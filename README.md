@@ -25,14 +25,31 @@ This server exposes Aiera API endpoints as MCP tools, providing access to compre
 - Company documents (press releases, slide presentations, disclosures, etc)
 - Filings (SEC filings and related metadata)
 
-## Installation
+## Quick Start
 
 ### Prerequisites
 
-- Python 3.10+
+- Python 3.11 or higher
 - An Aiera API key
 - [Astral UV](https://docs.astral.sh/uv/getting-started/installation/)
   - For existing installs, check that you have a version that supports the `uvx` command.
+
+### Installation
+
+1. **Install dependencies**:
+```bash
+pip install -r requirements.txt
+```
+
+2. **Set up environment variables**:
+```bash
+export AIERA_API_KEY="your-aiera-api-key"
+```
+
+3**Run server locally**:
+```bash
+python entrypoint.py
+```
 
 ### Claude Desktop
 

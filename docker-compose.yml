@@ -1,0 +1,10 @@
+services:
+  aiera_mcp:
+    build: .
+    volumes:
+      - .:/app
+    container_name: aiera_mcp_server
+    environment:
+      - AIERA_API_KEY=${AIERA_API_KEY}
+    stdin_open: true
+    tty: true

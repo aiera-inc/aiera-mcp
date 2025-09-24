@@ -1,1 +1,32 @@
 .idea/
+
+# dependencies
+venv
+.venv
+node_modules
+.pnp
+.pnp.js
+.python-version
+
+# testing
+coverage
+tmp_files/*
+
+# production
+build
+extension.zip
+
+# artifacts
+*.pyc
+__pycache__
+.mypy_cache
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.idea
+.vim
+

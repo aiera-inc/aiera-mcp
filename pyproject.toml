@@ -1,0 +1,9 @@
+[project]
+name = "aiera_mcp"
+version = "0.1.0"
+description = "Aiera MCP Server"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "mcp[cli]>=1.14.0",
+]
