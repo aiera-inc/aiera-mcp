@@ -14,7 +14,7 @@
 
 # Aiera MCP Server
 
-A [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server that provides access to [Aiera](https://www.aiera.com) financial data API through an LLM-friendly interface.
+A [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server that provides access to [Aiera](https://www.aiera.com) financial data.
 
 ## Overview
 
@@ -36,12 +36,11 @@ This server exposes Aiera API endpoints as MCP tools, providing access to compre
 
 ### Claude Desktop
 
-1. Follow the [Claude Desktop MCP installation instructions](https://modelcontextprotocol.io/quickstart/user) to complete the initial installation and find your configuration file.
+1. Follow the [Claude Desktop MCP installation instructions](https://modelcontextprotocol.io/quickstart/user) and find your configuration file.
 1. Use the following example as reference to add Aiera's MCP server.
-Make sure you complete the various fields.
     1. Path find your path to `uvx`, run `which uvx` in your terminal.
     2. Replace `<your_api_key_here>` with your actual Aiera API key.
-    3. Replace `<your_directory>` with your home directory path, e.g., `/home/username` (Mac/Linux) or `C:\Users\username` (Windows).
+    3. Replace `<your_directory>` with your home directory path, e.g., `/home/username` (Mac/Linux).
 
 <details>
   <summary>claude_desktop_config.json</summary>
@@ -97,8 +96,8 @@ This MCP server implements most Aiera API endpoints as tools, including:
 
 ## Privacy Policy
 
-This MCP server interacts with Aiera's API to fetch financial data. All data requests are subject to Aiera's privacy policy and terms of service.
+This MCP server interacts with Aiera's API to fetch relevant financial data. All data requests are subject to Aiera's privacy policy and terms of service, and require an active account.
 
 - **Aiera Privacy Policy**: https://aiera.com/privacy-policy/
-- **Data Handling**: This server does not store or cache any user data. All requests are proxied directly to Aiera's API.
+- **Data Handling**: This server does not store or cache any user data.
 - **API Key**: Your Aiera API key is used only for authenticating requests to their API.
