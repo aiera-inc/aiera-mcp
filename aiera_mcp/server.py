@@ -2,6 +2,8 @@
 
 import os
 import httpx
+
+from datetime import datetime
 from typing import Any, Dict, Optional
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
@@ -36,11 +38,39 @@ DEFAULT_HEADERS = {
 
 def correct_bloomberg_ticker(ticker: str) -> str:
     """Ensure bloomberg ticker is in the correct format (ticker:country_code)."""
-    if ":" not in ticker and " " in ticker:
+    if "," in ticker:
+        tickers = ticker.split(",")
+        reticker = []
+        for ticker in tickers:
+            if ":" not in ticker and " " in ticker:
+                ticker_parts = ticker.split()
+                reticker.append(f"{ticker_parts[0]}:{ticker_parts[1]}")
+            else:
+                reticker.append(ticker)
+
+        return ",".join(reticker)
+
+    elif ":" not in ticker and " " in ticker:
         ticker_parts = ticker.split()
-        ticker = f"{ticker_parts[0]}:{ticker_parts[1]}"
+        return f"{ticker_parts[0]}:{ticker_parts[1]}"
 
     return ticker
+
+
+def correct_keywords(keywords: str) -> str:
+    """Ensure keywords have comma-separation."""
+    if "," not in keywords and " " in keywords and len(keywords.split()) > 3:
+        return ",".join(keywords.split())
+
+    return keywords
+
+
+def correct_categories(categories: str) -> str:
+    """Ensure categories have comma-separation."""
+    if "," not in categories and " " in categories:
+        return ",".join(categories.split())
+
+    return categories
 
 
 async def make_aiera_request(
@@ -92,7 +122,7 @@ async def find_events(
     from_index: Optional[int] = None,
     size: Optional[int] = None,
 ) -> Dict[str, Any]:
-    """Retrieve events, filtered by bloomberg ticker(s), date range, and (optionally) by event type."""
+    """Retrieve events, filtered by bloomberg_ticker (a comma-separated list of tickers), start_date and end_date, and (optionally) by event_type."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -164,7 +194,7 @@ async def get_upcoming_events(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Retrieve confirmed and estimated upcoming events, filtered by bloomberg ticker(s) and a date range."""
+    """Retrieve confirmed and estimated upcoming events, filtered by bloomberg_ticker (a comma-separated list of tickers), and start_date and end_date."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -200,7 +230,7 @@ async def find_filings(
     from_index: Optional[int] = None,
     size: Optional[int] = None
 ) -> Dict[str, Any]:
-    """Retrieve SEC filings, filtered by bloomberg ticker(s) and a date range, and (optionally) by form number."""
+    """Retrieve SEC filings, filtered by bloomberg_ticker (a comma-separated list of tickers), start_date and end_date, and (optionally) by form_number."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -282,7 +312,7 @@ async def find_equities(
     page: Optional[int] = None,
     page_size: Optional[int] = None,
 ) -> Dict[str, Any]:
-    """Retrieve equities, filtered by various identifiers, such as bloomberg ticker(s) or RIC, or by a search term."""
+    """Retrieve equities, filtered by various identifiers, such as bloomberg_ticker, isin, or ric, or by a search term."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -351,7 +381,7 @@ async def get_equity_summaries(
     bloomberg_ticker: str,
     lookback: Optional[int] = None,
 ) -> Dict[str, Any]:
-    """Retrieve detailed summary information about one or more equities, filtered by bloomberg ticker(s)."""
+    """Retrieve detailed summary information about one or more equities, filtered by bloomberg_ticker (a comma-separated list of tickers)."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -425,7 +455,7 @@ async def find_company_docs(
     from_index: Optional[int] = None,
     size: Optional[int] = None
 ) -> Dict[str, Any]:
-    """Retrieve documents that have been published on company IR websites, filtered by a date range, and (optionally) by bloomberg ticker(s), categories or keywords."""
+    """Retrieve documents that have been published on company IR websites, filtered by start_date and end_date, and (optionally) by bloomberg_ticker (a comma-separated list of tickers), categories (a comma-separated list of categories) or keywords (a comma-separated list of keywords)."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -442,10 +472,10 @@ async def find_company_docs(
         params["bloomberg_ticker"] = correct_bloomberg_ticker(bloomberg_ticker)
 
     if categories:
-        params["categories"] = categories
+        params["categories"] = correct_categories(categories)
 
     if keywords:
-        params["keywords"] = keywords
+        params["keywords"] = correct_keywords(keywords)
 
     if from_index:
         params["from_index"] = from_index
@@ -554,7 +584,7 @@ async def get_company_doc_keywords(
 @mcp.resource("aiera://api/docs")
 def get_api_documentation() -> str:
     """Provide documentation for the Aiera API."""
-    return """
+    return f"""
     # Aiera Financial Data API
 
     This MCP server provides access to Aiera's comprehensive financial data API.
@@ -562,29 +592,29 @@ def get_api_documentation() -> str:
     ## Available Tools:
 
     ### Events API
-    - find_events: Retrieve events, filtered by bloomberg ticker(s), date range, and (optionally) by event type. This endpoint supports pagination.
+    - find_events: Retrieve events, filtered by bloomberg_ticker (a comma-separated list of tickers), start_date and end_date, and (optionally) by event_type. This endpoint supports pagination.
     -- Event types include: earnings, presentation, shareholder_meeting, investor_meeting, and special_situation.
     -- Conferences are labeled as presentation.
     -- Annual meetings are labeled as shareholder_meeting.
     -- Mergers & acquisitions, spinoffs, and other corporate actions are labeled as special_situation.
     - get_event: Retrieve a single event, including transcripts, summaries, and other metadata. Event IDs can be found using the find_events tool.
-    - get_upcoming_events: Retrieve confirmed and estimated upcoming events, filtered by bloomberg ticker(s) and a date range.
+    - get_upcoming_events: Retrieve confirmed and estimated upcoming events, filtered by bloomberg_ticker (can be a comma-separated list), start_date and end_date.
 
     ### Filings API
-    - find_filings: Retrieve SEC filings, filtered by bloomberg ticker(s) and a date range, and (optionally) by form number. This endpoint supports pagination.
+    - find_filings: Retrieve SEC filings, filtered by bloomberg_ticker (a comma-separated list of tickers), a start_date and end_date, and (optionally) a form_number. This endpoint supports pagination.
     -- Examples of form numbers include: 10-K, 10-Q, and 8-K. There are other possibilities, but those 3 are typically the most relevant.
     - get_filing: Retrieve a single SEC filing. Filing IDs can be found with the tool find_filings.
     - get_filing_text: Retrieve the raw content for a single SEC filing. Filings IDs can be found with the tool find_filings.
 
     ### Equity API
-    - find_equities: Retrieve equities, filtered by various identifiers, such as bloomberg ticker(s) or RIC, or by a search term.
+    - find_equities: Retrieve equities, filtered by various identifiers, such as bloomberg_ticker or ric, or by a search term. Identifiers can be comma-separated lists of multiple identifiers.
     - get_sectors_and_subsectors: Retrieve a list of all sectors and subsectors that can be queried.
-    - get_equity_summaries: Retrieve detailed summary information about one or more equities, filtered by bloomberg ticker(s). Results include past and upcoming events, company leadership, recent financials, and index membership.
+    - get_equity_summaries: Retrieve detailed summary information about one or more equities, filtered by bloomberg_ticker (a comma-separated list). Results include past and upcoming events, company leadership, recent financials, and index membership.
     - get_available_indexes: Retrieve the list of available indexes that can be queried.
     - get_index_constituents: Retrieve the list of all equities within an index.
 
     ### Company Docs API
-    - find_company_docs: Retrieve documents that have been published on company IR websites, filtered by a date range, and (optionally) by bloomberg ticker(s), categories (comma-separated list) or keywords (comma-separated list). This endpoint supports pagination.
+    - find_company_docs: Retrieve documents that have been published on company IR websites, filtered by a date range, and (optionally) by bloomberg_ticker (a comma-separated list), categories (a comma-separated list), or keywords (a comma-separated list). This endpoint supports pagination.
     -- Examples of a category include: annual_report, compliance, disclosure, earnings_release, slide_presentation, press_release. There are hundreds of other possibilities. The full list of possible categories can be found using the tool get_company_doc_categories.
     -- Examples of a keyword include: ESG, diversity, risk management. There are hundreds of other possibilities. The full list of possible keywords can be found using the tool get_company_doc_keywords.
     - get_company_doc_categories: Retrieve a list of all categories associated with company documents (and the number of documents associated with each category). This endpoint supports pagination, and can be filtered by a search term.
@@ -597,12 +627,15 @@ def get_api_documentation() -> str:
     ## Parameter Notes:
     - Endpoints that support pagination use 'size' and 'from_index' parameters.
     - Date parameters should be in ISO format (YYYY-MM-DD).
-    - Bloomberg tickers should be composed of a ticker and a country code joined by a colon (e.g., "AAPL:US").
+    - Bloomberg tickers are composed of a ticker and a country code joined by a colon (e.g., "AAPL:US").
+    -- If information from multiple bloomberg tickers is needed, they should be represented as a comma-separated list (e.g., "AAPL:US,MSFT:US,GOOGL:US").
+    - Comma-separated lists should not contain spaces (e.g., "keyword1,keyword2,keyword3").
     - Boolean parameters accept true/false values.
 
     ## Other Notes:
     - All dates and times are in eastern time (ET) unless specifically stated otherwise.
     - The term "publication" or "document" is likely referring to either an SEC filing or a company document.
+    - The current date is {datetime.now().strftime("%Y-%m-%d")}. Relative dates (e.g., "last 3 months") should be calculated based on this date.
     """
 
 
