@@ -1,11 +1,6 @@
-.idea/
-
 # dependencies
 venv
 .venv
-node_modules
-.pnp
-.pnp.js
 .python-version
 
 # testing
