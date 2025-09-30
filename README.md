@@ -48,7 +48,7 @@ export AIERA_API_KEY="your-aiera-api-key"
 
 3**Run server locally**:
 ```bash
-python entrypoint.py
+uv run entrypoint.py
 ```
 
 ### Claude Desktop

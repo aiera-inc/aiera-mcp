@@ -73,6 +73,18 @@ def correct_categories(categories: str) -> str:
     return categories
 
 
+def correct_event_ids(event_ids: str) -> str:
+    """Ensure event ID lists have comma-separation."""
+    if "," not in event_ids and " " in event_ids:
+        corrected = []
+        for event_id in event_ids.split(","):
+            corrected.append(event_id.strip())
+
+        return ",".join(corrected)
+
+    return event_ids
+
+
 async def make_aiera_request(
     client: httpx.AsyncClient,
     method: str,
@@ -114,15 +126,17 @@ async def make_aiera_request(
 
 @mcp.tool()
 async def find_events(
-    bloomberg_ticker: str,
     start_date: str,
     end_date: str,
+    bloomberg_ticker: Optional[str] = None,
+    sector_id: Optional[str] = None,
+    subsector_id: Optional[str] = None,
     event_type: Optional[str] = "earnings",
-    modified_since: Optional[str] = None,
-    from_index: Optional[int] = None,
-    size: Optional[int] = None,
+    include_transcripts: Optional[bool] = True,
+    page: Optional[int] = None,
+    page_size: Optional[int] = None,
 ) -> Dict[str, Any]:
-    """Retrieve events, filtered by bloomberg_ticker (a comma-separated list of tickers), start_date and end_date, and (optionally) by event_type."""
+    """Retrieve events, filtered by start_date and end_date, and (optionally) bloomberg_ticker (a comma-separated list of tickers), event_type (a comma-separated list of event types), sector_id, and/or subsector_id."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -131,36 +145,43 @@ async def find_events(
         raise ValueError("AIERA_API_KEY environment variable is required")
 
     params = {
-        "bloomberg_ticker": correct_bloomberg_ticker(bloomberg_ticker),
         "start_date": start_date,
         "end_date": end_date,
-        "simplified": True,
     }
+
+    if bloomberg_ticker:
+        params["bloomberg_ticker"] = correct_bloomberg_ticker(bloomberg_ticker)
+
+    if sector_id:
+        params["sector_id"] = sector_id
+
+    if subsector_id:
+        params["subsector_id"] = subsector_id
 
     if event_type:
         params["event_type"] = event_type
 
-    if modified_since:
-        params["modified_since"] = modified_since
+    if include_transcripts:
+        params["include_transcripts"] = True
 
-    if from_index:
-        params["from_index"] = from_index
+    if page:
+        params["page"] = page
 
-    if size:
-        params["size"] = size
+    if page_size:
+        params["page_size"] = page_size
 
     return await make_aiera_request(
         client=client,
         method="GET",
-        endpoint="/events-v2",
+        endpoint="/chat-support/find-events",
         api_key=api_key,
         params=params,
     )
 
 
 @mcp.tool()
-async def get_event(event_id: str) -> Dict[str, Any]:
-    """Retrieve a single event, including transcripts, summaries, and other metadata."""
+async def get_events(event_ids: str) -> Dict[str, Any]:
+    """Retrieve one or more events, including transcripts, summaries, and other metadata."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -169,20 +190,14 @@ async def get_event(event_id: str) -> Dict[str, Any]:
         raise ValueError("AIERA_API_KEY environment variable is required")
 
     params = {
-        "linguistics": True,
-        "pricing": True,
-        "transcripts": True,
-        "include_company_metadata": True,
-        "include_connection_detail": True,
-        "include_hierarchy": True,
-        "include_estimated_docs": True,
-        "include_tags": True,
+        "event_ids": correct_event_ids(event_ids),
+        "include_transcripts": True,
     }
 
     return await make_aiera_request(
         client=client,
         method="GET",
-        endpoint=f"/events-v2/{event_id}",
+        endpoint="/chat-support/find-events",
         api_key=api_key,
         params=params,
     )
@@ -227,8 +242,8 @@ async def find_filings(
     start_date: str,
     end_date: str,
     form_number: Optional[str] = None,
-    from_index: Optional[int] = None,
-    size: Optional[int] = None
+    page: Optional[int] = None,
+    page_size: Optional[int] = None
 ) -> Dict[str, Any]:
     """Retrieve SEC filings, filtered by bloomberg_ticker (a comma-separated list of tickers), start_date and end_date, and (optionally) by form_number."""
     ctx = mcp.get_context()
@@ -247,11 +262,11 @@ async def find_filings(
     if form_number:
         params["form_number"] = form_number
 
-    if from_index:
-        params["from_index"] = from_index
+    if page:
+        params["page"] = page
 
-    if size:
-        params["size"] = size
+    if page_size:
+        params["page_size"] = page_size
 
     return await make_aiera_request(
         client=client,
@@ -452,8 +467,8 @@ async def find_company_docs(
     bloomberg_ticker: Optional[str] = None,
     categories: Optional[str] = None,
     keywords: Optional[str] = None,
-    from_index: Optional[int] = None,
-    size: Optional[int] = None
+    page: Optional[int] = None,
+    page_size: Optional[int] = None
 ) -> Dict[str, Any]:
     """Retrieve documents that have been published on company IR websites, filtered by start_date and end_date, and (optionally) by bloomberg_ticker (a comma-separated list of tickers), categories (a comma-separated list of categories) or keywords (a comma-separated list of keywords)."""
     ctx = mcp.get_context()
@@ -477,11 +492,11 @@ async def find_company_docs(
     if keywords:
         params["keywords"] = correct_keywords(keywords)
 
-    if from_index:
-        params["from_index"] = from_index
+    if page:
+        params["page"] = page
 
-    if size:
-        params["size"] = size
+    if page_size:
+        params["page_size"] = page_size
 
     return await make_aiera_request(
         client=client,
@@ -509,15 +524,16 @@ async def get_company_doc_text(
         method="GET",
         endpoint=f"/company-docs-v1/{company_doc_id}/text",
         api_key=api_key,
-        params=params,
+        params={},
+        return_type="text",
     )
 
 
 @mcp.tool()
 async def get_company_doc_categories(
     search: Optional[str] = None,
-    from_index: Optional[int] = None,
-    size: Optional[int] = None,
+    page: Optional[int] = None,
+    page_size: Optional[int] = None,
 ) -> Dict[str, Any]:
     """Retrieve a list of all categories associated with company documents (and the number of documents associated with each category)."""
     ctx = mcp.get_context()
@@ -532,11 +548,11 @@ async def get_company_doc_categories(
     if search:
         params["search"] = search
 
-    if from_index:
-        params["from_index"] = from_index
+    if page:
+        params["page"] = page
 
-    if size:
-        params["size"] = size
+    if page_size:
+        params["page_size"] = page_size
 
     return await make_aiera_request(
         client=client,
@@ -550,8 +566,8 @@ async def get_company_doc_categories(
 @mcp.tool()
 async def get_company_doc_keywords(
     search: Optional[str] = None,
-    from_index: Optional[int] = None,
-    size: Optional[int] = None,
+    page: Optional[int] = None,
+    page_size: Optional[int] = None,
 ) -> Dict[str, Any]:
     """Retrieve a list of all keywords associated with company documents (and the number of documents associated with each keyword)."""
     ctx = mcp.get_context()
@@ -566,16 +582,81 @@ async def get_company_doc_keywords(
     if search:
         params["search"] = search
 
-    if from_index:
-        params["from_index"] = from_index
+    if page:
+        params["page"] = page
 
-    if size:
-        params["size"] = size
+    if page_size:
+        params["page_size"] = page_size
 
     return await make_aiera_request(
         client=client,
         method="GET",
         endpoint="/company-docs-v1/keywords",
+        api_key=api_key,
+        params=params,
+    )
+
+
+@mcp.tool()
+async def find_third_bridge_events(
+    start_date: str,
+    end_date: str,
+    include_transcripts: Optional[bool] = True,
+    page: Optional[int] = None,
+    page_size: Optional[int] = None,
+) -> Dict[str, Any]:
+    """Retrieve a list of expert insights events from Third Bridge, filtering by start_date and end_date."""
+    ctx = mcp.get_context()
+    client = ctx.request_context.lifespan_context["http_client"]
+    api_key = os.getenv("AIERA_API_KEY")
+
+    if not api_key:
+        raise ValueError("AIERA_API_KEY environment variable is required")
+
+    params = {
+        "start_date": start_date,
+        "end_date": end_date,
+        "event_category": "thirdbridge",
+    }
+
+    if include_transcripts:
+        params["include_transcripts"] = True
+
+    if page:
+        params["page"] = page
+
+    if page_size:
+        params["page_size"] = page_size
+
+    return await make_aiera_request(
+        client=client,
+        method="GET",
+        endpoint="/events-v2",
+        api_key=api_key,
+        params=params,
+    )
+
+
+@mcp.tool()
+async def get_third_bridge_events(event_ids: str) -> Dict[str, Any]:
+    """Retrieve one or more expert insights events from Third Bridge, including transcripts, summaries, and other metadata."""
+    ctx = mcp.get_context()
+    client = ctx.request_context.lifespan_context["http_client"]
+    api_key = os.getenv("AIERA_API_KEY")
+
+    if not api_key:
+        raise ValueError("AIERA_API_KEY environment variable is required")
+
+    params = {
+        "event_ids": correct_event_ids(event_ids),
+        "event_category": "thirdbridge",
+        "include_transcripts": True,
+    }
+
+    return await make_aiera_request(
+        client=client,
+        method="GET",
+        endpoint="/chat-support/find-events",
         api_key=api_key,
         params=params,
     )
@@ -592,13 +673,14 @@ def get_api_documentation() -> str:
     ## Available Tools:
 
     ### Events API
-    - find_events: Retrieve events, filtered by bloomberg_ticker (a comma-separated list of tickers), start_date and end_date, and (optionally) by event_type. This endpoint supports pagination.
+    - find_events: Retrieve events and associated transcripts, filtered by start_date and end_date, and optionally by bloomberg_ticker (a comma-separated list of tickers), event_type (a comma-separated list of event types), sector_id, or subsector_id. You can also include or exclude transcripts in the response using the boolean parameter include_transcripts. This endpoint supports pagination.
     -- Event types include: earnings, presentation, shareholder_meeting, investor_meeting, and special_situation.
-    -- Conferences are labeled as presentation.
-    -- Annual meetings are labeled as shareholder_meeting.
-    -- Mergers & acquisitions, spinoffs, and other corporate actions are labeled as special_situation.
-    - get_event: Retrieve a single event, including transcripts, summaries, and other metadata. Event IDs can be found using the find_events tool.
-    - get_upcoming_events: Retrieve confirmed and estimated upcoming events, filtered by bloomberg_ticker (can be a comma-separated list), start_date and end_date.
+    -- Conferences are often event type presentation.
+    -- Annual meetings are often event type shareholder_meeting.
+    -- Mergers & acquisitions, spinoffs, and other corporate actions are often event type special_situation.
+    -- sector_id and subsector_id can be found using the tool get_sectors_and_subsectors.
+    - get_events: Retrieve one or more events, including transcripts, summaries, and other metadata. Event IDs can be found using the find_events tool.
+    - get_upcoming_events: Retrieve confirmed and estimated upcoming events, filtered by bloomberg_ticker (a comma-separated list of tickers), start_date and end_date.
 
     ### Filings API
     - find_filings: Retrieve SEC filings, filtered by bloomberg_ticker (a comma-separated list of tickers), a start_date and end_date, and (optionally) a form_number. This endpoint supports pagination.
@@ -607,7 +689,7 @@ def get_api_documentation() -> str:
     - get_filing_text: Retrieve the raw content for a single SEC filing. Filings IDs can be found with the tool find_filings.
 
     ### Equity API
-    - find_equities: Retrieve equities, filtered by various identifiers, such as bloomberg_ticker or ric, or by a search term. Identifiers can be comma-separated lists of multiple identifiers.
+    - find_equities: Retrieve equities, filtered by various identifiers, such as bloomberg_ticker (a comma-separated list of tickers) or ric (a comma-separated list of RICs), or by a search term. This endpoint supports pagination.
     - get_sectors_and_subsectors: Retrieve a list of all sectors and subsectors that can be queried.
     - get_equity_summaries: Retrieve detailed summary information about one or more equities, filtered by bloomberg_ticker (a comma-separated list). Results include past and upcoming events, company leadership, recent financials, and index membership.
     - get_available_indexes: Retrieve the list of available indexes that can be queried.
@@ -621,11 +703,15 @@ def get_api_documentation() -> str:
     - get_company_doc_keywords: Retrieve a list of all keywords associated with company documents (and the number of documents associated with each keyword). This endpoint supports pagination, and can be filtered by a search term.
     - get_company_doc_text: Retrieve the raw content for a single company document. Document IDs can be found using the tool find_company_docs.
     
+    ### Third Bridge API
+    - find_third_bridge_events: Retrieve expert insights events from Third Bridge, filtered by start_date and end_date. You can also include or exclude transcripts using the boolean parameter include_transcripts. This endpoint supports pagination.
+    - get_third_bridge_events: Retrieve one or more expert insights events from Third Bridge, including transcripts, summaries, and other metadata. Event IDs can be found using the find_third_bridge_events tool.
+    
     ## Authentication:
     All endpoints require the AIERA_API_KEY environment variable to be set.
 
     ## Parameter Notes:
-    - Endpoints that support pagination use 'size' and 'from_index' parameters.
+    - Endpoints that support pagination use 'page' and 'page_size' parameters.
     - Date parameters should be in ISO format (YYYY-MM-DD).
     - Bloomberg tickers are composed of a ticker and a country code joined by a colon (e.g., "AAPL:US").
     -- If information from multiple bloomberg tickers is needed, they should be represented as a comma-separated list (e.g., "AAPL:US,MSFT:US,GOOGL:US").
