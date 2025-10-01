@@ -108,7 +108,7 @@ This MCP server implements most Aiera API endpoints as tools, including:
 - `find_third_bridge_events` - Retrieve expert insight events from Third Bridge.
 - And many more...
 
-Some endpoints may require specific permissions based on a subscription plan. 
+Some endpoints may require special permissions. 
 Talk to your Aiera representative for more details.
 
 ## Links
