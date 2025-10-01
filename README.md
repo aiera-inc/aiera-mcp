@@ -96,15 +96,19 @@ Get the latest earnings call transcript for Apple Inc. and summarize key points
 
 This MCP server implements most Aiera API endpoints as tools, including:
 
+- `find_equities` - Retrieve equities, filtered by various identifiers, such as ticker(s) or RIC, or by a search term.
+- `get_equity_summaries` - Retrieve detailed summary information about one or more equities.
+- `get_available_watchlists` - Retrieve a list of all available watchlists.
 - `find_events` - Retrieve events, filtered by ticker(s), date range, and (optionally) by event type.
 - `get_upcoming_events` - Retrieve confirmed and estimated upcoming events.
 - `find_filings` - Retrieve SEC filings, filtered by ticker(s) and a date range, and (optionally) by form number
 - `get_filing_text` - Retrieve the raw content for a single SEC filing.
-- `find_equities` - Retrieve equities, filtered by various identifiers, such as ticker(s) or RIC, or by a search term.
-- `get_equity_summaries` - Retrieve detailed summary information about one or more equities.
 - `find_company_docs` - Retrieve documents that have been published on company IR websites.
 - `get_company_doc_text` - Retrieve the raw content for a single company document.
+- `find_third_bridge_events` - Retrieve expert insight events from Third Bridge.
 - And many more...
+
+Some endpoints may require specific permissions based on a subscription plan. Talk to your Aiera representative for more details.
 
 ## Links
 - [Aiera REST Documentation](https://rest.aiera.com)

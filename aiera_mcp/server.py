@@ -129,6 +129,8 @@ async def find_events(
     start_date: str,
     end_date: str,
     bloomberg_ticker: Optional[str] = None,
+    watchlist_id: Optional[int] = None,
+    index_id: Optional[int] = None,
     sector_id: Optional[str] = None,
     subsector_id: Optional[str] = None,
     event_type: Optional[str] = "earnings",
@@ -136,7 +138,7 @@ async def find_events(
     page: Optional[int] = None,
     page_size: Optional[int] = None,
 ) -> Dict[str, Any]:
-    """Retrieve events, filtered by start_date and end_date, and (optionally) bloomberg_ticker (a comma-separated list of tickers), event_type (a comma-separated list of event types), sector_id, and/or subsector_id."""
+    """Retrieve events, filtered by a date range, and (optionally) ticker(s), watchlist, index, sector, or subsector; or event type(s)."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -151,6 +153,12 @@ async def find_events(
 
     if bloomberg_ticker:
         params["bloomberg_ticker"] = correct_bloomberg_ticker(bloomberg_ticker)
+
+    if watchlist_id:
+        params["watchlist_id"] = correct_bloomberg_ticker(watchlist_id)
+
+    if index_id:
+        params["index_id"] = correct_bloomberg_ticker(index_id)
 
     if sector_id:
         params["sector_id"] = sector_id
@@ -205,11 +213,15 @@ async def get_events(event_ids: str) -> Dict[str, Any]:
 
 @mcp.tool()
 async def get_upcoming_events(
+    start_date,
+    end_date,
     bloomberg_ticker: Optional[str] = None,
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
+    watchlist_id: Optional[int] = None,
+    index_id: Optional[int] = None,
+    sector_id: Optional[int] = None,
+    subsector_id: Optional[int] = None,
 ) -> Dict[str, Any]:
-    """Retrieve confirmed and estimated upcoming events, filtered by bloomberg_ticker (a comma-separated list of tickers), and start_date and end_date."""
+    """Retrieve confirmed and estimated upcoming events, filtered by a date range, and one of the following: ticker(s), watchlist, index, sector, or subsector."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -217,15 +229,25 @@ async def get_upcoming_events(
     if not api_key:
         raise ValueError("AIERA_API_KEY environment variable is required")
 
-    params = {}
+    params = {
+        "start_date": start_date,
+        "end_date": end_date,
+    }
+
     if bloomberg_ticker:
         params["bloomberg_ticker"] = correct_bloomberg_ticker(bloomberg_ticker)
 
-    if start_date:
-        params["start_date"] = start_date
+    if watchlist_id:
+        params["watchlist_id"] = watchlist_id
 
-    if end_date:
-        params["end_date"] = end_date
+    if index_id:
+        params["index_id"] = index_id
+
+    if sector_id:
+        params["sector_id"] = sector_id
+
+    if subsector_id:
+        params["subsector_id"] = subsector_id
 
     return await make_aiera_request(
         client=client,
@@ -238,14 +260,18 @@ async def get_upcoming_events(
 
 @mcp.tool()
 async def find_filings(
-    bloomberg_ticker: str,
     start_date: str,
     end_date: str,
+    bloomberg_ticker: Optional[str] = None,
+    watchlist_id: Optional[int] = None,
+    index_id: Optional[int] = None,
+    sector_id: Optional[int] = None,
+    subsector_id: Optional[int] = None,
     form_number: Optional[str] = None,
     page: Optional[int] = None,
     page_size: Optional[int] = None
 ) -> Dict[str, Any]:
-    """Retrieve SEC filings, filtered by bloomberg_ticker (a comma-separated list of tickers), start_date and end_date, and (optionally) by form_number."""
+    """Retrieve SEC filings, filtered by a date range, and one of the following: ticker(s), watchlist, index, sector, or subsector; and (optionally) by a form number."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -254,10 +280,25 @@ async def find_filings(
         raise ValueError("AIERA_API_KEY environment variable is required")
 
     params = {
-        "bloomberg_ticker": correct_bloomberg_ticker(bloomberg_ticker),
         "start_date": start_date,
-        "end_date": end_date
+        "end_date": end_date,
+        "include_summaries": True,
     }
+
+    if bloomberg_ticker:
+        params["bloomberg_ticker"] = correct_bloomberg_ticker(bloomberg_ticker)
+
+    if watchlist_id:
+        params["watchlist_id"] = watchlist_id
+
+    if index_id:
+        params["index_id"] = index_id
+
+    if sector_id:
+        params["sector_id"] = sector_id
+
+    if subsector_id:
+        params["subsector_id"] = subsector_id
 
     if form_number:
         params["form_number"] = form_number
@@ -298,7 +339,7 @@ async def get_filing(filing_id: str) -> Dict[str, Any]:
 
 @mcp.tool()
 async def get_filing_text(filing_id: str) -> Dict[str, Any]:
-    """Retrieve the raw content for a single SEC filing."""
+    """Retrieve the raw content from a single SEC filing."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -327,7 +368,7 @@ async def find_equities(
     page: Optional[int] = None,
     page_size: Optional[int] = None,
 ) -> Dict[str, Any]:
-    """Retrieve equities, filtered by various identifiers, such as bloomberg_ticker, isin, or ric, or by a search term."""
+    """Retrieve equities, filtered by various identifiers, such as ticker, ISIN, or RIC; or by a search term."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -374,7 +415,7 @@ async def find_equities(
 
 @mcp.tool()
 async def get_sectors_and_subsectors() -> Dict[str, Any]:
-    """Retrieve a list of all sectors and subsectors that can be queried."""
+    """Retrieve a list of all sectors and subsectors."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -387,16 +428,13 @@ async def get_sectors_and_subsectors() -> Dict[str, Any]:
         method="GET",
         endpoint="/equities-v2/sectors",
         api_key=api_key,
-        params=params,
+        params={},
     )
 
 
 @mcp.tool()
-async def get_equity_summaries(
-    bloomberg_ticker: str,
-    lookback: Optional[int] = None,
-) -> Dict[str, Any]:
-    """Retrieve detailed summary information about one or more equities, filtered by bloomberg_ticker (a comma-separated list of tickers)."""
+async def get_equity_summaries(bloomberg_ticker: str) -> Dict[str, Any]:
+    """Retrieve detailed summary information about one or more equities, filtered by ticker(s)."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -406,10 +444,8 @@ async def get_equity_summaries(
 
     params = {
         "bloomberg_ticker": correct_bloomberg_ticker(bloomberg_ticker),
+        "lookback": 90,
     }
-
-    if lookback:
-        params["lookback"] = lookback
 
     return await make_aiera_request(
         client=client,
@@ -422,7 +458,7 @@ async def get_equity_summaries(
 
 @mcp.tool()
 async def get_available_indexes() -> Dict[str, Any]:
-    """Retrieve the list of available indexes that can be queried."""
+    """Retrieve the list of available indexes."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -461,16 +497,60 @@ async def get_index_constituents(
 
 
 @mcp.tool()
+async def get_available_watchlists() -> Dict[str, Any]:
+    """Retrieve the list of available watchlists."""
+    ctx = mcp.get_context()
+    client = ctx.request_context.lifespan_context["http_client"]
+    api_key = os.getenv("AIERA_API_KEY")
+
+    if not api_key:
+        raise ValueError("AIERA_API_KEY environment variable is required")
+
+    return await make_aiera_request(
+        client=client,
+        method="GET",
+        endpoint="/chat-support/available-watchlists",
+        api_key=api_key,
+        params={},
+    )
+
+
+@mcp.tool()
+async def get_watchlist_constituents(
+    watchlist_id: str,
+) -> Dict[str, Any]:
+    """Retrieve the list of all equities within a watchlist."""
+    ctx = mcp.get_context()
+    client = ctx.request_context.lifespan_context["http_client"]
+    api_key = os.getenv("AIERA_API_KEY")
+
+    if not api_key:
+        raise ValueError("AIERA_API_KEY environment variable is required")
+
+    return await make_aiera_request(
+        client=client,
+        method="GET",
+        endpoint=f"/chat-support/watchlist-constituents/{watchlist_id}",
+        api_key=api_key,
+        params={},
+    )
+
+
+@mcp.tool()
 async def find_company_docs(
     start_date: str,
     end_date: str,
     bloomberg_ticker: Optional[str] = None,
+    watchlist_id: Optional[int] = None,
+    index_id: Optional[int] = None,
+    sector_id: Optional[int] = None,
+    subsector_id: Optional[int] = None,
     categories: Optional[str] = None,
     keywords: Optional[str] = None,
     page: Optional[int] = None,
     page_size: Optional[int] = None
 ) -> Dict[str, Any]:
-    """Retrieve documents that have been published on company IR websites, filtered by start_date and end_date, and (optionally) by bloomberg_ticker (a comma-separated list of tickers), categories (a comma-separated list of categories) or keywords (a comma-separated list of keywords)."""
+    """Retrieve documents that have been published by a company, filtered by a date range, and (optionally) by ticker(s), watchlist, index, sector, or subsector; or category(s) or keyword(s)."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -485,6 +565,18 @@ async def find_company_docs(
 
     if bloomberg_ticker:
         params["bloomberg_ticker"] = correct_bloomberg_ticker(bloomberg_ticker)
+
+    if watchlist_id:
+        params["watchlist_id"] = watchlist_id
+
+    if index_id:
+        params["index_id"] = index_id
+
+    if sector_id:
+        params["sector_id"] = sector_id
+
+    if subsector_id:
+        params["subsector_id"] = subsector_id
 
     if categories:
         params["categories"] = correct_categories(categories)
@@ -535,7 +627,7 @@ async def get_company_doc_categories(
     page: Optional[int] = None,
     page_size: Optional[int] = None,
 ) -> Dict[str, Any]:
-    """Retrieve a list of all categories associated with company documents (and the number of documents associated with each category)."""
+    """Retrieve a list of all categories associated with company documents."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -569,7 +661,7 @@ async def get_company_doc_keywords(
     page: Optional[int] = None,
     page_size: Optional[int] = None,
 ) -> Dict[str, Any]:
-    """Retrieve a list of all keywords associated with company documents (and the number of documents associated with each keyword)."""
+    """Retrieve a list of all keywords associated with company documents."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -605,7 +697,7 @@ async def find_third_bridge_events(
     page: Optional[int] = None,
     page_size: Optional[int] = None,
 ) -> Dict[str, Any]:
-    """Retrieve a list of expert insights events from Third Bridge, filtering by start_date and end_date."""
+    """Retrieve a list of expert insight events from Third Bridge, filtering by a date range."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -639,7 +731,7 @@ async def find_third_bridge_events(
 
 @mcp.tool()
 async def get_third_bridge_events(event_ids: str) -> Dict[str, Any]:
-    """Retrieve one or more expert insights events from Third Bridge, including transcripts, summaries, and other metadata."""
+    """Retrieve one or more expert insight events from Third Bridge, including transcripts, summaries, and other metadata."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -672,43 +764,58 @@ def get_api_documentation() -> str:
 
     ## Available Tools:
 
+    ### Equity API
+    - find_equities: Retrieve equities, filtered by various identifiers, such as bloomberg_ticker (a comma-separated list of tickers) or ric (a comma-separated list of RICs), or by a search term. This endpoint supports pagination.
+    - get_equity_summaries: Retrieve detailed summary information about one or more equities, filtered by bloomberg_ticker (a comma-separated list). Results include past and upcoming events, company leadership, recent financials, and index membership.
+    - get_sectors_and_subsectors: Retrieve a list of all sectors and subsectors that can be queried.
+    - get_available_indexes: Retrieve the list of available indexes that can be queried.
+    - get_index_constituents: Retrieve the list of all equities within an index.
+    - get_available_watchlists: Retrieve the list of watchlists that can be queried.
+    - get_watchlist_constituents: Retrieve the list of all equities within a watchlist.
+
     ### Events API
-    - find_events: Retrieve events and associated transcripts, filtered by start_date and end_date, and optionally by bloomberg_ticker (a comma-separated list of tickers), event_type (a comma-separated list of event types), sector_id, or subsector_id. You can also include or exclude transcripts in the response using the boolean parameter include_transcripts. This endpoint supports pagination.
+    - find_events: Retrieve events and associated transcripts, filtered by start_date and end_date, and optionally by bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id; or event_type (a comma-separated list of event types). You can also choose whether to include or exclude transcripts in the response by using the boolean parameter include_transcripts. This endpoint supports pagination.
     -- Event types include: earnings, presentation, shareholder_meeting, investor_meeting, and special_situation.
     -- Conferences are often event type presentation.
     -- Annual meetings are often event type shareholder_meeting.
     -- Mergers & acquisitions, spinoffs, and other corporate actions are often event type special_situation.
+    -- watchlist_id can be found using the tool get_available_watchlists.
+    -- index_id can be found using the tool get_available_indexes.
     -- sector_id and subsector_id can be found using the tool get_sectors_and_subsectors.
-    - get_events: Retrieve one or more events, including transcripts, summaries, and other metadata. Event IDs can be found using the find_events tool.
-    - get_upcoming_events: Retrieve confirmed and estimated upcoming events, filtered by bloomberg_ticker (a comma-separated list of tickers), start_date and end_date.
+    - get_events: Retrieve one or more events, including transcripts, summaries, and other metadata, filtered by event_ids.
+    -- Event IDs can be found using the find_events tool.
+    - get_upcoming_events: Retrieve confirmed and estimated upcoming events, filtered by start_date and end_date, and one of the following: bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id.
+    -- watchlist_id can be found using the tool get_available_watchlists.
+    -- index_id can be found using the tool get_available_indexes.
+    -- sector_id and subsector_id can be found using the tool get_sectors_and_subsectors.
 
     ### Filings API
-    - find_filings: Retrieve SEC filings, filtered by bloomberg_ticker (a comma-separated list of tickers), a start_date and end_date, and (optionally) a form_number. This endpoint supports pagination.
-    -- Examples of form numbers include: 10-K, 10-Q, and 8-K. There are other possibilities, but those 3 are typically the most relevant.
+    - find_filings: Retrieve SEC filings, filtered by start_date and end_date, and one of the following: bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id; and optionally by form_number. This endpoint supports pagination.
+    -- Examples of form numbers include: 10-K, 10-Q, and 8-K. There are other possibilities, but those 3 will be the most commonly used.
+    -- watchlist_id can be found using the tool get_available_watchlists.
+    -- index_id can be found using the tool get_available_indexes.
+    -- sector_id and subsector_id can be found using the tool get_sectors_and_subsectors.
     - get_filing: Retrieve a single SEC filing. Filing IDs can be found with the tool find_filings.
     - get_filing_text: Retrieve the raw content for a single SEC filing. Filings IDs can be found with the tool find_filings.
 
-    ### Equity API
-    - find_equities: Retrieve equities, filtered by various identifiers, such as bloomberg_ticker (a comma-separated list of tickers) or ric (a comma-separated list of RICs), or by a search term. This endpoint supports pagination.
-    - get_sectors_and_subsectors: Retrieve a list of all sectors and subsectors that can be queried.
-    - get_equity_summaries: Retrieve detailed summary information about one or more equities, filtered by bloomberg_ticker (a comma-separated list). Results include past and upcoming events, company leadership, recent financials, and index membership.
-    - get_available_indexes: Retrieve the list of available indexes that can be queried.
-    - get_index_constituents: Retrieve the list of all equities within an index.
-
     ### Company Docs API
-    - find_company_docs: Retrieve documents that have been published on company IR websites, filtered by a date range, and (optionally) by bloomberg_ticker (a comma-separated list), categories (a comma-separated list), or keywords (a comma-separated list). This endpoint supports pagination.
+    - find_company_docs: Retrieve documents that have been published on company IR websites, filtered by a date range, and optionally by bloomberg_ticker (a comma-separated list), watchlist_id, index_id, sector_id, or subsector_id; or categories (a comma-separated list), or keywords (a comma-separated list). This endpoint supports pagination.
     -- Examples of a category include: annual_report, compliance, disclosure, earnings_release, slide_presentation, press_release. There are hundreds of other possibilities. The full list of possible categories can be found using the tool get_company_doc_categories.
     -- Examples of a keyword include: ESG, diversity, risk management. There are hundreds of other possibilities. The full list of possible keywords can be found using the tool get_company_doc_keywords.
+    -- watchlist_id can be found using the tool get_available_watchlists.
+    -- index_id can be found using the tool get_available_indexes.
+    -- sector_id and subsector_id can be found using the tool get_sectors_and_subsectors.
     - get_company_doc_categories: Retrieve a list of all categories associated with company documents (and the number of documents associated with each category). This endpoint supports pagination, and can be filtered by a search term.
     - get_company_doc_keywords: Retrieve a list of all keywords associated with company documents (and the number of documents associated with each keyword). This endpoint supports pagination, and can be filtered by a search term.
     - get_company_doc_text: Retrieve the raw content for a single company document. Document IDs can be found using the tool find_company_docs.
     
     ### Third Bridge API
-    - find_third_bridge_events: Retrieve expert insights events from Third Bridge, filtered by start_date and end_date. You can also include or exclude transcripts using the boolean parameter include_transcripts. This endpoint supports pagination.
-    - get_third_bridge_events: Retrieve one or more expert insights events from Third Bridge, including transcripts, summaries, and other metadata. Event IDs can be found using the find_third_bridge_events tool.
+    - find_third_bridge_events: Retrieve expert insight events from Third Bridge, filtered by start_date and end_date. You can also include or exclude transcripts using the boolean parameter include_transcripts. This endpoint supports pagination.
+    - get_third_bridge_events: Retrieve one or more expert insight events from Third Bridge, including transcripts, summaries, and other metadata. Event IDs can be found using the find_third_bridge_events tool.
     
     ## Authentication:
     All endpoints require the AIERA_API_KEY environment variable to be set.
+    Some endpoints may require specific permissions based on a subscription plan. Talk to your Aiera representative for more details.
 
     ## Parameter Notes:
     - Endpoints that support pagination use 'page' and 'page_size' parameters.
@@ -721,7 +828,7 @@ def get_api_documentation() -> str:
     ## Other Notes:
     - All dates and times are in eastern time (ET) unless specifically stated otherwise.
     - The term "publication" or "document" is likely referring to either an SEC filing or a company document.
-    - The current date is {datetime.now().strftime("%Y-%m-%d")}. Relative dates (e.g., "last 3 months") should be calculated based on this date.
+    - The current date is {datetime.now().strftime("%Y-%m-%d")}. Relative dates (e.g., "last 3 months" or "next 3 months") should be calculated based on this date.
     """
 
 
