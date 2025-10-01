@@ -108,7 +108,8 @@ This MCP server implements most Aiera API endpoints as tools, including:
 - `find_third_bridge_events` - Retrieve expert insight events from Third Bridge.
 - And many more...
 
-Some endpoints may require specific permissions based on a subscription plan. Talk to your Aiera representative for more details.
+Some endpoints may require specific permissions based on a subscription plan. 
+Talk to your Aiera representative for more details.
 
 ## Links
 - [Aiera REST Documentation](https://rest.aiera.com)
@@ -117,7 +118,8 @@ Some endpoints may require specific permissions based on a subscription plan. Ta
 
 ## Privacy Policy
 
-This MCP server interacts with Aiera's API to fetch relevant financial data. All data requests are subject to Aiera's privacy policy and terms of service, and require an active account.
+This MCP server interacts with Aiera's API to fetch relevant financial data. 
+All data requests are subject to Aiera's privacy policy and terms of service, and require an active account.
 
 - **Aiera Privacy Policy**: https://aiera.com/privacy-policy/
 - **Data Handling**: This server does not store or cache any user data.
