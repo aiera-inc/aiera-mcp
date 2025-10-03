@@ -22,10 +22,10 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[Dict[str, Any]]:
 
 # Initialize FastMCP server
 mcp = FastMCP(
-    name="Aiera MCP",
+    name="Aiera",
     stateless_http=True,
     json_response=True,
-    lifespan=app_lifespan
+    lifespan=app_lifespan,
 )
 
 # Base configuration
@@ -96,7 +96,8 @@ async def make_aiera_request(
 ) -> Dict[str, Any]:
     """Make a request to the Aiera REST API."""
     headers = DEFAULT_HEADERS.copy()
-    headers["X-API-KEY"] = api_key
+    headers["X-API-Key"] = api_key
+    headers["X-Special-Origin"] = "local_mcp"
 
     url = f"{AIERA_BASE_URL}{endpoint}"
 
