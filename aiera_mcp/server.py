@@ -269,6 +269,7 @@ async def find_filings(
     sector_id: Optional[int] = None,
     subsector_id: Optional[int] = None,
     form_number: Optional[str] = None,
+    include_raw: Optional[bool] = False,
     page: Optional[int] = None,
     page_size: Optional[int] = None
 ) -> Dict[str, Any]:
@@ -304,6 +305,9 @@ async def find_filings(
     if form_number:
         params["form_number"] = form_number
 
+    if include_raw:
+        params["include_raw"] = True
+
     if page:
         params["page"] = page
 
@@ -334,27 +338,9 @@ async def get_filing(filing_id: str) -> Dict[str, Any]:
         method="GET",
         endpoint=f"/filings-v1/{filing_id}",
         api_key=api_key,
-        params={},
-    )
-
-
-@mcp.tool()
-async def get_filing_text(filing_id: str) -> Dict[str, Any]:
-    """Retrieve the raw content from a single SEC filing."""
-    ctx = mcp.get_context()
-    client = ctx.request_context.lifespan_context["http_client"]
-    api_key = os.getenv("AIERA_API_KEY")
-
-    if not api_key:
-        raise ValueError("AIERA_API_KEY environment variable is required")
-
-    return await make_aiera_request(
-        client=client,
-        method="GET",
-        endpoint=f"/filings-v1/{filing_id}/text",
-        api_key=api_key,
-        params={},
-        return_type="text",
+        params={
+            "include_raw": True,
+        },
     )
 
 
@@ -548,6 +534,7 @@ async def find_company_docs(
     subsector_id: Optional[int] = None,
     categories: Optional[str] = None,
     keywords: Optional[str] = None,
+    include_raw: Optional[bool] = False,
     page: Optional[int] = None,
     page_size: Optional[int] = None
 ) -> Dict[str, Any]:
@@ -585,6 +572,9 @@ async def find_company_docs(
     if keywords:
         params["keywords"] = correct_keywords(keywords)
 
+    if include_raw:
+        params["include_raw"] = True
+
     if page:
         params["page"] = page
 
@@ -601,7 +591,7 @@ async def find_company_docs(
 
 
 @mcp.tool()
-async def get_company_doc_text(
+async def get_company_doc(
     company_doc_id: str,
 ) -> Dict[str, Any]:
     """Retrieve raw text from a specific company document."""
@@ -617,8 +607,9 @@ async def get_company_doc_text(
         method="GET",
         endpoint=f"/company-docs-v1/{company_doc_id}/text",
         api_key=api_key,
-        params={},
-        return_type="text",
+        params={
+            "include_raw": True,
+        },
     )
 
 
@@ -791,16 +782,15 @@ def get_api_documentation() -> str:
     -- sector_id and subsector_id can be found using the tool get_sectors_and_subsectors.
 
     ### Filings API
-    - find_filings: Retrieve SEC filings, filtered by start_date and end_date, and one of the following: bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id; and optionally by form_number. This endpoint supports pagination.
+    - find_filings: Retrieve SEC filings, filtered by start_date and end_date, and one of the following: bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id; and optionally by form_number. You can also choose whether to include or exclude the raw text of the filing in the response by using the boolean parameter include_raw. This endpoint supports pagination.
     -- Examples of form numbers include: 10-K, 10-Q, and 8-K. There are other possibilities, but those 3 will be the most commonly used.
     -- watchlist_id can be found using the tool get_available_watchlists.
     -- index_id can be found using the tool get_available_indexes.
     -- sector_id and subsector_id can be found using the tool get_sectors_and_subsectors.
-    - get_filing: Retrieve a single SEC filing. Filing IDs can be found with the tool find_filings.
-    - get_filing_text: Retrieve the raw content for a single SEC filing. Filings IDs can be found with the tool find_filings.
+    - get_filing: Retrieve a single SEC filing, including the raw text of the document. Filing IDs can be found with the tool find_filings.
 
     ### Company Docs API
-    - find_company_docs: Retrieve documents that have been published on company IR websites, filtered by a date range, and optionally by bloomberg_ticker (a comma-separated list), watchlist_id, index_id, sector_id, or subsector_id; or categories (a comma-separated list), or keywords (a comma-separated list). This endpoint supports pagination.
+    - find_company_docs: Retrieve documents that have been published on company IR websites, filtered by a date range, and optionally by bloomberg_ticker (a comma-separated list), watchlist_id, index_id, sector_id, or subsector_id; or categories (a comma-separated list), or keywords (a comma-separated list). You can also choose whether to include or exclude the raw text of the document in the response by using the boolean parameter include_raw. This endpoint supports pagination.
     -- Examples of a category include: annual_report, compliance, disclosure, earnings_release, slide_presentation, press_release. There are hundreds of other possibilities. The full list of possible categories can be found using the tool get_company_doc_categories.
     -- Examples of a keyword include: ESG, diversity, risk management. There are hundreds of other possibilities. The full list of possible keywords can be found using the tool get_company_doc_keywords.
     -- watchlist_id can be found using the tool get_available_watchlists.
@@ -808,7 +798,7 @@ def get_api_documentation() -> str:
     -- sector_id and subsector_id can be found using the tool get_sectors_and_subsectors.
     - get_company_doc_categories: Retrieve a list of all categories associated with company documents (and the number of documents associated with each category). This endpoint supports pagination, and can be filtered by a search term.
     - get_company_doc_keywords: Retrieve a list of all keywords associated with company documents (and the number of documents associated with each keyword). This endpoint supports pagination, and can be filtered by a search term.
-    - get_company_doc_text: Retrieve the raw content for a single company document. Document IDs can be found using the tool find_company_docs.
+    - get_company_doc: Retrieve a single company document, including the raw text of the document. Document IDs can be found using the tool find_company_docs.
     
     ### Third Bridge API
     - find_third_bridge_events: Retrieve expert insight events from Third Bridge, filtered by start_date and end_date. You can also include or exclude transcripts using the boolean parameter include_transcripts. This endpoint supports pagination.
