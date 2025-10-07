@@ -145,6 +145,7 @@ async def find_events(
     sector_id: Optional[str] = None,
     subsector_id: Optional[str] = None,
     event_type: Optional[str] = "earnings",
+    search: Optional[str] = None,
     include_transcripts: Optional[bool] = True,
     page: Optional[int] = None,
     page_size: Optional[int] = None,
@@ -179,6 +180,9 @@ async def find_events(
 
     if event_type:
         params["event_type"] = correct_event_type(event_type)
+
+    if search:
+        params["search"] = search
 
     if include_transcripts:
         params["include_transcripts"] = True
@@ -279,6 +283,7 @@ async def find_filings(
     sector_id: Optional[int] = None,
     subsector_id: Optional[int] = None,
     form_number: Optional[str] = None,
+    search: Optional[str] = None,
     include_raw: Optional[bool] = False,
     page: Optional[int] = None,
     page_size: Optional[int] = None
@@ -314,6 +319,9 @@ async def find_filings(
 
     if form_number:
         params["form_number"] = form_number
+
+    if search:
+        params["search"] = search
 
     if include_raw:
         params["include_raw"] = True
@@ -547,6 +555,7 @@ async def find_company_docs(
     subsector_id: Optional[int] = None,
     categories: Optional[str] = None,
     keywords: Optional[str] = None,
+    search: Optional[str] = None,
     include_raw: Optional[bool] = False,
     page: Optional[int] = None,
     page_size: Optional[int] = None
@@ -584,6 +593,9 @@ async def find_company_docs(
 
     if keywords:
         params["keywords"] = correct_keywords(keywords)
+
+    if search:
+        params["search"] = search
 
     if include_raw:
         params["include_raw"] = True
@@ -780,7 +792,7 @@ def get_api_documentation() -> str:
     - get_watchlist_constituents: Retrieve the list of all equities within a watchlist.
 
     ### Events API
-    - find_events: Retrieve events, filtered by start_date and end_date, and optionally by bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id; or event_type (a comma-separated list of event types). You can also choose whether to include or exclude transcripts in the response by using the boolean parameter include_transcripts. This endpoint supports pagination.
+    - find_events: Retrieve events, filtered by start_date and end_date, and optionally by bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id; or event_type (a comma-separated list of event types) or search. You can also choose whether to include or exclude transcripts in the response by using the boolean parameter include_transcripts. This endpoint supports pagination.
     -- Event type must be one of the following: earnings, presentation, shareholder_meeting, investor_meeting, special_situation
     -- Some common associations of event_type:
     --- Conferences will often be a reference to the event type: presentation
@@ -797,7 +809,7 @@ def get_api_documentation() -> str:
     -- sector_id and subsector_id can be found using the tool get_sectors_and_subsectors.
 
     ### Filings API
-    - find_filings: Retrieve SEC filings, filtered by start_date and end_date, and one of the following: bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id; and optionally by form_number. You can also choose whether to include or exclude the full raw text for each filing by using the boolean parameter include_raw. This endpoint supports pagination.
+    - find_filings: Retrieve SEC filings, filtered by start_date and end_date, and one of the following: bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id; and optionally by form_number or search. You can also choose whether to include or exclude the full raw text for each filing by using the boolean parameter include_raw. This endpoint supports pagination.
     -- Examples of form numbers include: 10-K, 10-Q, and 8-K. There are other possibilities, but those 3 will be the most commonly used.
     -- watchlist_id can be found using the tool get_available_watchlists.
     -- index_id can be found using the tool get_available_indexes.
@@ -805,7 +817,7 @@ def get_api_documentation() -> str:
     - get_filing: Retrieve a single SEC filing, including a summary (if available). You can also choose whether to include or exclude the full raw text of the filing by using the boolean parameter include_raw. Filing IDs can be found with the tool find_filings.
 
     ### Company Docs API
-    - find_company_docs: Retrieve documents that have been published on company IR websites, filtered by a date range, and optionally by bloomberg_ticker (a comma-separated list), watchlist_id, index_id, sector_id, or subsector_id; or categories (a comma-separated list), or keywords (a comma-separated list). You can also choose whether to include or exclude the full raw text for each document by using the boolean parameter include_raw. This endpoint supports pagination.
+    - find_company_docs: Retrieve documents that have been published on company IR websites, filtered by a date range, and optionally by bloomberg_ticker (a comma-separated list), watchlist_id, index_id, sector_id, or subsector_id; or categories (a comma-separated list), keywords (a comma-separated list), or search. You can also choose whether to include or exclude the full raw text for each document by using the boolean parameter include_raw. This endpoint supports pagination.
     -- Examples of a category include: annual_report, compliance, disclosure, earnings_release, slide_presentation, press_release. There are hundreds of other possibilities. The full list of possible categories can be found using the tool get_company_doc_categories.
     -- Examples of a keyword include: ESG, diversity, risk management. There are hundreds of other possibilities. The full list of possible keywords can be found using the tool get_company_doc_keywords.
     -- watchlist_id can be found using the tool get_available_watchlists.
