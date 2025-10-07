@@ -32,7 +32,7 @@ mcp = FastMCP(
 AIERA_BASE_URL = "https://premium.aiera.com/api"
 DEFAULT_HEADERS = {
     "Content-Type": "application/json",
-    "User-Agent": "Aiera-Public-MCP/1.0.0"
+    "User-Agent": "Aiera-MCP/1.0.0"
 }
 
 
