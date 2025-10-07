@@ -772,7 +772,7 @@ def get_api_documentation() -> str:
 
     ### Equity API
     - find_equities: Retrieve equities, filtered by various identifiers, such as bloomberg_ticker (a comma-separated list of tickers) or ric (a comma-separated list of RICs), or by a search term. This endpoint supports pagination.
-    - get_equity_summaries: Retrieve detailed summary information about one or more equities, filtered by bloomberg_ticker (a comma-separated list). Results include past and upcoming events, company leadership, recent financials, and index membership.
+    - get_equity_summaries: Retrieve detailed summary(s) about one or more equities, filtered by bloomberg_ticker (a comma-separated list). Summaries will include past and upcoming events, information about company leadership, recent financials, and within which indices the equity is included.
     - get_sectors_and_subsectors: Retrieve a list of all sectors and subsectors that can be queried.
     - get_available_indexes: Retrieve the list of available indexes that can be queried.
     - get_index_constituents: Retrieve the list of all equities within an index.
@@ -780,16 +780,16 @@ def get_api_documentation() -> str:
     - get_watchlist_constituents: Retrieve the list of all equities within a watchlist.
 
     ### Events API
-    - find_events: Retrieve events and associated transcripts, filtered by start_date and end_date, and optionally by bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id; or event_type (a comma-separated list of event types). You can also choose whether to include or exclude transcripts in the response by using the boolean parameter include_transcripts. This endpoint supports pagination.
-    -- Event type must be one of the following: earnings, presentation, shareholder_meeting, investor_meeting, special_situation.
-    -- Some common associations for event_type:
+    - find_events: Retrieve events, filtered by start_date and end_date, and optionally by bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id; or event_type (a comma-separated list of event types). You can also choose whether to include or exclude transcripts in the response by using the boolean parameter include_transcripts. This endpoint supports pagination.
+    -- Event type must be one of the following: earnings, presentation, shareholder_meeting, investor_meeting, special_situation
+    -- Some common associations of event_type:
     --- Conferences will often be a reference to the event type: presentation
     --- Annual meetings will often be a reference to the event type: shareholder_meeting
     --- Mergers, acquisitions, spinoffs, and other corporate actions will often be a reference to the event type: special_situation
     -- watchlist_id can be found using the tool get_available_watchlists.
     -- index_id can be found using the tool get_available_indexes.
     -- sector_id and subsector_id can be found using the tool get_sectors_and_subsectors.
-    - get_events: Retrieve one or more events, including transcripts, summaries, and other metadata, filtered by event_ids.
+    - get_events: Retrieve one or more events, including transcripts, summaries, and other metadata, filtered by event_ids. 
     -- Event IDs can be found using the find_events tool.
     - get_upcoming_events: Retrieve confirmed and estimated upcoming events, filtered by start_date and end_date, and one of the following: bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id.
     -- watchlist_id can be found using the tool get_available_watchlists.
@@ -797,7 +797,7 @@ def get_api_documentation() -> str:
     -- sector_id and subsector_id can be found using the tool get_sectors_and_subsectors.
 
     ### Filings API
-    - find_filings: Retrieve SEC filings, filtered by start_date and end_date, and one of the following: bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id; and optionally by form_number. You can also choose whether to include or exclude the full raw text of the filing by using the boolean parameter include_raw. This endpoint supports pagination.
+    - find_filings: Retrieve SEC filings, filtered by start_date and end_date, and one of the following: bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id; and optionally by form_number. You can also choose whether to include or exclude the full raw text for each filing by using the boolean parameter include_raw. This endpoint supports pagination.
     -- Examples of form numbers include: 10-K, 10-Q, and 8-K. There are other possibilities, but those 3 will be the most commonly used.
     -- watchlist_id can be found using the tool get_available_watchlists.
     -- index_id can be found using the tool get_available_indexes.
@@ -805,7 +805,7 @@ def get_api_documentation() -> str:
     - get_filing: Retrieve a single SEC filing, including a summary (if available). You can also choose whether to include or exclude the full raw text of the filing by using the boolean parameter include_raw. Filing IDs can be found with the tool find_filings.
 
     ### Company Docs API
-    - find_company_docs: Retrieve documents that have been published on company IR websites, filtered by a date range, and optionally by bloomberg_ticker (a comma-separated list), watchlist_id, index_id, sector_id, or subsector_id; or categories (a comma-separated list), or keywords (a comma-separated list). You can also choose whether to include or exclude the full raw text of the document by using the boolean parameter include_raw. This endpoint supports pagination.
+    - find_company_docs: Retrieve documents that have been published on company IR websites, filtered by a date range, and optionally by bloomberg_ticker (a comma-separated list), watchlist_id, index_id, sector_id, or subsector_id; or categories (a comma-separated list), or keywords (a comma-separated list). You can also choose whether to include or exclude the full raw text for each document by using the boolean parameter include_raw. This endpoint supports pagination.
     -- Examples of a category include: annual_report, compliance, disclosure, earnings_release, slide_presentation, press_release. There are hundreds of other possibilities. The full list of possible categories can be found using the tool get_company_doc_categories.
     -- Examples of a keyword include: ESG, diversity, risk management. There are hundreds of other possibilities. The full list of possible keywords can be found using the tool get_company_doc_keywords.
     -- watchlist_id can be found using the tool get_available_watchlists.
@@ -816,7 +816,7 @@ def get_api_documentation() -> str:
     - get_company_doc_keywords: Retrieve a list of all keywords associated with company documents (and the number of documents associated with each keyword). This endpoint supports pagination, and can be filtered by a search term.
     
     ### Third Bridge API
-    - find_third_bridge_events: Retrieve expert insight events from Third Bridge, filtered by start_date and end_date. You can also include or exclude transcripts using the boolean parameter include_transcripts. This endpoint supports pagination.
+    - find_third_bridge_events: Retrieve expert insight events from Third Bridge, filtered by start_date and end_date. You can also include or exclude transcripts for each event using the boolean parameter include_transcripts. This endpoint supports pagination.
     - get_third_bridge_events: Retrieve one or more expert insight events from Third Bridge, including transcripts, summaries, and other metadata. Event IDs can be found using the find_third_bridge_events tool.
     
     ## Authentication:
