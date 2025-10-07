@@ -450,7 +450,7 @@ async def get_equity_summaries(bloomberg_ticker: str) -> Dict[str, Any]:
     return await make_aiera_request(
         client=client,
         method="GET",
-        endpoint="/equities-v2/summaries",
+        endpoint="/chat-support/equity-summaries",
         api_key=api_key,
         params=params,
     )
@@ -729,7 +729,7 @@ async def find_third_bridge_events(
     return await make_aiera_request(
         client=client,
         method="GET",
-        endpoint="/events-v2",
+        endpoint="/chat-support/find-events",
         api_key=api_key,
         params=params,
     )
