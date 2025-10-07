@@ -711,6 +711,7 @@ async def get_company_doc_keywords(
 async def find_third_bridge_events(
     start_date: str,
     end_date: str,
+    search: Optional[str] = None,
     include_transcripts: Optional[bool] = True,
     page: Optional[int] = None,
     page_size: Optional[int] = None,
@@ -728,6 +729,9 @@ async def find_third_bridge_events(
         "end_date": end_date,
         "event_category": "thirdbridge",
     }
+
+    if search:
+        params["search"] = search
 
     if include_transcripts:
         params["include_transcripts"] = True
@@ -828,7 +832,7 @@ def get_api_documentation() -> str:
     - get_company_doc_keywords: Retrieve a list of all keywords associated with company documents (and the number of documents associated with each keyword). This endpoint supports pagination, and can be filtered by a search term.
     
     ### Third Bridge API
-    - find_third_bridge_events: Retrieve expert insight events from Third Bridge, filtered by start_date and end_date. You can also include or exclude transcripts for each event using the boolean parameter include_transcripts. This endpoint supports pagination.
+    - find_third_bridge_events: Retrieve expert insight events from Third Bridge, filtered by start_date and end_date, and optionally by search. You can also include or exclude transcripts for each event using the boolean parameter include_transcripts. This endpoint supports pagination.
     - get_third_bridge_events: Retrieve one or more expert insight events from Third Bridge, including transcripts, summaries, and other metadata. Event IDs can be found using the find_third_bridge_events tool.
     
     ## Authentication:
@@ -836,12 +840,13 @@ def get_api_documentation() -> str:
     Some endpoints may require specific permissions based on a subscription plan. Talk to your Aiera representative for more details.
 
     ## Parameter Notes:
-    - Endpoints that support pagination use 'page' and 'page_size' parameters.
+    - Tools that support pagination use 'page' and 'page_size' parameters.
     - Date parameters should be in ISO format (YYYY-MM-DD).
     - Bloomberg tickers are composed of a ticker and a country code joined by a colon (e.g., "AAPL:US").
     -- If information from multiple bloomberg tickers is needed, they should be represented as a comma-separated list (e.g., "AAPL:US,MSFT:US,GOOGL:US").
     - Comma-separated lists should not contain spaces (e.g., "keyword1,keyword2,keyword3").
     - Boolean parameters accept true/false values.
+    - Tools that support filtering by search should favor other filtering methods first if possible, as text search can be less precise and inefficient.
 
     ## Other Notes:
     - All dates and times are in eastern time (ET) unless specifically stated otherwise.
