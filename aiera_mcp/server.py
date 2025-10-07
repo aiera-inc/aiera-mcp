@@ -85,6 +85,16 @@ def correct_event_ids(event_ids: str) -> str:
     return event_ids
 
 
+def correct_event_type(event_type: str) -> str:
+    """Ensure event type is set correctly."""
+    if event_type.strip() == "conference":
+        event_type = "presentation"
+    elif event_type.strip() == "m&a":
+        event_type = "special_situation"
+
+    return event_type.strip()
+
+
 async def make_aiera_request(
     client: httpx.AsyncClient,
     method: str,
@@ -97,7 +107,7 @@ async def make_aiera_request(
     """Make a request to the Aiera REST API."""
     headers = DEFAULT_HEADERS.copy()
     headers["X-API-Key"] = api_key
-    headers["X-Special-Origin"] = "local_mcp"
+    headers["X-MCP-Origin"] = "local_mcp"
 
     url = f"{AIERA_BASE_URL}{endpoint}"
 
@@ -156,10 +166,10 @@ async def find_events(
         params["bloomberg_ticker"] = correct_bloomberg_ticker(bloomberg_ticker)
 
     if watchlist_id:
-        params["watchlist_id"] = correct_bloomberg_ticker(watchlist_id)
+        params["watchlist_id"] = watchlist_id
 
     if index_id:
-        params["index_id"] = correct_bloomberg_ticker(index_id)
+        params["index_id"] = index_id
 
     if sector_id:
         params["sector_id"] = sector_id
@@ -168,7 +178,7 @@ async def find_events(
         params["subsector_id"] = subsector_id
 
     if event_type:
-        params["event_type"] = event_type
+        params["event_type"] = correct_event_type(event_type)
 
     if include_transcripts:
         params["include_transcripts"] = True
@@ -771,10 +781,11 @@ def get_api_documentation() -> str:
 
     ### Events API
     - find_events: Retrieve events and associated transcripts, filtered by start_date and end_date, and optionally by bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id; or event_type (a comma-separated list of event types). You can also choose whether to include or exclude transcripts in the response by using the boolean parameter include_transcripts. This endpoint supports pagination.
-    -- Event types include: earnings, presentation, shareholder_meeting, investor_meeting, and special_situation.
-    -- Conferences are often event type presentation.
-    -- Annual meetings are often event type shareholder_meeting.
-    -- Mergers & acquisitions, spinoffs, and other corporate actions are often event type special_situation.
+    -- Event type must be one of the following: earnings, presentation, shareholder_meeting, investor_meeting, special_situation.
+    -- Some common associations for event_type:
+    --- Conferences will often be a reference to the event type: presentation
+    --- Annual meetings will often be a reference to the event type: shareholder_meeting
+    --- Mergers, acquisitions, spinoffs, and other corporate actions will often be a reference to the event type: special_situation
     -- watchlist_id can be found using the tool get_available_watchlists.
     -- index_id can be found using the tool get_available_indexes.
     -- sector_id and subsector_id can be found using the tool get_sectors_and_subsectors.
