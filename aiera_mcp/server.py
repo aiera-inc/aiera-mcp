@@ -42,17 +42,28 @@ def correct_bloomberg_ticker(ticker: str) -> str:
         tickers = ticker.split(",")
         reticker = []
         for ticker in tickers:
+            # if a space was substituted over colon...
             if ":" not in ticker and " " in ticker:
                 ticker_parts = ticker.split()
                 reticker.append(f"{ticker_parts[0]}:{ticker_parts[1]}")
+
+            # default to US if ticker doesn't include country code...
+            elif ":" not in ticker:
+                reticker.append(f"{ticker}:US")
+
             else:
                 reticker.append(ticker)
 
         return ",".join(reticker)
 
+    # if a space was substituted over colon...
     elif ":" not in ticker and " " in ticker:
         ticker_parts = ticker.split()
         return f"{ticker_parts[0]}:{ticker_parts[1]}"
+
+    # default to US if ticker doesn't include country code...
+    elif ":" not in ticker:
+        return f"{ticker}:US"
 
     return ticker
 
