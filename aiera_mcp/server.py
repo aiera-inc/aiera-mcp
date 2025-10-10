@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import json
 import os
 import httpx
 
@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import FastMCP, Icon
 from mcp.types import TextContent, Completion, CompletionArgument, CompletionContext
 from mcp.types import PromptReference, ResourceTemplateReference
 
@@ -32,8 +32,14 @@ mcp = FastMCP(
 AIERA_BASE_URL = "https://premium.aiera.com/api"
 DEFAULT_HEADERS = {
     "Content-Type": "application/json",
-    "User-Agent": "Aiera-MCP/1.0.0"
+    "User-Agent": "Aiera-MCP/1.0.0",
+    "X-MCP-Origin": "local_mcp"
 }
+
+# Prompts
+CITATION_PROMPT = """IMPORTANT: when referencing this data in your response, ALWAYS include inline citations using the information found in the `citation_information` block along with an incrementing counter, rendering as markdown, like this: [[1]](url "title")
+
+Where possible, include citations for specific facts, figures, or quotes. If multiple citations are relevant, include them all. You can reference the same citation multiple times if needed."""
 
 
 def correct_bloomberg_ticker(ticker: str) -> str:
@@ -114,11 +120,11 @@ async def make_aiera_request(
     params: Optional[Dict[str, Any]] = None,
     data: Optional[Dict[str, Any]] = None,
     return_type: str = "json",
+    instructions: str = None,
 ) -> Dict[str, Any]:
     """Make a request to the Aiera REST API."""
     headers = DEFAULT_HEADERS.copy()
     headers["X-API-Key"] = api_key
-    headers["X-MCP-Origin"] = "local_mcp"
 
     url = f"{AIERA_BASE_URL}{endpoint}"
 
@@ -135,15 +141,21 @@ async def make_aiera_request(
         raise Exception(f"API request failed: {response.status_code} - {response.text}")
 
     if return_type == "json":
-        data = response.json()
-        if type(data) == dict:
-            return data
-
-        else:
-            return {"result": data}
+        response_data = response.json()
 
     else:
-        return {"result": response.text}
+        response_data = response.text
+
+    if instructions:
+        return {
+            "instructions": instructions,
+            "response": response_data,
+        }
+
+    else:
+        return {
+            "response": response_data,
+        }
 
 
 @mcp.tool()
@@ -210,6 +222,7 @@ async def find_events(
         endpoint="/chat-support/find-events",
         api_key=api_key,
         params=params,
+        instructions=CITATION_PROMPT,
     )
 
 
@@ -234,6 +247,7 @@ async def get_events(event_ids: str) -> Dict[str, Any]:
         endpoint="/chat-support/find-events",
         api_key=api_key,
         params=params,
+        instructions=CITATION_PROMPT,
     )
 
 
@@ -281,6 +295,7 @@ async def get_upcoming_events(
         endpoint="/chat-support/estimated-and-upcoming-events",
         api_key=api_key,
         params=params,
+        instructions=CITATION_PROMPT,
     )
 
 
@@ -311,6 +326,7 @@ async def find_filings(
         "start_date": start_date,
         "end_date": end_date,
         "include_summaries": True,
+        "include_chat_support": True,
     }
 
     if bloomberg_ticker:
@@ -349,6 +365,7 @@ async def find_filings(
         endpoint="/filings-v1",
         api_key=api_key,
         params=params,
+        instructions=CITATION_PROMPT,
     )
 
 
@@ -372,7 +389,9 @@ async def get_filing(
         api_key=api_key,
         params={
             "include_raw": include_raw,
+            "include_chat_support": True,
         },
+        instructions=CITATION_PROMPT,
     )
 
 
@@ -582,6 +601,7 @@ async def find_company_docs(
     params = {
         "start_date": start_date,
         "end_date": end_date,
+        "include_chat_support": True,
     }
 
     if bloomberg_ticker:
@@ -623,6 +643,7 @@ async def find_company_docs(
         endpoint="/company-docs-v1",
         api_key=api_key,
         params=params,
+        instructions=CITATION_PROMPT,
     )
 
 
@@ -646,7 +667,9 @@ async def get_company_doc(
         api_key=api_key,
         params={
             "include_raw": include_raw,
+            "include_chat_support": True,
         },
+        instructions=CITATION_PROMPT,
     )
 
 
@@ -759,6 +782,7 @@ async def find_third_bridge_events(
         endpoint="/chat-support/find-events",
         api_key=api_key,
         params=params,
+        instructions=CITATION_PROMPT,
     )
 
 
@@ -784,10 +808,11 @@ async def get_third_bridge_events(event_ids: str) -> Dict[str, Any]:
         endpoint="/chat-support/find-events",
         api_key=api_key,
         params=params,
+        instructions=CITATION_PROMPT,
     )
 
 
-@mcp.resource("aiera://api/docs")
+@mcp.resource(uri="aiera://api/docs")
 def get_api_documentation() -> str:
     """Provide documentation for the Aiera API."""
     return f"""
@@ -849,7 +874,7 @@ def get_api_documentation() -> str:
     ## Authentication:
     All endpoints require the AIERA_API_KEY environment variable to be set.
     Some endpoints may require specific permissions based on a subscription plan. Talk to your Aiera representative for more details.
-
+    
     ## Parameter Notes:
     - Tools that support pagination use 'page' and 'page_size' parameters.
     - Date parameters should be in ISO format (YYYY-MM-DD).
