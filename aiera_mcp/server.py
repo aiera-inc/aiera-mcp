@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import json
 import os
 import httpx
 
@@ -8,7 +7,7 @@ from typing import Any, Dict, Optional
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 
-from mcp.server.fastmcp import FastMCP, Icon
+from mcp.server.fastmcp import FastMCP
 from mcp.types import TextContent, Completion, CompletionArgument, CompletionContext
 from mcp.types import PromptReference, ResourceTemplateReference
 
