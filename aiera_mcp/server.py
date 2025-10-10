@@ -37,9 +37,11 @@ DEFAULT_HEADERS = {
 }
 
 # Prompts
-CITATION_PROMPT = """IMPORTANT: when referencing this data in your response, ALWAYS include inline citations using the information found in the `citation_information` block along with an incrementing counter, rendering as markdown, like this: [[1]](url "title")
+CITATION_PROMPT = """IMPORTANT: when referencing this data in your response, ALWAYS include inline citations using the information found in the `citation_information` block, along with an incrementing counter. Render these citations as markdown, like this: [[1]](url "title")
 
-Where possible, include citations for specific facts, figures, or quotes. If multiple citations are relevant, include them all. You can reference the same citation multiple times if needed."""
+Where possible, include citations for each fact, figure, or quote pulled from a transcript by using transcript-level citations (e.g. over event-level citations.
+
+If multiple citations are relevant, include them all. You can reference the same citation multiple times if needed."""
 
 
 def correct_bloomberg_ticker(ticker: str) -> str:
