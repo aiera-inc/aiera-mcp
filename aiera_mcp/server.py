@@ -36,13 +36,6 @@ DEFAULT_HEADERS = {
     "X-MCP-Origin": "local_mcp"
 }
 
-# Prompts
-CITATION_PROMPT = """IMPORTANT: when referencing this data in your response, ALWAYS include inline citations using the information found in the `citation_information` block, along with an incrementing counter. Render these citations as markdown, like this: [[1]](url "title")
-
-Where possible, include citations for each fact, figure, or quote pulled from a transcript by using transcript-level citations (e.g. over event-level citations.
-
-If multiple citations are relevant, include them all. You can reference the same citation multiple times if needed."""
-
 
 def correct_bloomberg_ticker(ticker: str) -> str:
     """Ensure bloomberg ticker is in the correct format (ticker:country_code)."""
@@ -224,7 +217,6 @@ async def find_events(
         endpoint="/chat-support/find-events",
         api_key=api_key,
         params=params,
-        instructions=CITATION_PROMPT,
     )
 
 
@@ -249,7 +241,6 @@ async def get_events(event_ids: str) -> Dict[str, Any]:
         endpoint="/chat-support/find-events",
         api_key=api_key,
         params=params,
-        instructions=CITATION_PROMPT,
     )
 
 
@@ -297,7 +288,6 @@ async def get_upcoming_events(
         endpoint="/chat-support/estimated-and-upcoming-events",
         api_key=api_key,
         params=params,
-        instructions=CITATION_PROMPT,
     )
 
 
@@ -367,7 +357,6 @@ async def find_filings(
         endpoint="/filings-v1",
         api_key=api_key,
         params=params,
-        instructions=CITATION_PROMPT,
     )
 
 
@@ -393,7 +382,6 @@ async def get_filing(
             "include_raw": include_raw,
             "include_chat_support": True,
         },
-        instructions=CITATION_PROMPT,
     )
 
 
@@ -645,7 +633,6 @@ async def find_company_docs(
         endpoint="/company-docs-v1",
         api_key=api_key,
         params=params,
-        instructions=CITATION_PROMPT,
     )
 
 
@@ -671,7 +658,6 @@ async def get_company_doc(
             "include_raw": include_raw,
             "include_chat_support": True,
         },
-        instructions=CITATION_PROMPT,
     )
 
 
@@ -784,7 +770,6 @@ async def find_third_bridge_events(
         endpoint="/chat-support/find-events",
         api_key=api_key,
         params=params,
-        instructions=CITATION_PROMPT,
     )
 
 
@@ -810,7 +795,6 @@ async def get_third_bridge_events(event_ids: str) -> Dict[str, Any]:
         endpoint="/chat-support/find-events",
         api_key=api_key,
         params=params,
-        instructions=CITATION_PROMPT,
     )
 
 
