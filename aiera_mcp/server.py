@@ -165,7 +165,6 @@ async def find_events(
     subsector_id: Optional[int] = None,
     event_type: Optional[str] = "earnings",
     search: Optional[str] = None,
-    include_transcripts: Optional[bool] = True,
     page: Optional[int] = 1,
     page_size: Optional[int] = DEFAULT_PAGE_SIZE,
 ) -> Dict[str, Any]:
@@ -180,6 +179,7 @@ async def find_events(
     params = {
         "start_date": start_date,
         "end_date": end_date,
+        "include_transcripts": False,
     }
 
     if bloomberg_ticker:
@@ -202,9 +202,6 @@ async def find_events(
 
     if search:
         params["search"] = search
-
-    if include_transcripts:
-        params["include_transcripts"] = True
 
     if page:
         params["page"] = page
@@ -735,7 +732,6 @@ async def find_third_bridge_events(
     start_date: str,
     end_date: str,
     search: Optional[str] = None,
-    include_transcripts: Optional[bool] = True,
     page: Optional[int] = 1,
     page_size: Optional[int] = DEFAULT_PAGE_SIZE,
 ) -> Dict[str, Any]:
@@ -751,13 +747,11 @@ async def find_third_bridge_events(
         "start_date": start_date,
         "end_date": end_date,
         "event_category": "thirdbridge",
+        "include_transcripts": False,
     }
 
     if search:
         params["search"] = search
-
-    if include_transcripts:
-        params["include_transcripts"] = True
 
     if page:
         params["page"] = page
@@ -819,7 +813,7 @@ def get_api_documentation() -> str:
     - get_watchlist_constituents: Retrieve the list of all equities within a watchlist.
 
     ### Events API
-    - find_events: Retrieve events, filtered by start_date and end_date, and optionally by bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id; or event_type (a comma-separated list of event types) or search. You can also choose whether to include or exclude transcripts in the response by using the boolean parameter include_transcripts. This endpoint supports pagination.
+    - find_events: Retrieve events, filtered by start_date and end_date, and optionally by bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id; or event_type (a comma-separated list of event types) or search. This endpoint supports pagination.
     -- Event type must be one of the following: earnings, presentation, shareholder_meeting, investor_meeting, special_situation
     -- Some common associations of event_type:
     --- Conferences will often be a reference to the event type: presentation
@@ -855,7 +849,7 @@ def get_api_documentation() -> str:
     - get_company_doc_keywords: Retrieve a list of all keywords associated with company documents (and the number of documents associated with each keyword). This endpoint supports pagination, and can be filtered by a search term.
     
     ### Third Bridge API
-    - find_third_bridge_events: Retrieve expert insight events from Third Bridge, filtered by start_date and end_date, and optionally by search. You can also include or exclude transcripts for each event using the boolean parameter include_transcripts. This endpoint supports pagination.
+    - find_third_bridge_events: Retrieve expert insight events from Third Bridge, filtered by start_date and end_date, and optionally by search. This endpoint supports pagination.
     - get_third_bridge_events: Retrieve one or more expert insight events from Third Bridge, including transcripts, summaries, and other metadata. Event IDs can be found using the find_third_bridge_events tool.
     
     ## Authentication:
