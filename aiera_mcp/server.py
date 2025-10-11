@@ -29,6 +29,7 @@ mcp = FastMCP(
 )
 
 # Base configuration
+DEFAULT_PAGE_SIZE = 25
 AIERA_BASE_URL = "https://premium.aiera.com/api"
 DEFAULT_HEADERS = {
     "Content-Type": "application/json",
@@ -160,13 +161,13 @@ async def find_events(
     bloomberg_ticker: Optional[str] = None,
     watchlist_id: Optional[int] = None,
     index_id: Optional[int] = None,
-    sector_id: Optional[str] = None,
-    subsector_id: Optional[str] = None,
+    sector_id: Optional[int] = None,
+    subsector_id: Optional[int] = None,
     event_type: Optional[str] = "earnings",
     search: Optional[str] = None,
     include_transcripts: Optional[bool] = True,
-    page: Optional[int] = None,
-    page_size: Optional[int] = None,
+    page: Optional[int] = 1,
+    page_size: Optional[int] = DEFAULT_PAGE_SIZE,
 ) -> Dict[str, Any]:
     """Retrieve events, filtered by a date range, and (optionally) ticker(s), watchlist, index, sector, or subsector; or event type(s)."""
     ctx = mcp.get_context()
@@ -303,8 +304,8 @@ async def find_filings(
     form_number: Optional[str] = None,
     search: Optional[str] = None,
     include_raw: Optional[bool] = False,
-    page: Optional[int] = None,
-    page_size: Optional[int] = None
+    page: Optional[int] = 1,
+    page_size: Optional[int] = DEFAULT_PAGE_SIZE
 ) -> Dict[str, Any]:
     """Retrieve SEC filings, filtered by a date range, and one of the following: ticker(s), watchlist, index, sector, or subsector; and (optionally) by a form number."""
     ctx = mcp.get_context()
@@ -393,8 +394,8 @@ async def find_equities(
     ticker: Optional[str] = None,
     permid: Optional[str] = None,
     search: Optional[str] = None,
-    page: Optional[int] = None,
-    page_size: Optional[int] = None,
+    page: Optional[int] = 1,
+    page_size: Optional[int] = DEFAULT_PAGE_SIZE,
 ) -> Dict[str, Any]:
     """Retrieve equities, filtered by various identifiers, such as ticker, ISIN, or RIC; or by a search term."""
     ctx = mcp.get_context()
@@ -577,8 +578,8 @@ async def find_company_docs(
     keywords: Optional[str] = None,
     search: Optional[str] = None,
     include_raw: Optional[bool] = False,
-    page: Optional[int] = None,
-    page_size: Optional[int] = None
+    page: Optional[int] = 1,
+    page_size: Optional[int] = DEFAULT_PAGE_SIZE
 ) -> Dict[str, Any]:
     """Retrieve documents that have been published by a company, filtered by a date range, and (optionally) by ticker(s), watchlist, index, sector, or subsector; or category(s) or keyword(s)."""
     ctx = mcp.get_context()
@@ -664,8 +665,8 @@ async def get_company_doc(
 @mcp.tool()
 async def get_company_doc_categories(
     search: Optional[str] = None,
-    page: Optional[int] = None,
-    page_size: Optional[int] = None,
+    page: Optional[int] = 1,
+    page_size: Optional[int] = DEFAULT_PAGE_SIZE,
 ) -> Dict[str, Any]:
     """Retrieve a list of all categories associated with company documents."""
     ctx = mcp.get_context()
@@ -698,8 +699,8 @@ async def get_company_doc_categories(
 @mcp.tool()
 async def get_company_doc_keywords(
     search: Optional[str] = None,
-    page: Optional[int] = None,
-    page_size: Optional[int] = None,
+    page: Optional[int] = 1,
+    page_size: Optional[int] = DEFAULT_PAGE_SIZE,
 ) -> Dict[str, Any]:
     """Retrieve a list of all keywords associated with company documents."""
     ctx = mcp.get_context()
@@ -735,8 +736,8 @@ async def find_third_bridge_events(
     end_date: str,
     search: Optional[str] = None,
     include_transcripts: Optional[bool] = True,
-    page: Optional[int] = None,
-    page_size: Optional[int] = None,
+    page: Optional[int] = 1,
+    page_size: Optional[int] = DEFAULT_PAGE_SIZE,
 ) -> Dict[str, Any]:
     """Retrieve a list of expert insight events from Third Bridge, filtering by a date range."""
     ctx = mcp.get_context()
@@ -862,7 +863,7 @@ def get_api_documentation() -> str:
     Some endpoints may require specific permissions based on a subscription plan. Talk to your Aiera representative for more details.
     
     ## Parameter Notes:
-    - Tools that support pagination use 'page' and 'page_size' parameters.
+    - Tools that support pagination use 'page' and 'page_size' parameters. By default, page is set to 1 and page_size is set to {DEFAULT_PAGE_SIZE}.
     - Date parameters should be in ISO format (YYYY-MM-DD).
     - Bloomberg tickers are composed of a ticker and a country code joined by a colon (e.g., "AAPL:US").
     -- If information from multiple bloomberg tickers is needed, they should be represented as a comma-separated list (e.g., "AAPL:US,MSFT:US,GOOGL:US").
