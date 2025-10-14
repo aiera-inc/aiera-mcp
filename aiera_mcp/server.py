@@ -86,16 +86,16 @@ def correct_categories(categories: str) -> str:
     return categories
 
 
-def correct_event_ids(event_ids: str) -> str:
-    """Ensure event ID lists have comma-separation."""
-    if "," not in event_ids and " " in event_ids:
+def correct_provided_ids(provided_ids: str) -> str:
+    """Ensure provided ID lists have comma-separation."""
+    if "," not in provided_ids and " " in provided_ids:
         corrected = []
-        for event_id in event_ids.split(","):
-            corrected.append(event_id.strip())
+        for provided_id in provided_ids.split(","):
+            corrected.append(provided_id.strip())
 
         return ",".join(corrected)
 
-    return event_ids
+    return provided_ids
 
 
 def correct_event_type(event_type: str) -> str:
@@ -229,7 +229,7 @@ async def get_events(event_ids: str) -> Dict[str, Any]:
         raise ValueError("AIERA_API_KEY environment variable is required")
 
     params = {
-        "event_ids": correct_event_ids(event_ids),
+        "event_ids": correct_provided_ids(event_ids),
         "include_transcripts": True,
     }
 
@@ -300,7 +300,6 @@ async def find_filings(
     subsector_id: Optional[int] = None,
     form_number: Optional[str] = None,
     search: Optional[str] = None,
-    include_raw: Optional[bool] = False,
     page: Optional[int] = 1,
     page_size: Optional[int] = DEFAULT_PAGE_SIZE
 ) -> Dict[str, Any]:
@@ -315,8 +314,6 @@ async def find_filings(
     params = {
         "start_date": start_date,
         "end_date": end_date,
-        "include_summaries": True,
-        "include_chat_support": True,
     }
 
     if bloomberg_ticker:
@@ -340,9 +337,6 @@ async def find_filings(
     if search:
         params["search"] = search
 
-    if include_raw:
-        params["include_raw"] = True
-
     if page:
         params["page"] = page
 
@@ -352,17 +346,14 @@ async def find_filings(
     return await make_aiera_request(
         client=client,
         method="GET",
-        endpoint="/filings-v1",
+        endpoint="/chat-support/find-filings",
         api_key=api_key,
         params=params,
     )
 
 
 @mcp.tool()
-async def get_filing(
-    filing_id: str,
-    include_raw: Optional[bool] = True,
-) -> Dict[str, Any]:
+async def get_filings(filing_ids: str) -> Dict[str, Any]:
     """Retrieve a single SEC filing."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
@@ -371,15 +362,17 @@ async def get_filing(
     if not api_key:
         raise ValueError("AIERA_API_KEY environment variable is required")
 
+    params = {
+        "filing_ids": correct_provided_ids(filing_ids),
+        "include_content": True,
+    }
+
     return await make_aiera_request(
         client=client,
         method="GET",
-        endpoint=f"/filings-v1/{filing_id}",
+        endpoint="/chat-support/find-filings",
         api_key=api_key,
-        params={
-            "include_raw": include_raw,
-            "include_chat_support": True,
-        },
+        params=params,
     )
 
 
@@ -574,7 +567,6 @@ async def find_company_docs(
     categories: Optional[str] = None,
     keywords: Optional[str] = None,
     search: Optional[str] = None,
-    include_raw: Optional[bool] = False,
     page: Optional[int] = 1,
     page_size: Optional[int] = DEFAULT_PAGE_SIZE
 ) -> Dict[str, Any]:
@@ -589,7 +581,6 @@ async def find_company_docs(
     params = {
         "start_date": start_date,
         "end_date": end_date,
-        "include_chat_support": True,
     }
 
     if bloomberg_ticker:
@@ -616,9 +607,6 @@ async def find_company_docs(
     if search:
         params["search"] = search
 
-    if include_raw:
-        params["include_raw"] = True
-
     if page:
         params["page"] = page
 
@@ -628,17 +616,14 @@ async def find_company_docs(
     return await make_aiera_request(
         client=client,
         method="GET",
-        endpoint="/company-docs-v1",
+        endpoint="/chat-support/find-company-docs",
         api_key=api_key,
         params=params,
     )
 
 
 @mcp.tool()
-async def get_company_doc(
-    company_doc_id: str,
-    include_raw: Optional[bool] = True,
-) -> Dict[str, Any]:
+async def get_company_docs(company_doc_ids: str) -> Dict[str, Any]:
     """Retrieve raw text from a specific company document."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
@@ -647,15 +632,17 @@ async def get_company_doc(
     if not api_key:
         raise ValueError("AIERA_API_KEY environment variable is required")
 
+    params = {
+        "company_doc_ids": correct_provided_ids(company_doc_ids),
+        "include_content": True,
+    }
+
     return await make_aiera_request(
         client=client,
         method="GET",
-        endpoint=f"/company-docs-v1/{company_doc_id}/text",
+        endpoint="/chat-support/find-company-docs",
         api_key=api_key,
-        params={
-            "include_raw": include_raw,
-            "include_chat_support": True,
-        },
+        params=params,
     )
 
 
@@ -779,7 +766,7 @@ async def get_third_bridge_events(event_ids: str) -> Dict[str, Any]:
         raise ValueError("AIERA_API_KEY environment variable is required")
 
     params = {
-        "event_ids": correct_event_ids(event_ids),
+        "event_ids": correct_provided_ids(event_ids),
         "event_category": "thirdbridge",
         "include_transcripts": True,
     }
@@ -830,32 +817,35 @@ def get_api_documentation() -> str:
     -- sector_id and subsector_id can be found using the tool get_sectors_and_subsectors.
 
     ### Filings API
-    - find_filings: Retrieve SEC filings, filtered by start_date and end_date, and one of the following: bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id; and optionally by form_number or search. You can also choose whether to include or exclude the full raw text for each filing by using the boolean parameter include_raw. This endpoint supports pagination.
+    - find_filings: Retrieve SEC filings, filtered by start_date and end_date, and one of the following: bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id; and optionally by form_number or search. This endpoint supports pagination.
     -- Examples of form numbers include: 10-K, 10-Q, and 8-K. There are other possibilities, but those 3 will be the most commonly used.
     -- watchlist_id can be found using the tool get_available_watchlists.
     -- index_id can be found using the tool get_available_indexes.
     -- sector_id and subsector_id can be found using the tool get_sectors_and_subsectors.
-    - get_filing: Retrieve a single SEC filing, including a summary (if available). You can also choose whether to include or exclude the full raw text of the filing by using the boolean parameter include_raw. Filing IDs can be found with the tool find_filings.
-
+    - get_filings: Retrieve one or more SEC filings, including summaries, content, and other metadata, filtered by filing_ids.
+    -- Filing IDs can be found with the tool find_filings.
+    
     ### Company Docs API
-    - find_company_docs: Retrieve documents that have been published on company IR websites, filtered by a date range, and optionally by bloomberg_ticker (a comma-separated list), watchlist_id, index_id, sector_id, or subsector_id; or categories (a comma-separated list), keywords (a comma-separated list), or search. You can also choose whether to include or exclude the full raw text for each document by using the boolean parameter include_raw. This endpoint supports pagination.
+    - find_company_docs: Retrieve documents that have been published on company IR websites, filtered by a date range, and optionally by bloomberg_ticker (a comma-separated list), watchlist_id, index_id, sector_id, or subsector_id; or categories (a comma-separated list), keywords (a comma-separated list), or search. This endpoint supports pagination.
     -- Examples of a category include: annual_report, compliance, disclosure, earnings_release, slide_presentation, press_release. There are hundreds of other possibilities. The full list of possible categories can be found using the tool get_company_doc_categories.
     -- Examples of a keyword include: ESG, diversity, risk management. There are hundreds of other possibilities. The full list of possible keywords can be found using the tool get_company_doc_keywords.
     -- watchlist_id can be found using the tool get_available_watchlists.
     -- index_id can be found using the tool get_available_indexes.
     -- sector_id and subsector_id can be found using the tool get_sectors_and_subsectors.
-    - get_company_doc: Retrieve a single company document, including a summary (if available). You can also choose whether to include or exclude the full raw text of the document by using the boolean parameter include_raw. Document IDs can be found using the tool find_company_docs.
+    - get_company_docs: Retrieve one or more company documents, including a summary and content, filtered by company_doc_ids. 
+    -- Document IDs can be found using the tool find_company_docs.
     - get_company_doc_categories: Retrieve a list of all categories associated with company documents (and the number of documents associated with each category). This endpoint supports pagination, and can be filtered by a search term.
     - get_company_doc_keywords: Retrieve a list of all keywords associated with company documents (and the number of documents associated with each keyword). This endpoint supports pagination, and can be filtered by a search term.
     
     ### Third Bridge API
     - find_third_bridge_events: Retrieve expert insight events from Third Bridge, filtered by start_date and end_date, and optionally by search. This endpoint supports pagination.
-    - get_third_bridge_events: Retrieve one or more expert insight events from Third Bridge, including transcripts, summaries, and other metadata. Event IDs can be found using the find_third_bridge_events tool.
+    - get_third_bridge_events: Retrieve one or more expert insight events from Third Bridge, including transcripts, summaries, and other metadata. 
+    -- Event IDs can be found using the tool find_third_bridge_events.
     
     ## Authentication:
     All endpoints require the AIERA_API_KEY environment variable to be set.
-    Some endpoints may require specific permissions based on a subscription plan. Talk to your Aiera representative for more details.
-    
+    Some endpoints may require specific permissions based on a subscription plan. If access is denied, the user should talk to their Aiera representative about gaining access.
+
     ## Parameter Notes:
     - Tools that support pagination use 'page' and 'page_size' parameters. By default, page is set to 1 and page_size is set to {DEFAULT_PAGE_SIZE}.
     - Date parameters should be in ISO format (YYYY-MM-DD).
