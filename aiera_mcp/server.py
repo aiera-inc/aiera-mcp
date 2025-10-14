@@ -353,17 +353,16 @@ async def find_filings(
 
 
 @mcp.tool()
-async def get_filings(filing_ids: str) -> Dict[str, Any]:
+async def get_filing(filing_id: str) -> Dict[str, Any]:
     """Retrieve a single SEC filing."""
-    ctx = mcp.get_context()
-    client = ctx.request_context.lifespan_context["http_client"]
-    api_key = os.getenv("AIERA_API_KEY")
+    logger.info("tool called: get_filing")
 
-    if not api_key:
-        raise ValueError("AIERA_API_KEY environment variable is required")
+    ctx = mcp.get_context()
+    client = await get_http_client(ctx)
+    api_key = await get_api_key_from_context(ctx)
 
     params = {
-        "filing_ids": correct_provided_ids(filing_ids),
+        "filing_ids": str(filing_id),
         "include_content": True,
     }
 
@@ -373,6 +372,7 @@ async def get_filings(filing_ids: str) -> Dict[str, Any]:
         endpoint="/chat-support/find-filings",
         api_key=api_key,
         params=params,
+        instructions=CITATION_PROMPT if FROM_UI_CLIENT else None,
     )
 
 
@@ -623,17 +623,16 @@ async def find_company_docs(
 
 
 @mcp.tool()
-async def get_company_docs(company_doc_ids: str) -> Dict[str, Any]:
+async def get_company_doc(company_doc_id: str) -> Dict[str, Any]:
     """Retrieve raw text from a specific company document."""
-    ctx = mcp.get_context()
-    client = ctx.request_context.lifespan_context["http_client"]
-    api_key = os.getenv("AIERA_API_KEY")
+    logger.info("tool called: get_company_doc")
 
-    if not api_key:
-        raise ValueError("AIERA_API_KEY environment variable is required")
+    ctx = mcp.get_context()
+    client = await get_http_client(ctx)
+    api_key = await get_api_key_from_context(ctx)
 
     params = {
-        "company_doc_ids": correct_provided_ids(company_doc_ids),
+        "company_doc_ids": str(company_doc_id),
         "include_content": True,
     }
 
@@ -643,6 +642,7 @@ async def get_company_docs(company_doc_ids: str) -> Dict[str, Any]:
         endpoint="/chat-support/find-company-docs",
         api_key=api_key,
         params=params,
+        instructions=CITATION_PROMPT if FROM_UI_CLIENT else None,
     )
 
 
@@ -811,6 +811,7 @@ def get_api_documentation() -> str:
     -- sector_id and subsector_id can be found using the tool get_sectors_and_subsectors.
     - get_events: Retrieve one or more events, including transcripts, summaries, and other metadata, filtered by event_ids. 
     -- Event IDs can be found using the find_events tool.
+    -- Due to the size of the data being returned, don't query more than 3 event IDs at a time. If you want to retrieve more than 3 events, make multiple sequential calls.
     - get_upcoming_events: Retrieve confirmed and estimated upcoming events, filtered by start_date and end_date, and one of the following: bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id.
     -- watchlist_id can be found using the tool get_available_watchlists.
     -- index_id can be found using the tool get_available_indexes.
@@ -822,9 +823,10 @@ def get_api_documentation() -> str:
     -- watchlist_id can be found using the tool get_available_watchlists.
     -- index_id can be found using the tool get_available_indexes.
     -- sector_id and subsector_id can be found using the tool get_sectors_and_subsectors.
-    - get_filings: Retrieve one or more SEC filings, including summaries, content, and other metadata, filtered by filing_ids.
+    - get_filing: Retrieve an SEC filing, including summaries, content, and other metadata, filtered by filing_id.
     -- Filing IDs can be found with the tool find_filings.
-    
+    -- If you want to retrieve more than one filing, make multiple sequential calls.
+
     ### Company Docs API
     - find_company_docs: Retrieve documents that have been published on company IR websites, filtered by a date range, and optionally by bloomberg_ticker (a comma-separated list), watchlist_id, index_id, sector_id, or subsector_id; or categories (a comma-separated list), keywords (a comma-separated list), or search. This endpoint supports pagination.
     -- Examples of a category include: annual_report, compliance, disclosure, earnings_release, slide_presentation, press_release. There are hundreds of other possibilities. The full list of possible categories can be found using the tool get_company_doc_categories.
@@ -832,8 +834,9 @@ def get_api_documentation() -> str:
     -- watchlist_id can be found using the tool get_available_watchlists.
     -- index_id can be found using the tool get_available_indexes.
     -- sector_id and subsector_id can be found using the tool get_sectors_and_subsectors.
-    - get_company_docs: Retrieve one or more company documents, including a summary and content, filtered by company_doc_ids. 
+    - get_company_doc: Retrieve a company document, including a summary and content, filtered by company_doc_id. 
     -- Document IDs can be found using the tool find_company_docs.
+    -- If you want to retrieve more than one company document, make multiple sequential calls.
     - get_company_doc_categories: Retrieve a list of all categories associated with company documents (and the number of documents associated with each category). This endpoint supports pagination, and can be filtered by a search term.
     - get_company_doc_keywords: Retrieve a list of all keywords associated with company documents (and the number of documents associated with each keyword). This endpoint supports pagination, and can be filtered by a search term.
     
@@ -841,7 +844,8 @@ def get_api_documentation() -> str:
     - find_third_bridge_events: Retrieve expert insight events from Third Bridge, filtered by start_date and end_date, and optionally by search. This endpoint supports pagination.
     - get_third_bridge_events: Retrieve one or more expert insight events from Third Bridge, including transcripts, summaries, and other metadata. 
     -- Event IDs can be found using the tool find_third_bridge_events.
-    
+    -- Due to the size of the data being returned, don't query more than 3 event IDs at a time. If you want to retrieve more than 3 events, make multiple sequential calls.
+
     ## Authentication:
     All endpoints require the AIERA_API_KEY environment variable to be set.
     Some endpoints may require specific permissions based on a subscription plan. If access is denied, the user should talk to their Aiera representative about gaining access.
