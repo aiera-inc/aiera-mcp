@@ -168,7 +168,7 @@ async def find_events(
     page: Optional[int] = 1,
     page_size: Optional[int] = DEFAULT_PAGE_SIZE,
 ) -> Dict[str, Any]:
-    """Retrieve events, filtered by a date range, and (optionally) ticker(s), watchlist, index, sector, or subsector; or event type(s)."""
+    """Find events, filtered by a date range, and (optionally) ticker(s), watchlist, index, sector, or subsector; or event type(s) or search."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -219,8 +219,8 @@ async def find_events(
 
 
 @mcp.tool()
-async def get_events(event_ids: str) -> Dict[str, Any]:
-    """Retrieve one or more events, including transcripts, summaries, and other metadata."""
+async def get_event(event_id: str) -> Dict[str, Any]:
+    """Retrieve an event, including transcripts, summaries, and other metadata."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -229,7 +229,7 @@ async def get_events(event_ids: str) -> Dict[str, Any]:
         raise ValueError("AIERA_API_KEY environment variable is required")
 
     params = {
-        "event_ids": correct_provided_ids(event_ids),
+        "event_ids": str(event_id),
         "include_transcripts": True,
     }
 
@@ -303,7 +303,7 @@ async def find_filings(
     page: Optional[int] = 1,
     page_size: Optional[int] = DEFAULT_PAGE_SIZE
 ) -> Dict[str, Any]:
-    """Retrieve SEC filings, filtered by a date range, and one of the following: ticker(s), watchlist, index, sector, or subsector; and (optionally) by a form number."""
+    """Find SEC filings, filtered by a date range, and one of the following: ticker(s), watchlist, index, sector, or subsector; and (optionally) by a form number or search."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -354,7 +354,7 @@ async def find_filings(
 
 @mcp.tool()
 async def get_filing(filing_id: str) -> Dict[str, Any]:
-    """Retrieve a single SEC filing."""
+    """Retrieve an SEC filing, including a summary and other metadata."""
     logger.info("tool called: get_filing")
 
     ctx = mcp.get_context()
@@ -570,7 +570,7 @@ async def find_company_docs(
     page: Optional[int] = 1,
     page_size: Optional[int] = DEFAULT_PAGE_SIZE
 ) -> Dict[str, Any]:
-    """Retrieve documents that have been published by a company, filtered by a date range, and (optionally) by ticker(s), watchlist, index, sector, or subsector; or category(s) or keyword(s)."""
+    """Find documents that have been published by a company, filtered by a date range, and (optionally) by ticker(s), watchlist, index, sector, or subsector; or category(s) or keyword(s) or search."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -624,7 +624,7 @@ async def find_company_docs(
 
 @mcp.tool()
 async def get_company_doc(company_doc_id: str) -> Dict[str, Any]:
-    """Retrieve raw text from a specific company document."""
+    """Retrieve a company document, including a summary and other metadata."""
     logger.info("tool called: get_company_doc")
 
     ctx = mcp.get_context()
@@ -722,7 +722,7 @@ async def find_third_bridge_events(
     page: Optional[int] = 1,
     page_size: Optional[int] = DEFAULT_PAGE_SIZE,
 ) -> Dict[str, Any]:
-    """Retrieve a list of expert insight events from Third Bridge, filtering by a date range."""
+    """Find expert insight events from Third Bridge, filtering by a date range and (optionally) by search."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -756,8 +756,8 @@ async def find_third_bridge_events(
 
 
 @mcp.tool()
-async def get_third_bridge_events(event_ids: str) -> Dict[str, Any]:
-    """Retrieve one or more expert insight events from Third Bridge, including transcripts, summaries, and other metadata."""
+async def get_third_bridge_event(event_id: str) -> Dict[str, Any]:
+    """Retrieve an expert insight events from Third Bridge, including transcripts, summaries, and other metadata."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -766,7 +766,7 @@ async def get_third_bridge_events(event_ids: str) -> Dict[str, Any]:
         raise ValueError("AIERA_API_KEY environment variable is required")
 
     params = {
-        "event_ids": correct_provided_ids(event_ids),
+        "event_ids": str(event_id),
         "event_category": "thirdbridge",
         "include_transcripts": True,
     }
@@ -809,9 +809,9 @@ def get_api_documentation() -> str:
     -- watchlist_id can be found using the tool get_available_watchlists.
     -- index_id can be found using the tool get_available_indexes.
     -- sector_id and subsector_id can be found using the tool get_sectors_and_subsectors.
-    - get_events: Retrieve one or more events, including transcripts, summaries, and other metadata, filtered by event_ids. 
+    - get_event: Retrieve one or more events, including transcripts, summaries, and other metadata, filtered by event_ids.
     -- Event IDs can be found using the find_events tool.
-    -- Due to the size of the data being returned, don't query more than 3 event IDs at a time. If you want to retrieve more than 3 events, make multiple sequential calls.
+    -- If you need to retrieve more than one event, make multiple sequential calls.
     - get_upcoming_events: Retrieve confirmed and estimated upcoming events, filtered by start_date and end_date, and one of the following: bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id.
     -- watchlist_id can be found using the tool get_available_watchlists.
     -- index_id can be found using the tool get_available_indexes.
@@ -825,7 +825,7 @@ def get_api_documentation() -> str:
     -- sector_id and subsector_id can be found using the tool get_sectors_and_subsectors.
     - get_filing: Retrieve an SEC filing, including summaries, content, and other metadata, filtered by filing_id.
     -- Filing IDs can be found with the tool find_filings.
-    -- If you want to retrieve more than one filing, make multiple sequential calls.
+    -- If you need to retrieve more than one filing, make multiple sequential calls.
 
     ### Company Docs API
     - find_company_docs: Retrieve documents that have been published on company IR websites, filtered by a date range, and optionally by bloomberg_ticker (a comma-separated list), watchlist_id, index_id, sector_id, or subsector_id; or categories (a comma-separated list), keywords (a comma-separated list), or search. This endpoint supports pagination.
@@ -834,17 +834,17 @@ def get_api_documentation() -> str:
     -- watchlist_id can be found using the tool get_available_watchlists.
     -- index_id can be found using the tool get_available_indexes.
     -- sector_id and subsector_id can be found using the tool get_sectors_and_subsectors.
-    - get_company_doc: Retrieve a company document, including a summary and content, filtered by company_doc_id. 
+    - get_company_doc: Retrieve a company document, including a summary and other metadata, filtered by company_doc_id. 
     -- Document IDs can be found using the tool find_company_docs.
-    -- If you want to retrieve more than one company document, make multiple sequential calls.
+    -- If you need to retrieve more than one company document, make multiple sequential calls.
     - get_company_doc_categories: Retrieve a list of all categories associated with company documents (and the number of documents associated with each category). This endpoint supports pagination, and can be filtered by a search term.
     - get_company_doc_keywords: Retrieve a list of all keywords associated with company documents (and the number of documents associated with each keyword). This endpoint supports pagination, and can be filtered by a search term.
-    
+
     ### Third Bridge API
     - find_third_bridge_events: Retrieve expert insight events from Third Bridge, filtered by start_date and end_date, and optionally by search. This endpoint supports pagination.
-    - get_third_bridge_events: Retrieve one or more expert insight events from Third Bridge, including transcripts, summaries, and other metadata. 
+    - get_third_bridge_event: Retrieve one or more expert insight events from Third Bridge, including transcripts, summaries, and other metadata. 
     -- Event IDs can be found using the tool find_third_bridge_events.
-    -- Due to the size of the data being returned, don't query more than 3 event IDs at a time. If you want to retrieve more than 3 events, make multiple sequential calls.
+    -- If you need to retrieve more than one event, make multiple sequential calls.
 
     ## Authentication:
     All endpoints require the AIERA_API_KEY environment variable to be set.
