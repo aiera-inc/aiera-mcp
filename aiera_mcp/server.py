@@ -243,6 +243,39 @@ async def get_event(event_id: str) -> Dict[str, Any]:
 
 
 @mcp.tool()
+async def get_transcripts(
+    event_ids: str,
+    transcript_section: Optional[str] = None,
+    search: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Retrieve transcripts from one or more events, filtered by event_ids and (optionally) by section or a search term."""
+    ctx = mcp.get_context()
+    client = ctx.request_context.lifespan_context["http_client"]
+    api_key = os.getenv("AIERA_API_KEY")
+
+    if not api_key:
+        raise ValueError("AIERA_API_KEY environment variable is required")
+
+    params = {
+        "event_ids": correct_provided_ids(event_ids),
+    }
+
+    if transcript_section:
+        params["transcript_section"] = transcript_section
+
+    if search:
+        params["search"] = search
+
+    return await make_aiera_request(
+        client=client,
+        method="GET",
+        endpoint="/chat-support/get-transcripts",
+        api_key=api_key,
+        params=params,
+    )
+
+
+@mcp.tool()
 async def get_upcoming_events(
     start_date,
     end_date,
@@ -792,6 +825,7 @@ def get_api_documentation() -> str:
 
     ### Equity API
     - find_equities: Retrieve equities, filtered by various identifiers, such as bloomberg_ticker (a comma-separated list of tickers) or ric (a comma-separated list of RICs), or by a search term. This endpoint supports pagination.
+    -- Search will only look for matches within the company name or ticker.
     - get_equity_summaries: Retrieve detailed summary(s) about one or more equities, filtered by bloomberg_ticker (a comma-separated list). Summaries will include past and upcoming events, information about company leadership, recent financials, and within which indices the equity is included.
     - get_sectors_and_subsectors: Retrieve a list of all sectors and subsectors that can be queried.
     - get_available_indexes: Retrieve the list of available indexes that can be queried.
@@ -800,7 +834,7 @@ def get_api_documentation() -> str:
     - get_watchlist_constituents: Retrieve the list of all equities within a watchlist.
 
     ### Events API
-    - find_events: Retrieve events, filtered by start_date and end_date, and optionally by bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id; or event_type (a comma-separated list of event types) or search. This endpoint supports pagination.
+    - find_events: Retrieve events, filtered by start_date and end_date, and optionally by bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id; or event_type (a comma-separated list of event types). This endpoint supports pagination.
     -- Event type must be one of the following: earnings, presentation, shareholder_meeting, investor_meeting, special_situation
     -- Some common associations of event_type:
     --- Conferences will often be a reference to the event type: presentation
@@ -809,8 +843,8 @@ def get_api_documentation() -> str:
     -- watchlist_id can be found using the tool get_available_watchlists.
     -- index_id can be found using the tool get_available_indexes.
     -- sector_id and subsector_id can be found using the tool get_sectors_and_subsectors.
-    - get_event: Retrieve one or more events, including transcripts, summaries, and other metadata, filtered by event_ids.
-    -- Event IDs can be found using the find_events tool.
+    - get_event: Retrieve an event, including a summary, the full transcript, and other metadata, filtered by event_id.
+    -- The event ID can be found using the find_events tool.
     -- If you need to retrieve more than one event, make multiple sequential calls.
     - get_upcoming_events: Retrieve confirmed and estimated upcoming events, filtered by start_date and end_date, and one of the following: bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id.
     -- watchlist_id can be found using the tool get_available_watchlists.
@@ -818,34 +852,40 @@ def get_api_documentation() -> str:
     -- sector_id and subsector_id can be found using the tool get_sectors_and_subsectors.
 
     ### Filings API
-    - find_filings: Retrieve SEC filings, filtered by start_date and end_date, and one of the following: bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id; and optionally by form_number or search. This endpoint supports pagination.
+    - find_filings: Retrieve SEC filings, filtered by start_date and end_date, and one of the following: bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id; and optionally by form_number. This endpoint supports pagination.
     -- Examples of form numbers include: 10-K, 10-Q, and 8-K. There are other possibilities, but those 3 will be the most commonly used.
     -- watchlist_id can be found using the tool get_available_watchlists.
     -- index_id can be found using the tool get_available_indexes.
     -- sector_id and subsector_id can be found using the tool get_sectors_and_subsectors.
-    - get_filing: Retrieve an SEC filing, including summaries, content, and other metadata, filtered by filing_id.
-    -- Filing IDs can be found with the tool find_filings.
+    - get_filing: Retrieve an SEC filing, including a summary, document contents, and other metadata, filtered by filing_id.
+    -- The filing ID can be found with the tool find_filings.
     -- If you need to retrieve more than one filing, make multiple sequential calls.
 
     ### Company Docs API
-    - find_company_docs: Retrieve documents that have been published on company IR websites, filtered by a date range, and optionally by bloomberg_ticker (a comma-separated list), watchlist_id, index_id, sector_id, or subsector_id; or categories (a comma-separated list), keywords (a comma-separated list), or search. This endpoint supports pagination.
+    - find_company_docs: Retrieve documents that have been published on company IR websites, filtered by a date range, and optionally by bloomberg_ticker (a comma-separated list), watchlist_id, index_id, sector_id, or subsector_id; or categories (a comma-separated list), keywords (a comma-separated list). This endpoint supports pagination.
     -- Examples of a category include: annual_report, compliance, disclosure, earnings_release, slide_presentation, press_release. There are hundreds of other possibilities. The full list of possible categories can be found using the tool get_company_doc_categories.
     -- Examples of a keyword include: ESG, diversity, risk management. There are hundreds of other possibilities. The full list of possible keywords can be found using the tool get_company_doc_keywords.
     -- watchlist_id can be found using the tool get_available_watchlists.
     -- index_id can be found using the tool get_available_indexes.
     -- sector_id and subsector_id can be found using the tool get_sectors_and_subsectors.
     - get_company_doc: Retrieve a company document, including a summary and other metadata, filtered by company_doc_id. 
-    -- Document IDs can be found using the tool find_company_docs.
+    -- The document ID can be found using the tool find_company_docs.
     -- If you need to retrieve more than one company document, make multiple sequential calls.
     - get_company_doc_categories: Retrieve a list of all categories associated with company documents (and the number of documents associated with each category). This endpoint supports pagination, and can be filtered by a search term.
     - get_company_doc_keywords: Retrieve a list of all keywords associated with company documents (and the number of documents associated with each keyword). This endpoint supports pagination, and can be filtered by a search term.
 
     ### Third Bridge API
-    - find_third_bridge_events: Retrieve expert insight events from Third Bridge, filtered by start_date and end_date, and optionally by search. This endpoint supports pagination.
-    - get_third_bridge_event: Retrieve one or more expert insight events from Third Bridge, including transcripts, summaries, and other metadata. 
-    -- Event IDs can be found using the tool find_third_bridge_events.
+    - find_third_bridge_events: Retrieve expert insight events from Third Bridge, filtered by start_date and end_date. This endpoint supports pagination.
+    - get_third_bridge_event: Retrieve an expert insight event from Third Bridge, including a summary, the full transcript, and other metadata, filtered by event_id. 
+    -- The event ID can be found using the tool find_third_bridge_events.
     -- If you need to retrieve more than one event, make multiple sequential calls.
-
+    
+    ### Transcripts API
+    - get_transcripts: Retrieve transcript segments from one or more events, filtered by event_ids and (optionally) by transcript_section or a search term.
+    -- Event IDs can be found using the find_events tool or the find_third_bridge_events tool.
+    -- transcript_section is only relevant for earnings events, and can be set to either "presentation" or "q_and_a".
+    -- search will look for exact matches within the transcript text.
+    
     ## Authentication:
     All endpoints require the AIERA_API_KEY environment variable to be set.
     Some endpoints may require specific permissions based on a subscription plan. If access is denied, the user should talk to their Aiera representative about gaining access.
@@ -857,7 +897,6 @@ def get_api_documentation() -> str:
     -- If information from multiple bloomberg tickers is needed, they should be represented as a comma-separated list (e.g., "AAPL:US,MSFT:US,GOOGL:US").
     - Comma-separated lists should not contain spaces (e.g., "keyword1,keyword2,keyword3").
     - Boolean parameters accept true/false values.
-    - Tools that support filtering by search should favor other filtering methods first if possible, as text search can be less precise and inefficient.
     
     ## Usage Hints:
     - Questions about guidance will always require the transcript from at least one earnings event, and often will require multiple earnings transcripts from the last year in order to provide sufficient context.
