@@ -426,7 +426,7 @@ async def find_equities(
     return await make_aiera_request(
         client=client,
         method="GET",
-        endpoint="/equities-v2",
+        endpoint="/chat-support/find-equities",
         api_key=api_key,
         params=params,
     )
@@ -445,7 +445,7 @@ async def get_sectors_and_subsectors() -> Dict[str, Any]:
     return await make_aiera_request(
         client=client,
         method="GET",
-        endpoint="/equities-v2/sectors",
+        endpoint="/chat-support/get-sectors-and-subsectors",
         api_key=api_key,
         params={},
     )
@@ -674,7 +674,7 @@ async def get_company_doc_categories(
     return await make_aiera_request(
         client=client,
         method="GET",
-        endpoint="/company-docs-v1/categories",
+        endpoint="/chat-support/get-company-doc-categories",
         api_key=api_key,
         params=params,
     )
@@ -708,7 +708,7 @@ async def get_company_doc_keywords(
     return await make_aiera_request(
         client=client,
         method="GET",
-        endpoint="/company-docs-v1/keywords",
+        endpoint="/chat-support/get-company-doc-keywords",
         api_key=api_key,
         params=params,
     )
@@ -858,7 +858,11 @@ def get_api_documentation() -> str:
     - Comma-separated lists should not contain spaces (e.g., "keyword1,keyword2,keyword3").
     - Boolean parameters accept true/false values.
     - Tools that support filtering by search should favor other filtering methods first if possible, as text search can be less precise and inefficient.
-
+    
+    ## Usage Hints:
+    - Questions about guidance will always require the transcript from at least one earnings event, and often will require multiple earnings transcripts from the last year in order to provide sufficient context.
+    -- Answers to guidance questions should focus on management commentary, and avoid analyst commentary unless specifically asked for.
+    
     ## Other Notes:
     - All dates and times are in eastern time (ET) unless specifically stated otherwise.
     - The term "publication" or "document" is likely referring to either an SEC filing or a company document.
