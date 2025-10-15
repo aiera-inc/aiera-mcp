@@ -108,6 +108,14 @@ def correct_event_type(event_type: str) -> str:
     return event_type.strip()
 
 
+def correct_transcript_section(section: str) -> str:
+    """Ensure the transcript section is set correctly."""
+    if section.strip() == "qa":
+        section = "q_and_a"
+
+    return section.strip()
+
+
 async def make_aiera_request(
     client: httpx.AsyncClient,
     method: str,
@@ -261,7 +269,7 @@ async def get_transcripts(
     }
 
     if transcript_section:
-        params["transcript_section"] = transcript_section
+        params["transcript_section"] = correct_transcript_section(transcript_section)
 
     if search:
         params["search"] = search
