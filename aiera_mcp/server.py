@@ -227,8 +227,11 @@ async def find_events(
 
 
 @mcp.tool()
-async def get_event(event_id: str) -> Dict[str, Any]:
-    """Retrieve an event, including transcripts, summaries, and other metadata."""
+async def get_event(
+    event_id: str,
+    transcript_section: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Retrieve an event, including the summary, transcript, and other metadata. Optionally, you filter the transcripts by section ('presentation' or 'q_and_a')."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -241,43 +244,13 @@ async def get_event(event_id: str) -> Dict[str, Any]:
         "include_transcripts": True,
     }
 
+    if transcript_section:
+        params["transcript_section"] = transcript_section
+
     return await make_aiera_request(
         client=client,
         method="GET",
         endpoint="/chat-support/find-events",
-        api_key=api_key,
-        params=params,
-    )
-
-
-@mcp.tool()
-async def get_transcripts(
-    event_ids: str,
-    transcript_section: Optional[str] = None,
-    search: Optional[str] = None,
-) -> Dict[str, Any]:
-    """Retrieve transcripts from one or more events, filtered by event_ids and (optionally) by section or a search term."""
-    ctx = mcp.get_context()
-    client = ctx.request_context.lifespan_context["http_client"]
-    api_key = os.getenv("AIERA_API_KEY")
-
-    if not api_key:
-        raise ValueError("AIERA_API_KEY environment variable is required")
-
-    params = {
-        "event_ids": correct_provided_ids(event_ids),
-    }
-
-    if transcript_section:
-        params["transcript_section"] = correct_transcript_section(transcript_section)
-
-    if search:
-        params["search"] = search
-
-    return await make_aiera_request(
-        client=client,
-        method="GET",
-        endpoint="/chat-support/get-transcripts",
         api_key=api_key,
         params=params,
     )
@@ -851,9 +824,10 @@ def get_api_documentation() -> str:
     -- watchlist_id can be found using the tool get_available_watchlists.
     -- index_id can be found using the tool get_available_indexes.
     -- sector_id and subsector_id can be found using the tool get_sectors_and_subsectors.
-    - get_event: Retrieve an event, including a summary, the full transcript, and other metadata, filtered by event_id.
+    - get_event: Retrieve an event, including a summary, the transcript, and other metadata. Optionally, you can also filter the included transcript by transcript_section ("presentation" or "q_and_a").
     -- The event ID can be found using the find_events tool.
     -- If you need to retrieve more than one event, make multiple sequential calls.
+    -- transcript_section is only applicable with the earnings event_type, and must be one of the following: presentation, q_and_a
     - get_upcoming_events: Retrieve confirmed and estimated upcoming events, filtered by start_date and end_date, and one of the following: bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id.
     -- watchlist_id can be found using the tool get_available_watchlists.
     -- index_id can be found using the tool get_available_indexes.
@@ -887,12 +861,6 @@ def get_api_documentation() -> str:
     - get_third_bridge_event: Retrieve an expert insight event from Third Bridge, including a summary, the full transcript, and other metadata, filtered by event_id. 
     -- The event ID can be found using the tool find_third_bridge_events.
     -- If you need to retrieve more than one event, make multiple sequential calls.
-    
-    ### Transcripts API
-    - get_transcripts: Retrieve transcript segments from one or more events, filtered by event_ids and (optionally) by transcript_section or a search term.
-    -- Event IDs can be found using the find_events tool or the find_third_bridge_events tool.
-    -- transcript_section is only relevant for earnings events, and can be set to either "presentation" or "q_and_a".
-    -- search will look for exact matches within the transcript text.
     
     ## Authentication:
     All endpoints require the AIERA_API_KEY environment variable to be set.
