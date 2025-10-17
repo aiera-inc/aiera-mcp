@@ -151,15 +151,15 @@ async def make_aiera_request(
         response_data = response.text
 
     if instructions:
-        return {
-            "instructions": instructions,
-            "response": response_data,
-        }
+        instructions = [
+            "This data is provided for institutional finance professionals. Responses should be composed of accurate, concise, and well-structured financial insights.",
+            instructions,
+        ]
 
-    else:
-        return {
-            "response": response_data,
-        }
+    return {
+        "instructions": instructions,
+        "response": response_data,
+    }
 
 
 @mcp.tool()
