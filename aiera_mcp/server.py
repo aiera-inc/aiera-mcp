@@ -29,7 +29,8 @@ mcp = FastMCP(
 )
 
 # Base configuration
-DEFAULT_PAGE_SIZE = 25
+DEFAULT_PAGE_SIZE = 50
+DEFAULT_MAX_PAGE_SIZE = 100
 AIERA_BASE_URL = "https://premium.aiera.com/api"
 DEFAULT_HEADERS = {
     "Content-Type": "application/json",
@@ -162,7 +163,13 @@ async def make_aiera_request(
     }
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations={
+        "title": "Find Events",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+    }
+)
 async def find_events(
     start_date: str,
     end_date: str,
@@ -226,7 +233,13 @@ async def find_events(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations={
+        "title": "Get Event",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+    }
+)
 async def get_event(
     event_id: str,
     transcript_section: Optional[str] = None,
@@ -256,7 +269,13 @@ async def get_event(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations={
+        "title": "Get Upcoming Events",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+    }
+)
 async def get_upcoming_events(
     start_date,
     end_date,
@@ -303,7 +322,13 @@ async def get_upcoming_events(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations={
+        "title": "Find Filings",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+    }
+)
 async def find_filings(
     start_date: str,
     end_date: str,
@@ -366,7 +391,13 @@ async def find_filings(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations={
+        "title": "Get Filing",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+    }
+)
 async def get_filing(filing_id: str) -> Dict[str, Any]:
     """Retrieve an SEC filing, including a summary and other metadata."""
     logger.info("tool called: get_filing")
@@ -390,7 +421,13 @@ async def get_filing(filing_id: str) -> Dict[str, Any]:
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations={
+        "title": "Find Equities",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+    }
+)
 async def find_equities(
     bloomberg_ticker: Optional[str] = None,
     isin: Optional[str] = None,
@@ -446,7 +483,13 @@ async def find_equities(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations={
+        "title": "Get Sectors and Subsectors",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+    }
+)
 async def get_sectors_and_subsectors() -> Dict[str, Any]:
     """Retrieve a list of all sectors and subsectors."""
     ctx = mcp.get_context()
@@ -465,7 +508,13 @@ async def get_sectors_and_subsectors() -> Dict[str, Any]:
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations={
+        "title": "Get Equity Summaries",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+    }
+)
 async def get_equity_summaries(bloomberg_ticker: str) -> Dict[str, Any]:
     """Retrieve detailed summary information about one or more equities, filtered by ticker(s)."""
     ctx = mcp.get_context()
@@ -489,7 +538,13 @@ async def get_equity_summaries(bloomberg_ticker: str) -> Dict[str, Any]:
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations={
+        "title": "Get Available Indexes",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+    }
+)
 async def get_available_indexes() -> Dict[str, Any]:
     """Retrieve the list of available indexes."""
     ctx = mcp.get_context()
@@ -508,9 +563,17 @@ async def get_available_indexes() -> Dict[str, Any]:
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations={
+        "title": "Get Index Constituents",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+    }
+)
 async def get_index_constituents(
     index: str,
+    page: Optional[int] = 1,
+    page_size: Optional[int] = DEFAULT_PAGE_SIZE,
 ) -> Dict[str, Any]:
     """Retrieve the list of all equities within an index."""
     ctx = mcp.get_context()
@@ -520,16 +583,30 @@ async def get_index_constituents(
     if not api_key:
         raise ValueError("AIERA_API_KEY environment variable is required")
 
+    params = {}
+
+    if page:
+        params["page"] = page
+
+    if page:
+        params["page_size"] = page_size
+
     return await make_aiera_request(
         client=client,
         method="GET",
         endpoint=f"/chat-support/index-constituents/{index}",
         api_key=api_key,
-        params={},
+        params=params,
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations={
+        "title": "Get Available Watchlists",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+    }
+)
 async def get_available_watchlists() -> Dict[str, Any]:
     """Retrieve the list of available watchlists."""
     ctx = mcp.get_context()
@@ -548,9 +625,17 @@ async def get_available_watchlists() -> Dict[str, Any]:
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations={
+        "title": "Get Watchlist Constituents",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+    }
+)
 async def get_watchlist_constituents(
     watchlist_id: str,
+    page: Optional[int] = 1,
+    page_size: Optional[int] = DEFAULT_PAGE_SIZE,
 ) -> Dict[str, Any]:
     """Retrieve the list of all equities within a watchlist."""
     ctx = mcp.get_context()
@@ -560,16 +645,30 @@ async def get_watchlist_constituents(
     if not api_key:
         raise ValueError("AIERA_API_KEY environment variable is required")
 
+    params = {}
+
+    if page:
+        params["page"] = page
+
+    if page:
+        params["page_size"] = page_size
+
     return await make_aiera_request(
         client=client,
         method="GET",
         endpoint=f"/chat-support/watchlist-constituents/{watchlist_id}",
         api_key=api_key,
-        params={},
+        params=params,
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations={
+        "title": "Find Company Documents",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+    }
+)
 async def find_company_docs(
     start_date: str,
     end_date: str,
@@ -636,7 +735,13 @@ async def find_company_docs(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations={
+        "title": "Get Company Document",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+    }
+)
 async def get_company_doc(company_doc_id: str) -> Dict[str, Any]:
     """Retrieve a company document, including a summary and other metadata."""
     logger.info("tool called: get_company_doc")
@@ -660,7 +765,13 @@ async def get_company_doc(company_doc_id: str) -> Dict[str, Any]:
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations={
+        "title": "Get Company Document Categories",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+    }
+)
 async def get_company_doc_categories(
     search: Optional[str] = None,
     page: Optional[int] = 1,
@@ -694,7 +805,13 @@ async def get_company_doc_categories(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations={
+        "title": "Get Company Document Keywords",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+    }
+)
 async def get_company_doc_keywords(
     search: Optional[str] = None,
     page: Optional[int] = 1,
@@ -728,7 +845,13 @@ async def get_company_doc_keywords(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations={
+        "title": "Find Third Bridge Events",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+    }
+)
 async def find_third_bridge_events(
     start_date: str,
     end_date: str,
@@ -769,7 +892,13 @@ async def find_third_bridge_events(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations={
+        "title": "Get Third Bridge Event",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+    }
+)
 async def get_third_bridge_event(event_id: str) -> Dict[str, Any]:
     """Retrieve an expert insight events from Third Bridge, including transcripts, summaries, and other metadata."""
     ctx = mcp.get_context()
@@ -810,9 +939,9 @@ def get_api_documentation() -> str:
     - get_equity_summaries: Retrieve detailed summary(s) about one or more equities, filtered by bloomberg_ticker (a comma-separated list). Summaries will include past and upcoming events, information about company leadership, recent financials, and within which indices the equity is included.
     - get_sectors_and_subsectors: Retrieve a list of all sectors and subsectors that can be queried.
     - get_available_indexes: Retrieve the list of available indexes that can be queried.
-    - get_index_constituents: Retrieve the list of all equities within an index.
+    - get_index_constituents: Retrieve the list of all equities within an index. This endpoint supports pagination.
     - get_available_watchlists: Retrieve the list of watchlists that can be queried.
-    - get_watchlist_constituents: Retrieve the list of all equities within a watchlist.
+    - get_watchlist_constituents: Retrieve the list of all equities within a watchlist. This endpoint supports pagination.
 
     ### Events API
     - find_events: Retrieve events, filtered by start_date and end_date, and optionally by bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id; or event_type (a comma-separated list of event types). This endpoint supports pagination.
@@ -867,7 +996,7 @@ def get_api_documentation() -> str:
     Some endpoints may require specific permissions based on a subscription plan. If access is denied, the user should talk to their Aiera representative about gaining access.
 
     ## Parameter Notes:
-    - Tools that support pagination use 'page' and 'page_size' parameters. By default, page is set to 1 and page_size is set to {DEFAULT_PAGE_SIZE}.
+    - Tools that support pagination use 'page' and 'page_size' parameters. By default, page is set to 1 and page_size is set to {DEFAULT_PAGE_SIZE}. The default maximum page_size is {DEFAULT_MAX_PAGE_SIZE}.
     - Date parameters should be in ISO format (YYYY-MM-DD).
     - Bloomberg tickers are composed of a ticker and a country code joined by a colon (e.g., "AAPL:US").
     -- If information from multiple bloomberg tickers is needed, they should be represented as a comma-separated list (e.g., "AAPL:US,MSFT:US,GOOGL:US").
