@@ -179,11 +179,10 @@ async def find_events(
     sector_id: Optional[int] = None,
     subsector_id: Optional[int] = None,
     event_type: Optional[str] = "earnings",
-    search: Optional[str] = None,
     page: Optional[int] = 1,
     page_size: Optional[int] = DEFAULT_PAGE_SIZE,
 ) -> Dict[str, Any]:
-    """Find events, filtered by a date range, and (optionally) ticker(s), watchlist, index, sector, or subsector; or event type(s) or search."""
+    """Find events, filtered by a date range, and (optionally) ticker(s), watchlist, index, sector, or subsector; or event type(s)."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -214,9 +213,6 @@ async def find_events(
 
     if event_type:
         params["event_type"] = correct_event_type(event_type)
-
-    if search:
-        params["search"] = search
 
     if page:
         params["page"] = page
@@ -338,11 +334,10 @@ async def find_filings(
     sector_id: Optional[int] = None,
     subsector_id: Optional[int] = None,
     form_number: Optional[str] = None,
-    search: Optional[str] = None,
     page: Optional[int] = 1,
     page_size: Optional[int] = DEFAULT_PAGE_SIZE
 ) -> Dict[str, Any]:
-    """Find SEC filings, filtered by a date range, and one of the following: ticker(s), watchlist, index, sector, or subsector; and (optionally) by a form number or search."""
+    """Find SEC filings, filtered by a date range, and one of the following: ticker(s), watchlist, index, sector, or subsector; and (optionally) by a form number."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -372,9 +367,6 @@ async def find_filings(
 
     if form_number:
         params["form_number"] = form_number
-
-    if search:
-        params["search"] = search
 
     if page:
         params["page"] = page
@@ -438,7 +430,7 @@ async def find_equities(
     page: Optional[int] = 1,
     page_size: Optional[int] = DEFAULT_PAGE_SIZE,
 ) -> Dict[str, Any]:
-    """Retrieve equities, filtered by various identifiers, such as ticker, ISIN, or RIC; or by a search term."""
+    """Retrieve equities, filtered by various identifiers, such as ticker, ISIN, or RIC; or by search."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -679,11 +671,10 @@ async def find_company_docs(
     subsector_id: Optional[int] = None,
     categories: Optional[str] = None,
     keywords: Optional[str] = None,
-    search: Optional[str] = None,
     page: Optional[int] = 1,
     page_size: Optional[int] = DEFAULT_PAGE_SIZE
 ) -> Dict[str, Any]:
-    """Find documents that have been published by a company, filtered by a date range, and (optionally) by ticker(s), watchlist, index, sector, or subsector; or category(s) or keyword(s) or search."""
+    """Find documents that have been published by a company, filtered by a date range, and (optionally) by ticker(s), watchlist, index, sector, or subsector; or category(s) or keyword(s)."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -716,9 +707,6 @@ async def find_company_docs(
 
     if keywords:
         params["keywords"] = correct_keywords(keywords)
-
-    if search:
-        params["search"] = search
 
     if page:
         params["page"] = page
