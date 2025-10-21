@@ -855,11 +855,15 @@ async def get_company_doc_keywords(
 async def find_third_bridge_events(
     start_date: str,
     end_date: str,
-    search: Optional[str] = None,
+    bloomberg_ticker: Optional[str] = None,
+    watchlist_id: Optional[int] = None,
+    index_id: Optional[int] = None,
+    sector_id: Optional[int] = None,
+    subsector_id: Optional[int] = None,
     page: Optional[int] = 1,
     page_size: Optional[int] = DEFAULT_PAGE_SIZE,
 ) -> Dict[str, Any]:
-    """Find expert insight events from Third Bridge, filtering by a date range and (optionally) by search."""
+    """Find expert insight events from Third Bridge, filtering by a date range and (optionally) by ticker, index, watchlist, sector, or subsector."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -870,12 +874,23 @@ async def find_third_bridge_events(
     params = {
         "start_date": start_date,
         "end_date": end_date,
-        "event_category": "thirdbridge",
         "include_transcripts": False,
     }
 
-    if search:
-        params["search"] = search
+    if bloomberg_ticker:
+        params["bloomberg_ticker"] = correct_bloomberg_ticker(bloomberg_ticker)
+
+    if watchlist_id:
+        params["watchlist_id"] = watchlist_id
+
+    if index_id:
+        params["index_id"] = index_id
+
+    if sector_id:
+        params["sector_id"] = sector_id
+
+    if subsector_id:
+        params["subsector_id"] = subsector_id
 
     if page:
         params["page"] = page
@@ -886,7 +901,7 @@ async def find_third_bridge_events(
     return await make_aiera_request(
         client=client,
         method="GET",
-        endpoint="/chat-support/find-events",
+        endpoint="/chat-support/find-third-bridge",
         api_key=api_key,
         params=params,
     )
@@ -900,7 +915,7 @@ async def find_third_bridge_events(
     }
 )
 async def get_third_bridge_event(event_id: str) -> Dict[str, Any]:
-    """Retrieve an expert insight events from Third Bridge, including transcripts, summaries, and other metadata."""
+    """Retrieve an expert insight events from Third Bridge, including agenda, insights, transcript, and other metadata."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
     api_key = os.getenv("AIERA_API_KEY")
@@ -910,14 +925,13 @@ async def get_third_bridge_event(event_id: str) -> Dict[str, Any]:
 
     params = {
         "event_ids": str(event_id),
-        "event_category": "thirdbridge",
         "include_transcripts": True,
     }
 
     return await make_aiera_request(
         client=client,
         method="GET",
-        endpoint="/chat-support/find-events",
+        endpoint="/chat-support/find-third-bridge",
         api_key=api_key,
         params=params,
     )
@@ -986,8 +1000,8 @@ def get_api_documentation() -> str:
     - get_company_doc_keywords: Retrieve a list of all keywords associated with company documents (and the number of documents associated with each keyword). This endpoint supports pagination, and can be filtered by a search term.
 
     ### Third Bridge API
-    - find_third_bridge_events: Retrieve expert insight events from Third Bridge, filtered by start_date and end_date. This endpoint supports pagination.
-    - get_third_bridge_event: Retrieve an expert insight event from Third Bridge, including a summary, the full transcript, and other metadata, filtered by event_id. 
+    - find_third_bridge_events: Retrieve expert insight events from Third Bridge, filtered by start_date and end_date, and optionally by bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id. This endpoint supports pagination.
+    - get_third_bridge_event: Retrieve an expert insight event from Third Bridge, including an agenda, insights, the full transcript, filtered by event_id. 
     -- The event ID can be found using the tool find_third_bridge_events.
     -- If you need to retrieve more than one event, make multiple sequential calls.
     
@@ -1010,7 +1024,7 @@ def get_api_documentation() -> str:
     ## Other Notes:
     - All dates and times are in eastern time (ET) unless specifically stated otherwise.
     - The term "publication" or "document" is likely referring to either an SEC filing or a company document.
-    - The current date is {datetime.now().strftime("%Y-%m-%d")}. Relative dates (e.g., "last 3 months" or "next 3 months") should be calculated based on this date.
+    - The current date is **{datetime.now().strftime("%Y-%m-%d")}**, and the current time is **{datetime.now().strftime("%I:%M %p")}**. Relative dates and times (e.g., "last 3 months" or "next 3 months" or "later today") should be calculated based on this date.
     """
 
 
