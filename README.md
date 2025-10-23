@@ -12,33 +12,45 @@
 > [!IMPORTANT]
 > :test_tube: This project is experimental and could be subject to breaking changes.
 
-# Aiera MCP Server
+# Aiera MCP Tools
 
-A [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server that provides access to [Aiera](https://www.aiera.com) financial data.
+A [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) package that provides access to [Aiera](https://www.aiera.com) financial data. This repository contains both a standalone MCP server and a reusable Python package.
 
 ## Overview
 
-This server exposes Aiera API endpoints as MCP tools, providing access to comprehensive financial data including:
+This package exposes Aiera API endpoints as MCP tools, providing access to comprehensive financial data including:
 
-- Events (calendar, transcripts, and metadata)
-- Company information (symbology, summaries, etc)
-- Company documents (press releases, slide presentations, disclosures, etc)
-- Filings (SEC filings and related metadata)
+- **Events**: Calendar events, transcripts, and metadata
+- **Company Information**: Symbology, summaries, sectors, and watchlists
+- **Company Documents**: Press releases, slide presentations, disclosures
+- **SEC Filings**: Filing data and metadata
+- **Third Bridge**: Expert insight events
 
-## Quick Start
+## Installation
 
-### Prerequisites
+### Option 1: As a Python Package (Recommended)
 
-- Python 3.11 or higher
-- An Aiera API key
-- [Astral UV](https://docs.astral.sh/uv/getting-started/installation/)
-  - For existing installs, check that you have a version that supports the `uvx` command.
+Install directly from GitHub:
 
-### Installation
-
-1. **Install dependencies**:
 ```bash
-pip install -r requirements.txt
+pip install git+https://github.com/aiera-inc/aiera-mcp.git
+```
+
+Or add to your `pyproject.toml`:
+
+```toml
+dependencies = [
+    "aiera-mcp-tools @ git+https://github.com/aiera-inc/aiera-mcp.git@main",
+]
+```
+
+### Option 2: Local Development
+
+1. **Clone and install**:
+```bash
+git clone https://github.com/aiera-inc/aiera-mcp.git
+cd aiera-mcp
+uv sync  # or pip install -e .
 ```
 
 2. **Set up environment variables**:
@@ -46,21 +58,92 @@ pip install -r requirements.txt
 export AIERA_API_KEY="your-aiera-api-key"
 ```
 
-3**Run server locally**:
+3. **Run standalone server**:
 ```bash
 uv run entrypoint.py
 ```
 
-### Claude Desktop
+## Usage
+
+### As a Package
+
+```python
+import asyncio
+from mcp.server.fastmcp import FastMCP
+from aiera_mcp import register_aiera_tools
+
+# Create MCP server and register all Aiera tools
+mcp = FastMCP("MyServer")
+register_aiera_tools(mcp)
+
+# Or import individual functions
+from aiera_mcp import find_events, make_aiera_request, correct_bloomberg_ticker
+```
+
+## Package Contents
+
+### Tools
+- **Events**: `find_events`, `get_event`, `get_upcoming_events`
+- **Filings**: `find_filings`, `get_filing`
+- **Equities**: `find_equities`, `get_equity_summaries`, `get_sectors_and_subsectors`
+- **Indexes & Watchlists**: `get_available_indexes`, `get_index_constituents`, `get_available_watchlists`, `get_watchlist_constituents`
+- **Company Documents**: `find_company_docs`, `get_company_doc`, `get_company_doc_categories`, `get_company_doc_keywords`
+- **Third Bridge**: `find_third_bridge_events`, `get_third_bridge_event`
+
+### Utilities
+- **API Functions**: `make_aiera_request`
+- **Data Correction**: `correct_bloomberg_ticker`, `correct_keywords`, `correct_categories`, `correct_provided_ids`, `correct_event_type`, `correct_transcript_section`
+- **Registration**: `register_aiera_tools` - Register all tools with any FastMCP server instance
+
+### Constants
+- `DEFAULT_PAGE_SIZE`, `DEFAULT_MAX_PAGE_SIZE`, `AIERA_BASE_URL`, `CITATION_PROMPT`
+
+## Prerequisites
+
+- Python 3.11 or higher
+- An Aiera API key
+- [Astral UV](https://docs.astral.sh/uv/getting-started/installation/) (for development)
+
+## Claude Desktop Configuration
+
+### Option 1: Using the Standalone Server
 
 1. Follow the [Claude Desktop MCP installation instructions](https://modelcontextprotocol.io/quickstart/user) and find your configuration file.
-1. Use the following example as reference to add Aiera's MCP server.
-    1. Path find your path to `uvx`, run `which uvx` in your terminal.
-    2. Replace `<your_api_key_here>` with your actual Aiera API key.
-    3. Replace `<your_directory>` with your home directory path, e.g., `/home/username` (Mac/Linux).
+2. Use the following configuration:
+   - Replace `<your_api_key_here>` with your actual Aiera API key
+   - Replace `<your_directory>` with your home directory path
 
 <details>
-  <summary>claude_desktop_config.json</summary>
+  <summary>claude_desktop_config.json (Standalone Server)</summary>
+
+```json
+{
+    "mcpServers": {
+        "Aiera MCP": {
+           "command": "uv",
+           "args": [
+               "run",
+               "--with",
+               "git+https://github.com/aiera-inc/aiera-mcp.git",
+               "--with",
+               "mcp[cli]",
+               "mcp",
+               "run",
+               "aiera_mcp/server.py"
+            ],
+            "env": {
+               "AIERA_API_KEY": "<your_api_key_here>"
+            }
+        }
+    }
+}
+```
+</details>
+
+### Option 2: Using Local Installation
+
+<details>
+  <summary>claude_desktop_config.json (Local Installation)</summary>
 
 ```json
 {
@@ -92,24 +175,15 @@ Once integrated, you can prompt Claude to access Aiera data:
 Get the latest earnings call transcript for Apple Inc. and summarize key points
 ```
 
-## Available Tools
+## Key Features
 
-This MCP server implements most Aiera API endpoints as tools, including:
+- **Comprehensive API Coverage**: Implements most Aiera API endpoints as MCP tools
+- **Flexible Integration**: Use as a standalone server or integrate as a Python package
+- **Data Validation**: Built-in utilities for correcting tickers, keywords, and other parameters
+- **Easy Registration**: Single function to register all tools with any MCP server
+- **Development Ready**: Full development environment with testing and linting tools
 
-- `find_equities` - Retrieve equities, filtered by various identifiers, such as ticker(s) or RIC, or by a search term.
-- `get_equity_summaries` - Retrieve detailed summary information about one or more equities.
-- `get_available_watchlists` - Retrieve a list of all available watchlists.
-- `find_events` - Retrieve events, filtered by ticker(s), date range, and (optionally) by event type.
-- `get_upcoming_events` - Retrieve confirmed and estimated upcoming events.
-- `find_filings` - Retrieve SEC filings, filtered by ticker(s) and a date range, and (optionally) by form number
-- `get_filing_text` - Retrieve the raw content for a single SEC filing.
-- `find_company_docs` - Retrieve documents that have been published on company IR websites.
-- `get_company_doc_text` - Retrieve the raw content for a single company document.
-- `find_third_bridge_events` - Retrieve expert insight events from Third Bridge.
-- And many more...
-
-Some endpoints may require special permissions. 
-Talk to your Aiera representative for more details.
+Some endpoints may require special permissions. Contact your Aiera representative for more details.
 
 ## Links
 - [Aiera REST Documentation](https://rest.aiera.com)

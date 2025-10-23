@@ -38,6 +38,15 @@ DEFAULT_HEADERS = {
     "X-MCP-Origin": "local_mcp"
 }
 
+# Citation prompt for UI clients
+CITATION_PROMPT = """IMPORTANT: when referencing this data in your response, ALWAYS include inline citations by using the information found in the `citation_information` block, along with an incrementing counter. Render these citations as markdown (padded with a leading space for readability), like this: [[1]](url "title")
+
+Where possible, include inline citations for every fact, figure, or quote that was sourced, directly or indirectly, from a transcript by using transcript-level citations (as opposed to event-level citations).
+
+If multiple citations are relevant, include them all. You can reference the same citation multiple times if needed.
+
+However, if the user has requested a response as JSON, you do NOT need to include any citations."""
+
 
 def correct_bloomberg_ticker(ticker: str) -> str:
     """Ensure bloomberg ticker is in the correct format (ticker:country_code)."""
@@ -392,11 +401,12 @@ async def find_filings(
 )
 async def get_filing(filing_id: str) -> Dict[str, Any]:
     """Retrieve an SEC filing, including a summary and other metadata."""
-    logger.info("tool called: get_filing")
-
     ctx = mcp.get_context()
-    client = await get_http_client(ctx)
-    api_key = await get_api_key_from_context(ctx)
+    client = ctx.request_context.lifespan_context["http_client"]
+    api_key = os.getenv("AIERA_API_KEY")
+
+    if not api_key:
+        raise ValueError("AIERA_API_KEY environment variable is required")
 
     params = {
         "filing_ids": str(filing_id),
@@ -409,7 +419,6 @@ async def get_filing(filing_id: str) -> Dict[str, Any]:
         endpoint="/chat-support/find-filings",
         api_key=api_key,
         params=params,
-        instructions=CITATION_PROMPT if FROM_UI_CLIENT else None,
     )
 
 
@@ -732,11 +741,12 @@ async def find_company_docs(
 )
 async def get_company_doc(company_doc_id: str) -> Dict[str, Any]:
     """Retrieve a company document, including a summary and other metadata."""
-    logger.info("tool called: get_company_doc")
-
     ctx = mcp.get_context()
-    client = await get_http_client(ctx)
-    api_key = await get_api_key_from_context(ctx)
+    client = ctx.request_context.lifespan_context["http_client"]
+    api_key = os.getenv("AIERA_API_KEY")
+
+    if not api_key:
+        raise ValueError("AIERA_API_KEY environment variable is required")
 
     params = {
         "company_doc_ids": str(company_doc_id),
@@ -749,7 +759,6 @@ async def get_company_doc(company_doc_id: str) -> Dict[str, Any]:
         endpoint="/chat-support/find-company-docs",
         api_key=api_key,
         params=params,
-        instructions=CITATION_PROMPT if FROM_UI_CLIENT else None,
     )
 
 
@@ -1016,5 +1025,100 @@ def get_api_documentation() -> str:
     """
 
 
+def register_aiera_tools(mcp_server: FastMCP) -> None:
+    """Register all Aiera tools with a FastMCP server instance."""
+    # Register all the tools with the provided server
+    mcp_server.tool(
+        name="find_events",
+        description="Finds company events using search filters including date, event type, company, sectors, and more."
+    )(find_events)
+
+    mcp_server.tool(
+        name="get_event",
+        description="Returns the details of an event given its identifier."
+    )(get_event)
+
+    mcp_server.tool(
+        name="get_upcoming_events",
+        description="Returns upcoming events of a specific type that match provided filters."
+    )(get_upcoming_events)
+
+    mcp_server.tool(
+        name="find_filings",
+        description="Finds SEC filings using search filters including company, date, form type, and more."
+    )(find_filings)
+
+    mcp_server.tool(
+        name="get_filing",
+        description="Returns the details of a filing given its identifier."
+    )(get_filing)
+
+    mcp_server.tool(
+        name="find_equities",
+        description="Finds companies/equities using search filters like company name, ticker, sector, and more."
+    )(find_equities)
+
+    mcp_server.tool(
+        name="get_sectors_and_subsectors",
+        description="Returns the list of available sectors and their subsectors for filtering."
+    )(get_sectors_and_subsectors)
+
+    mcp_server.tool(
+        name="get_equity_summaries",
+        description="Returns summary statistics for equities."
+    )(get_equity_summaries)
+
+    mcp_server.tool(
+        name="get_available_indexes",
+        description="Returns the list of available stock indexes."
+    )(get_available_indexes)
+
+    mcp_server.tool(
+        name="get_index_constituents",
+        description="Returns the constituents of a stock index."
+    )(get_index_constituents)
+
+    mcp_server.tool(
+        name="get_available_watchlists",
+        description="Returns the list of available watchlists."
+    )(get_available_watchlists)
+
+    mcp_server.tool(
+        name="get_watchlist_constituents",
+        description="Returns the constituents of a watchlist."
+    )(get_watchlist_constituents)
+
+    mcp_server.tool(
+        name="find_company_docs",
+        description="Finds company documents using search filters."
+    )(find_company_docs)
+
+    mcp_server.tool(
+        name="get_company_doc",
+        description="Returns the details of a company document given its identifier."
+    )(get_company_doc)
+
+    mcp_server.tool(
+        name="get_company_doc_categories",
+        description="Returns the list of available categories for company documents."
+    )(get_company_doc_categories)
+
+    mcp_server.tool(
+        name="get_company_doc_keywords",
+        description="Returns the list of available keywords for company documents."
+    )(get_company_doc_keywords)
+
+    mcp_server.tool(
+        name="find_third_bridge_events",
+        description="Finds Third Bridge events using search filters."
+    )(find_third_bridge_events)
+
+    mcp_server.tool(
+        name="get_third_bridge_event",
+        description="Returns the details of a Third Bridge event given its identifier."
+    )(get_third_bridge_event)
+
+
 def run(transport="streamable-http"):
+    """Run the MCP server (for standalone usage)."""
     mcp.run(transport=transport)
