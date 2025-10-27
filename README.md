@@ -72,9 +72,17 @@ import asyncio
 from mcp.server.fastmcp import FastMCP
 from aiera_mcp import register_aiera_tools
 
-# Create MCP server and register all Aiera tools
+# Basic usage with AIERA_API_KEY environment variable
 mcp = FastMCP("MyServer")
 register_aiera_tools(mcp)
+
+# For OAuth systems (e.g., aiera-public-mcp)
+from your_auth_system import get_current_api_key
+register_aiera_tools(mcp, get_current_api_key)
+
+# Or configure globally
+from aiera_mcp import set_api_key_provider
+set_api_key_provider(get_current_api_key)
 
 # Or import individual functions
 from aiera_mcp import find_events, make_aiera_request, correct_bloomberg_ticker
@@ -94,6 +102,7 @@ from aiera_mcp import find_events, make_aiera_request, correct_bloomberg_ticker
 - **API Functions**: `make_aiera_request`
 - **Data Correction**: `correct_bloomberg_ticker`, `correct_keywords`, `correct_categories`, `correct_provided_ids`, `correct_event_type`, `correct_transcript_section`
 - **Registration**: `register_aiera_tools` - Register all tools with any FastMCP server instance
+- **Authentication**: `set_api_key_provider`, `get_api_key`, `clear_api_key_provider` - OAuth compatibility functions
 
 ### Constants
 - `DEFAULT_PAGE_SIZE`, `DEFAULT_MAX_PAGE_SIZE`, `AIERA_BASE_URL`, `CITATION_PROMPT`
@@ -179,11 +188,31 @@ Get the latest earnings call transcript for Apple Inc. and summarize key points
 
 - **Comprehensive API Coverage**: Implements most Aiera API endpoints as MCP tools
 - **Flexible Integration**: Use as a standalone server or integrate as a Python package
+- **OAuth Compatible**: Seamlessly integrates with OAuth authentication systems (e.g., aiera-public-mcp)
+- **Multi-Authentication**: Supports both environment variables and OAuth providers
 - **Data Validation**: Built-in utilities for correcting tickers, keywords, and other parameters
 - **Easy Registration**: Single function to register all tools with any MCP server
 - **Development Ready**: Full development environment with testing and linting tools
 
 Some endpoints may require special permissions. Contact your Aiera representative for more details.
+
+## Authentication
+
+This package supports two authentication methods:
+
+### Environment Variable (Default)
+```bash
+export AIERA_API_KEY="your-aiera-api-key"
+```
+
+### OAuth Integration
+For OAuth systems like aiera-public-mcp:
+```python
+from your_oauth_system import get_current_api_key
+register_aiera_tools(mcp, get_current_api_key)
+```
+
+The package automatically handles API key resolution with fallback from OAuth provider to environment variable.
 
 ## Links
 - [Aiera REST Documentation](https://rest.aiera.com)
