@@ -1,6 +1,56 @@
 """Aiera MCP Tools - Core financial data API tools for MCP servers."""
 
+import os
+from typing import Callable, Optional
+
 __version__ = "0.1.0"
+
+# API Key Provider Infrastructure
+_api_key_provider: Optional[Callable[[], Optional[str]]] = None
+
+
+def set_api_key_provider(provider: Callable[[], Optional[str]]) -> None:
+    """Configure a custom API key provider function (e.g., for OAuth systems).
+
+    Args:
+        provider: A callable that returns an API key string or None
+
+    Example:
+        # For OAuth systems like aiera-public-mcp:
+        from aiera_public_mcp.auth import get_current_api_key
+        set_api_key_provider(get_current_api_key)
+    """
+    global _api_key_provider
+    _api_key_provider = provider
+
+
+def get_api_key() -> Optional[str]:
+    """Get API key from configured provider or environment variable fallback.
+
+    Returns:
+        API key string or None if not available
+
+    Priority order:
+        1. Custom API key provider (if configured)
+        2. AIERA_API_KEY environment variable
+    """
+    # Try custom provider first
+    if _api_key_provider:
+        try:
+            if key := _api_key_provider():
+                return key
+        except Exception:
+            # Fallback to environment variable if provider fails
+            pass
+
+    # Fallback to environment variable
+    return os.getenv("AIERA_API_KEY")
+
+
+def clear_api_key_provider() -> None:
+    """Clear the configured API key provider (mainly for testing)."""
+    global _api_key_provider
+    _api_key_provider = None
 
 from .server import (
     # Tools
@@ -74,6 +124,11 @@ __all__ = [
 
     # Tool registration
     "register_aiera_tools",
+
+    # API Key Provider
+    "set_api_key_provider",
+    "get_api_key",
+    "clear_api_key_provider",
 
     # Constants
     "DEFAULT_PAGE_SIZE",

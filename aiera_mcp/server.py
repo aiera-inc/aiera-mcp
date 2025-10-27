@@ -4,13 +4,21 @@ import os
 import httpx
 
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Callable
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 
 from mcp.server.fastmcp import FastMCP
 from mcp.types import TextContent, Completion, CompletionArgument, CompletionContext
 from mcp.types import PromptReference, ResourceTemplateReference
+
+# Import API key provider functions from package
+try:
+    from . import get_api_key
+except ImportError:
+    # Fallback for standalone usage
+    def get_api_key() -> Optional[str]:
+        return os.getenv("AIERA_API_KEY")
 
 
 @asynccontextmanager
@@ -130,13 +138,34 @@ async def make_aiera_request(
     client: httpx.AsyncClient,
     method: str,
     endpoint: str,
-    api_key: str,
+    api_key: Optional[str] = None,
     params: Optional[Dict[str, Any]] = None,
     data: Optional[Dict[str, Any]] = None,
     return_type: str = "json",
-    instructions: str = None,
+    instructions: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Make a request to the Aiera REST API."""
+    """Make a request to the Aiera REST API.
+
+    Args:
+        client: HTTP client instance
+        method: HTTP method (GET, POST, etc.)
+        endpoint: API endpoint path
+        api_key: API key (optional, will use provider if not specified)
+        params: Query parameters
+        data: Request body data
+        return_type: Response format type
+        instructions: Additional instructions
+
+    Returns:
+        JSON response data
+    """
+    # Get API key from parameter or provider
+    if api_key is None:
+        api_key = get_api_key()
+
+    if not api_key:
+        raise ValueError("API key is required. Configure via AIERA_API_KEY environment variable or set_api_key_provider()")
+
     headers = DEFAULT_HEADERS.copy()
     headers["X-API-Key"] = api_key
 
@@ -194,10 +223,6 @@ async def find_events(
     """Find events, filtered by a date range, and (optionally) ticker(s), watchlist, index, sector, or subsector; or event type(s)."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
-    api_key = os.getenv("AIERA_API_KEY")
-
-    if not api_key:
-        raise ValueError("AIERA_API_KEY environment variable is required")
 
     params = {
         "start_date": start_date,
@@ -233,7 +258,6 @@ async def find_events(
         client=client,
         method="GET",
         endpoint="/chat-support/find-events",
-        api_key=api_key,
         params=params,
     )
 
@@ -252,10 +276,6 @@ async def get_event(
     """Retrieve an event, including the summary, transcript, and other metadata. Optionally, you filter the transcripts by section ('presentation' or 'q_and_a')."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
-    api_key = os.getenv("AIERA_API_KEY")
-
-    if not api_key:
-        raise ValueError("AIERA_API_KEY environment variable is required")
 
     params = {
         "event_ids": str(event_id),
@@ -269,7 +289,6 @@ async def get_event(
         client=client,
         method="GET",
         endpoint="/chat-support/find-events",
-        api_key=api_key,
         params=params,
     )
 
@@ -293,10 +312,6 @@ async def get_upcoming_events(
     """Retrieve confirmed and estimated upcoming events, filtered by a date range, and one of the following: ticker(s), watchlist, index, sector, or subsector."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
-    api_key = os.getenv("AIERA_API_KEY")
-
-    if not api_key:
-        raise ValueError("AIERA_API_KEY environment variable is required")
 
     params = {
         "start_date": start_date,
@@ -322,7 +337,6 @@ async def get_upcoming_events(
         client=client,
         method="GET",
         endpoint="/chat-support/estimated-and-upcoming-events",
-        api_key=api_key,
         params=params,
     )
 
@@ -349,10 +363,6 @@ async def find_filings(
     """Find SEC filings, filtered by a date range, and one of the following: ticker(s), watchlist, index, sector, or subsector; and (optionally) by a form number."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
-    api_key = os.getenv("AIERA_API_KEY")
-
-    if not api_key:
-        raise ValueError("AIERA_API_KEY environment variable is required")
 
     params = {
         "start_date": start_date,
@@ -387,7 +397,6 @@ async def find_filings(
         client=client,
         method="GET",
         endpoint="/chat-support/find-filings",
-        api_key=api_key,
         params=params,
     )
 
@@ -403,10 +412,6 @@ async def get_filing(filing_id: str) -> Dict[str, Any]:
     """Retrieve an SEC filing, including a summary and other metadata."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
-    api_key = os.getenv("AIERA_API_KEY")
-
-    if not api_key:
-        raise ValueError("AIERA_API_KEY environment variable is required")
 
     params = {
         "filing_ids": str(filing_id),
@@ -417,7 +422,6 @@ async def get_filing(filing_id: str) -> Dict[str, Any]:
         client=client,
         method="GET",
         endpoint="/chat-support/find-filings",
-        api_key=api_key,
         params=params,
     )
 
@@ -442,10 +446,6 @@ async def find_equities(
     """Retrieve equities, filtered by various identifiers, such as ticker, ISIN, or RIC; or by search."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
-    api_key = os.getenv("AIERA_API_KEY")
-
-    if not api_key:
-        raise ValueError("AIERA_API_KEY environment variable is required")
 
     params = {
         "include_company_metadata": True,
@@ -479,7 +479,6 @@ async def find_equities(
         client=client,
         method="GET",
         endpoint="/chat-support/find-equities",
-        api_key=api_key,
         params=params,
     )
 
@@ -495,16 +494,11 @@ async def get_sectors_and_subsectors() -> Dict[str, Any]:
     """Retrieve a list of all sectors and subsectors."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
-    api_key = os.getenv("AIERA_API_KEY")
-
-    if not api_key:
-        raise ValueError("AIERA_API_KEY environment variable is required")
 
     return await make_aiera_request(
         client=client,
         method="GET",
         endpoint="/chat-support/get-sectors-and-subsectors",
-        api_key=api_key,
         params={},
     )
 
@@ -520,10 +514,6 @@ async def get_equity_summaries(bloomberg_ticker: str) -> Dict[str, Any]:
     """Retrieve detailed summary information about one or more equities, filtered by ticker(s)."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
-    api_key = os.getenv("AIERA_API_KEY")
-
-    if not api_key:
-        raise ValueError("AIERA_API_KEY environment variable is required")
 
     params = {
         "bloomberg_ticker": correct_bloomberg_ticker(bloomberg_ticker),
@@ -534,7 +524,6 @@ async def get_equity_summaries(bloomberg_ticker: str) -> Dict[str, Any]:
         client=client,
         method="GET",
         endpoint="/chat-support/equity-summaries",
-        api_key=api_key,
         params=params,
     )
 
@@ -550,16 +539,11 @@ async def get_available_indexes() -> Dict[str, Any]:
     """Retrieve the list of available indexes."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
-    api_key = os.getenv("AIERA_API_KEY")
-
-    if not api_key:
-        raise ValueError("AIERA_API_KEY environment variable is required")
 
     return await make_aiera_request(
         client=client,
         method="GET",
         endpoint="/chat-support/available-indexes",
-        api_key=api_key,
         params={},
     )
 
@@ -579,10 +563,6 @@ async def get_index_constituents(
     """Retrieve the list of all equities within an index."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
-    api_key = os.getenv("AIERA_API_KEY")
-
-    if not api_key:
-        raise ValueError("AIERA_API_KEY environment variable is required")
 
     params = {}
 
@@ -596,7 +576,6 @@ async def get_index_constituents(
         client=client,
         method="GET",
         endpoint=f"/chat-support/index-constituents/{index}",
-        api_key=api_key,
         params=params,
     )
 
@@ -612,16 +591,11 @@ async def get_available_watchlists() -> Dict[str, Any]:
     """Retrieve the list of available watchlists."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
-    api_key = os.getenv("AIERA_API_KEY")
-
-    if not api_key:
-        raise ValueError("AIERA_API_KEY environment variable is required")
 
     return await make_aiera_request(
         client=client,
         method="GET",
         endpoint="/chat-support/available-watchlists",
-        api_key=api_key,
         params={},
     )
 
@@ -641,10 +615,6 @@ async def get_watchlist_constituents(
     """Retrieve the list of all equities within a watchlist."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
-    api_key = os.getenv("AIERA_API_KEY")
-
-    if not api_key:
-        raise ValueError("AIERA_API_KEY environment variable is required")
 
     params = {}
 
@@ -658,7 +628,6 @@ async def get_watchlist_constituents(
         client=client,
         method="GET",
         endpoint=f"/chat-support/watchlist-constituents/{watchlist_id}",
-        api_key=api_key,
         params=params,
     )
 
@@ -686,10 +655,6 @@ async def find_company_docs(
     """Find documents that have been published by a company, filtered by a date range, and (optionally) by ticker(s), watchlist, index, sector, or subsector; or category(s) or keyword(s)."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
-    api_key = os.getenv("AIERA_API_KEY")
-
-    if not api_key:
-        raise ValueError("AIERA_API_KEY environment variable is required")
 
     params = {
         "start_date": start_date,
@@ -727,7 +692,6 @@ async def find_company_docs(
         client=client,
         method="GET",
         endpoint="/chat-support/find-company-docs",
-        api_key=api_key,
         params=params,
     )
 
@@ -743,10 +707,6 @@ async def get_company_doc(company_doc_id: str) -> Dict[str, Any]:
     """Retrieve a company document, including a summary and other metadata."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
-    api_key = os.getenv("AIERA_API_KEY")
-
-    if not api_key:
-        raise ValueError("AIERA_API_KEY environment variable is required")
 
     params = {
         "company_doc_ids": str(company_doc_id),
@@ -757,7 +717,6 @@ async def get_company_doc(company_doc_id: str) -> Dict[str, Any]:
         client=client,
         method="GET",
         endpoint="/chat-support/find-company-docs",
-        api_key=api_key,
         params=params,
     )
 
@@ -777,10 +736,6 @@ async def get_company_doc_categories(
     """Retrieve a list of all categories associated with company documents."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
-    api_key = os.getenv("AIERA_API_KEY")
-
-    if not api_key:
-        raise ValueError("AIERA_API_KEY environment variable is required")
 
     params = {}
 
@@ -797,7 +752,6 @@ async def get_company_doc_categories(
         client=client,
         method="GET",
         endpoint="/chat-support/get-company-doc-categories",
-        api_key=api_key,
         params=params,
     )
 
@@ -817,10 +771,6 @@ async def get_company_doc_keywords(
     """Retrieve a list of all keywords associated with company documents."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
-    api_key = os.getenv("AIERA_API_KEY")
-
-    if not api_key:
-        raise ValueError("AIERA_API_KEY environment variable is required")
 
     params = {}
 
@@ -837,7 +787,6 @@ async def get_company_doc_keywords(
         client=client,
         method="GET",
         endpoint="/chat-support/get-company-doc-keywords",
-        api_key=api_key,
         params=params,
     )
 
@@ -863,10 +812,6 @@ async def find_third_bridge_events(
     """Find expert insight events from Third Bridge, filtering by a date range and (optionally) by ticker, index, watchlist, sector, or subsector."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
-    api_key = os.getenv("AIERA_API_KEY")
-
-    if not api_key:
-        raise ValueError("AIERA_API_KEY environment variable is required")
 
     params = {
         "start_date": start_date,
@@ -899,7 +844,6 @@ async def find_third_bridge_events(
         client=client,
         method="GET",
         endpoint="/chat-support/find-third-bridge",
-        api_key=api_key,
         params=params,
     )
 
@@ -915,10 +859,6 @@ async def get_third_bridge_event(event_id: str) -> Dict[str, Any]:
     """Retrieve an expert insight events from Third Bridge, including agenda, insights, transcript, and other metadata."""
     ctx = mcp.get_context()
     client = ctx.request_context.lifespan_context["http_client"]
-    api_key = os.getenv("AIERA_API_KEY")
-
-    if not api_key:
-        raise ValueError("AIERA_API_KEY environment variable is required")
 
     params = {
         "event_ids": str(event_id),
@@ -929,7 +869,6 @@ async def get_third_bridge_event(event_id: str) -> Dict[str, Any]:
         client=client,
         method="GET",
         endpoint="/chat-support/find-third-bridge",
-        api_key=api_key,
         params=params,
     )
 
@@ -1025,8 +964,28 @@ def get_api_documentation() -> str:
     """
 
 
-def register_aiera_tools(mcp_server: FastMCP) -> None:
-    """Register all Aiera tools with a FastMCP server instance."""
+def register_aiera_tools(
+    mcp_server: FastMCP,
+    api_key_provider: Optional[Callable[[], Optional[str]]] = None
+) -> None:
+    """Register all Aiera tools with a FastMCP server instance.
+
+    Args:
+        mcp_server: FastMCP server instance to register tools with
+        api_key_provider: Optional function that returns API key for OAuth systems
+
+    Example:
+        # Basic usage with environment variable
+        register_aiera_tools(mcp)
+
+        # With OAuth provider (e.g., aiera-public-mcp)
+        from aiera_public_mcp.auth import get_current_api_key
+        register_aiera_tools(mcp, get_current_api_key)
+    """
+    # Configure API key provider if provided
+    if api_key_provider:
+        from . import set_api_key_provider
+        set_api_key_provider(api_key_provider)
     # Register all the tools with the provided server
     mcp_server.tool(
         name="find_events",
