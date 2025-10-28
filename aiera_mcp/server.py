@@ -2,6 +2,9 @@
 
 import os
 import httpx
+import logging
+import contextvars
+import json
 
 from datetime import datetime
 from typing import Any, Dict, Optional, Callable
@@ -12,6 +15,9 @@ from mcp.server.fastmcp import FastMCP
 from mcp.types import TextContent, Completion, CompletionArgument, CompletionContext
 from mcp.types import PromptReference, ResourceTemplateReference
 
+# Setup logging
+logger = logging.getLogger(__name__)
+
 # Import API key provider functions from package
 try:
     from . import get_api_key
@@ -20,12 +26,53 @@ except ImportError:
     def get_api_key() -> Optional[str]:
         return os.getenv("AIERA_API_KEY")
 
+# Global HTTP client for Lambda environment with proper configuration
+_lambda_http_client: Optional[httpx.AsyncClient] = None
+
+
+async def cleanup_lambda_http_client():
+    """Cleanup the global HTTP client."""
+    global _lambda_http_client
+    if _lambda_http_client is not None:
+        await _lambda_http_client.aclose()
+        _lambda_http_client = None
+
+
+def get_lambda_http_client() -> httpx.AsyncClient:
+    """Get or create a shared HTTP client for Lambda environment."""
+    global _lambda_http_client
+    if _lambda_http_client is None:
+        # Configure client with connection pooling and timeouts
+        _lambda_http_client = httpx.AsyncClient(
+            limits=httpx.Limits(max_keepalive_connections=10, max_connections=20, keepalive_expiry=30.0),
+            timeout=httpx.Timeout(30.0),
+            follow_redirects=True,
+        )
+
+    return _lambda_http_client
+
 
 @asynccontextmanager
-async def app_lifespan(server: FastMCP) -> AsyncIterator[Dict[str, Any]]:
+async def app_lifespan(_server: FastMCP) -> AsyncIterator[Dict[str, Any]]:
     """Manage application lifecycle with HTTP client."""
-    async with httpx.AsyncClient() as client:
+    # Always create client in lifespan to ensure proper FastMCP initialization
+    # Even in Lambda, FastMCP requires the full lifespan cycle to initialize its task groups
+
+    # In Lambda, we can use a shared client for efficiency
+    if os.getenv("AWS_LAMBDA_FUNCTION_NAME") or os.getenv("MCP_LAMBDA_MODE"):
+        # For Lambda, yield the global client but still go through full lifespan
+        client = get_lambda_http_client()
         yield {"http_client": client}
+        # Don't close the global client on shutdown in Lambda
+
+    else:
+        # For non-Lambda environments, use context-managed client
+        async with httpx.AsyncClient(
+            limits=httpx.Limits(max_keepalive_connections=10, max_connections=20, keepalive_expiry=30.0),
+            timeout=httpx.Timeout(30.0),
+            follow_redirects=True,
+        ) as client:
+            yield {"http_client": client}
 
 
 # Initialize FastMCP server
@@ -134,66 +181,158 @@ def correct_transcript_section(section: str) -> str:
     return section.strip()
 
 
+async def get_http_client(ctx) -> httpx.AsyncClient:
+    """Get HTTP client from context."""
+    # Try to get client from lifespan context first
+    try:
+        if hasattr(ctx, "request_context") and hasattr(ctx.request_context, "lifespan_context"):
+            client = ctx.request_context.lifespan_context.get("http_client")
+            if client:
+                return client
+    except (KeyError, AttributeError) as e:
+        logger.debug(f"Could not get client from lifespan context: {e}")
+
+    # Fall back to global client for Lambda or when lifespan context is not available
+    return get_lambda_http_client()
+
+
+async def get_api_key_from_context(ctx) -> str:
+    """Extract API key from authenticated context with enhanced OAuth integration."""
+    # Log context ID to verify isolation between concurrent requests
+    context_id = id(contextvars.copy_context())
+    logger.debug(f"Context ID: {context_id}")
+
+    # Check if API key is already stored in context variable
+    api_key = get_api_key()
+
+    # If API key already set (e.g., from query parameter or OAuth), use it
+    if api_key:
+        logger.info(f"API key already set, using {api_key[:8]}...")
+        return api_key
+
+    # If no API key yet, try OAuth authentication
+    try:
+        # Try to import and use OAuth authentication
+        try:
+            from .auth import validate_auth_context, get_current_api_key
+            await validate_auth_context(ctx)
+            api_key = get_current_api_key()
+
+            if not api_key:
+                # This is the critical issue - if OAuth succeeds but no API key found,
+                # we should NOT fall back to environment variables
+                logger.error("OAuth authentication succeeded but no API key found in user claims")
+                raise ValueError("No API key found in authenticated user claims")
+
+        except ImportError:
+            # OAuth not available, fall back to environment variable
+            logger.debug("OAuth authentication not available, using environment variable")
+            api_key = os.getenv("AIERA_API_KEY")
+
+    except Exception as e:
+        logger.error(f"Auth validation failed: {str(e)}")
+
+        # Special handling for Lambda environment with direct API key
+        # This should only be used as absolute last resort
+        if os.getenv("AWS_LAMBDA_FUNCTION_NAME") and os.getenv("AIERA_API_KEY"):
+            logger.warning("Using Lambda environment API key as emergency fallback")
+            logger.warning("This should only happen during Lambda cold starts or system issues")
+
+            api_key = os.getenv("AIERA_API_KEY")
+
+        else:
+            # Re-raise the original error
+            raise
+
+    if not api_key:
+        raise ValueError("Failed to retrieve API key after all authentication attempts")
+
+    return api_key
+
+
 async def make_aiera_request(
     client: httpx.AsyncClient,
     method: str,
     endpoint: str,
-    api_key: Optional[str] = None,
+    api_key: str,
     params: Optional[Dict[str, Any]] = None,
     data: Optional[Dict[str, Any]] = None,
+    additional_instructions: Optional[str] = None,
     return_type: str = "json",
-    instructions: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Make a request to the Aiera REST API.
+    """Make a request to the Aiera API with enhanced error handling and logging.
 
     Args:
         client: HTTP client instance
         method: HTTP method (GET, POST, etc.)
         endpoint: API endpoint path
-        api_key: API key (optional, will use provider if not specified)
+        api_key: API key (required)
         params: Query parameters
         data: Request body data
+        additional_instructions: Additional instructions for response formatting
         return_type: Response format type
-        instructions: Additional instructions
 
     Returns:
-        JSON response data
+        JSON response data with instructions
     """
-    # Get API key from parameter or provider
-    if api_key is None:
-        api_key = get_api_key()
-
-    if not api_key:
-        raise ValueError("API key is required. Configure via AIERA_API_KEY environment variable or set_api_key_provider()")
-
     headers = DEFAULT_HEADERS.copy()
     headers["X-API-Key"] = api_key
 
-    url = f"{AIERA_BASE_URL}{endpoint}"
-
-    response = await client.request(
-        method=method,
-        url=url,
-        params=params,
-        json=data,
-        headers=headers,
-        timeout=30.0
+    # Log API key info for debugging (without exposing the full key)
+    logger.info(
+        f"API request: {endpoint}\n"
+        f"API key preview: {api_key[:8]}...{api_key[-4:] if len(api_key) > 12 else '***'}\n"
+        f"Params: {params}\n"
     )
 
+    url = f"{AIERA_BASE_URL}{endpoint}"
+
+    try:
+        response = await client.request(
+            method=method,
+            url=url,
+            params=params,
+            json=data,
+            headers=headers,
+            timeout=60.0,
+        )
+
+    except httpx.RequestError as e:
+        logger.error(f"Request URL was: {url}")
+        logger.error(f"Request headers were: {headers}")
+        if params:
+            logger.error(f"Request params were: {params}")
+
+        raise Exception(f"Network error calling Aiera API: {str(e)}")
+
     if response.status_code != 200:
-        raise Exception(f"API request failed: {response.status_code} - {response.text}")
+        logger.error(f"API error: {response.status_code} - {response.text}")
+        logger.error(f"Request URL: {url}")
+        logger.error(f"Request headers were: {headers}")
+        if params:
+            logger.error(f"Request params: {params}")
+
+        # Check if this looks like an auth error
+        if response.status_code in [401, 403]:
+            raise Exception(
+                f"Aiera API authentication failed (HTTP {response.status_code}). The API key may be invalid or expired."
+            )
+        else:
+            raise Exception(f"API request failed: {response.status_code} - {response.text}")
 
     if return_type == "json":
         response_data = response.json()
-
     else:
         response_data = response.text
 
-    if instructions:
-        instructions = [
-            "This data is provided for institutional finance professionals. Responses should be composed of accurate, concise, and well-structured financial insights.",
-            instructions,
-        ]
+    # Prepare instructions for response formatting
+    instructions = [
+        "This data is provided for institutional finance professionals. Responses should be composed of accurate, concise, and well-structured financial insights.",
+        CITATION_PROMPT,
+    ]
+
+    if additional_instructions:
+        instructions.append(additional_instructions)
 
     return {
         "instructions": instructions,
@@ -221,8 +360,10 @@ async def find_events(
     page_size: Optional[int] = DEFAULT_PAGE_SIZE,
 ) -> Dict[str, Any]:
     """Find events, filtered by a date range, and (optionally) ticker(s), watchlist, index, sector, or subsector; or event type(s)."""
+    logger.info("tool called: find_events")
     ctx = mcp.get_context()
-    client = ctx.request_context.lifespan_context["http_client"]
+    client = await get_http_client(ctx)
+    api_key = await get_api_key_from_context(ctx)
 
     params = {
         "start_date": start_date,
@@ -234,30 +375,31 @@ async def find_events(
         params["bloomberg_ticker"] = correct_bloomberg_ticker(bloomberg_ticker)
 
     if watchlist_id:
-        params["watchlist_id"] = watchlist_id
+        params["watchlist_id"] = str(watchlist_id)
 
     if index_id:
-        params["index_id"] = index_id
+        params["index_id"] = str(index_id)
 
     if sector_id:
-        params["sector_id"] = sector_id
+        params["sector_id"] = str(sector_id)
 
     if subsector_id:
-        params["subsector_id"] = subsector_id
+        params["subsector_id"] = str(subsector_id)
 
     if event_type:
         params["event_type"] = correct_event_type(event_type)
 
     if page:
-        params["page"] = page
+        params["page"] = str(page)
 
     if page_size:
-        params["page_size"] = page_size
+        params["page_size"] = str(page_size)
 
     return await make_aiera_request(
         client=client,
         method="GET",
         endpoint="/chat-support/find-events",
+        api_key=api_key,
         params=params,
     )
 
@@ -274,8 +416,10 @@ async def get_event(
     transcript_section: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Retrieve an event, including the summary, transcript, and other metadata. Optionally, you filter the transcripts by section ('presentation' or 'q_and_a')."""
+    logger.info("tool called: get_event")
     ctx = mcp.get_context()
-    client = ctx.request_context.lifespan_context["http_client"]
+    client = await get_http_client(ctx)
+    api_key = await get_api_key_from_context(ctx)
 
     params = {
         "event_ids": str(event_id),
@@ -289,6 +433,7 @@ async def get_event(
         client=client,
         method="GET",
         endpoint="/chat-support/find-events",
+        api_key=api_key,
         params=params,
     )
 
@@ -310,8 +455,10 @@ async def get_upcoming_events(
     subsector_id: Optional[int] = None,
 ) -> Dict[str, Any]:
     """Retrieve confirmed and estimated upcoming events, filtered by a date range, and one of the following: ticker(s), watchlist, index, sector, or subsector."""
+    logger.info("tool called: get_upcoming_events")
     ctx = mcp.get_context()
-    client = ctx.request_context.lifespan_context["http_client"]
+    client = await get_http_client(ctx)
+    api_key = await get_api_key_from_context(ctx)
 
     params = {
         "start_date": start_date,
@@ -322,21 +469,22 @@ async def get_upcoming_events(
         params["bloomberg_ticker"] = correct_bloomberg_ticker(bloomberg_ticker)
 
     if watchlist_id:
-        params["watchlist_id"] = watchlist_id
+        params["watchlist_id"] = str(watchlist_id)
 
     if index_id:
-        params["index_id"] = index_id
+        params["index_id"] = str(index_id)
 
     if sector_id:
-        params["sector_id"] = sector_id
+        params["sector_id"] = str(sector_id)
 
     if subsector_id:
-        params["subsector_id"] = subsector_id
+        params["subsector_id"] = str(subsector_id)
 
     return await make_aiera_request(
         client=client,
         method="GET",
         endpoint="/chat-support/estimated-and-upcoming-events",
+        api_key=api_key,
         params=params,
     )
 
@@ -361,8 +509,10 @@ async def find_filings(
     page_size: Optional[int] = DEFAULT_PAGE_SIZE
 ) -> Dict[str, Any]:
     """Find SEC filings, filtered by a date range, and one of the following: ticker(s), watchlist, index, sector, or subsector; and (optionally) by a form number."""
+    logger.info("tool called: find_filings")
     ctx = mcp.get_context()
-    client = ctx.request_context.lifespan_context["http_client"]
+    client = await get_http_client(ctx)
+    api_key = await get_api_key_from_context(ctx)
 
     params = {
         "start_date": start_date,
@@ -373,30 +523,31 @@ async def find_filings(
         params["bloomberg_ticker"] = correct_bloomberg_ticker(bloomberg_ticker)
 
     if watchlist_id:
-        params["watchlist_id"] = watchlist_id
+        params["watchlist_id"] = str(watchlist_id)
 
     if index_id:
-        params["index_id"] = index_id
+        params["index_id"] = str(index_id)
 
     if sector_id:
-        params["sector_id"] = sector_id
+        params["sector_id"] = str(sector_id)
 
     if subsector_id:
-        params["subsector_id"] = subsector_id
+        params["subsector_id"] = str(subsector_id)
 
     if form_number:
         params["form_number"] = form_number
 
     if page:
-        params["page"] = page
+        params["page"] = str(page)
 
     if page_size:
-        params["page_size"] = page_size
+        params["page_size"] = str(page_size)
 
     return await make_aiera_request(
         client=client,
         method="GET",
         endpoint="/chat-support/find-filings",
+        api_key=api_key,
         params=params,
     )
 
@@ -410,8 +561,10 @@ async def find_filings(
 )
 async def get_filing(filing_id: str) -> Dict[str, Any]:
     """Retrieve an SEC filing, including a summary and other metadata."""
+    logger.info("tool called: get_filing")
     ctx = mcp.get_context()
-    client = ctx.request_context.lifespan_context["http_client"]
+    client = await get_http_client(ctx)
+    api_key = await get_api_key_from_context(ctx)
 
     params = {
         "filing_ids": str(filing_id),
@@ -422,6 +575,7 @@ async def get_filing(filing_id: str) -> Dict[str, Any]:
         client=client,
         method="GET",
         endpoint="/chat-support/find-filings",
+        api_key=api_key,
         params=params,
     )
 
@@ -444,11 +598,13 @@ async def find_equities(
     page_size: Optional[int] = DEFAULT_PAGE_SIZE,
 ) -> Dict[str, Any]:
     """Retrieve equities, filtered by various identifiers, such as ticker, ISIN, or RIC; or by search."""
+    logger.info("tool called: find_equities")
     ctx = mcp.get_context()
-    client = ctx.request_context.lifespan_context["http_client"]
+    client = await get_http_client(ctx)
+    api_key = await get_api_key_from_context(ctx)
 
     params = {
-        "include_company_metadata": True,
+        "include_company_metadata": "true",
     }
 
     if bloomberg_ticker:
@@ -470,15 +626,16 @@ async def find_equities(
         params["search"] = search
 
     if page:
-        params["page"] = page
+        params["page"] = str(page)
 
     if page_size:
-        params["page_size"] = page_size
+        params["page_size"] = str(page_size)
 
     return await make_aiera_request(
         client=client,
         method="GET",
         endpoint="/chat-support/find-equities",
+        api_key=api_key,
         params=params,
     )
 
@@ -492,13 +649,16 @@ async def find_equities(
 )
 async def get_sectors_and_subsectors() -> Dict[str, Any]:
     """Retrieve a list of all sectors and subsectors."""
+    logger.info("tool called: get_sectors_and_subsectors")
     ctx = mcp.get_context()
-    client = ctx.request_context.lifespan_context["http_client"]
+    client = await get_http_client(ctx)
+    api_key = await get_api_key_from_context(ctx)
 
     return await make_aiera_request(
         client=client,
         method="GET",
         endpoint="/chat-support/get-sectors-and-subsectors",
+        api_key=api_key,
         params={},
     )
 
@@ -512,18 +672,21 @@ async def get_sectors_and_subsectors() -> Dict[str, Any]:
 )
 async def get_equity_summaries(bloomberg_ticker: str) -> Dict[str, Any]:
     """Retrieve detailed summary information about one or more equities, filtered by ticker(s)."""
+    logger.info("tool called: get_equity_summaries")
     ctx = mcp.get_context()
-    client = ctx.request_context.lifespan_context["http_client"]
+    client = await get_http_client(ctx)
+    api_key = await get_api_key_from_context(ctx)
 
     params = {
         "bloomberg_ticker": correct_bloomberg_ticker(bloomberg_ticker),
-        "lookback": 90,
+        "lookback": "90",
     }
 
     return await make_aiera_request(
         client=client,
         method="GET",
         endpoint="/chat-support/equity-summaries",
+        api_key=api_key,
         params=params,
     )
 
@@ -537,13 +700,16 @@ async def get_equity_summaries(bloomberg_ticker: str) -> Dict[str, Any]:
 )
 async def get_available_indexes() -> Dict[str, Any]:
     """Retrieve the list of available indexes."""
+    logger.info("tool called: get_available_indexes")
     ctx = mcp.get_context()
-    client = ctx.request_context.lifespan_context["http_client"]
+    client = await get_http_client(ctx)
+    api_key = await get_api_key_from_context(ctx)
 
     return await make_aiera_request(
         client=client,
         method="GET",
         endpoint="/chat-support/available-indexes",
+        api_key=api_key,
         params={},
     )
 
@@ -561,21 +727,24 @@ async def get_index_constituents(
     page_size: Optional[int] = DEFAULT_PAGE_SIZE,
 ) -> Dict[str, Any]:
     """Retrieve the list of all equities within an index."""
+    logger.info("tool called: get_index_constituents")
     ctx = mcp.get_context()
-    client = ctx.request_context.lifespan_context["http_client"]
+    client = await get_http_client(ctx)
+    api_key = await get_api_key_from_context(ctx)
 
     params = {}
 
     if page:
-        params["page"] = page
+        params["page"] = str(page)
 
-    if page:
-        params["page_size"] = page_size
+    if page_size:
+        params["page_size"] = str(page_size)
 
     return await make_aiera_request(
         client=client,
         method="GET",
         endpoint=f"/chat-support/index-constituents/{index}",
+        api_key=api_key,
         params=params,
     )
 
@@ -589,13 +758,16 @@ async def get_index_constituents(
 )
 async def get_available_watchlists() -> Dict[str, Any]:
     """Retrieve the list of available watchlists."""
+    logger.info("tool called: get_available_watchlists")
     ctx = mcp.get_context()
-    client = ctx.request_context.lifespan_context["http_client"]
+    client = await get_http_client(ctx)
+    api_key = await get_api_key_from_context(ctx)
 
     return await make_aiera_request(
         client=client,
         method="GET",
         endpoint="/chat-support/available-watchlists",
+        api_key=api_key,
         params={},
     )
 
@@ -613,21 +785,24 @@ async def get_watchlist_constituents(
     page_size: Optional[int] = DEFAULT_PAGE_SIZE,
 ) -> Dict[str, Any]:
     """Retrieve the list of all equities within a watchlist."""
+    logger.info("tool called: get_watchlist_constituents")
     ctx = mcp.get_context()
-    client = ctx.request_context.lifespan_context["http_client"]
+    client = await get_http_client(ctx)
+    api_key = await get_api_key_from_context(ctx)
 
     params = {}
 
     if page:
-        params["page"] = page
+        params["page"] = str(page)
 
-    if page:
-        params["page_size"] = page_size
+    if page_size:
+        params["page_size"] = str(page_size)
 
     return await make_aiera_request(
         client=client,
         method="GET",
         endpoint=f"/chat-support/watchlist-constituents/{watchlist_id}",
+        api_key=api_key,
         params=params,
     )
 
@@ -653,8 +828,10 @@ async def find_company_docs(
     page_size: Optional[int] = DEFAULT_PAGE_SIZE
 ) -> Dict[str, Any]:
     """Find documents that have been published by a company, filtered by a date range, and (optionally) by ticker(s), watchlist, index, sector, or subsector; or category(s) or keyword(s)."""
+    logger.info("tool called: find_company_docs")
     ctx = mcp.get_context()
-    client = ctx.request_context.lifespan_context["http_client"]
+    client = await get_http_client(ctx)
+    api_key = await get_api_key_from_context(ctx)
 
     params = {
         "start_date": start_date,
@@ -665,16 +842,16 @@ async def find_company_docs(
         params["bloomberg_ticker"] = correct_bloomberg_ticker(bloomberg_ticker)
 
     if watchlist_id:
-        params["watchlist_id"] = watchlist_id
+        params["watchlist_id"] = str(watchlist_id)
 
     if index_id:
-        params["index_id"] = index_id
+        params["index_id"] = str(index_id)
 
     if sector_id:
-        params["sector_id"] = sector_id
+        params["sector_id"] = str(sector_id)
 
     if subsector_id:
-        params["subsector_id"] = subsector_id
+        params["subsector_id"] = str(subsector_id)
 
     if categories:
         params["categories"] = correct_categories(categories)
@@ -683,15 +860,16 @@ async def find_company_docs(
         params["keywords"] = correct_keywords(keywords)
 
     if page:
-        params["page"] = page
+        params["page"] = str(page)
 
     if page_size:
-        params["page_size"] = page_size
+        params["page_size"] = str(page_size)
 
     return await make_aiera_request(
         client=client,
         method="GET",
         endpoint="/chat-support/find-company-docs",
+        api_key=api_key,
         params=params,
     )
 
@@ -705,18 +883,21 @@ async def find_company_docs(
 )
 async def get_company_doc(company_doc_id: str) -> Dict[str, Any]:
     """Retrieve a company document, including a summary and other metadata."""
+    logger.info("tool called: get_company_doc")
     ctx = mcp.get_context()
-    client = ctx.request_context.lifespan_context["http_client"]
+    client = await get_http_client(ctx)
+    api_key = await get_api_key_from_context(ctx)
 
     params = {
         "company_doc_ids": str(company_doc_id),
-        "include_content": True,
+        "include_content": "true",
     }
 
     return await make_aiera_request(
         client=client,
         method="GET",
         endpoint="/chat-support/find-company-docs",
+        api_key=api_key,
         params=params,
     )
 
@@ -734,8 +915,10 @@ async def get_company_doc_categories(
     page_size: Optional[int] = DEFAULT_PAGE_SIZE,
 ) -> Dict[str, Any]:
     """Retrieve a list of all categories associated with company documents."""
+    logger.info("tool called: get_company_doc_categories")
     ctx = mcp.get_context()
-    client = ctx.request_context.lifespan_context["http_client"]
+    client = await get_http_client(ctx)
+    api_key = await get_api_key_from_context(ctx)
 
     params = {}
 
@@ -743,15 +926,16 @@ async def get_company_doc_categories(
         params["search"] = search
 
     if page:
-        params["page"] = page
+        params["page"] = str(page)
 
     if page_size:
-        params["page_size"] = page_size
+        params["page_size"] = str(page_size)
 
     return await make_aiera_request(
         client=client,
         method="GET",
         endpoint="/chat-support/get-company-doc-categories",
+        api_key=api_key,
         params=params,
     )
 
@@ -769,8 +953,10 @@ async def get_company_doc_keywords(
     page_size: Optional[int] = DEFAULT_PAGE_SIZE,
 ) -> Dict[str, Any]:
     """Retrieve a list of all keywords associated with company documents."""
+    logger.info("tool called: get_company_doc_keywords")
     ctx = mcp.get_context()
-    client = ctx.request_context.lifespan_context["http_client"]
+    client = await get_http_client(ctx)
+    api_key = await get_api_key_from_context(ctx)
 
     params = {}
 
@@ -778,15 +964,16 @@ async def get_company_doc_keywords(
         params["search"] = search
 
     if page:
-        params["page"] = page
+        params["page"] = str(page)
 
     if page_size:
-        params["page_size"] = page_size
+        params["page_size"] = str(page_size)
 
     return await make_aiera_request(
         client=client,
         method="GET",
         endpoint="/chat-support/get-company-doc-keywords",
+        api_key=api_key,
         params=params,
     )
 
@@ -810,40 +997,43 @@ async def find_third_bridge_events(
     page_size: Optional[int] = DEFAULT_PAGE_SIZE,
 ) -> Dict[str, Any]:
     """Find expert insight events from Third Bridge, filtering by a date range and (optionally) by ticker, index, watchlist, sector, or subsector."""
+    logger.info("tool called: find_third_bridge_events")
     ctx = mcp.get_context()
-    client = ctx.request_context.lifespan_context["http_client"]
+    client = await get_http_client(ctx)
+    api_key = await get_api_key_from_context(ctx)
 
     params = {
         "start_date": start_date,
         "end_date": end_date,
-        "include_transcripts": False,
+        "include_transcripts": "false",
     }
 
     if bloomberg_ticker:
         params["bloomberg_ticker"] = correct_bloomberg_ticker(bloomberg_ticker)
 
     if watchlist_id:
-        params["watchlist_id"] = watchlist_id
+        params["watchlist_id"] = str(watchlist_id)
 
     if index_id:
-        params["index_id"] = index_id
+        params["index_id"] = str(index_id)
 
     if sector_id:
-        params["sector_id"] = sector_id
+        params["sector_id"] = str(sector_id)
 
     if subsector_id:
-        params["subsector_id"] = subsector_id
+        params["subsector_id"] = str(subsector_id)
 
     if page:
-        params["page"] = page
+        params["page"] = str(page)
 
     if page_size:
-        params["page_size"] = page_size
+        params["page_size"] = str(page_size)
 
     return await make_aiera_request(
         client=client,
         method="GET",
         endpoint="/chat-support/find-third-bridge",
+        api_key=api_key,
         params=params,
     )
 
@@ -857,18 +1047,21 @@ async def find_third_bridge_events(
 )
 async def get_third_bridge_event(event_id: str) -> Dict[str, Any]:
     """Retrieve an expert insight events from Third Bridge, including agenda, insights, transcript, and other metadata."""
+    logger.info("tool called: get_third_bridge_event")
     ctx = mcp.get_context()
-    client = ctx.request_context.lifespan_context["http_client"]
+    client = await get_http_client(ctx)
+    api_key = await get_api_key_from_context(ctx)
 
     params = {
         "event_ids": str(event_id),
-        "include_transcripts": True,
+        "include_transcripts": "true",
     }
 
     return await make_aiera_request(
         client=client,
         method="GET",
         endpoint="/chat-support/find-third-bridge",
+        api_key=api_key,
         params=params,
     )
 
@@ -1078,6 +1271,6 @@ def register_aiera_tools(
     )(get_third_bridge_event)
 
 
-def run(transport="streamable-http"):
+def run(transport: str = "streamable-http"):
     """Run the MCP server (for standalone usage)."""
     mcp.run(transport=transport)
