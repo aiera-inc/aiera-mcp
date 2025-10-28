@@ -2,6 +2,10 @@
 
 import os
 from typing import Callable, Optional
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 __version__ = "0.1.0"
 
@@ -40,6 +44,7 @@ def get_api_key() -> Optional[str]:
             if key := _api_key_provider():
                 return key
         except Exception:
+            logger.info("Failed to get API key from provider, falling back to environment variable.")
             # Fallback to environment variable if provider fails
             pass
 
