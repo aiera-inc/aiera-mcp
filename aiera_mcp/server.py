@@ -7,7 +7,7 @@ import contextvars
 import json
 
 from datetime import datetime
-from typing import Any, Dict, Optional, Callable
+from typing import Any, Dict, Optional, Callable, List, Set
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 
@@ -1159,116 +1159,143 @@ def get_api_documentation() -> str:
 
 def register_aiera_tools(
     mcp_server: FastMCP,
-    api_key_provider: Optional[Callable[[], Optional[str]]] = None
+    api_key_provider: Optional[Callable[[], Optional[str]]] = None,
+    include: Optional[List[str]] = None,
+    exclude: Optional[List[str]] = None,
 ) -> None:
-    """Register all Aiera tools with a FastMCP server instance.
+    """Register Aiera tools with a FastMCP server instance with optional filtering.
 
     Args:
         mcp_server: FastMCP server instance to register tools with
         api_key_provider: Optional function that returns API key for OAuth systems
+        include: Optional list of tool names to include (if specified, only these tools will be registered)
+        exclude: Optional list of tool names to exclude (these tools will not be registered)
 
-    Example:
-        # Basic usage with environment variable
+    Examples:
+        # Basic usage with environment variable - registers all tools
         register_aiera_tools(mcp)
 
-        # With OAuth provider (e.g., aiera-public-mcp)
+        # With OAuth provider - registers all tools
         from aiera_public_mcp.auth import get_current_api_key
         register_aiera_tools(mcp, get_current_api_key)
+
+        # Register only event-related tools
+        register_aiera_tools(mcp, include=["find_events", "get_event", "get_upcoming_events"])
+
+        # Register all tools except Third Bridge
+        register_aiera_tools(mcp, exclude=["find_third_bridge_events", "get_third_bridge_event"])
+
+        # Combine OAuth with selective registration
+        register_aiera_tools(mcp, get_current_api_key, include=["find_events", "find_filings"])
     """
     # Configure API key provider if provided
     if api_key_provider:
         from . import set_api_key_provider
         set_api_key_provider(api_key_provider)
-    # Register all the tools with the provided server
-    mcp_server.tool(
-        name="find_events",
-        description="Finds company events using search filters including date, event type, company, sectors, and more."
-    )(find_events)
 
-    mcp_server.tool(
-        name="get_event",
-        description="Returns the details of an event given its identifier."
-    )(get_event)
+    # Define all available tools
+    available_tools = {
+        "find_events": {
+            "function": find_events,
+            "description": "Finds company events using search filters including date, event type, company, sectors, and more."
+        },
+        "get_event": {
+            "function": get_event,
+            "description": "Returns the details of an event given its identifier."
+        },
+        "get_upcoming_events": {
+            "function": get_upcoming_events,
+            "description": "Returns upcoming events of a specific type that match provided filters."
+        },
+        "find_filings": {
+            "function": find_filings,
+            "description": "Finds SEC filings using search filters including company, date, form type, and more."
+        },
+        "get_filing": {
+            "function": get_filing,
+            "description": "Returns the details of a filing given its identifier."
+        },
+        "find_equities": {
+            "function": find_equities,
+            "description": "Finds companies/equities using search filters like company name, ticker, sector, and more."
+        },
+        "get_sectors_and_subsectors": {
+            "function": get_sectors_and_subsectors,
+            "description": "Returns the list of available sectors and their subsectors for filtering."
+        },
+        "get_equity_summaries": {
+            "function": get_equity_summaries,
+            "description": "Returns summary statistics for equities."
+        },
+        "get_available_indexes": {
+            "function": get_available_indexes,
+            "description": "Returns the list of available stock indexes."
+        },
+        "get_index_constituents": {
+            "function": get_index_constituents,
+            "description": "Returns the constituents of a stock index."
+        },
+        "get_available_watchlists": {
+            "function": get_available_watchlists,
+            "description": "Returns the list of available watchlists."
+        },
+        "get_watchlist_constituents": {
+            "function": get_watchlist_constituents,
+            "description": "Returns the constituents of a watchlist."
+        },
+        "find_company_docs": {
+            "function": find_company_docs,
+            "description": "Finds company documents using search filters."
+        },
+        "get_company_doc": {
+            "function": get_company_doc,
+            "description": "Returns the details of a company document given its identifier."
+        },
+        "get_company_doc_categories": {
+            "function": get_company_doc_categories,
+            "description": "Returns the list of available categories for company documents."
+        },
+        "get_company_doc_keywords": {
+            "function": get_company_doc_keywords,
+            "description": "Returns the list of available keywords for company documents."
+        },
+        "find_third_bridge_events": {
+            "function": find_third_bridge_events,
+            "description": "Finds Third Bridge events using search filters."
+        },
+        "get_third_bridge_event": {
+            "function": get_third_bridge_event,
+            "description": "Returns the details of a Third Bridge event given its identifier."
+        },
+    }
 
-    mcp_server.tool(
-        name="get_upcoming_events",
-        description="Returns upcoming events of a specific type that match provided filters."
-    )(get_upcoming_events)
+    # Validate include/exclude parameters
+    if include is not None and exclude is not None:
+        raise ValueError("Cannot specify both 'include' and 'exclude' parameters")
 
-    mcp_server.tool(
-        name="find_filings",
-        description="Finds SEC filings using search filters including company, date, form type, and more."
-    )(find_filings)
+    if include is not None:
+        # Validate that all included tools exist
+        invalid_tools = set(include) - set(available_tools.keys())
+        if invalid_tools:
+            raise ValueError(f"Unknown tools specified in 'include': {sorted(invalid_tools)}")
+        tools_to_register = set(include)
+    elif exclude is not None:
+        # Validate that all excluded tools exist
+        invalid_tools = set(exclude) - set(available_tools.keys())
+        if invalid_tools:
+            raise ValueError(f"Unknown tools specified in 'exclude': {sorted(invalid_tools)}")
+        tools_to_register = set(available_tools.keys()) - set(exclude)
+    else:
+        # Register all tools
+        tools_to_register = set(available_tools.keys())
 
-    mcp_server.tool(
-        name="get_filing",
-        description="Returns the details of a filing given its identifier."
-    )(get_filing)
-
-    mcp_server.tool(
-        name="find_equities",
-        description="Finds companies/equities using search filters like company name, ticker, sector, and more."
-    )(find_equities)
-
-    mcp_server.tool(
-        name="get_sectors_and_subsectors",
-        description="Returns the list of available sectors and their subsectors for filtering."
-    )(get_sectors_and_subsectors)
-
-    mcp_server.tool(
-        name="get_equity_summaries",
-        description="Returns summary statistics for equities."
-    )(get_equity_summaries)
-
-    mcp_server.tool(
-        name="get_available_indexes",
-        description="Returns the list of available stock indexes."
-    )(get_available_indexes)
-
-    mcp_server.tool(
-        name="get_index_constituents",
-        description="Returns the constituents of a stock index."
-    )(get_index_constituents)
-
-    mcp_server.tool(
-        name="get_available_watchlists",
-        description="Returns the list of available watchlists."
-    )(get_available_watchlists)
-
-    mcp_server.tool(
-        name="get_watchlist_constituents",
-        description="Returns the constituents of a watchlist."
-    )(get_watchlist_constituents)
-
-    mcp_server.tool(
-        name="find_company_docs",
-        description="Finds company documents using search filters."
-    )(find_company_docs)
-
-    mcp_server.tool(
-        name="get_company_doc",
-        description="Returns the details of a company document given its identifier."
-    )(get_company_doc)
-
-    mcp_server.tool(
-        name="get_company_doc_categories",
-        description="Returns the list of available categories for company documents."
-    )(get_company_doc_categories)
-
-    mcp_server.tool(
-        name="get_company_doc_keywords",
-        description="Returns the list of available keywords for company documents."
-    )(get_company_doc_keywords)
-
-    mcp_server.tool(
-        name="find_third_bridge_events",
-        description="Finds Third Bridge events using search filters."
-    )(find_third_bridge_events)
-
-    mcp_server.tool(
-        name="get_third_bridge_event",
-        description="Returns the details of a Third Bridge event given its identifier."
-    )(get_third_bridge_event)
+    # Register the selected tools
+    for tool_name in sorted(tools_to_register):
+        tool_info = available_tools[tool_name]
+        mcp_server.tool(
+            name=tool_name,
+            description=tool_info["description"]
+        )(tool_info["function"])
 
 
 def run(transport: str = "streamable-http"):
