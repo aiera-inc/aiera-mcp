@@ -80,6 +80,14 @@ register_aiera_tools(mcp)
 from your_auth_system import get_current_api_key
 register_aiera_tools(mcp, get_current_api_key)
 
+# Selective tool registration - only register specific tools
+from aiera_mcp import EVENT_TOOLS, FILING_TOOLS
+register_aiera_tools(mcp, include=EVENT_TOOLS + FILING_TOOLS)
+
+# Register all tools except Third Bridge
+from aiera_mcp import THIRD_BRIDGE_TOOLS
+register_aiera_tools(mcp, exclude=THIRD_BRIDGE_TOOLS)
+
 # Or configure globally
 from aiera_mcp import set_api_key_provider
 set_api_key_provider(get_current_api_key)
@@ -106,6 +114,70 @@ from aiera_mcp import find_events, make_aiera_request, correct_bloomberg_ticker
 
 ### Constants
 - `DEFAULT_PAGE_SIZE`, `DEFAULT_MAX_PAGE_SIZE`, `AIERA_BASE_URL`, `CITATION_PROMPT`
+- `AVAILABLE_TOOLS` - List of all 18 available tool names
+
+## Selective Tool Registration
+
+The `register_aiera_tools` function supports optional `include` and `exclude` parameters to register only a subset of tools:
+
+```python
+from mcp.server.fastmcp import FastMCP
+from aiera_mcp import register_aiera_tools, EVENT_TOOLS, THIRD_BRIDGE_TOOLS
+
+mcp = FastMCP("MyServer")
+
+# Register only event-related tools
+register_aiera_tools(mcp, include=["find_events", "get_event", "get_upcoming_events"])
+
+# Use predefined tool groups for convenience
+register_aiera_tools(mcp, include=EVENT_TOOLS)
+
+# Register all tools except Third Bridge
+register_aiera_tools(mcp, exclude=THIRD_BRIDGE_TOOLS)
+
+# Combine with OAuth authentication
+from your_auth_system import get_current_api_key
+register_aiera_tools(mcp, get_current_api_key, include=EVENT_TOOLS)
+```
+
+### Available Tool Groups
+
+The package provides predefined tool groups for common use cases:
+
+- **`EVENT_TOOLS`**: `["find_events", "get_event", "get_upcoming_events"]`
+- **`FILING_TOOLS`**: `["find_filings", "get_filing"]`
+- **`EQUITY_TOOLS`**: `["find_equities", "get_equity_summaries", "get_sectors_and_subsectors"]`
+- **`INDEX_WATCHLIST_TOOLS`**: `["get_available_indexes", "get_index_constituents", "get_available_watchlists", "get_watchlist_constituents"]`
+- **`COMPANY_DOC_TOOLS`**: `["find_company_docs", "get_company_doc", "get_company_doc_categories", "get_company_doc_keywords"]`
+- **`THIRD_BRIDGE_TOOLS`**: `["find_third_bridge_events", "get_third_bridge_event"]`
+- **`AVAILABLE_TOOLS`**: Complete list of all 18 available tools
+
+### Usage Examples
+
+```python
+# Register only core financial tools (events + filings + equities)
+core_tools = EVENT_TOOLS + FILING_TOOLS + EQUITY_TOOLS
+register_aiera_tools(mcp, include=core_tools)
+
+# Register everything except Third Bridge (useful for basic subscriptions)
+register_aiera_tools(mcp, exclude=THIRD_BRIDGE_TOOLS)
+
+# Register only search/discovery tools
+discovery_tools = ["find_events", "find_filings", "find_equities", "find_company_docs"]
+register_aiera_tools(mcp, include=discovery_tools)
+```
+
+### Error Handling
+
+The function validates tool names and provides helpful error messages:
+
+```python
+# This will raise ValueError: Unknown tools specified in 'include': ['nonexistent_tool']
+register_aiera_tools(mcp, include=["nonexistent_tool"])
+
+# This will raise ValueError: Cannot specify both 'include' and 'exclude' parameters
+register_aiera_tools(mcp, include=EVENT_TOOLS, exclude=FILING_TOOLS)
+```
 
 ## Prerequisites
 

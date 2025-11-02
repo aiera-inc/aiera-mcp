@@ -57,6 +57,48 @@ def clear_api_key_provider() -> None:
     global _api_key_provider
     _api_key_provider = None
 
+
+# List of all available tool names for reference with include/exclude
+AVAILABLE_TOOLS = [
+    # Event Tools
+    "find_events",
+    "get_event",
+    "get_upcoming_events",
+
+    # Filing Tools
+    "find_filings",
+    "get_filing",
+
+    # Equity Tools
+    "find_equities",
+    "get_equity_summaries",
+    "get_sectors_and_subsectors",
+
+    # Index/Watchlist Tools
+    "get_available_indexes",
+    "get_index_constituents",
+    "get_available_watchlists",
+    "get_watchlist_constituents",
+
+    # Company Document Tools
+    "find_company_docs",
+    "get_company_doc",
+    "get_company_doc_categories",
+    "get_company_doc_keywords",
+
+    # Third Bridge Tools
+    "find_third_bridge_events",
+    "get_third_bridge_event",
+]
+
+# Convenience tool groups for common use cases
+EVENT_TOOLS = ["find_events", "get_event", "get_upcoming_events"]
+FILING_TOOLS = ["find_filings", "get_filing"]
+EQUITY_TOOLS = ["find_equities", "get_equity_summaries", "get_sectors_and_subsectors"]
+INDEX_WATCHLIST_TOOLS = ["get_available_indexes", "get_index_constituents", "get_available_watchlists", "get_watchlist_constituents"]
+COMPANY_DOC_TOOLS = ["find_company_docs", "get_company_doc", "get_company_doc_categories", "get_company_doc_keywords"]
+THIRD_BRIDGE_TOOLS = ["find_third_bridge_events", "get_third_bridge_event"]
+
 from .server import (
     # Tools
     find_events,
@@ -140,4 +182,13 @@ __all__ = [
     "DEFAULT_MAX_PAGE_SIZE",
     "AIERA_BASE_URL",
     "CITATION_PROMPT",
+    "AVAILABLE_TOOLS",
+
+    # Tool Groups
+    "EVENT_TOOLS",
+    "FILING_TOOLS",
+    "EQUITY_TOOLS",
+    "INDEX_WATCHLIST_TOOLS",
+    "COMPANY_DOC_TOOLS",
+    "THIRD_BRIDGE_TOOLS",
 ]
