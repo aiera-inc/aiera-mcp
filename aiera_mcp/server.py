@@ -1111,13 +1111,27 @@ async def find_transcrippets(
     if created_end_date:
         params["created_end_date"] = created_end_date
 
-    return await make_aiera_request(
+    response = await make_aiera_request(
         client=client,
         method="GET",
         endpoint="/transcrippets/",
         api_key=api_key,
         params=params,
     )
+
+    # Filter response to only include public_url and transcrippet_id
+    if "response" in response and isinstance(response["response"], list):
+        filtered_transcrippets = []
+        for transcrippet in response["response"]:
+            filtered_item = {
+                "transcrippet_id": transcrippet.get("transcrippet_id"),
+                "public_url": f"https://public.aiera.com/shared/transcrippet.html?id={transcrippet.get('transcrippet_guid')}"
+            }
+            filtered_transcrippets.append(filtered_item)
+
+        response["response"] = filtered_transcrippets
+
+    return response
 
 
 @mcp.tool(
@@ -1158,13 +1172,24 @@ async def create_transcrippet(
     if equity_id:
         data["equity_id"] = equity_id
 
-    return await make_aiera_request(
+    response = await make_aiera_request(
         client=client,
         method="POST",
         endpoint="/transcrippets/create",
         api_key=api_key,
         data=data,
     )
+
+    # Filter response to only include public_url and transcrippet_id
+    if "response" in response and isinstance(response["response"], dict):
+        transcrippet = response["response"]
+        filtered_transcrippet = {
+            "transcrippet_id": transcrippet.get("transcrippet_id"),
+            "public_url": f"https://public.aiera.com/shared/transcrippet.html?id={transcrippet.get('transcrippet_guid')}"
+        }
+        response["response"] = filtered_transcrippet
+
+    return response
 
 
 @mcp.tool(
