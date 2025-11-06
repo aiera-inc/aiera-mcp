@@ -1066,6 +1066,130 @@ async def get_third_bridge_event(event_id: str) -> Dict[str, Any]:
     )
 
 
+@mcp.tool(
+    annotations={
+        "title": "Find Transcrippets",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+    }
+)
+async def find_transcrippets(
+    transcrippet_id: Optional[str] = None,
+    event_id: Optional[str] = None,
+    equity_id: Optional[str] = None,
+    speaker_id: Optional[str] = None,
+    transcript_item_id: Optional[str] = None,
+    created_start_date: Optional[str] = None,
+    created_end_date: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Find and retrieve Transcrippets™, filtered by various identifiers and date ranges."""
+    logger.info("tool called: find_transcrippets")
+    ctx = mcp.get_context()
+    client = await get_http_client(ctx)
+    api_key = await get_api_key_from_context(ctx)
+
+    params = {}
+
+    if transcrippet_id:
+        params["transcrippet_id"] = correct_provided_ids(transcrippet_id)
+
+    if event_id:
+        params["event_id"] = correct_provided_ids(event_id)
+
+    if equity_id:
+        params["equity_id"] = correct_provided_ids(equity_id)
+
+    if speaker_id:
+        params["speaker_id"] = correct_provided_ids(speaker_id)
+
+    if transcript_item_id:
+        params["transcript_item_id"] = correct_provided_ids(transcript_item_id)
+
+    if created_start_date:
+        params["created_start_date"] = created_start_date
+
+    if created_end_date:
+        params["created_end_date"] = created_end_date
+
+    return await make_aiera_request(
+        client=client,
+        method="GET",
+        endpoint="/transcrippets/",
+        api_key=api_key,
+        params=params,
+    )
+
+
+@mcp.tool(
+    annotations={
+        "title": "Create Transcrippet",
+        "readOnlyHint": False,
+        "destructiveHint": False,
+    }
+)
+async def create_transcrippet(
+    event_id: int,
+    transcript: str,
+    transcript_item_id: int,
+    transcript_item_offset: int,
+    transcript_end_item_id: int,
+    transcript_end_item_offset: int,
+    company_id: Optional[int] = None,
+    equity_id: Optional[int] = None,
+) -> Dict[str, Any]:
+    """Create a new Transcrippet™ from an event transcript segment."""
+    logger.info("tool called: create_transcrippet")
+    ctx = mcp.get_context()
+    client = await get_http_client(ctx)
+    api_key = await get_api_key_from_context(ctx)
+
+    data = {
+        "event_id": event_id,
+        "transcript": transcript,
+        "transcript_item_id": transcript_item_id,
+        "transcript_item_offset": transcript_item_offset,
+        "transcript_end_item_id": transcript_end_item_id,
+        "transcript_end_item_offset": transcript_end_item_offset,
+    }
+
+    if company_id:
+        data["company_id"] = company_id
+
+    if equity_id:
+        data["equity_id"] = equity_id
+
+    return await make_aiera_request(
+        client=client,
+        method="POST",
+        endpoint="/transcrippets/create",
+        api_key=api_key,
+        data=data,
+    )
+
+
+@mcp.tool(
+    annotations={
+        "title": "Delete Transcrippet",
+        "readOnlyHint": False,
+        "destructiveHint": True,
+    }
+)
+async def delete_transcrippet(transcrippet_id: str) -> Dict[str, Any]:
+    """Delete a Transcrippet™ by its ID."""
+    logger.info("tool called: delete_transcrippet")
+    ctx = mcp.get_context()
+    client = await get_http_client(ctx)
+    api_key = await get_api_key_from_context(ctx)
+
+    return await make_aiera_request(
+        client=client,
+        method="POST",
+        endpoint=f"/transcrippets/{transcrippet_id}/delete",
+        api_key=api_key,
+        params={},
+    )
+
+
 @mcp.resource(uri="aiera://api/docs")
 def get_api_documentation() -> str:
     """Provide documentation for the Aiera API."""
@@ -1130,10 +1254,20 @@ def get_api_documentation() -> str:
 
     ### Third Bridge API
     - find_third_bridge_events: Retrieve expert insight events from Third Bridge, filtered by start_date and end_date, and optionally by bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id. This endpoint supports pagination.
-    - get_third_bridge_event: Retrieve an expert insight event from Third Bridge, including an agenda, insights, the full transcript, filtered by event_id. 
+    - get_third_bridge_event: Retrieve an expert insight event from Third Bridge, including an agenda, insights, the full transcript, filtered by event_id.
     -- The event ID can be found using the tool find_third_bridge_events.
     -- If you need to retrieve more than one event, make multiple sequential calls.
-    
+
+    ### Transcrippets API
+    - find_transcrippets: Retrieve Transcrippets™, filtered by various identifiers such as transcrippet_id (comma-separated list), event_id (comma-separated list), equity_id (comma-separated list), speaker_id (comma-separated list), transcript_item_id (comma-separated list), and date ranges (created_start_date and created_end_date).
+    -- Transcrippets™ are curated segments of event transcripts that capture key insights or memorable quotes.
+    -- Date parameters should be in ISO format (YYYY-MM-DD).
+    - create_transcrippet: Create a new Transcrippet™ from an event transcript segment. Requires event_id, transcript (the text content), transcript_item_id, transcript_item_offset, transcript_end_item_id, and transcript_end_item_offset. Optionally accepts company_id and equity_id.
+    -- The event_id can be found using the find_events tool.
+    -- Transcript item IDs and offsets define the precise boundaries of the transcript segment to capture.
+    - delete_transcrippet: Delete a Transcrippet™ by its ID. This is a destructive operation that cannot be undone.
+    -- The transcrippet_id can be found using the find_transcrippets tool.
+
     ## Authentication:
     All endpoints require the AIERA_API_KEY environment variable to be set.
     Some endpoints may require specific permissions based on a subscription plan. If access is denied, the user should talk to their Aiera representative about gaining access.
@@ -1270,7 +1404,22 @@ def register_aiera_tools(
         description="Returns the details of a Third Bridge event given its identifier."
     )(get_third_bridge_event)
 
+    mcp_server.tool(
+        name="find_transcrippets",
+        description="Finds and retrieves Transcrippets™ using search filters."
+    )(find_transcrippets)
 
-def run(transport: str = "streamable-http"):
+    mcp_server.tool(
+        name="create_transcrippet",
+        description="Creates a new Transcrippet™ from an event transcript segment."
+    )(create_transcrippet)
+
+    mcp_server.tool(
+        name="delete_transcrippet",
+        description="Deletes a Transcrippet™ by its ID."
+    )(delete_transcrippet)
+
+
+def run(transport: str = "stdio"):
     """Run the MCP server (for standalone usage)."""
     mcp.run(transport=transport)
