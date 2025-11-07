@@ -4,7 +4,7 @@
 
 from typing import List, Tuple
 
-# Import all tool functions
+# Import all tool functions from domain modules
 from .events import find_events, get_event, get_upcoming_events
 from .filings import find_filings, get_filing
 from .equities import find_equities, get_equity_summaries, get_available_watchlists, get_available_indexes, get_sectors_and_subsectors, get_index_constituents, get_watchlist_constituents
@@ -12,27 +12,14 @@ from .company_docs import find_company_docs, get_company_doc, get_company_doc_ca
 from .third_bridge import find_third_bridge_events, get_third_bridge_event
 from .transcrippets import find_transcrippets, create_transcrippet, delete_transcrippet
 
-# Import all parameter model classes
-from .params import (
-    FindEventsArgs,
-    GetEventArgs,
-    GetUpcomingEventsArgs,
-    FindFilingsArgs,
-    GetFilingArgs,
-    FindEquitiesArgs,
-    GetEquitySummariesArgs,
-    EmptyArgs,
-    GetIndexConstituentsArgs,
-    GetWatchlistConstituentsArgs,
-    FindCompanyDocsArgs,
-    GetCompanyDocArgs,
-    SearchArgs,
-    FindThirdBridgeEventsArgs,
-    GetThirdBridgeEventArgs,
-    FindTranscrippetsArgs,
-    CreateTranscrippetArgs,
-    DeleteTranscrippetArgs,
-)
+# Import all parameter model classes from domain modules
+from .events import FindEventsArgs, GetEventArgs, GetUpcomingEventsArgs
+from .filings import FindFilingsArgs, GetFilingArgs
+from .equities import FindEquitiesArgs, GetEquitySummariesArgs, GetIndexConstituentsArgs, GetWatchlistConstituentsArgs
+from .company_docs import FindCompanyDocsArgs, GetCompanyDocArgs
+from .third_bridge import FindThirdBridgeEventsArgs, GetThirdBridgeEventArgs
+from .transcrippets import FindTranscrippetsArgs, CreateTranscrippetArgs, DeleteTranscrippetArgs
+from .common import EmptyArgs, SearchArgs
 
 TOOL_REGISTRY = {
     'find_events': {
