@@ -85,102 +85,52 @@ DEFAULT_MAX_PAGE_SIZE = 100
 
 @mcp.resource(uri="aiera://api/docs")
 def get_api_documentation() -> str:
-    """Provide documentation for the Aiera API."""
+    """Provide overview documentation for the Aiera API."""
     return f"""
     # Aiera Financial Data API
 
-    This MCP server provides access to Aiera's comprehensive financial data API.
+    This MCP server provides access to Aiera's comprehensive financial data API for institutional finance professionals.
 
-    ## Available Tools:
+    ## Tool Categories
 
-    ### Equity API
-    - find_equities: Retrieve equities, filtered by various identifiers, such as bloomberg_ticker (a comma-separated list of tickers) or ric (a comma-separated list of RICs), or by a search term. This endpoint supports pagination.
-    -- Search will only look for matches within the company name or ticker.
-    - get_equity_summaries: Retrieve detailed summary(s) about one or more equities, filtered by bloomberg_ticker (a comma-separated list). Summaries will include past and upcoming events, information about company leadership, recent financials, and within which indices the equity is included.
-    - get_sectors_and_subsectors: Retrieve a list of all sectors and subsectors that can be queried.
-    - get_available_indexes: Retrieve the list of available indexes that can be queried.
-    - get_index_constituents: Retrieve the list of all equities within an index. This endpoint supports pagination.
-    - get_available_watchlists: Retrieve the list of watchlists that can be queried.
-    - get_watchlist_constituents: Retrieve the list of all equities within a watchlist. This endpoint supports pagination.
+    **Events & Transcripts**: Find and retrieve corporate events (earnings calls, conferences, meetings) with full transcripts and metadata.
 
-    ### Events API
-    - find_events: Retrieve events, filtered by start_date and end_date, and optionally by bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id; or event_type (a comma-separated list of event types). This endpoint supports pagination.
-    -- Event type must be one of the following: earnings, presentation, shareholder_meeting, investor_meeting, special_situation
-    -- Some common associations of event_type:
-    --- Conferences will often be a reference to the event type: presentation
-    --- Annual meetings will often be a reference to the event type: shareholder_meeting
-    --- Mergers, acquisitions, spinoffs, and other corporate actions will often be a reference to the event type: special_situation
-    -- watchlist_id can be found using the tool get_available_watchlists.
-    -- index_id can be found using the tool get_available_indexes.
-    -- sector_id and subsector_id can be found using the tool get_sectors_and_subsectors.
-    - get_event: Retrieve an event, including a summary, the transcript, and other metadata. Optionally, you can also filter the included transcript by transcript_section ("presentation" or "q_and_a").
-    -- The event ID can be found using the find_events tool.
-    -- If you need to retrieve more than one event, make multiple sequential calls.
-    -- transcript_section is only applicable with the earnings event_type, and must be one of the following: presentation, q_and_a
-    - get_upcoming_events: Retrieve confirmed and estimated upcoming events, filtered by start_date and end_date, and one of the following: bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id.
-    -- watchlist_id can be found using the tool get_available_watchlists.
-    -- index_id can be found using the tool get_available_indexes.
-    -- sector_id and subsector_id can be found using the tool get_sectors_and_subsectors.
+    **SEC Filings**: Search and retrieve SEC filings (10-K, 10-Q, 8-K, etc.) with summaries and full content.
 
-    ### Filings API
-    - find_filings: Retrieve SEC filings, filtered by start_date and end_date, and one of the following: bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id; and optionally by form_number. This endpoint supports pagination.
-    -- Examples of form numbers include: 10-K, 10-Q, and 8-K. There are other possibilities, but those 3 will be the most commonly used.
-    -- watchlist_id can be found using the tool get_available_watchlists.
-    -- index_id can be found using the tool get_available_indexes.
-    -- sector_id and subsector_id can be found using the tool get_sectors_and_subsectors.
-    - get_filing: Retrieve an SEC filing, including a summary, document contents, and other metadata, filtered by filing_id.
-    -- The filing ID can be found with the tool find_filings.
-    -- If you need to retrieve more than one filing, make multiple sequential calls.
+    **Company Data**: Access equity information, sector classifications, index constituents, and watchlists.
 
-    ### Company Docs API
-    - find_company_docs: Retrieve documents that have been published on company IR websites, filtered by a date range, and optionally by bloomberg_ticker (a comma-separated list), watchlist_id, index_id, sector_id, or subsector_id; or categories (a comma-separated list), keywords (a comma-separated list). This endpoint supports pagination.
-    -- Examples of a category include: annual_report, compliance, disclosure, earnings_release, slide_presentation, press_release. There are hundreds of other possibilities. The full list of possible categories can be found using the tool get_company_doc_categories.
-    -- Examples of a keyword include: ESG, diversity, risk management. There are hundreds of other possibilities. The full list of possible keywords can be found using the tool get_company_doc_keywords.
-    -- watchlist_id can be found using the tool get_available_watchlists.
-    -- index_id can be found using the tool get_available_indexes.
-    -- sector_id and subsector_id can be found using the tool get_sectors_and_subsectors.
-    - get_company_doc: Retrieve a company document, including a summary and other metadata, filtered by company_doc_id.
-    -- The document ID can be found using the tool find_company_docs.
-    -- If you need to retrieve more than one company document, make multiple sequential calls.
-    - get_company_doc_categories: Retrieve a list of all categories associated with company documents (and the number of documents associated with each category). This endpoint supports pagination, and can be filtered by a search term.
-    - get_company_doc_keywords: Retrieve a list of all keywords associated with company documents (and the number of documents associated with each keyword). This endpoint supports pagination, and can be filtered by a search term.
+    **Company Documents**: Find investor relations documents, press releases, and regulatory filings published by companies.
 
-    ### Third Bridge API
-    - find_third_bridge_events: Retrieve expert insight events from Third Bridge, filtered by start_date and end_date, and optionally by bloomberg_ticker (a comma-separated list of tickers), watchlist_id, index_id, sector_id, or subsector_id. This endpoint supports pagination.
-    - get_third_bridge_event: Retrieve an expert insight event from Third Bridge, including an agenda, insights, the full transcript, filtered by event_id.
-    -- The event ID can be found using the tool find_third_bridge_events.
-    -- If you need to retrieve more than one event, make multiple sequential calls.
+    **Expert Insights**: Access Third Bridge expert interview events and insights.
 
-    ### Transcrippets API
-    - find_transcrippets: Retrieve Transcrippets™, filtered by various identifiers such as transcrippet_id (comma-separated list), event_id (comma-separated list), equity_id (comma-separated list), speaker_id (comma-separated list), transcript_item_id (comma-separated list), and date ranges (created_start_date and created_end_date).
-    -- Transcrippets™ are curated segments of event transcripts that capture key insights or memorable quotes.
-    -- Date parameters should be in ISO format (YYYY-MM-DD).
-    - create_transcrippet: Create a new Transcrippet™ from an event transcript segment. Requires event_id, transcript (the text content), transcript_item_id, transcript_item_offset, transcript_end_item_id, and transcript_end_item_offset. Optionally accepts company_id and equity_id.
-    -- The event_id can be found using the find_events tool.
-    -- Transcript item IDs and offsets define the precise boundaries of the transcript segment to capture.
-    - delete_transcrippet: Delete a Transcrippet™ by its ID. This is a destructive operation that cannot be undone.
-    -- The transcrippet_id can be found using the find_transcrippets tool.
+    **Transcrippets™**: Create, find, and manage curated transcript segments for key insights and memorable quotes.
 
-    ## Authentication:
-    All endpoints require the AIERA_API_KEY environment variable to be set.
-    Some endpoints may require specific permissions based on a subscription plan. If access is denied, the user should talk to their Aiera representative about gaining access.
+    ## Key Features
 
-    ## Parameter Notes:
-    - Tools that support pagination use 'page' and 'page_size' parameters. By default, page is set to 1 and page_size is set to {DEFAULT_PAGE_SIZE}. The default maximum page_size is {DEFAULT_MAX_PAGE_SIZE}.
-    - Date parameters should be in ISO format (YYYY-MM-DD).
-    - Bloomberg tickers are composed of a ticker and a country code joined by a colon (e.g., "AAPL:US").
-    -- If information from multiple bloomberg tickers is needed, they should be represented as a comma-separated list (e.g., "AAPL:US,MSFT:US,GOOGL:US").
-    - Comma-separated lists should not contain spaces (e.g., "keyword1,keyword2,keyword3").
-    - Boolean parameters accept true/false values.
+    - **Comprehensive Coverage**: Access to events, filings, documents, and expert insights across all major markets
+    - **Rich Metadata**: Detailed summaries, speaker information, and structured data for all content
+    - **Flexible Filtering**: Search by date ranges, tickers, sectors, indices, watchlists, and custom criteria
+    - **Pagination Support**: Handle large result sets efficiently with pagination
+    - **Citation Ready**: All responses include citation information for professional use
 
-    ## Usage Hints:
-    - Questions about guidance will always require the transcript from at least one earnings event, and often will require multiple earnings transcripts from the last year in order to provide sufficient context.
-    -- Answers to guidance questions should focus on management commentary, and avoid analyst commentary unless specifically asked for.
+    ## Authentication & Usage
 
-    ## Other Notes:
-    - All dates and times are in eastern time (ET) unless specifically stated otherwise.
-    - The term "publication" or "document" is likely referring to either an SEC filing or a company document.
-    - The current date is **{datetime.now().strftime("%Y-%m-%d")}**, and the current time is **{datetime.now().strftime("%I:%M %p")}**. Relative dates and times (e.g., "last 3 months" or "next 3 months" or "later today") should be calculated based on this date.
+    - Requires `AIERA_API_KEY` environment variable
+    - All dates use Eastern Time (ET)
+    - Current date: **{datetime.now().strftime("%Y-%m-%d")}**
+    - Bloomberg tickers use format "TICKER:COUNTRY" (e.g., "AAPL:US")
+    - Multiple values in comma-separated lists (no spaces)
+
+    ## Tool Parameters
+
+    Each tool provides detailed parameter descriptions and validation through its input schema. Common patterns include:
+
+    - **Date ranges**: ISO format (YYYY-MM-DD) with start_date and end_date
+    - **Entity filtering**: Filter by tickers, watchlists, indices, sectors, or subsectors
+    - **Pagination**: Page number and page size parameters where applicable
+    - **Content filtering**: Categories, keywords, form types for targeted searches
+
+    Use tool argument schemas for complete parameter documentation and validation.
     """
 
 
@@ -221,8 +171,8 @@ def register_aiera_tools(
         set_api_key_provider(api_key_provider)
 
     # Register all tools using the new modular structure
-    from .tools import register_all_tools
-    register_all_tools(mcp_server)
+    from .tools import register_tools
+    register_tools(mcp_server)
 
 
 def run(transport: str = "stdio"):
