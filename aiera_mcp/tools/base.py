@@ -198,6 +198,9 @@ async def make_aiera_request(
             raise Exception(
                 f"Aiera API authentication failed (HTTP {response.status_code}). The API key may be invalid or expired."
             )
+        # For 504 Gateway Timeout, provide a more informative message
+        elif response.status_code == 504:
+            raise Exception(f"API request timed out (504). The API endpoint may be experiencing heavy load. Please retry in a moment.")
         else:
             raise Exception(f"API request failed: {response.status_code} - {response.text}")
 

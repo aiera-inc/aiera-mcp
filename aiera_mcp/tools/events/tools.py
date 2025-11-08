@@ -22,7 +22,7 @@ async def find_events(args: FindEventsArgs) -> FindEventsResponse:
     logger.info("tool called: find_events")
 
     # Get context from FastMCP instance
-    from ..server import mcp
+    from ...server import mcp
     ctx = mcp.get_context()
     client = await get_http_client(ctx)
     api_key = await get_api_key_from_context(ctx)
@@ -39,23 +39,32 @@ async def find_events(args: FindEventsArgs) -> FindEventsResponse:
     )
 
     # Transform raw response to structured format
-    api_data = raw_response.get("response", {})
-    events_data = api_data.get("data", [])
+    # Handle both old format (response.data) and new format (data directly)
+    if "response" in raw_response:
+        api_data = raw_response.get("response", {})
+        events_data = api_data.get("data", [])
+        total_count = api_data.get("total", 0)
+    else:
+        # New API format with pagination object
+        events_data = raw_response.get("data", [])
+        pagination = raw_response.get("pagination", {})
+        total_count = pagination.get("total_count", len(events_data))
 
     events = []
     citations = []
 
     for event_data in events_data:
         # Extract event information
+        # Try different field names for event ID
+        event_id = event_data.get("event_id") or event_data.get("id") or ""
         event_item = EventItem(
-            event_id=str(event_data.get("id")),
+            event_id=str(event_id),
             title=event_data.get("title", ""),
             event_type=EventType(event_data.get("event_type", "earnings")),
             event_date=datetime.fromisoformat(event_data.get("event_date").replace("Z", "+00:00")) if event_data.get("event_date") else datetime.now(),
             company_name=event_data.get("company_name"),
-            company_ticker=event_data.get("ticker"),
-            has_transcript=event_data.get("has_transcript", False),
-            status=event_data.get("status")
+            ticker=event_data.get("ticker"),
+            event_status=event_data.get("status")
         )
         events.append(event_item)
 
@@ -69,7 +78,7 @@ async def find_events(args: FindEventsArgs) -> FindEventsResponse:
 
     return FindEventsResponse(
         events=events,
-        total=api_data.get("total", len(events)),
+        total=total_count,
         page=args.page,
         page_size=args.page_size,
         instructions=raw_response.get("instructions", []),
@@ -82,7 +91,7 @@ async def get_event(args: GetEventArgs) -> GetEventResponse:
     logger.info("tool called: get_event")
 
     # Get context from FastMCP instance
-    from ..server import mcp
+    from ...server import mcp
     ctx = mcp.get_context()
     client = await get_http_client(ctx)
     api_key = await get_api_key_from_context(ctx)
@@ -103,46 +112,36 @@ async def get_event(args: GetEventArgs) -> GetEventResponse:
     )
 
     # Transform raw response to structured format
-    api_data = raw_response.get("response", {})
-    events_data = api_data.get("data", [])
+    # Handle both old format (response.data) and new format (data directly)
+    if "response" in raw_response:
+        api_data = raw_response.get("response", {})
+        events_data = api_data.get("data", [])
+        total_count = api_data.get("total", 0)
+    else:
+        # New API format with pagination object
+        events_data = raw_response.get("data", [])
+        pagination = raw_response.get("pagination", {})
+        total_count = pagination.get("total_count", len(events_data))
 
     if not events_data:
         raise ValueError(f"Event not found: {args.event_id}")
 
     event_data = events_data[0]  # Get the first (and should be only) event
 
-    # Build event summary
-    summary = None
-    if event_data.get("summary"):
-        summary = EventSummary(
-            summary=event_data.get("summary"),
-            key_topics=event_data.get("key_topics", []),
-            speakers=event_data.get("speakers", [])
-        )
-
-    # Build transcript
-    transcript = None
-    if event_data.get("transcript"):
-        transcript = EventTranscript(
-            transcript_text=event_data.get("transcript", ""),
-            sections=event_data.get("transcript_sections", []),
-            word_count=len(event_data.get("transcript", "").split()) if event_data.get("transcript") else 0
-        )
-
     # Build detailed event
+    # Try different field names for event ID
+    event_id = event_data.get("event_id") or event_data.get("id") or ""
     event_details = EventDetails(
-        event_id=str(event_data.get("id")),
+        event_id=str(event_id),
         title=event_data.get("title", ""),
         event_type=EventType(event_data.get("event_type", "earnings")),
         event_date=datetime.fromisoformat(event_data.get("event_date").replace("Z", "+00:00")) if event_data.get("event_date") else datetime.now(),
         company_name=event_data.get("company_name"),
-        company_ticker=event_data.get("ticker"),
-        has_transcript=bool(transcript),
-        status=event_data.get("status"),
-        summary=summary,
-        transcript=transcript,
-        audio_url=event_data.get("audio_url"),
-        attachments=event_data.get("attachments", [])
+        ticker=event_data.get("ticker"),
+        event_status=event_data.get("status"),
+        description=event_data.get("description"),
+        transcript_preview=event_data.get("transcript_preview"),
+        audio_url=event_data.get("audio_url")
     )
 
     # Build citation
@@ -166,7 +165,7 @@ async def get_upcoming_events(args: GetUpcomingEventsArgs) -> GetUpcomingEventsR
     logger.info("tool called: get_upcoming_events")
 
     # Get context from FastMCP instance
-    from ..server import mcp
+    from ...server import mcp
     ctx = mcp.get_context()
     client = await get_http_client(ctx)
     api_key = await get_api_key_from_context(ctx)
@@ -182,23 +181,32 @@ async def get_upcoming_events(args: GetUpcomingEventsArgs) -> GetUpcomingEventsR
     )
 
     # Transform raw response to structured format
-    api_data = raw_response.get("response", {})
-    events_data = api_data.get("data", [])
+    # Handle both old format (response.data) and new format (data directly)
+    if "response" in raw_response:
+        api_data = raw_response.get("response", {})
+        events_data = api_data.get("data", [])
+        total_count = api_data.get("total", 0)
+    else:
+        # New API format with pagination object
+        events_data = raw_response.get("data", [])
+        pagination = raw_response.get("pagination", {})
+        total_count = pagination.get("total_count", len(events_data))
 
     events = []
     citations = []
 
     for event_data in events_data:
         # Extract event information
+        # Try different field names for event ID
+        event_id = event_data.get("event_id") or event_data.get("id") or ""
         event_item = EventItem(
-            event_id=str(event_data.get("id")),
+            event_id=str(event_id),
             title=event_data.get("title", ""),
             event_type=EventType(event_data.get("event_type", "earnings")),
             event_date=datetime.fromisoformat(event_data.get("event_date").replace("Z", "+00:00")) if event_data.get("event_date") else datetime.now(),
             company_name=event_data.get("company_name"),
-            company_ticker=event_data.get("ticker"),
-            has_transcript=event_data.get("has_transcript", False),
-            status=event_data.get("status", "upcoming")
+            ticker=event_data.get("ticker"),
+            event_status=event_data.get("status", "upcoming")
         )
         events.append(event_item)
 

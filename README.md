@@ -325,6 +325,33 @@ register_aiera_tools(mcp, get_current_api_key)
 
 The package automatically handles API key resolution with fallback from OAuth provider to environment variable.
 
+## Testing
+
+### Integration Tests
+
+This project includes comprehensive integration tests that validate the MCP tools against the real Aiera API.
+
+**Quick Start:**
+```bash
+# Set up API key
+echo "export AIERA_API_KEY=your_api_key_here" > .env
+
+# Run core integration tests
+./scripts/run_integration_tests.sh
+
+# Run extended test suite
+./scripts/run_integration_tests.sh --extended
+```
+
+**Manual Testing:**
+```bash
+# Individual test examples
+source .env && uv run pytest tests/integration/test_events_integration.py::TestEventsIntegration::test_find_events_real_api -v
+source .env && uv run pytest tests/integration/test_filings_integration.py::TestFilingsIntegration::test_find_filings_real_api -v
+```
+
+For detailed testing instructions, see [INTEGRATION_TESTING.md](INTEGRATION_TESTING.md).
+
 ## Links
 - [Aiera REST Documentation](https://rest.aiera.com)
 - [Model Context Protocol](https://modelcontextprotocol.io)

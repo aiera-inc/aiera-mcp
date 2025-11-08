@@ -95,26 +95,26 @@ class FilingItem(BaseModel):
     """Individual filing item."""
     filing_id: str = Field(description="Unique filing identifier")
     company_name: str = Field(description="Company name")
-    company_ticker: Optional[str] = Field(description="Company ticker")
+    company_ticker: Optional[str] = Field(default=None, description="Company ticker")
     form_type: str = Field(description="SEC form type (e.g., 10-K, 10-Q)")
     title: str = Field(description="Filing title")
     filing_date: date = Field(description="Filing date")
-    period_end_date: Optional[date] = Field(description="Period end date")
+    period_end_date: Optional[date] = Field(default=None, description="Period end date")
     is_amendment: bool = Field(description="Whether this is an amendment")
-    official_url: Optional[str] = Field(description="Official SEC.gov URL")
+    official_url: Optional[str] = Field(default=None, description="Official SEC.gov URL")
 
 
 class FilingSummary(BaseModel):
     """Filing summary information."""
-    summary: Optional[str] = Field(description="AI-generated summary")
+    summary: Optional[str] = Field(default=None, description="AI-generated summary")
     key_points: List[str] = Field(default=[], description="Key points from filing")
     financial_highlights: Dict[str, Any] = Field(default={}, description="Financial highlights")
 
 
 class FilingDetails(FilingItem):
     """Detailed filing information including content and summary."""
-    summary: Optional[FilingSummary] = Field(description="Filing summary")
-    content_preview: Optional[str] = Field(description="Preview of filing content")
+    summary: Optional[FilingSummary] = Field(default=None, description="Filing summary")
+    content_preview: Optional[str] = Field(default=None, description="Preview of filing content")
     document_count: int = Field(description="Number of documents in filing")
 
 

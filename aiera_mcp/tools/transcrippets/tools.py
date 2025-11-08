@@ -28,7 +28,7 @@ async def find_transcrippets(args: FindTranscrippetsArgs) -> FindTranscrippetsRe
     logger.info("tool called: find_transcrippets")
 
     # Get context from FastMCP instance
-    from ..server import mcp
+    from ...server import mcp
     ctx = mcp.get_context()
     client = await get_http_client(ctx)
     api_key = await get_api_key_from_context(ctx)
@@ -94,7 +94,7 @@ async def create_transcrippet(args: CreateTranscrippetArgs) -> CreateTranscrippe
     logger.info("tool called: create_transcrippet")
 
     # Get context from FastMCP instance
-    from ..server import mcp
+    from ...server import mcp
     ctx = mcp.get_context()
     client = await get_http_client(ctx)
     api_key = await get_api_key_from_context(ctx)
@@ -162,7 +162,7 @@ async def delete_transcrippet(args: DeleteTranscrippetArgs) -> DeleteTranscrippe
     logger.info("tool called: delete_transcrippet")
 
     # Get context from FastMCP instance
-    from ..server import mcp
+    from ...server import mcp
     ctx = mcp.get_context()
     client = await get_http_client(ctx)
     api_key = await get_api_key_from_context(ctx)

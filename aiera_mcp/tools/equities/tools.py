@@ -39,7 +39,7 @@ async def find_equities(args: FindEquitiesArgs) -> FindEquitiesResponse:
     logger.info("tool called: find_equities")
 
     # Get context from FastMCP instance
-    from ..server import mcp
+    from ...server import mcp
     ctx = mcp.get_context()
     client = await get_http_client(ctx)
     api_key = await get_api_key_from_context(ctx)
@@ -56,8 +56,16 @@ async def find_equities(args: FindEquitiesArgs) -> FindEquitiesResponse:
     )
 
     # Transform raw response to structured format
-    api_data = raw_response.get("response", {})
-    equities_data = api_data.get("data", [])
+    # Handle both old format (response.data) and new format (data directly)
+    if "response" in raw_response:
+        api_data = raw_response.get("response", {})
+        equities_data = api_data.get("data", [])
+        total_count = api_data.get("total", 0)
+    else:
+        # New API format with pagination object
+        equities_data = raw_response.get("data", [])
+        pagination = raw_response.get("pagination", {})
+        total_count = pagination.get("total_count", len(equities_data))
 
     equities = []
     citations = []
@@ -86,7 +94,7 @@ async def find_equities(args: FindEquitiesArgs) -> FindEquitiesResponse:
 
     return FindEquitiesResponse(
         equities=equities,
-        total=api_data.get("total", len(equities)),
+        total=total_count,
         page=args.page,
         page_size=args.page_size,
         instructions=raw_response.get("instructions", []),
@@ -99,7 +107,7 @@ async def get_sectors_and_subsectors(args: SearchArgs) -> GetSectorsSubsectorsRe
     logger.info("tool called: get_sectors_and_subsectors")
 
     # Get context from FastMCP instance
-    from ..server import mcp
+    from ...server import mcp
     ctx = mcp.get_context()
     client = await get_http_client(ctx)
     api_key = await get_api_key_from_context(ctx)
@@ -115,8 +123,16 @@ async def get_sectors_and_subsectors(args: SearchArgs) -> GetSectorsSubsectorsRe
     )
 
     # Transform raw response to structured format
-    api_data = raw_response.get("response", {})
-    sectors_data = api_data.get("data", [])
+    # Handle both old format (response.data) and new format (data directly)
+    if "response" in raw_response:
+        api_data = raw_response.get("response", {})
+        sectors_data = api_data.get("data", [])
+        total_count = api_data.get("total", 0)
+    else:
+        # New API format with pagination object
+        sectors_data = raw_response.get("data", [])
+        pagination = raw_response.get("pagination", {})
+        total_count = pagination.get("total_count", len(sectors_data))
 
     sectors = []
     for sector_data in sectors_data:
@@ -140,7 +156,7 @@ async def get_equity_summaries(args: GetEquitySummariesArgs) -> GetEquitySummari
     logger.info("tool called: get_equity_summaries")
 
     # Get context from FastMCP instance
-    from ..server import mcp
+    from ...server import mcp
     ctx = mcp.get_context()
     client = await get_http_client(ctx)
     api_key = await get_api_key_from_context(ctx)
@@ -157,8 +173,16 @@ async def get_equity_summaries(args: GetEquitySummariesArgs) -> GetEquitySummari
     )
 
     # Transform raw response to structured format
-    api_data = raw_response.get("response", {})
-    summaries_data = api_data.get("data", [])
+    # Handle both old format (response.data) and new format (data directly)
+    if "response" in raw_response:
+        api_data = raw_response.get("response", {})
+        summaries_data = api_data.get("data", [])
+        total_count = api_data.get("total", 0)
+    else:
+        # New API format with pagination object
+        summaries_data = raw_response.get("data", [])
+        pagination = raw_response.get("pagination", {})
+        total_count = pagination.get("total_count", len(summaries_data))
 
     summaries = []
     citations = []
@@ -213,7 +237,7 @@ async def get_available_indexes(args: EmptyArgs) -> GetAvailableIndexesResponse:
     logger.info("tool called: get_available_indexes")
 
     # Get context from FastMCP instance
-    from ..server import mcp
+    from ...server import mcp
     ctx = mcp.get_context()
     client = await get_http_client(ctx)
     api_key = await get_api_key_from_context(ctx)
@@ -229,8 +253,16 @@ async def get_available_indexes(args: EmptyArgs) -> GetAvailableIndexesResponse:
     )
 
     # Transform raw response to structured format
-    api_data = raw_response.get("response", {})
-    indexes_data = api_data.get("data", [])
+    # Handle both old format (response.data) and new format (data directly)
+    if "response" in raw_response:
+        api_data = raw_response.get("response", {})
+        indexes_data = api_data.get("data", [])
+        total_count = api_data.get("total", 0)
+    else:
+        # New API format with pagination object
+        indexes_data = raw_response.get("data", [])
+        pagination = raw_response.get("pagination", {})
+        total_count = pagination.get("total_count", len(indexes_data))
 
     indexes = []
     for index_data in indexes_data:
@@ -253,7 +285,7 @@ async def get_index_constituents(args: GetIndexConstituentsArgs) -> GetIndexCons
     logger.info("tool called: get_index_constituents")
 
     # Get context from FastMCP instance
-    from ..server import mcp
+    from ...server import mcp
     ctx = mcp.get_context()
     client = await get_http_client(ctx)
     api_key = await get_api_key_from_context(ctx)
@@ -269,8 +301,16 @@ async def get_index_constituents(args: GetIndexConstituentsArgs) -> GetIndexCons
     )
 
     # Transform raw response to structured format
-    api_data = raw_response.get("response", {})
-    constituents_data = api_data.get("data", [])
+    # Handle both old format (response.data) and new format (data directly)
+    if "response" in raw_response:
+        api_data = raw_response.get("response", {})
+        constituents_data = api_data.get("data", [])
+        total_count = api_data.get("total", 0)
+    else:
+        # New API format with pagination object
+        constituents_data = raw_response.get("data", [])
+        pagination = raw_response.get("pagination", {})
+        total_count = pagination.get("total_count", len(constituents_data))
 
     constituents = []
     citations = []
@@ -292,7 +332,7 @@ async def get_index_constituents(args: GetIndexConstituentsArgs) -> GetIndexCons
     return GetIndexConstituentsResponse(
         index_name=args.index,
         constituents=constituents,
-        total=api_data.get("total", len(constituents)),
+        total=total_count,
         page=args.page,
         page_size=args.page_size,
         instructions=raw_response.get("instructions", []),
@@ -305,7 +345,7 @@ async def get_available_watchlists(args: EmptyArgs) -> GetAvailableWatchlistsRes
     logger.info("tool called: get_available_watchlists")
 
     # Get context from FastMCP instance
-    from ..server import mcp
+    from ...server import mcp
     ctx = mcp.get_context()
     client = await get_http_client(ctx)
     api_key = await get_api_key_from_context(ctx)
@@ -321,8 +361,16 @@ async def get_available_watchlists(args: EmptyArgs) -> GetAvailableWatchlistsRes
     )
 
     # Transform raw response to structured format
-    api_data = raw_response.get("response", {})
-    watchlists_data = api_data.get("data", [])
+    # Handle both old format (response.data) and new format (data directly)
+    if "response" in raw_response:
+        api_data = raw_response.get("response", {})
+        watchlists_data = api_data.get("data", [])
+        total_count = api_data.get("total", 0)
+    else:
+        # New API format with pagination object
+        watchlists_data = raw_response.get("data", [])
+        pagination = raw_response.get("pagination", {})
+        total_count = pagination.get("total_count", len(watchlists_data))
 
     watchlists = []
     for watchlist_data in watchlists_data:
@@ -345,7 +393,7 @@ async def get_watchlist_constituents(args: GetWatchlistConstituentsArgs) -> GetW
     logger.info("tool called: get_watchlist_constituents")
 
     # Get context from FastMCP instance
-    from ..server import mcp
+    from ...server import mcp
     ctx = mcp.get_context()
     client = await get_http_client(ctx)
     api_key = await get_api_key_from_context(ctx)
@@ -361,8 +409,16 @@ async def get_watchlist_constituents(args: GetWatchlistConstituentsArgs) -> GetW
     )
 
     # Transform raw response to structured format
-    api_data = raw_response.get("response", {})
-    constituents_data = api_data.get("data", [])
+    # Handle both old format (response.data) and new format (data directly)
+    if "response" in raw_response:
+        api_data = raw_response.get("response", {})
+        constituents_data = api_data.get("data", [])
+        total_count = api_data.get("total", 0)
+    else:
+        # New API format with pagination object
+        constituents_data = raw_response.get("data", [])
+        pagination = raw_response.get("pagination", {})
+        total_count = pagination.get("total_count", len(constituents_data))
     metadata = api_data.get("metadata", {})
 
     constituents = []
@@ -383,7 +439,7 @@ async def get_watchlist_constituents(args: GetWatchlistConstituentsArgs) -> GetW
     return GetWatchlistConstituentsResponse(
         watchlist_name=metadata.get("watchlist_name", f"Watchlist {args.watchlist_id}"),
         constituents=constituents,
-        total=api_data.get("total", len(constituents)),
+        total=total_count,
         page=args.page,
         page_size=args.page_size,
         instructions=raw_response.get("instructions", []),

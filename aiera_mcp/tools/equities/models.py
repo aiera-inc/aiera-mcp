@@ -148,24 +148,24 @@ class EquityItem(BaseModel):
     company_name: str = Field(description="Company name")
     ticker: str = Field(description="Primary ticker symbol")
     bloomberg_ticker: str = Field(description="Bloomberg ticker")
-    exchange: Optional[str] = Field(description="Primary exchange")
-    sector: Optional[str] = Field(description="GICS sector")
-    subsector: Optional[str] = Field(description="GICS subsector")
-    country: Optional[str] = Field(description="Country of incorporation")
-    market_cap: Optional[float] = Field(description="Market capitalization")
+    exchange: Optional[str] = Field(default=None, description="Primary exchange")
+    sector: Optional[str] = Field(default=None, description="GICS sector")
+    subsector: Optional[str] = Field(default=None, description="GICS subsector")
+    country: Optional[str] = Field(default=None, description="Country of incorporation")
+    market_cap: Optional[float] = Field(default=None, description="Market capitalization")
 
 
 class EquitySummary(BaseModel):
     """Equity summary information."""
-    description: Optional[str] = Field(description="Company description")
-    recent_events: List[Dict[str, Any]] = Field(default=[], description="Recent corporate events")
+    description: Optional[str] = Field(default=None, description="Company description")
+    recent_events: List[str] = Field(default=[], description="Recent corporate events")
     key_metrics: Dict[str, Any] = Field(default={}, description="Key financial metrics")
     analyst_coverage: Dict[str, Any] = Field(default={}, description="Analyst coverage info")
 
 
 class EquityDetails(EquityItem):
     """Detailed equity information."""
-    summary: Optional[EquitySummary] = Field(description="Company summary")
+    summary: Optional[EquitySummary] = Field(default=None, description="Company summary")
     identifiers: Dict[str, str] = Field(default={}, description="Alternative identifiers")
 
 
@@ -173,8 +173,8 @@ class SectorSubsector(BaseModel):
     """Sector and subsector information."""
     sector_id: str = Field(description="Sector ID")
     sector_name: str = Field(description="Sector name")
-    subsector_id: Optional[str] = Field(description="Subsector ID")
-    subsector_name: Optional[str] = Field(description="Subsector name")
+    subsector_id: Optional[str] = Field(default=None, description="Subsector ID")
+    subsector_name: Optional[str] = Field(default=None, description="Subsector name")
 
 
 class IndexItem(BaseModel):
@@ -188,7 +188,7 @@ class WatchlistItem(BaseModel):
     """Watchlist information."""
     watchlist_id: str = Field(description="Watchlist identifier")
     watchlist_name: str = Field(description="Watchlist name")
-    description: Optional[str] = Field(description="Watchlist description")
+    description: Optional[str] = Field(default=None, description="Watchlist description")
 
 
 # Response classes

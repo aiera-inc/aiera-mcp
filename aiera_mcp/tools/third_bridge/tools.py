@@ -26,7 +26,7 @@ async def find_third_bridge_events(args: FindThirdBridgeEventsArgs) -> FindThird
     logger.info("tool called: find_third_bridge_events")
 
     # Get context from FastMCP instance
-    from ..server import mcp
+    from ...server import mcp
     ctx = mcp.get_context()
     client = await get_http_client(ctx)
     api_key = await get_api_key_from_context(ctx)
@@ -43,8 +43,16 @@ async def find_third_bridge_events(args: FindThirdBridgeEventsArgs) -> FindThird
     )
 
     # Transform raw response to structured format
-    api_data = raw_response.get("response", {})
-    events_data = api_data.get("data", [])
+    # Handle both old format (response.data) and new format (data directly)
+    if "response" in raw_response:
+        api_data = raw_response.get("response", {})
+        events_data = api_data.get("data", [])
+        total_count = api_data.get("total", 0)
+    else:
+        # New API format with pagination object
+        events_data = raw_response.get("data", [])
+        pagination = raw_response.get("pagination", {})
+        total_count = pagination.get("total_count", len(events_data))
 
     events = []
     citations = []
@@ -80,7 +88,7 @@ async def find_third_bridge_events(args: FindThirdBridgeEventsArgs) -> FindThird
 
     return FindThirdBridgeEventsResponse(
         events=events,
-        total=api_data.get("total", len(events)),
+        total=total_count,
         page=args.page,
         page_size=args.page_size,
         instructions=raw_response.get("instructions", []),
@@ -93,7 +101,7 @@ async def get_third_bridge_event(args: GetThirdBridgeEventArgs) -> GetThirdBridg
     logger.info("tool called: get_third_bridge_event")
 
     # Get context from FastMCP instance
-    from ..server import mcp
+    from ...server import mcp
     ctx = mcp.get_context()
     client = await get_http_client(ctx)
     api_key = await get_api_key_from_context(ctx)
@@ -114,8 +122,16 @@ async def get_third_bridge_event(args: GetThirdBridgeEventArgs) -> GetThirdBridg
     )
 
     # Transform raw response to structured format
-    api_data = raw_response.get("response", {})
-    events_data = api_data.get("data", [])
+    # Handle both old format (response.data) and new format (data directly)
+    if "response" in raw_response:
+        api_data = raw_response.get("response", {})
+        events_data = api_data.get("data", [])
+        total_count = api_data.get("total", 0)
+    else:
+        # New API format with pagination object
+        events_data = raw_response.get("data", [])
+        pagination = raw_response.get("pagination", {})
+        total_count = pagination.get("total_count", len(events_data))
 
     if not events_data:
         raise ValueError(f"Third Bridge event not found: {args.event_id}")

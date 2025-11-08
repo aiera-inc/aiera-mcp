@@ -1,0 +1,251 @@
+{
+  "events": {
+    "find_events_success": {
+      "response": {
+        "data": [
+          {
+            "id": "event123",
+            "title": "Apple Inc Q4 2023 Earnings Call",
+            "event_type": "earnings",
+            "event_date": "2023-10-26T21:00:00Z",
+            "company_name": "Apple Inc",
+            "ticker": "AAPL",
+            "event_status": "confirmed",
+            "description": "Apple Inc quarterly earnings call for Q4 2023",
+            "transcript_preview": "Welcome to the Apple Q4 2023 earnings call. We'll begin with prepared remarks...",
+            "audio_url": "https://example.com/audio/event123.mp3",
+            "url": "https://aiera.com/event/event123"
+          },
+          {
+            "id": "event456",
+            "title": "Microsoft Corp Investor Meeting",
+            "event_type": "investor_meeting",
+            "event_date": "2023-10-27T17:00:00Z",
+            "company_name": "Microsoft Corporation",
+            "ticker": "MSFT",
+            "event_status": "confirmed",
+            "description": "Microsoft investor meeting discussing cloud strategy",
+            "url": "https://aiera.com/event/event456"
+          }
+        ],
+        "total": 2
+      },
+      "instructions": ["Events found successfully"]
+    },
+    "get_event_success": {
+      "response": {
+        "data": [
+          {
+            "id": "event123",
+            "title": "Apple Inc Q4 2023 Earnings Call",
+            "event_type": "earnings",
+            "event_date": "2023-10-26T21:00:00Z",
+            "company_name": "Apple Inc",
+            "ticker": "AAPL",
+            "event_status": "confirmed",
+            "description": "Apple Inc quarterly earnings call for Q4 2023",
+            "transcript_preview": "Welcome to the Apple Q4 2023 earnings call. We'll begin with prepared remarks from CEO Tim Cook...",
+            "audio_url": "https://example.com/audio/event123.mp3",
+            "url": "https://aiera.com/event/event123",
+            "transcript": "Full transcript content here..."
+          }
+        ]
+      },
+      "instructions": ["Event retrieved successfully"]
+    }
+  },
+  "filings": {
+    "find_filings_success": {
+      "response": {
+        "data": [
+          {
+            "id": "filing789",
+            "company_name": "Apple Inc",
+            "ticker": "AAPL",
+            "form_type": "10-K",
+            "title": "Annual Report",
+            "filing_date": "2023-10-27T00:00:00Z",
+            "period_end_date": "2023-09-30T00:00:00Z",
+            "is_amendment": false,
+            "official_url": "https://sec.gov/filing/filing789"
+          }
+        ],
+        "total": 1
+      },
+      "instructions": ["Filing found successfully"]
+    },
+    "get_filing_success": {
+      "response": {
+        "data": [
+          {
+            "id": "filing789",
+            "company_name": "Apple Inc",
+            "ticker": "AAPL",
+            "form_type": "10-K",
+            "title": "Annual Report",
+            "filing_date": "2023-10-27T00:00:00Z",
+            "period_end_date": "2023-09-30T00:00:00Z",
+            "is_amendment": false,
+            "official_url": "https://sec.gov/filing/filing789",
+            "summary": "Apple Inc's annual report for fiscal year 2023 showing record revenue and strong performance across all product categories.",
+            "key_points": [
+              "Record revenue of $394.3 billion",
+              "Strong iPhone sales in emerging markets",
+              "Services revenue grew 16% year-over-year"
+            ],
+            "financial_highlights": {
+              "revenue": "$394.3B",
+              "net_income": "$97.0B",
+              "gross_margin": "44.1%"
+            },
+            "content_preview": "This annual report contains forward-looking statements...",
+            "document_count": 1
+          }
+        ]
+      },
+      "instructions": ["Filing content retrieved successfully"]
+    }
+  },
+  "equities": {
+    "find_equities_success": {
+      "response": {
+        "data": [
+          {
+            "id": "equity123",
+            "company_name": "Apple Inc",
+            "ticker": "AAPL",
+            "bloomberg_ticker": "AAPL:US",
+            "exchange": "NASDAQ",
+            "sector": "Technology",
+            "subsector": "Consumer Electronics",
+            "country": "United States",
+            "market_cap": 3000000000000
+          }
+        ],
+        "total": 1
+      },
+      "instructions": ["Equity found successfully"]
+    },
+    "get_equity_summaries_success": {
+      "response": {
+        "data": [
+          {
+            "id": "equity123",
+            "company_name": "Apple Inc",
+            "ticker": "AAPL",
+            "bloomberg_ticker": "AAPL:US",
+            "exchange": "NASDAQ",
+            "sector": "Technology",
+            "subsector": "Consumer Electronics",
+            "country": "United States",
+            "market_cap": 3000000000000,
+            "description": "Apple Inc. designs, manufactures and markets smartphones, personal computers, tablets, wearables and accessories.",
+            "recent_events": [
+              "Q4 2023 Earnings Call",
+              "iPhone 15 Launch Event"
+            ],
+            "key_metrics": {
+              "pe_ratio": 28.5,
+              "price_to_book": 45.2,
+              "dividend_yield": 0.5
+            },
+            "analyst_coverage": {
+              "avg_rating": "Buy",
+              "price_target": "$200.00"
+            },
+            "identifiers": {
+              "isin": "US0378331005",
+              "cusip": "037833100"
+            }
+          }
+        ]
+      },
+      "instructions": ["Equity summary retrieved successfully"]
+    }
+  },
+  "company_docs": {
+    "find_company_docs_success": {
+      "response": {
+        "data": [
+          {
+            "id": "doc456",
+            "company_name": "Apple Inc",
+            "title": "Sustainability Report 2023",
+            "category": "Sustainability",
+            "keywords": ["environment", "carbon neutral", "renewable energy"],
+            "publish_date": "2023-09-15T00:00:00Z",
+            "document_type": "report",
+            "url": "https://apple.com/sustainability/pdf/Apple_Environmental_Progress_Report_2023.pdf"
+          }
+        ],
+        "total": 1
+      },
+      "instructions": ["Company document found successfully"]
+    }
+  },
+  "third_bridge": {
+    "find_third_bridge_events_success": {
+      "response": {
+        "data": [
+          {
+            "id": "tb789",
+            "title": "Apple Supply Chain Analysis",
+            "company_name": "Apple Inc",
+            "event_date": "2023-10-20T14:00:00Z",
+            "expert_name": "Jane Smith",
+            "expert_title": "Former Apple Supply Chain Director",
+            "url": "https://thirdbridge.com/event/tb789"
+          }
+        ],
+        "total": 1
+      },
+      "instructions": ["Third Bridge event found successfully"]
+    }
+  },
+  "transcrippets": {
+    "find_transcrippets_success": {
+      "response": [
+        {
+          "transcrippet_id": "trans123",
+          "transcrippet_guid": "guid-123-456",
+          "title": "CEO Comments on Q4 Performance",
+          "company_name": "Apple Inc",
+          "event_title": "Q4 2023 Earnings Call",
+          "transcript_preview": "I'm pleased to report that Q4 was another strong quarter...",
+          "created_date": "2023-10-26T22:00:00Z"
+        }
+      ],
+      "instructions": ["Transcrippet found successfully"]
+    },
+    "create_transcrippet_success": {
+      "response": {
+        "transcrippet_id": "trans456",
+        "transcrippet_guid": "guid-456-789",
+        "title": "New Transcrippet",
+        "company_name": "Apple Inc",
+        "event_title": "Q4 2023 Earnings Call",
+        "transcript_text": "Full transcript text here...",
+        "created_date": "2023-10-26T22:05:00Z",
+        "audio_url": "https://example.com/audio/trans456.mp3",
+        "speaker_name": "Tim Cook",
+        "start_time": "00:05:30",
+        "end_time": "00:06:45"
+      },
+      "instructions": ["Transcrippet created successfully"]
+    }
+  },
+  "errors": {
+    "api_error_401": {
+      "error": "Unauthorized",
+      "message": "Invalid API key"
+    },
+    "api_error_404": {
+      "error": "Not Found",
+      "message": "Resource not found"
+    },
+    "api_error_500": {
+      "error": "Internal Server Error",
+      "message": "An unexpected error occurred"
+    }
+  }
+}

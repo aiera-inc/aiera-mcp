@@ -29,7 +29,7 @@ async def find_company_docs(args: FindCompanyDocsArgs) -> FindCompanyDocsRespons
     logger.info("tool called: find_company_docs")
 
     # Get context from FastMCP instance
-    from ..server import mcp
+    from ...server import mcp
     ctx = mcp.get_context()
     client = await get_http_client(ctx)
     api_key = await get_api_key_from_context(ctx)
@@ -45,8 +45,16 @@ async def find_company_docs(args: FindCompanyDocsArgs) -> FindCompanyDocsRespons
     )
 
     # Transform raw response to structured format
-    api_data = raw_response.get("response", {})
-    docs_data = api_data.get("data", [])
+    # Handle both old format (response.data) and new format (data directly)
+    if "response" in raw_response:
+        api_data = raw_response.get("response", {})
+        docs_data = api_data.get("data", [])
+        total_count = api_data.get("total", 0)
+    else:
+        # New API format with pagination object
+        docs_data = raw_response.get("data", [])
+        pagination = raw_response.get("pagination", {})
+        total_count = pagination.get("total_count", len(docs_data))
 
     documents = []
     citations = []
@@ -81,7 +89,7 @@ async def find_company_docs(args: FindCompanyDocsArgs) -> FindCompanyDocsRespons
 
     return FindCompanyDocsResponse(
         documents=documents,
-        total=api_data.get("total", len(documents)),
+        total=total_count,
         page=args.page,
         page_size=args.page_size,
         instructions=raw_response.get("instructions", []),
@@ -94,7 +102,7 @@ async def get_company_doc(args: GetCompanyDocArgs) -> GetCompanyDocResponse:
     logger.info("tool called: get_company_doc")
 
     # Get context from FastMCP instance
-    from ..server import mcp
+    from ...server import mcp
     ctx = mcp.get_context()
     client = await get_http_client(ctx)
     api_key = await get_api_key_from_context(ctx)
@@ -115,8 +123,16 @@ async def get_company_doc(args: GetCompanyDocArgs) -> GetCompanyDocResponse:
     )
 
     # Transform raw response to structured format
-    api_data = raw_response.get("response", {})
-    docs_data = api_data.get("data", [])
+    # Handle both old format (response.data) and new format (data directly)
+    if "response" in raw_response:
+        api_data = raw_response.get("response", {})
+        docs_data = api_data.get("data", [])
+        total_count = api_data.get("total", 0)
+    else:
+        # New API format with pagination object
+        docs_data = raw_response.get("data", [])
+        pagination = raw_response.get("pagination", {})
+        total_count = pagination.get("total_count", len(docs_data))
 
     if not docs_data:
         raise ValueError(f"Document not found: {args.company_doc_id}")
@@ -166,7 +182,7 @@ async def get_company_doc_categories(args: SearchArgs) -> GetCompanyDocCategorie
     logger.info("tool called: get_company_doc_categories")
 
     # Get context from FastMCP instance
-    from ..server import mcp
+    from ...server import mcp
     ctx = mcp.get_context()
     client = await get_http_client(ctx)
     api_key = await get_api_key_from_context(ctx)
@@ -182,8 +198,16 @@ async def get_company_doc_categories(args: SearchArgs) -> GetCompanyDocCategorie
     )
 
     # Transform raw response to structured format
-    api_data = raw_response.get("response", {})
-    categories_data = api_data.get("data", [])
+    # Handle both old format (response.data) and new format (data directly)
+    if "response" in raw_response:
+        api_data = raw_response.get("response", {})
+        categories_data = api_data.get("data", [])
+        total_count = api_data.get("total", 0)
+    else:
+        # New API format with pagination object
+        categories_data = raw_response.get("data", [])
+        pagination = raw_response.get("pagination", {})
+        total_count = pagination.get("total_count", len(categories_data))
 
     categories = []
     for category_data in categories_data:
@@ -199,7 +223,7 @@ async def get_company_doc_categories(args: SearchArgs) -> GetCompanyDocCategorie
 
     return GetCompanyDocCategoriesResponse(
         categories=categories,
-        total=api_data.get("total", len(categories)),
+        total=total_count,
         page=page,
         page_size=page_size,
         instructions=raw_response.get("instructions", []),
@@ -212,7 +236,7 @@ async def get_company_doc_keywords(args: SearchArgs) -> GetCompanyDocKeywordsRes
     logger.info("tool called: get_company_doc_keywords")
 
     # Get context from FastMCP instance
-    from ..server import mcp
+    from ...server import mcp
     ctx = mcp.get_context()
     client = await get_http_client(ctx)
     api_key = await get_api_key_from_context(ctx)
@@ -228,8 +252,16 @@ async def get_company_doc_keywords(args: SearchArgs) -> GetCompanyDocKeywordsRes
     )
 
     # Transform raw response to structured format
-    api_data = raw_response.get("response", {})
-    keywords_data = api_data.get("data", [])
+    # Handle both old format (response.data) and new format (data directly)
+    if "response" in raw_response:
+        api_data = raw_response.get("response", {})
+        keywords_data = api_data.get("data", [])
+        total_count = api_data.get("total", 0)
+    else:
+        # New API format with pagination object
+        keywords_data = raw_response.get("data", [])
+        pagination = raw_response.get("pagination", {})
+        total_count = pagination.get("total_count", len(keywords_data))
 
     keywords = []
     for keyword_data in keywords_data:
@@ -245,7 +277,7 @@ async def get_company_doc_keywords(args: SearchArgs) -> GetCompanyDocKeywordsRes
 
     return GetCompanyDocKeywordsResponse(
         keywords=keywords,
-        total=api_data.get("total", len(keywords)),
+        total=total_count,
         page=page,
         page_size=page_size,
         instructions=raw_response.get("instructions", []),
