@@ -6,9 +6,9 @@ from aiera_mcp import server
 def transport():
     """
     Determine the transport type for the MCP server.
-    Defaults to 'streamable-http' if not set in environment variables.
+    Defaults to 'stdio' if not set in environment variables.
     """
-    mcp_transport_str = os.environ.get("MCP_TRANSPORT", "streamable-http")
+    mcp_transport_str = os.environ.get("MCP_TRANSPORT", "stdio")
 
     # These are currently the only supported transports
     supported_transports = {
@@ -17,7 +17,7 @@ def transport():
         "streamable-http": "streamable-http",
     }
 
-    return supported_transports.get(mcp_transport_str, "streamable-http")
+    return supported_transports.get(mcp_transport_str, "stdio")
 
 
 if __name__ == "__main__":
