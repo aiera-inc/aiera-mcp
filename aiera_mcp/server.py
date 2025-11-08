@@ -1137,8 +1137,8 @@ async def find_transcrippets(
 @mcp.tool(
     annotations={
         "title": "Create Transcrippet",
-        "readOnlyHint": True,
-        "destructiveHint": False,
+        "readOnlyHint": False,
+        "destructiveHint": True,
     }
 )
 async def create_transcrippet(
