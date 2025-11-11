@@ -1160,26 +1160,6 @@ async def search_transcripts(
         },
         "from": (page - 1),
         "size": page_size,
-        "min_score": 0.2,
-        "_source": [
-            "content_id",
-            "transcript_event_id",
-            "primary_equity_id",
-            "title",
-            "text",
-            "speaker_name",
-            "speaker_title",
-            "date",
-            "section",
-            "transcript_section"
-        ],
-        "sort": [
-            {
-                "_score": {
-                    "order": "desc"
-                }
-            }
-        ],
         "ext": {
             "ml_inference": {
                 "query_text": search
@@ -1224,26 +1204,6 @@ async def search_transcripts(
             },
             "from": (page - 1),
             "size": page_size,
-            "min_score": 0.2,
-            "_source": [
-                "content_id",
-                "transcript_event_id",
-                "primary_equity_id",
-                "title",
-                "text",
-                "speaker_name",
-                "speaker_title",
-                "date",
-                "section",
-                "transcript_section"
-            ],
-            "sort": [
-                {
-                    "_score": {
-                        "order": "desc"
-                    }
-                }
-            ]
         }
 
         raw_results = await make_aiera_request(
@@ -1345,23 +1305,6 @@ async def search_filings(
         },
         "from": (page - 1),
         "size": page_size,
-        "min_score": 0.2,
-        "_source": [
-            "filing_id",
-            "metadata",
-            "primary_equity_id",
-            "title",
-            "text",
-            "date",
-            "filing_type"
-        ],
-        "sort": [
-            {
-                "_score": {
-                    "order": "desc"
-                }
-            }
-        ]
     }
 
     raw_results = await make_aiera_request(
