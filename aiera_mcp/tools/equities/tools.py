@@ -38,11 +38,9 @@ async def find_equities(args: FindEquitiesArgs) -> FindEquitiesResponse:
     """Retrieve equities, filtered by various identifiers, such as ticker, ISIN, or RIC; or by search."""
     logger.info("tool called: find_equities")
 
-    # Get context from FastMCP instance
-    from ...server import mcp
-    ctx = mcp.get_context()
-    client = await get_http_client(ctx)
-    api_key = await get_api_key_from_context(ctx)
+    # Get client and API key (no context needed for standard MCP)
+    client = await get_http_client(None)
+    api_key = await get_api_key_from_context(None)
 
     params = args.model_dump(exclude_none=True)
     params["include_company_metadata"] = "true"
@@ -106,11 +104,9 @@ async def get_sectors_and_subsectors(args: SearchArgs) -> GetSectorsSubsectorsRe
     """Retrieve a list of all sectors and subsectors."""
     logger.info("tool called: get_sectors_and_subsectors")
 
-    # Get context from FastMCP instance
-    from ...server import mcp
-    ctx = mcp.get_context()
-    client = await get_http_client(ctx)
-    api_key = await get_api_key_from_context(ctx)
+    # Get client and API key (no context needed for standard MCP)
+    client = await get_http_client(None)
+    api_key = await get_api_key_from_context(None)
 
     params = args.model_dump(exclude_none=True)
 
@@ -155,11 +151,9 @@ async def get_equity_summaries(args: GetEquitySummariesArgs) -> GetEquitySummari
     """Retrieve detailed summary information about one or more equities, filtered by ticker(s)."""
     logger.info("tool called: get_equity_summaries")
 
-    # Get context from FastMCP instance
-    from ...server import mcp
-    ctx = mcp.get_context()
-    client = await get_http_client(ctx)
-    api_key = await get_api_key_from_context(ctx)
+    # Get client and API key (no context needed for standard MCP)
+    client = await get_http_client(None)
+    api_key = await get_api_key_from_context(None)
 
     params = args.model_dump(exclude_none=True)
     params["lookback"] = "90"
@@ -236,11 +230,9 @@ async def get_available_indexes(args: EmptyArgs) -> GetAvailableIndexesResponse:
     """Retrieve the list of available indexes."""
     logger.info("tool called: get_available_indexes")
 
-    # Get context from FastMCP instance
-    from ...server import mcp
-    ctx = mcp.get_context()
-    client = await get_http_client(ctx)
-    api_key = await get_api_key_from_context(ctx)
+    # Get client and API key (no context needed for standard MCP)
+    client = await get_http_client(None)
+    api_key = await get_api_key_from_context(None)
 
     params = args.model_dump(exclude_none=True)
 
@@ -284,11 +276,9 @@ async def get_index_constituents(args: GetIndexConstituentsArgs) -> GetIndexCons
     """Retrieve the list of all equities within an index."""
     logger.info("tool called: get_index_constituents")
 
-    # Get context from FastMCP instance
-    from ...server import mcp
-    ctx = mcp.get_context()
-    client = await get_http_client(ctx)
-    api_key = await get_api_key_from_context(ctx)
+    # Get client and API key (no context needed for standard MCP)
+    client = await get_http_client(None)
+    api_key = await get_api_key_from_context(None)
 
     params = args.model_dump(exclude_none=True)
 
@@ -344,11 +334,9 @@ async def get_available_watchlists(args: EmptyArgs) -> GetAvailableWatchlistsRes
     """Retrieve the list of available watchlists."""
     logger.info("tool called: get_available_watchlists")
 
-    # Get context from FastMCP instance
-    from ...server import mcp
-    ctx = mcp.get_context()
-    client = await get_http_client(ctx)
-    api_key = await get_api_key_from_context(ctx)
+    # Get client and API key (no context needed for standard MCP)
+    client = await get_http_client(None)
+    api_key = await get_api_key_from_context(None)
 
     params = args.model_dump(exclude_none=True)
 
@@ -392,11 +380,9 @@ async def get_watchlist_constituents(args: GetWatchlistConstituentsArgs) -> GetW
     """Retrieve the list of all equities within a watchlist."""
     logger.info("tool called: get_watchlist_constituents")
 
-    # Get context from FastMCP instance
-    from ...server import mcp
-    ctx = mcp.get_context()
-    client = await get_http_client(ctx)
-    api_key = await get_api_key_from_context(ctx)
+    # Get client and API key (no context needed for standard MCP)
+    client = await get_http_client(None)
+    api_key = await get_api_key_from_context(None)
 
     params = args.model_dump(exclude_none=True)
 

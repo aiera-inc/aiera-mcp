@@ -28,11 +28,9 @@ async def find_company_docs(args: FindCompanyDocsArgs) -> FindCompanyDocsRespons
     """Find documents that have been published by a company, filtered by a date range, and (optionally) by ticker(s), watchlist, index, sector, or subsector; or category(s) or keyword(s)."""
     logger.info("tool called: find_company_docs")
 
-    # Get context from FastMCP instance
-    from ...server import mcp
-    ctx = mcp.get_context()
-    client = await get_http_client(ctx)
-    api_key = await get_api_key_from_context(ctx)
+    # Get client and API key (no context needed for standard MCP)
+    client = await get_http_client(None)
+    api_key = await get_api_key_from_context(None)
 
     params = args.model_dump(exclude_none=True)
 
@@ -101,11 +99,9 @@ async def get_company_doc(args: GetCompanyDocArgs) -> GetCompanyDocResponse:
     """Retrieve a company document, including a summary and other metadata."""
     logger.info("tool called: get_company_doc")
 
-    # Get context from FastMCP instance
-    from ...server import mcp
-    ctx = mcp.get_context()
-    client = await get_http_client(ctx)
-    api_key = await get_api_key_from_context(ctx)
+    # Get client and API key (no context needed for standard MCP)
+    client = await get_http_client(None)
+    api_key = await get_api_key_from_context(None)
 
     params = args.model_dump(exclude_none=True)
     params["include_content"] = "true"
@@ -181,11 +177,9 @@ async def get_company_doc_categories(args: SearchArgs) -> GetCompanyDocCategorie
     """Retrieve a list of all categories associated with company documents."""
     logger.info("tool called: get_company_doc_categories")
 
-    # Get context from FastMCP instance
-    from ...server import mcp
-    ctx = mcp.get_context()
-    client = await get_http_client(ctx)
-    api_key = await get_api_key_from_context(ctx)
+    # Get client and API key (no context needed for standard MCP)
+    client = await get_http_client(None)
+    api_key = await get_api_key_from_context(None)
 
     params = args.model_dump(exclude_none=True)
 
@@ -235,11 +229,9 @@ async def get_company_doc_keywords(args: SearchArgs) -> GetCompanyDocKeywordsRes
     """Retrieve a list of all keywords associated with company documents."""
     logger.info("tool called: get_company_doc_keywords")
 
-    # Get context from FastMCP instance
-    from ...server import mcp
-    ctx = mcp.get_context()
-    client = await get_http_client(ctx)
-    api_key = await get_api_key_from_context(ctx)
+    # Get client and API key (no context needed for standard MCP)
+    client = await get_http_client(None)
+    api_key = await get_api_key_from_context(None)
 
     params = args.model_dump(exclude_none=True)
 

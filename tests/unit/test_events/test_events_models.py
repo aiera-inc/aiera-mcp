@@ -3,6 +3,7 @@
 """Unit tests for events models."""
 
 import pytest
+import json
 from datetime import datetime
 from pydantic import ValidationError
 
@@ -430,3 +431,123 @@ class TestEventsModelValidation:
         # Check that required fields are marked as required
         assert "start_date" in schema["required"]
         assert "end_date" in schema["required"]
+
+
+@pytest.mark.unit
+class TestEventItemDateTimeSerialization:
+    """Test datetime field serialization in event models."""
+
+    def test_event_item_datetime_serialization(self):
+        """Test that EventItem datetime fields are serialized to strings."""
+        test_datetime = datetime(2024, 1, 15, 14, 30, 0)
+
+        event = EventItem(
+            event_id="123",
+            title="Test Event",
+            event_type=EventType.EARNINGS,
+            event_date=test_datetime,
+            company_name="Test Corp",
+            ticker="TEST:US"
+        )
+
+        # Test model_dump serialization
+        serialized = event.model_dump()
+
+        # event_date should be serialized as string, not datetime object
+        assert isinstance(serialized["event_date"], str)
+        assert serialized["event_date"] == test_datetime.isoformat()
+
+    def test_event_details_datetime_serialization(self):
+        """Test that EventDetails inherits datetime serialization from EventItem."""
+        test_datetime = datetime(2024, 1, 15, 14, 30, 0)
+
+        details = EventDetails(
+            event_id="123",
+            title="Test Event",
+            event_type=EventType.EARNINGS,
+            event_date=test_datetime,
+            description="Test description",
+            transcript_preview="Test preview"
+        )
+
+        # Test model_dump serialization
+        serialized = details.model_dump()
+
+        # event_date should be serialized as string
+        assert isinstance(serialized["event_date"], str)
+        assert serialized["event_date"] == test_datetime.isoformat()
+
+    def test_citation_info_datetime_serialization(self):
+        """Test that CitationInfo datetime fields are serialized correctly."""
+        test_datetime = datetime(2024, 1, 15, 14, 30, 0)
+
+        citation = CitationInfo(
+            title="Test Citation",
+            url="https://example.com",
+            timestamp=test_datetime,
+            source="Test Source"
+        )
+
+        # Test model_dump serialization
+        serialized = citation.model_dump()
+
+        # timestamp should be serialized as string
+        assert isinstance(serialized["timestamp"], str)
+        assert serialized["timestamp"] == test_datetime.isoformat()
+
+    def test_citation_info_optional_timestamp_serialization(self):
+        """Test CitationInfo with None timestamp."""
+        citation = CitationInfo(
+            title="Test Citation",
+            url="https://example.com",
+            timestamp=None,
+            source="Test Source"
+        )
+
+        # Test model_dump serialization
+        serialized = citation.model_dump()
+
+        # timestamp should remain None when not provided
+        assert serialized["timestamp"] is None
+
+    def test_events_response_json_serialization(self):
+        """Test that complete response models can be serialized to JSON."""
+        test_datetime = datetime(2024, 1, 15, 14, 30, 0)
+
+        # Create event with datetime
+        event = EventItem(
+            event_id="123",
+            title="Test Event",
+            event_type=EventType.EARNINGS,
+            event_date=test_datetime
+        )
+
+        # Create citation with datetime
+        citation = CitationInfo(
+            title="Test Citation",
+            url="https://example.com",
+            timestamp=test_datetime
+        )
+
+        # Create response with both
+        response = FindEventsResponse(
+            events=[event],
+            total=1,
+            page=1,
+            page_size=50,
+            instructions=["Test instruction"],
+            citation_information=[citation]
+        )
+
+        # Test that entire response can be JSON serialized
+        response_dict = response.model_dump()
+        json_str = json.dumps(response_dict)
+
+        # Should not raise any serialization errors
+        assert isinstance(json_str, str)
+        assert len(json_str) > 0
+
+        # Verify datetime fields were serialized as strings in JSON
+        parsed = json.loads(json_str)
+        assert isinstance(parsed["events"][0]["event_date"], str)
+        assert isinstance(parsed["citation_information"][0]["timestamp"], str)

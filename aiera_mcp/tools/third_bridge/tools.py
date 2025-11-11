@@ -25,11 +25,9 @@ async def find_third_bridge_events(args: FindThirdBridgeEventsArgs) -> FindThird
     """Find expert insight events from Third Bridge, filtering by a date range and (optionally) by ticker, index, watchlist, sector, or subsector."""
     logger.info("tool called: find_third_bridge_events")
 
-    # Get context from FastMCP instance
-    from ...server import mcp
-    ctx = mcp.get_context()
-    client = await get_http_client(ctx)
-    api_key = await get_api_key_from_context(ctx)
+    # Get client and API key (no context needed for standard MCP)
+    client = await get_http_client(None)
+    api_key = await get_api_key_from_context(None)
 
     params = args.model_dump(exclude_none=True)
     params["include_transcripts"] = "false"
@@ -100,11 +98,9 @@ async def get_third_bridge_event(args: GetThirdBridgeEventArgs) -> GetThirdBridg
     """Retrieve an expert insight events from Third Bridge, including agenda, insights, transcript, and other metadata."""
     logger.info("tool called: get_third_bridge_event")
 
-    # Get context from FastMCP instance
-    from ...server import mcp
-    ctx = mcp.get_context()
-    client = await get_http_client(ctx)
-    api_key = await get_api_key_from_context(ctx)
+    # Get client and API key (no context needed for standard MCP)
+    client = await get_http_client(None)
+    api_key = await get_api_key_from_context(None)
 
     params = args.model_dump(exclude_none=True)
     params["include_transcripts"] = "true"

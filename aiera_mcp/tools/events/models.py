@@ -176,6 +176,11 @@ class EventItem(BaseModel):
     ticker: Optional[str] = Field(None, description="Company ticker symbol")
     event_status: Optional[str] = Field(None, description="Status of the event (confirmed, estimated, etc.)")
 
+    @field_serializer('event_date')
+    def serialize_event_date(self, value: datetime) -> str:
+        """Serialize datetime to ISO format string for JSON compatibility."""
+        return value.isoformat()
+
 
 class EventDetails(EventItem):
     """Detailed event information including transcripts and metadata."""

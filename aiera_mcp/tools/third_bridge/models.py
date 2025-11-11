@@ -95,6 +95,11 @@ class ThirdBridgeEventItem(BaseModel):
     expert_name: Optional[str] = Field(description="Expert name")
     expert_title: Optional[str] = Field(description="Expert title/role")
 
+    @field_serializer('event_date')
+    def serialize_event_date(self, value: datetime) -> str:
+        """Serialize datetime to ISO format string for JSON compatibility."""
+        return value.isoformat()
+
 
 class ThirdBridgeEventDetails(ThirdBridgeEventItem):
     """Detailed Third Bridge event information."""

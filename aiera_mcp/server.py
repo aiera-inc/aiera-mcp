@@ -8,7 +8,9 @@ from typing import Any, Dict, Optional, Callable, List, Set
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server import Server
+from mcp.server.stdio import stdio_server
+from mcp.types import Tool, TextContent
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -47,43 +49,18 @@ def get_lambda_http_client() -> httpx.AsyncClient:
     return _lambda_http_client
 
 
-@asynccontextmanager
-async def app_lifespan(_server: FastMCP) -> AsyncIterator[Dict[str, Any]]:
-    """Manage application lifecycle with HTTP client."""
-    # Always create client in lifespan to ensure proper FastMCP initialization
-    # Even in Lambda, FastMCP requires the full lifespan cycle to initialize its task groups
-
-    # In Lambda, we can use a shared client for efficiency
-    if os.getenv("AWS_LAMBDA_FUNCTION_NAME") or os.getenv("MCP_LAMBDA_MODE"):
-        # For Lambda, yield the global client but still go through full lifespan
-        client = get_lambda_http_client()
-        yield {"http_client": client}
-        # Don't close the global client on shutdown in Lambda
-
-    else:
-        # For non-Lambda environments, use context-managed client
-        async with httpx.AsyncClient(
-            limits=httpx.Limits(max_keepalive_connections=10, max_connections=20, keepalive_expiry=30.0),
-            timeout=httpx.Timeout(30.0),
-            follow_redirects=True,
-        ) as client:
-            yield {"http_client": client}
+# HTTP client management for the standard MCP server
+# We'll manage clients directly in the tool functions as needed
 
 
-# Initialize FastMCP server
-mcp = FastMCP(
-    name="Aiera",
-    stateless_http=True,
-    json_response=True,
-    lifespan=app_lifespan,
-)
+# Initialize standard MCP server
+server = Server("Aiera")
 
 # Base configuration
 DEFAULT_PAGE_SIZE = 50
 DEFAULT_MAX_PAGE_SIZE = 100
 
 
-@mcp.resource(uri="aiera://api/docs")
 def get_api_documentation() -> str:
     """Provide overview documentation for the Aiera API."""
     return f"""
@@ -104,6 +81,8 @@ def get_api_documentation() -> str:
     **Expert Insights**: Access Third Bridge expert interview events and insights.
 
     **Transcrippets™**: Create, find, and manage curated transcript segments for key insights and memorable quotes.
+
+    **Search**: Perform semantic search across transcripts and filings with advanced filtering.
 
     ## Key Features
 
@@ -135,57 +114,104 @@ def get_api_documentation() -> str:
 
 
 def register_aiera_tools(
-    mcp_server: FastMCP,
     api_key_provider: Optional[Callable[[], Optional[str]]] = None,
     include: Optional[List[str]] = None,
     exclude: Optional[List[str]] = None,
-) -> None:
-    """Register Aiera tools with a FastMCP server instance with optional filtering.
+) -> Dict[str, Dict[str, Any]]:
+    """Register Aiera tools and return the tool registry.
 
     Args:
-        mcp_server: FastMCP server instance to register tools with
         api_key_provider: Optional function that returns API key for OAuth systems
         include: Optional list of tool names to include (if specified, only these tools will be registered)
         exclude: Optional list of tool names to exclude (these tools will not be registered)
 
-    Examples:
-        # Basic usage with environment variable - registers all tools
-        register_aiera_tools(mcp)
-
-        # With OAuth provider - registers all tools
-        from aiera_public_mcp.auth import get_current_api_key
-        register_aiera_tools(mcp, get_current_api_key)
-
-        # Register only event-related tools
-        register_aiera_tools(mcp, include=["find_events", "get_event", "get_upcoming_events"])
-
-        # Register all tools except Third Bridge
-        register_aiera_tools(mcp, exclude=["find_third_bridge_events", "get_third_bridge_event"])
-
-        # Combine OAuth with selective registration
-        register_aiera_tools(mcp, get_current_api_key, include=["find_events", "find_filings"])
+    Returns:
+        Dictionary of registered tools
     """
     # Configure API key provider if provided
     if api_key_provider:
         from . import set_api_key_provider
         set_api_key_provider(api_key_provider)
 
-    # Register all tools using the new modular structure
-    from .tools import register_tools
-    register_tools(mcp_server)
+    # Get the tool registry
+    from .tools.registry import TOOL_REGISTRY
+    return TOOL_REGISTRY
+
+
+async def run_server():
+    """Run the MCP server using stdio transport."""
+    # Get the tool registry
+    tool_registry = register_aiera_tools()
+
+    logger.info(f"Registered {len(tool_registry)} tools")
+
+    @server.list_tools()
+    async def list_tools() -> List[Tool]:
+        """Return list of available tools with proper schemas."""
+        tools = []
+        for tool_name, tool_config in tool_registry.items():
+            tools.append(
+                Tool(
+                    name=tool_name,
+                    description=tool_config['description'],
+                    inputSchema=tool_config['input_schema'],
+                )
+            )
+        return tools
+
+    @server.call_tool()
+    async def call_tool(name: str, arguments: dict) -> List[TextContent]:
+        """Handle tool calls."""
+        logger.info(f"Tool called: {name}")
+        logger.debug(f"Arguments: {arguments}")
+
+        # Find the tool in registry
+        if name not in tool_registry:
+            logger.error(f"Unknown tool: {name}")
+            raise ValueError(f"Unknown tool: {name}")
+
+        tool_config = tool_registry[name]
+
+        try:
+            # Parse arguments using the Pydantic model
+            parsed_args = tool_config['args_model'](**arguments)
+            logger.debug(f"Arguments parsed successfully for {name}")
+
+            # Call the tool function
+            result = await tool_config['function'](parsed_args)
+
+            # Convert result to dict if needed
+            if hasattr(result, 'model_dump'):
+                result_dict = result.model_dump()
+            else:
+                result_dict = result
+
+            # Return as TextContent
+            import json
+            result_text = json.dumps(result_dict, indent=2) if not isinstance(result_dict, str) else result_dict
+
+            logger.info(f"Tool {name} completed successfully")
+            return [TextContent(type="text", text=result_text)]
+
+        except Exception as e:
+            logger.error(f"Tool {name} failed: {str(e)}")
+            return [TextContent(type="text", text=f"Error: {str(e)}")]
+
+    # Start stdio-based MCP server
+    logger.info("🚀 Aiera MCP Server ready!")
+    logger.info("📡 Transport: stdio (JSON-RPC over stdin/stdout)")
+    logger.info(f"🔧 Tools enabled: {len(tool_registry)}")
+
+    options = server.create_initialization_options()
+    async with stdio_server() as (reader, writer):
+        logger.info("✅ stdio server started - ready for MCP client connections")
+        await server.run(reader, writer, options, raise_exceptions=True)
 
 
 def run(transport: str = "stdio"):
     """Run the MCP server (for standalone usage)."""
-    # Register all tools when running standalone
-    register_aiera_tools(mcp)
+    if transport != "stdio":
+        raise ValueError("Only stdio transport is currently supported")
 
-    # Literal type fix for transport parameter
-    from typing import Literal
-    valid_transports = ["stdio", "sse", "streamable-http"]
-    if transport not in valid_transports:
-        raise ValueError(f"Invalid transport: {transport}. Must be one of {valid_transports}")
-
-    # Cast to the expected literal type
-    transport_literal: Literal["stdio", "sse", "streamable-http"] = transport  # type: ignore
-    mcp.run(transport=transport_literal)
+    import asyncio
+    asyncio.run(run_server())

@@ -11,6 +11,7 @@ from .equities import find_equities, get_equity_summaries, get_available_watchli
 from .company_docs import find_company_docs, get_company_doc, get_company_doc_categories, get_company_doc_keywords
 from .third_bridge import find_third_bridge_events, get_third_bridge_event
 from .transcrippets import find_transcrippets, create_transcrippet, delete_transcrippet
+from .search import search_transcripts, search_filings
 
 # Import all parameter model classes from domain modules
 from .events import FindEventsArgs, GetEventArgs, GetUpcomingEventsArgs
@@ -19,6 +20,7 @@ from .equities import FindEquitiesArgs, GetEquitySummariesArgs, GetIndexConstitu
 from .company_docs import FindCompanyDocsArgs, GetCompanyDocArgs
 from .third_bridge import FindThirdBridgeEventsArgs, GetThirdBridgeEventArgs
 from .transcrippets import FindTranscrippetsArgs, CreateTranscrippetArgs, DeleteTranscrippetArgs
+from .search import SearchTranscriptsArgs, SearchFilingsArgs
 from .common import EmptyArgs, SearchArgs
 
 TOOL_REGISTRY = {
@@ -32,16 +34,16 @@ TOOL_REGISTRY = {
         'read_only': True,
         'destructive': False,
     },
-    'get_event': {
-        'display_name': 'Event Retriever',
-        'description': 'Retrieve detailed information about a specific event including summary, transcript, and metadata. Optionally filter transcripts by section for earnings events.',
-        'input_schema': GetEventArgs.model_json_schema(),
-        'function': get_event,
-        'args_model': GetEventArgs,
-        'category': 'events',
-        'read_only': True,
-        'destructive': False,
-    },
+    # 'get_event': {
+    #     'display_name': 'Event Retriever',
+    #     'description': 'Retrieve detailed information about a specific event including summary, transcript, and metadata. Optionally filter transcripts by section for earnings events.',
+    #     'input_schema': GetEventArgs.model_json_schema(),
+    #     'function': get_event,
+    #     'args_model': GetEventArgs,
+    #     'category': 'events',
+    #     'read_only': True,
+    #     'destructive': False,
+    # },
     'get_upcoming_events': {
         'display_name': 'Upcoming Events Finder',
         'description': 'Retrieve confirmed and estimated upcoming events within a date range, filtered by company identifiers, watchlists, indices, or sectors.',
@@ -62,16 +64,16 @@ TOOL_REGISTRY = {
         'read_only': True,
         'destructive': False,
     },
-    'get_filing': {
-        'display_name': 'Filing Retriever',
-        'description': 'Retrieve detailed information about a specific SEC filing including content, metadata, and summaries.',
-        'input_schema': GetFilingArgs.model_json_schema(),
-        'function': get_filing,
-        'args_model': GetFilingArgs,
-        'category': 'filings',
-        'read_only': True,
-        'destructive': False,
-    },
+    # 'get_filing': {
+    #     'display_name': 'Filing Retriever',
+    #     'description': 'Retrieve detailed information about a specific SEC filing including content, metadata, and summaries.',
+    #     'input_schema': GetFilingArgs.model_json_schema(),
+    #     'function': get_filing,
+    #     'args_model': GetFilingArgs,
+    #     'category': 'filings',
+    #     'read_only': True,
+    #     'destructive': False,
+    # },
     'find_equities': {
         'display_name': 'Equity Finder',
         'description': 'Find companies and equities using various identifiers (Bloomberg tickers, ISIN, RIC, PermID) or search terms. Returns company and equity information.',
@@ -231,6 +233,26 @@ TOOL_REGISTRY = {
         'category': 'transcrippets',
         'read_only': False,
         'destructive': True,
+    },
+    'search_transcripts': {
+        'display_name': 'Transcript Searcher',
+        'description': 'Perform a semantic search against all event transcripts, filtered by event IDs, equity IDs, transcript section, event type, or date range. Supports ML-based semantic search with fallback to traditional text search.',
+        'input_schema': SearchTranscriptsArgs.model_json_schema(),
+        'function': search_transcripts,
+        'args_model': SearchTranscriptsArgs,
+        'category': 'search',
+        'read_only': True,
+        'destructive': False,
+    },
+    'search_filings': {
+        'display_name': 'Filing Searcher',
+        'description': 'Perform a semantic search against all SEC filings, filtered by filing IDs, equity IDs, filing types, or date range. Searches through filing content and metadata.',
+        'input_schema': SearchFilingsArgs.model_json_schema(),
+        'function': search_filings,
+        'args_model': SearchFilingsArgs,
+        'category': 'search',
+        'read_only': True,
+        'destructive': False,
     },
 }
 

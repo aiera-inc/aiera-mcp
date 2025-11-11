@@ -4,7 +4,7 @@
 
 from datetime import datetime
 from typing import List, Optional, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer
 
 
 class BaseAieraArgs(BaseModel):
@@ -18,6 +18,13 @@ class CitationInfo(BaseModel):
     url: Optional[str] = Field(None, description="URL to the source (if available)")
     timestamp: Optional[datetime] = Field(None, description="When the data was created/published")
     source: Optional[str] = Field(None, description="Source name (e.g., 'Aiera', 'SEC')")
+
+    @field_serializer('timestamp')
+    def serialize_timestamp(self, value: Optional[datetime]) -> Optional[str]:
+        """Serialize datetime to ISO format string for JSON compatibility."""
+        if value is None:
+            return None
+        return value.isoformat()
 
 
 class BaseAieraResponse(BaseModel):

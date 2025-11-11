@@ -103,6 +103,13 @@ class FilingItem(BaseModel):
     is_amendment: bool = Field(description="Whether this is an amendment")
     official_url: Optional[str] = Field(default=None, description="Official SEC.gov URL")
 
+    @field_serializer('filing_date', 'period_end_date')
+    def serialize_date_fields(self, value: Optional[date]) -> Optional[str]:
+        """Serialize date fields to ISO format string for JSON compatibility."""
+        if value is None:
+            return None
+        return value.isoformat()
+
 
 class FilingSummary(BaseModel):
     """Filing summary information."""

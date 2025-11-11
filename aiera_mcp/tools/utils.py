@@ -70,6 +70,9 @@ def correct_event_type(event_type: str) -> str:
     elif event_type.strip() == "m&a":
         event_type = "special_situation"
 
+    if event_type.strip() not in ["earnings", "presentation", "shareholder_meeting", "investor_meeting", "special_situation"]:
+        event_type = "earnings"
+
     return event_type.strip()
 
 

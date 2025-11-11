@@ -21,11 +21,9 @@ async def find_filings(args: FindFilingsArgs) -> FindFilingsResponse:
     """Find SEC filings, filtered by a date range, and one of the following: ticker(s), watchlist, index, sector, or subsector; and (optionally) by a form number."""
     logger.info("tool called: find_filings")
 
-    # Get context from FastMCP instance
-    from ...server import mcp
-    ctx = mcp.get_context()
-    client = await get_http_client(ctx)
-    api_key = await get_api_key_from_context(ctx)
+    # Get client and API key (no context needed for standard MCP)
+    client = await get_http_client(None)
+    api_key = await get_api_key_from_context(None)
 
     params = args.model_dump(exclude_none=True)
 
@@ -108,11 +106,9 @@ async def get_filing(args: GetFilingArgs) -> GetFilingResponse:
     """Retrieve an SEC filing, including a summary and other metadata."""
     logger.info("tool called: get_filing")
 
-    # Get context from FastMCP instance
-    from ...server import mcp
-    ctx = mcp.get_context()
-    client = await get_http_client(ctx)
-    api_key = await get_api_key_from_context(ctx)
+    # Get client and API key (no context needed for standard MCP)
+    client = await get_http_client(None)
+    api_key = await get_api_key_from_context(None)
 
     params = args.model_dump(exclude_none=True)
     params["include_content"] = "true"

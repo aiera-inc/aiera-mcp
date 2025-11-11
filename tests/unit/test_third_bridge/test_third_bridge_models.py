@@ -3,6 +3,7 @@
 """Unit tests for third_bridge models."""
 
 import pytest
+import json
 from datetime import datetime
 from pydantic import ValidationError
 
@@ -433,3 +434,120 @@ class TestThirdBridgeModelValidation:
             company_name="AT&T Inc."
         )
         assert event_special.company_name == "AT&T Inc."
+
+
+@pytest.mark.unit
+class TestThirdBridgeEventItemDateTimeSerialization:
+    """Test datetime field serialization in Third Bridge event models."""
+
+    def test_third_bridge_event_item_datetime_serialization(self):
+        """Test that ThirdBridgeEventItem datetime fields are serialized to strings."""
+        test_datetime = datetime(2024, 1, 15, 14, 30, 0)
+
+        event = ThirdBridgeEventItem(
+            event_id="tb123",
+            title="Test Third Bridge Event",
+            event_date=test_datetime,
+            company_name="Test Corp",
+            expert_name="Jane Expert",
+            expert_title="Former Executive"
+        )
+
+        # Test model_dump serialization
+        serialized = event.model_dump()
+
+        # event_date should be serialized as string, not datetime object
+        assert isinstance(serialized["event_date"], str)
+        assert serialized["event_date"] == test_datetime.isoformat()
+
+    def test_third_bridge_event_details_datetime_serialization(self):
+        """Test that ThirdBridgeEventDetails inherits datetime serialization."""
+        test_datetime = datetime(2024, 1, 15, 14, 30, 0)
+
+        details = ThirdBridgeEventDetails(
+            event_id="tb123",
+            title="Test Third Bridge Event",
+            event_date=test_datetime,
+            company_name="Test Corp",
+            expert_name="Jane Expert",
+            expert_title="Former Executive",
+            agenda="Test agenda",
+            insights="Test insights",
+            transcript="Test transcript"
+        )
+
+        # Test model_dump serialization
+        serialized = details.model_dump()
+
+        # event_date should be serialized as string
+        assert isinstance(serialized["event_date"], str)
+        assert serialized["event_date"] == test_datetime.isoformat()
+
+    def test_third_bridge_response_json_serialization(self):
+        """Test that complete Third Bridge response models can be serialized to JSON."""
+        test_datetime = datetime(2024, 1, 15, 14, 30, 0)
+
+        # Create Third Bridge event with datetime
+        event = ThirdBridgeEventItem(
+            event_id="tb123",
+            title="Test Third Bridge Event",
+            event_date=test_datetime,
+            company_name="Test Corp",
+            expert_name="Jane Expert",
+            expert_title="Former Executive"
+        )
+
+        # Create citation with datetime
+        citation = CitationInfo(
+            title="Third Bridge Citation",
+            url="https://thirdbridge.com/event/123",
+            timestamp=test_datetime
+        )
+
+        # Create response with both
+        response = FindThirdBridgeEventsResponse(
+            events=[event],
+            total=1,
+            page=1,
+            page_size=50,
+            instructions=["Third Bridge instruction"],
+            citation_information=[citation]
+        )
+
+        # Test that entire response can be JSON serialized
+        response_dict = response.model_dump()
+        json_str = json.dumps(response_dict)
+
+        # Should not raise any serialization errors
+        assert isinstance(json_str, str)
+        assert len(json_str) > 0
+
+        # Verify datetime fields were serialized as strings in JSON
+        parsed = json.loads(json_str)
+        assert isinstance(parsed["events"][0]["event_date"], str)
+        assert isinstance(parsed["citation_information"][0]["timestamp"], str)
+
+    def test_minimal_third_bridge_event_serialization(self):
+        """Test serialization of Third Bridge event with minimal required fields."""
+        test_datetime = datetime(2024, 1, 15, 14, 30, 0)
+
+        event = ThirdBridgeEventItem(
+            event_id="tb124",
+            title="Minimal Event",
+            event_date=test_datetime,
+            company_name="Minimal Corp",
+            expert_name="Test Expert",
+            expert_title="Test Title"
+        )
+
+        # Test JSON serialization with minimal fields
+        response_dict = event.model_dump()
+        json_str = json.dumps(response_dict)
+
+        # Should not raise any serialization errors
+        assert isinstance(json_str, str)
+
+        # Verify datetime field was serialized as string
+        parsed = json.loads(json_str)
+        assert isinstance(parsed["event_date"], str)
+        assert parsed["event_date"] == test_datetime.isoformat()
