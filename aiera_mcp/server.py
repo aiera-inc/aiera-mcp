@@ -135,6 +135,30 @@ def correct_bloomberg_ticker(ticker: str) -> str:
     return ticker
 
 
+def correct_provided_ids(provided_ids: str) -> str:
+    """Ensure provided ID lists have comma-separation."""
+    if "," not in provided_ids and " " in provided_ids:
+        provided_ids = ",".join(provided_ids.split())
+
+    reid = []
+    for provided_id in provided_ids.split(","):
+        reid.append(int(provided_id.strip()))
+
+    return reid
+
+
+def correct_provided_types(provided_types: str) -> str:
+    """Ensure provided type lists have comma-separation."""
+    if "," not in provided_types and " " in provided_types:
+        provided_types = ",".join(provided_types.split())
+
+    retype = []
+    for provided_type in provided_types.split(","):
+        retype.append(str(provided_type.strip()))
+
+    return retype
+
+
 def correct_keywords(keywords: str) -> str:
     """Ensure keywords have comma-separation."""
     if "," not in keywords and " " in keywords and len(keywords.split()) > 3:
@@ -151,24 +175,15 @@ def correct_categories(categories: str) -> str:
     return categories
 
 
-def correct_provided_ids(provided_ids: str) -> str:
-    """Ensure provided ID lists have comma-separation."""
-    if "," not in provided_ids and " " in provided_ids:
-        corrected = []
-        for provided_id in provided_ids.split(","):
-            corrected.append(provided_id.strip())
-
-        return ",".join(corrected)
-
-    return provided_ids
-
-
 def correct_event_type(event_type: str) -> str:
     """Ensure event type is set correctly."""
     if event_type.strip() == "conference":
         event_type = "presentation"
     elif event_type.strip() == "m&a":
         event_type = "special_situation"
+
+    if event_type.strip() not in ["earnings", "presentation", "shareholder_meeting", "investor_meeting", "special_situation"]:
+        event_type = "earnings"
 
     return event_type.strip()
 
@@ -1066,6 +1081,301 @@ async def get_third_bridge_event(event_id: str) -> Dict[str, Any]:
     )
 
 
+@mcp.tool(
+    annotations={
+        "title": "Search Transcripts",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+    }
+)
+async def search_transcripts(
+    search: str,
+    event_ids: str = None,
+    equity_ids: str = None,
+    start_date: str = None,
+    end_date: str = None,
+    transcript_section: str = None,
+    event_type: Optional[str] = "earnings",
+    page: Optional[int] = 1,
+    page_size: Optional[int] = DEFAULT_PAGE_SIZE,
+) -> Dict[str, Any]:
+    """Perform a semantic search against all event transcripts."""
+    logger.info("tool called: search_transcripts")
+
+    ctx = mcp.get_context()
+    client = await get_http_client(ctx)
+    api_key = await get_api_key_from_context(ctx)
+
+    must_clauses = []
+
+    # add event ID filter...
+    if event_ids:
+        must_clauses.append({
+            "terms": {
+                "transcript_event_id": correct_provided_ids(event_ids),
+            }
+        })
+
+    # add equity ID filter...
+    if equity_ids:
+        must_clauses.append({
+            "terms": {
+                "primary_equity_id": correct_provided_ids(equity_ids),
+            }
+        })
+
+    # add date range filter...
+    if start_date and end_date:
+        must_clauses.append({
+            "range": {
+                "date": {
+                    "gte": start_date,
+                    "lte": end_date
+                }
+            }
+        })
+
+    # add event type filter...
+    if event_type and event_type.strip():
+        must_clauses.append({
+            "term": {
+                "transcript_event_type": correct_event_type(event_type)
+            }
+        })
+
+    # add a section filter...
+    if transcript_section and transcript_section.strip() in ["presentation", "q_and_a"]:
+        must_clauses.append({
+            "term": {
+                "transcript_section": transcript_section.strip()
+            }
+        })
+
+    # first, try ML-based search...
+    query = {
+        "query": {
+            "bool": {
+                "must": must_clauses,
+            }
+        },
+        "from": (page - 1),
+        "size": page_size,
+        "min_score": 0.2,
+        "_source": [
+            "content_id",
+            "transcript_event_id",
+            "primary_equity_id",
+            "title",
+            "text",
+            "speaker_name",
+            "speaker_title",
+            "date",
+            "section",
+            "transcript_section"
+        ],
+        "sort": [
+            {
+                "_score": {
+                    "order": "desc"
+                }
+            }
+        ],
+        "ext": {
+            "ml_inference": {
+                "query_text": search
+            }
+        }
+    }
+
+    raw_results = await make_aiera_request(
+        client=client,
+        method="POST",
+        endpoint="/chat-support/search/transcripts",
+        api_key=api_key,
+        params={},
+        data=query,
+    )
+
+    # if not (or bad) results, fall back to traditional search...
+    if not raw_results or "result" not in raw_results or not raw_results["result"]:
+        query = {
+            "query": {
+                "bool": {
+                    "must": must_clauses,
+                    "should": [
+                        {
+                            "match": {
+                                "text": {
+                                    "query": search,
+                                    "boost": 2.0
+                                }
+                            }
+                        },
+                        {
+                            "multi_match": {
+                                "query": search,
+                                "fields": ["text", "title", "speaker_name"],
+                                "type": "best_fields",
+                                "boost": 1.5
+                            }
+                        }
+                    ]
+                }
+            },
+            "from": (page - 1),
+            "size": page_size,
+            "min_score": 0.2,
+            "_source": [
+                "content_id",
+                "transcript_event_id",
+                "primary_equity_id",
+                "title",
+                "text",
+                "speaker_name",
+                "speaker_title",
+                "date",
+                "section",
+                "transcript_section"
+            ],
+            "sort": [
+                {
+                    "_score": {
+                        "order": "desc"
+                    }
+                }
+            ]
+        }
+
+        raw_results = await make_aiera_request(
+            client=client,
+            method="POST",
+            endpoint="/chat-support/search/transcripts",
+            api_key=api_key,
+            params={},
+            data=query,
+        )
+
+    return raw_results
+
+
+@mcp.tool(
+    annotations={
+        "title": "Search Filings",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+    }
+)
+async def search_filings(
+    search: str,
+    filing_ids: str = None,
+    equity_ids: str = None,
+    filing_types: str = None,
+    start_date: str = None,
+    end_date: str = None,
+    page: Optional[int] = 1,
+    page_size: Optional[int] = DEFAULT_PAGE_SIZE,
+) -> Dict[str, Any]:
+    """Perform a semantic search against all SEC filings."""
+    logger.info("tool called: search_filings")
+
+    ctx = mcp.get_context()
+    client = await get_http_client(ctx)
+    api_key = await get_api_key_from_context(ctx)
+
+    must_clauses = []
+
+    # add event ID filter...
+    if filing_ids:
+        must_clauses.append({
+            "terms": {
+                "filing_id": correct_provided_ids(filing_ids),
+            }
+        })
+
+    # add equity ID filter...
+    if equity_ids:
+        must_clauses.append({
+            "terms": {
+                "primary_equity_id": correct_provided_ids(equity_ids),
+            }
+        })
+
+    # add date range filter...
+    if start_date and end_date:
+        must_clauses.append({
+            "range": {
+                "date": {
+                    "gte": start_date,
+                    "lte": end_date
+                }
+            }
+        })
+
+    # add filing type filter...
+    if filing_types:
+        must_clauses.append({
+            "terms": {
+                "filing_type": correct_provided_types(filing_types),
+            }
+        })
+
+    query = {
+        "query": {
+            "bool": {
+                "must": must_clauses,
+                "should": [
+                    {
+                        "match": {
+                            "text": {
+                                "query": search,
+                                "boost": 2.0
+                            }
+                        }
+                    },
+                    {
+                        "multi_match": {
+                            "query": search,
+                            "fields": ["text", "title"],
+                            "type": "best_fields",
+                            "boost": 1.5
+                        }
+                    }
+                ]
+            }
+        },
+        "from": (page - 1),
+        "size": page_size,
+        "min_score": 0.2,
+        "_source": [
+            "filing_id",
+            "metadata",
+            "primary_equity_id",
+            "title",
+            "text",
+            "date",
+            "filing_type"
+        ],
+        "sort": [
+            {
+                "_score": {
+                    "order": "desc"
+                }
+            }
+        ]
+    }
+
+    raw_results = await make_aiera_request(
+        client=client,
+        method="POST",
+        endpoint="/chat-support/search/filings",
+        api_key=api_key,
+        params={},
+        data=query,
+    )
+
+    return raw_results
+
+
 @mcp.resource(uri="aiera://api/docs")
 def get_api_documentation() -> str:
     """Provide documentation for the Aiera API."""
@@ -1133,6 +1443,17 @@ def get_api_documentation() -> str:
     - get_third_bridge_event: Retrieve an expert insight event from Third Bridge, including an agenda, insights, the full transcript, filtered by event_id. 
     -- The event ID can be found using the tool find_third_bridge_events.
     -- If you need to retrieve more than one event, make multiple sequential calls.
+    
+    ### Search API
+    - search_transcripts: Perform a semantic search against all event transcripts, filtered by event_ids (a comma-separated list of IDs), equity_ids (a comma-separated list of IDs), transcript_section, event_type, or a date range. This endpoint supports pagination.
+    -- Transcript section must be one of the following: presentation, q_and_a
+    -- Event type must be one of the following: earnings, presentation, shareholder_meeting, investor_meeting, special_situation
+    -- Event IDs can be found using the find_events tool.
+    -- Equity IDs can be found using the find_equities tool.
+    - search_filings: Perform a semantic search against all SEC filings, filtered by filing_ids (a comma-separated list of IDs), equity_ids (a comma-separated list of IDs), filing_types (a comma-seperated list of types), or a date range. This endpoint supports pagination.
+    -- Examples of filing types include: 10-K, 10-Q, and 8-K. There are other possibilities, but those 3 will be the most commonly used.
+    -- Event IDs can be found using the find_events tool.
+    -- Equity IDs can be found using the find_equities tool.
     
     ## Authentication:
     All endpoints require the AIERA_API_KEY environment variable to be set.
