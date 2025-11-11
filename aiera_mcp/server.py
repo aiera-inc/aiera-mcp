@@ -1410,6 +1410,7 @@ def get_api_documentation() -> str:
     - Tools that support pagination use 'page' and 'page_size' parameters. 
     -- For non-search tools, the default page is 1 and the default page_size is {DEFAULT_PAGE_SIZE}, with a maximum page_size of {DEFAULT_MAX_PAGE_SIZE}.
     -- For search tools, the default page is 1 and the default page_size is {SEARCH_PAGE_SIZE}, with a maximum page_size of {SEARCH_MAX_PAGE_SIZE}.
+    -- page_size can be as small as 1 and as large as the maximum page size. Where possible, use smaller page sizes to reduce the total number of tokens consumed.
     - Date parameters should be in ISO format (YYYY-MM-DD).
     - Bloomberg tickers are composed of a ticker and a country code joined by a colon (e.g., "AAPL:US").
     -- If information from multiple bloomberg tickers is needed, they should be represented as a comma-separated list (e.g., "AAPL:US,MSFT:US,GOOGL:US").
