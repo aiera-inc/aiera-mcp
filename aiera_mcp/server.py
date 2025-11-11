@@ -1125,13 +1125,14 @@ async def search_transcripts(
         })
 
     # add date range filter...
-    if start_date and end_date:
+    if start_date:
+        range = {"gte": start_date}
+        if end_date:
+            range["lte"] = end_date
+
         must_clauses.append({
             "range": {
-                "date": {
-                    "gte": start_date,
-                    "lte": end_date
-                }
+                "date": range
             }
         })
 
@@ -1261,13 +1262,14 @@ async def search_filings(
         })
 
     # add date range filter...
-    if start_date and end_date:
+    if start_date:
+        range = {"gte": start_date}
+        if end_date:
+            range["lte"] = end_date
+
         must_clauses.append({
             "range": {
-                "date": {
-                    "gte": start_date,
-                    "lte": end_date
-                }
+                "date": range
             }
         })
 
