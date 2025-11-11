@@ -86,6 +86,8 @@ mcp = FastMCP(
 # Base configuration
 DEFAULT_PAGE_SIZE = 50
 DEFAULT_MAX_PAGE_SIZE = 100
+SEARCH_PAGE_SIZE = 100
+SEARCH_MAX_PAGE_SIZE = 250
 AIERA_BASE_URL = "https://premium.aiera.com/api"
 DEFAULT_HEADERS = {
     "Content-Type": "application/json",
@@ -1097,7 +1099,7 @@ async def search_transcripts(
     transcript_section: str = None,
     event_type: Optional[str] = "earnings",
     page: Optional[int] = 1,
-    page_size: Optional[int] = DEFAULT_PAGE_SIZE,
+    page_size: Optional[int] = SEARCH_PAGE_SIZE,
 ) -> Dict[str, Any]:
     """Perform a semantic search against all event transcripts."""
     logger.info("tool called: search_transcripts")
@@ -1234,7 +1236,7 @@ async def search_filings(
     start_date: str = None,
     end_date: str = None,
     page: Optional[int] = 1,
-    page_size: Optional[int] = DEFAULT_PAGE_SIZE,
+    page_size: Optional[int] = SEARCH_PAGE_SIZE,
 ) -> Dict[str, Any]:
     """Perform a semantic search against all SEC filings."""
     logger.info("tool called: search_filings")
@@ -1405,7 +1407,9 @@ def get_api_documentation() -> str:
     Some endpoints may require specific permissions based on a subscription plan. If access is denied, the user should talk to their Aiera representative about gaining access.
 
     ## Parameter Notes:
-    - Tools that support pagination use 'page' and 'page_size' parameters. By default, page is set to 1 and page_size is set to {DEFAULT_PAGE_SIZE}. The default maximum page_size is {DEFAULT_MAX_PAGE_SIZE}.
+    - Tools that support pagination use 'page' and 'page_size' parameters. 
+    -- For non-search tools, the default page is 1 and the default page_size is {DEFAULT_PAGE_SIZE}, with a maximum page_size of {DEFAULT_MAX_PAGE_SIZE}.
+    -- For search tools, the default page is 1 and the default page_size is {SEARCH_PAGE_SIZE}, with a maximum page_size of {SEARCH_MAX_PAGE_SIZE}.
     - Date parameters should be in ISO format (YYYY-MM-DD).
     - Bloomberg tickers are composed of a ticker and a country code joined by a colon (e.g., "AAPL:US").
     -- If information from multiple bloomberg tickers is needed, they should be represented as a comma-separated list (e.g., "AAPL:US,MSFT:US,GOOGL:US").
