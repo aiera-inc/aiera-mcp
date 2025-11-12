@@ -91,14 +91,6 @@ class CreateTranscrippetArgs(BaseToolArgs):
         ge=0,
         description="Character offset within the ending transcript item."
     )
-    company_id: Optional[int] = Field(
-        default=None,
-        description="Optional company ID to associate with the transcrippet."
-    )
-    equity_id: Optional[int] = Field(
-        default=None,
-        description="Optional equity ID to associate with the transcrippet."
-    )
 
 
 class DeleteTranscrippetArgs(BaseToolArgs):
@@ -133,14 +125,9 @@ class TranscrippetItem(BaseModel):
     transcription_audio_offset_seconds: int = Field(description="Audio offset in seconds")
     trimmed_audio_url: str = Field(description="Trimmed audio URL")
     word_durations_ms: List[int] = Field(description="Word durations in milliseconds")
-
-
-class TranscrippetDetails(TranscrippetItem):
-    """Detailed transcrippet information."""
-    transcript_text: str = Field(description="Full transcript text")
-    speaker_name: Optional[str] = Field(description="Speaker name")
-    start_time: Optional[str] = Field(description="Start time")
-    end_time: Optional[str] = Field(description="End time")
+    speaker_name: Optional[str] = Field(default=None, description="Speaker name")
+    speaker_title: Optional[str] = Field(default=None, description="Speaker title")
+    public_url: Optional[str] = Field(default=None, description="Public URL for viewing the transcrippet")
 
 
 # Response classes
@@ -151,7 +138,7 @@ class FindTranscrippetsResponse(BaseAieraResponse):
 
 class CreateTranscrippetResponse(BaseAieraResponse):
     """Response for create_transcrippet tool - matches actual API structure."""
-    response: TranscrippetDetails = Field(description="Created transcrippet")
+    response: TranscrippetItem = Field(description="Created transcrippet")
 
 
 class DeleteTranscrippetResponse(BaseAieraResponse):

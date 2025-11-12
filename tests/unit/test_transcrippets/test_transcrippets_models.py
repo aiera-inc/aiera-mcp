@@ -9,7 +9,7 @@ from pydantic import ValidationError
 from aiera_mcp.tools.transcrippets.models import (
     FindTranscrippetsArgs, CreateTranscrippetArgs, DeleteTranscrippetArgs,
     FindTranscrippetsResponse, CreateTranscrippetResponse, DeleteTranscrippetResponse,
-    TranscrippetItem, TranscrippetDetails
+    TranscrippetItem
 )
 from aiera_mcp.tools.common.models import CitationInfo
 
@@ -66,9 +66,9 @@ class TestTranscrippetsModels:
         with pytest.raises(Exception):  # Pydantic ValidationError
             TranscrippetItem(**minimal_data)
 
-    def test_transcrippet_details_inherits_transcrippet_item(self):
-        """Test TranscrippetDetails inherits from TranscrippetItem."""
-        details_data = {
+    def test_transcrippet_item_with_speaker_fields(self):
+        """Test TranscrippetItem includes speaker_name and speaker_title fields."""
+        item_data = {
             "transcrippet_id": 123,
             "company_id": 456,
             "equity_id": 789,
@@ -91,24 +91,25 @@ class TestTranscrippetsModels:
             "transcription_audio_offset_seconds": 30,
             "trimmed_audio_url": "https://example.com/audio/trans123_trimmed.mp3",
             "word_durations_ms": [500, 300, 400, 600, 350, 800, 200, 450],
-            "transcript_text": "Full transcript text of the CEO's comments...",
             "speaker_name": "Tim Cook",
-            "start_time": "00:05:30",
-            "end_time": "00:06:45"
+            "speaker_title": "Chief Executive Officer",
+            "public_url": "https://public.aiera.com/shared/transcrippet.html?id=guid-123-456"
         }
 
-        details = TranscrippetDetails(**details_data)
+        item = TranscrippetItem(**item_data)
 
-        # Test inherited fields
-        assert details.transcrippet_id == 123
-        assert details.company_name == "Apple Inc"
-        assert details.event_title == "Q4 2023 Earnings Call"
+        # Test base fields
+        assert item.transcrippet_id == 123
+        assert item.company_name == "Apple Inc"
+        assert item.event_title == "Q4 2023 Earnings Call"
+        assert item.transcript == "I'm pleased to report that Q4 was another strong quarter..."
 
-        # Test TranscrippetDetails-specific fields
-        assert details.transcript_text == "Full transcript text of the CEO's comments..."
-        assert details.speaker_name == "Tim Cook"
-        assert details.start_time == "00:05:30"
-        assert details.end_time == "00:06:45"
+        # Test speaker fields
+        assert item.speaker_name == "Tim Cook"
+        assert item.speaker_title == "Chief Executive Officer"
+
+        # Test public URL field
+        assert item.public_url == "https://public.aiera.com/shared/transcrippet.html?id=guid-123-456"
 
 
 @pytest.mark.unit
@@ -194,9 +195,7 @@ class TestCreateTranscrippetArgs:
             transcript_item_id=789,
             transcript_item_offset=0,
             transcript_end_item_id=790,
-            transcript_end_item_offset=100,
-            company_id=456,
-            equity_id=789
+            transcript_end_item_offset=100
         )
 
         assert args.event_id == 12345
@@ -205,8 +204,6 @@ class TestCreateTranscrippetArgs:
         assert args.transcript_item_offset == 0
         assert args.transcript_end_item_id == 790
         assert args.transcript_end_item_offset == 100
-        assert args.company_id == 456
-        assert args.equity_id == 789
 
     def test_create_transcrippet_args_required_fields(self):
         """Test CreateTranscrippetArgs with only required fields."""
@@ -221,8 +218,6 @@ class TestCreateTranscrippetArgs:
 
         assert args.event_id == 12345
         assert args.transcript == "This is the transcript text content"
-        assert args.company_id is None  # Optional field
-        assert args.equity_id is None    # Optional field
 
     def test_create_transcrippet_args_validation(self):
         """Test CreateTranscrippetArgs validation rules."""
@@ -350,7 +345,7 @@ class TestTranscrippetsResponses:
 
     def test_create_transcrippet_response(self):
         """Test CreateTranscrippetResponse model."""
-        transcrippet_details = TranscrippetDetails(
+        transcrippet_item = TranscrippetItem(
             transcrippet_id=456,
             company_id=789,
             equity_id=101112,
@@ -373,21 +368,20 @@ class TestTranscrippetsResponses:
             transcription_audio_offset_seconds=45,
             trimmed_audio_url="https://example.com/audio/trans456_trimmed.mp3",
             word_durations_ms=[600, 400, 500, 700, 350, 900, 250, 550],
-            transcript_text="Full transcript text here...",
             speaker_name="Tim Cook",
-            start_time="00:05:30",
-            end_time="00:06:45"
+            speaker_title="Chief Executive Officer",
+            public_url="https://public.aiera.com/shared/transcrippet.html?id=guid-456-789"
         )
 
         response = CreateTranscrippetResponse(
-            response=transcrippet_details,
+            response=transcrippet_item,
             instructions=["Test instruction"],
             citation_information=[]
         )
 
-        assert isinstance(response.response, TranscrippetDetails)
+        assert isinstance(response.response, TranscrippetItem)
         assert response.response.transcrippet_id == 456
-        assert response.response.transcript_text == "Full transcript text here..."
+        assert response.response.transcript == "Full transcript text here..."
         assert response.instructions == ["Test instruction"]
 
     def test_delete_transcrippet_response(self):
@@ -471,9 +465,6 @@ class TestTranscrippetsModelValidation:
         assert "transcript_end_item_id" in required_fields
         assert "transcript_end_item_offset" in required_fields
 
-        # Optional fields should not be required
-        assert "company_id" not in required_fields
-        assert "equity_id" not in required_fields
 
     def test_datetime_field_handling(self):
         """Test datetime field handling in API structure."""
@@ -548,10 +539,10 @@ class TestTranscrippetsModelValidation:
                 word_durations_ms=[500, 300, 400]
             )
 
-    def test_transcript_text_field_in_details(self):
-        """Test transcript_text field in TranscrippetDetails."""
-        # Create complete TranscrippetDetails with transcript_text
-        details_data = {
+    def test_transcrippet_item_transcript_field(self):
+        """Test transcript field in TranscrippetItem matches API response structure."""
+        # Create complete TranscrippetItem with fields from actual API response
+        item_data = {
             "transcrippet_id": 123,
             "company_id": 456,
             "equity_id": 789,
@@ -569,21 +560,20 @@ class TestTranscrippetsModelValidation:
             "event_type": "earnings",
             "modified": "2023-10-26T22:05:00Z",
             "start_ms": 60000,
-            "transcript": "Basic transcript content",
+            "transcript": "Sure, I'll take that one. I think we're a long way from equilibrium.",
             "transcrippet_guid": "guid-123-456",
             "transcription_audio_offset_seconds": 30,
             "trimmed_audio_url": "https://example.com/audio/trans123_trimmed.mp3",
             "word_durations_ms": [500, 300, 400],
-            "transcript_text": "Detailed transcript text content",
-            "speaker_name": "Tim Cook",
-            "start_time": "00:05:30",
-            "end_time": "00:06:45"
+            "speaker_name": "Spencer Adam Neumann",
+            "speaker_title": "Chief Financial Officer",
+            "public_url": "https://public.aiera.com/shared/transcrippet.html?id=guid-123-456"
         }
 
-        details = TranscrippetDetails(**details_data)
-        assert details.transcript_text == "Detailed transcript text content"
-        assert details.speaker_name == "Tim Cook"
-        assert details.start_time == "00:05:30"
+        item = TranscrippetItem(**item_data)
+        assert item.transcript == "Sure, I'll take that one. I think we're a long way from equilibrium."
+        assert item.speaker_name == "Spencer Adam Neumann"
+        assert item.speaker_title == "Chief Financial Officer"
 
     def test_api_structure_validation(self):
         """Test that the models match expected API structure."""

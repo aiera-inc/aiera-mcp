@@ -11,7 +11,7 @@ from aiera_mcp.tools.transcrippets.tools import find_transcrippets, create_trans
 from aiera_mcp.tools.transcrippets.models import (
     FindTranscrippetsArgs, CreateTranscrippetArgs, DeleteTranscrippetArgs,
     FindTranscrippetsResponse, CreateTranscrippetResponse, DeleteTranscrippetResponse,
-    TranscrippetItem, TranscrippetDetails
+    TranscrippetItem
 )
 
 
@@ -248,9 +248,7 @@ class TestCreateTranscrippet:
             transcript_item_id=789,
             transcript_item_offset=0,
             transcript_end_item_id=790,
-            transcript_end_item_offset=100,
-            company_id=456,
-            equity_id=789
+            transcript_end_item_offset=100
         )
 
         # Execute
@@ -258,13 +256,14 @@ class TestCreateTranscrippet:
 
         # Verify
         assert isinstance(result, CreateTranscrippetResponse)
-        assert isinstance(result.response, TranscrippetDetails)
+        assert isinstance(result.response, TranscrippetItem)
         assert result.response.transcrippet_id == 456
         assert result.response.company_name == "Apple Inc"
-        assert result.response.transcript_text == "Full transcript text here..."
+        assert result.response.transcript == "Full transcript text here..."
         assert result.response.audio_url == "https://example.com/audio/trans456.mp3"
         assert result.response.speaker_name == "Tim Cook"
         assert result.response.transcrippet_guid == "guid-456-789"
+        assert result.response.public_url == "https://public.aiera.com/shared/transcrippet.html?id=guid-456-789"
 
         # Check API call was made correctly
         mock_http_dependencies['mock_make_request'].assert_called_once()
@@ -280,8 +279,6 @@ class TestCreateTranscrippet:
         assert data['transcript_item_offset'] == 0
         assert data['transcript_end_item_id'] == 790
         assert data['transcript_end_item_offset'] == 100
-        assert data['company_id'] == 456
-        assert data['equity_id'] == 789
 
     @pytest.mark.asyncio
     async def test_create_transcrippet_minimal_args(self, mock_http_dependencies, transcrippets_api_responses):
@@ -303,13 +300,11 @@ class TestCreateTranscrippet:
 
         # Verify
         assert isinstance(result, CreateTranscrippetResponse)
-        assert isinstance(result.response, TranscrippetDetails)
+        assert isinstance(result.response, TranscrippetItem)
 
-        # Check data was passed correctly (optional fields excluded)
+        # Check data was passed correctly
         call_args = mock_http_dependencies['mock_make_request'].call_args
         data = call_args[1]['data']
-        assert 'company_id' not in data  # Should be excluded if None
-        assert 'equity_id' not in data    # Should be excluded if None
 
     @pytest.mark.asyncio
     async def test_create_transcrippet_invalid_response(self, mock_http_dependencies):
@@ -407,6 +402,7 @@ class TestCreateTranscrippet:
         # Verify basic response structure (API doesn't auto-generate citations)
         assert len(result.citation_information) == 0
         assert result.response.transcrippet_guid == "guid-456-789"
+        assert result.response.public_url == "https://public.aiera.com/shared/transcrippet.html?id=guid-456-789"
         assert result.response.event_title == "Q4 2023 Earnings Call"
 
 

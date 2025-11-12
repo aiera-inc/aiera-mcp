@@ -112,8 +112,8 @@ class TestToolSerializationComprehensive:
                 elif 'CreateTranscrippet' in model_class.__name__:
                     sample_data['response'] = {
                         'transcrippet_id': 123,
-                        'company_id': 456,
-                        'equity_id': 789,
+                        'company_id': 456,  # Still returned by API
+                        'equity_id': 789,   # Still returned by API
                         'event_id': 101,
                         'transcript_item_id': 202,
                         'user_id': 303,

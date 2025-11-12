@@ -14,7 +14,6 @@ from .models import (
     CreateTranscrippetResponse,
     DeleteTranscrippetResponse,
     TranscrippetItem,
-    TranscrippetDetails
 )
 from ..base import get_http_client, get_api_key_from_context, make_aiera_request
 from ..common.models import CitationInfo
@@ -64,8 +63,12 @@ async def create_transcrippet(args: CreateTranscrippetArgs) -> CreateTranscrippe
         data=data,
     )
 
-    # Return the structured response directly - no transformation needed
-    # since CreateTranscrippetResponse model now matches the actual API format
+    # Add public URL to the response data before validation
+    if raw_response.get("response") and raw_response["response"].get("transcrippet_guid"):
+        guid = raw_response["response"]["transcrippet_guid"]
+        raw_response["response"]["public_url"] = f"https://public.aiera.com/shared/transcrippet.html?id={guid}"
+
+    # Return the structured response with the added public URL
     return CreateTranscrippetResponse.model_validate(raw_response)
 
 

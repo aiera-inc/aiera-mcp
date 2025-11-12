@@ -12,7 +12,7 @@ from aiera_mcp.tools.transcrippets.tools import (
 from aiera_mcp.tools.transcrippets.models import (
     FindTranscrippetsArgs, CreateTranscrippetArgs, DeleteTranscrippetArgs,
     FindTranscrippetsResponse, CreateTranscrippetResponse, DeleteTranscrippetResponse,
-    TranscrippetItem, TranscrippetDetails
+    TranscrippetItem
 )
 
 
@@ -194,7 +194,7 @@ class TestTranscrippetsIntegration:
 
                 # Verify response structure if creation succeeds
                 assert isinstance(result, CreateTranscrippetResponse)
-                assert isinstance(result.transcrippet, TranscrippetDetails)
+                assert isinstance(result.transcrippet, TranscrippetItem)
                 assert result.transcrippet.transcrippet_id
                 assert result.transcrippet.public_url
                 assert result.transcrippet.title == "Test Integration Transcrippet"

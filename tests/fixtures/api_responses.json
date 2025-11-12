@@ -372,10 +372,8 @@
         "transcription_audio_offset_seconds": 45,
         "trimmed_audio_url": "https://example.com/audio/trans456_trimmed.mp3",
         "word_durations_ms": [600, 400, 500, 700, 350, 900, 250, 550],
-        "transcript_text": "Full transcript text here...",
         "speaker_name": "Tim Cook",
-        "start_time": "00:05:30",
-        "end_time": "00:06:45"
+        "speaker_title": "Chief Executive Officer"
       },
       "instructions": ["Transcrippet created successfully"]
     }

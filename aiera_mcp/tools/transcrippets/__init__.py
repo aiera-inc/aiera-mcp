@@ -14,8 +14,7 @@ from .models import (
     FindTranscrippetsResponse,
     CreateTranscrippetResponse,
     DeleteTranscrippetResponse,
-    TranscrippetItem,
-    TranscrippetDetails
+    TranscrippetItem
 )
 
 __all__ = [
@@ -36,5 +35,4 @@ __all__ = [
 
     # Data models
     "TranscrippetItem",
-    "TranscrippetDetails",
 ]

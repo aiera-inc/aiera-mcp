@@ -186,7 +186,7 @@ async def make_aiera_request(
 
         raise Exception(f"Network error calling Aiera API: {str(e)}")
 
-    if response.status_code != 200:
+    if response.status_code not in [200, 201]:
         logger.error(f"API error: {response.status_code} - {response.text}")
         logger.error(f"Request URL: {url}")
         logger.error(f"Request headers were: {headers}")
