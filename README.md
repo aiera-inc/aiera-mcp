@@ -24,6 +24,8 @@ This package exposes Aiera API endpoints as MCP tools, providing access to compr
 - **Company Information**: Symbology, summaries, sectors, and watchlists
 - **Company Documents**: Press releases, slide presentations, disclosures
 - **SEC Filings**: Filing data and metadata
+- **Search**: Semantic search within transcripts and SEC filing content
+- **Transcrippets**: Create, manage, and retrieve transcript excerpts
 - **Third Bridge**: Expert insight events
 
 ## Installation
@@ -106,6 +108,8 @@ from aiera_mcp import find_events, make_aiera_request, correct_bloomberg_ticker
 - **Equities**: `find_equities`, `get_equity_summaries`, `get_sectors_and_subsectors`
 - **Indexes & Watchlists**: `get_available_indexes`, `get_index_constituents`, `get_available_watchlists`, `get_watchlist_constituents`
 - **Company Documents**: `find_company_docs`, `get_company_doc`, `get_company_doc_categories`, `get_company_doc_keywords`
+- **Search**: `search_transcripts`, `search_filings`, `search_filing_chunks`
+- **Transcrippets**: `find_transcrippets`, `create_transcrippet`, `delete_transcrippet`
 - **Third Bridge**: `find_third_bridge_events`, `get_third_bridge_event`
 
 ### Utilities
@@ -124,7 +128,7 @@ from aiera_mcp import find_events, make_aiera_request, correct_bloomberg_ticker
 
 ### Constants
 - `DEFAULT_PAGE_SIZE`, `DEFAULT_MAX_PAGE_SIZE`, `AIERA_BASE_URL`, `CITATION_PROMPT`
-- `AVAILABLE_TOOLS` - List of all 18 available tool names
+- `AVAILABLE_TOOLS` - List of all 24 available tool names
 
 ## Selective Tool Registration
 
@@ -159,8 +163,10 @@ The package provides predefined tool groups for common use cases:
 - **`EQUITY_TOOLS`**: `["find_equities", "get_equity_summaries", "get_sectors_and_subsectors"]`
 - **`INDEX_WATCHLIST_TOOLS`**: `["get_available_indexes", "get_index_constituents", "get_available_watchlists", "get_watchlist_constituents"]`
 - **`COMPANY_DOC_TOOLS`**: `["find_company_docs", "get_company_doc", "get_company_doc_categories", "get_company_doc_keywords"]`
+- **`SEARCH_TOOLS`**: `["search_transcripts", "search_filings", "search_filing_chunks"]`
+- **`TRANSCRIPPET_TOOLS`**: `["find_transcrippets", "create_transcrippet", "delete_transcrippet"]`
 - **`THIRD_BRIDGE_TOOLS`**: `["find_third_bridge_events", "get_third_bridge_event"]`
-- **`AVAILABLE_TOOLS`**: Complete list of all 18 available tools
+- **`AVAILABLE_TOOLS`**: Complete list of all 24 available tools
 
 ### Usage Examples
 
