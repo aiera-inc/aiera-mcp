@@ -209,10 +209,11 @@ class TestFindTranscrippets:
         # Execute
         result = await find_transcrippets(args)
 
-        # Verify transcrippet GUID field exists
+        # Verify transcrippet GUID field exists and public URL is generated
         assert len(result.response) == 1
         transcrippet = result.response[0]
         assert transcrippet.transcrippet_guid == "test-guid-123"
+        assert transcrippet.public_url == "https://public.aiera.com/shared/transcrippet.html?id=test-guid-123"
 
     @pytest.mark.asyncio
     async def test_find_transcrippets_citations(self, mock_http_dependencies, transcrippets_api_responses):
