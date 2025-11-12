@@ -365,6 +365,43 @@ The manual test script:
 - Logs discrepancies and issues to help with debugging
 - Provides comprehensive validation of tool behavior
 
+## Development
+
+### Version Management
+
+This package uses automatic semantic versioning based on Git tags:
+
+**Creating a Release:**
+```bash
+# 1. Ensure all changes are committed and pushed
+git add . && git commit -m "Prepare release"
+
+# 2. Create and push a version tag
+git tag v1.2.3  # Use semantic versioning
+git push origin v1.2.3
+
+# 3. Create GitHub release (optional but recommended)
+gh release create v1.2.3 --generate-notes
+```
+
+**Version Formats:**
+- Released versions: `1.2.3` (from Git tags like `v1.2.3`)
+- Development versions: `1.2.4.dev5+g1a2b3c4` (auto-generated from commits)
+
+The package version is automatically determined from Git history using `hatch-vcs`.
+
+### Pre-commit Hooks
+
+This project uses pre-commit for code quality:
+
+```bash
+# Install hooks (one time setup)
+uv run pre-commit install
+
+# Run manually
+uv run pre-commit run --all-files
+```
+
 ## Links
 - [Aiera REST Documentation](https://rest.aiera.com)
 - [Model Context Protocol](https://modelcontextprotocol.io)

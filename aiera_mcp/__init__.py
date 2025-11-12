@@ -4,10 +4,13 @@ import os
 from typing import Callable, Optional
 import logging
 
+try:
+    from ._version import __version__
+except ImportError:
+    # Fallback for development/editable installs
+    __version__ = "dev"
 
 logger = logging.getLogger(__name__)
-
-__version__ = "0.1.0"
 
 # API Key Provider Infrastructure
 _api_key_provider: Optional[Callable[[], Optional[str]]] = None
@@ -135,6 +138,8 @@ from .tools.utils import (
 from .server import register_aiera_tools, DEFAULT_PAGE_SIZE, DEFAULT_MAX_PAGE_SIZE
 
 __all__ = [
+    # Version
+    "__version__",
     # Tools
     "find_events",
     "get_event",
