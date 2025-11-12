@@ -99,45 +99,29 @@ INDEX_WATCHLIST_TOOLS = ["get_available_indexes", "get_index_constituents", "get
 COMPANY_DOC_TOOLS = ["find_company_docs", "get_company_doc", "get_company_doc_categories", "get_company_doc_keywords"]
 THIRD_BRIDGE_TOOLS = ["find_third_bridge_events", "get_third_bridge_event"]
 
-from .server import (
-    # Tools
-    find_events,
-    get_event,
-    get_upcoming_events,
-    find_filings,
-    get_filing,
-    find_equities,
-    get_equity_summaries,
-    get_sectors_and_subsectors,
-    get_available_indexes,
-    get_index_constituents,
-    get_available_watchlists,
-    get_watchlist_constituents,
+
+from .tools.company_docs import (
     find_company_docs,
     get_company_doc,
     get_company_doc_categories,
-    get_company_doc_keywords,
-    find_third_bridge_events,
-    get_third_bridge_event,
+    get_company_doc_keywords
+)
+from .tools.third_bridge import find_third_bridge_events, get_third_bridge_event
+from .tools.transcrippets import find_transcrippets, create_transcrippet, delete_transcrippet
 
-    # Utilities
-    make_aiera_request,
+# Import utilities
+from .tools.base import make_aiera_request, AIERA_BASE_URL, CITATION_PROMPT
+from .tools.utils import (
     correct_bloomberg_ticker,
     correct_keywords,
     correct_categories,
     correct_provided_ids,
     correct_event_type,
-    correct_transcript_section,
-
-    # Tool registration
-    register_aiera_tools,
-
-    # Constants
-    DEFAULT_PAGE_SIZE,
-    DEFAULT_MAX_PAGE_SIZE,
-    AIERA_BASE_URL,
-    CITATION_PROMPT,
+    correct_transcript_section
 )
+
+# Import server functionality
+from .server import register_aiera_tools, DEFAULT_PAGE_SIZE, DEFAULT_MAX_PAGE_SIZE
 
 __all__ = [
     # Tools
@@ -159,6 +143,9 @@ __all__ = [
     "get_company_doc_keywords",
     "find_third_bridge_events",
     "get_third_bridge_event",
+    "find_transcrippets",
+    "create_transcrippet",
+    "delete_transcrippet",
 
     # Utilities
     "make_aiera_request",

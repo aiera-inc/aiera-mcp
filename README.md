@@ -80,13 +80,15 @@ register_aiera_tools(mcp)
 from your_auth_system import get_current_api_key
 register_aiera_tools(mcp, get_current_api_key)
 
-# Selective tool registration - only register specific tools
-from aiera_mcp import EVENT_TOOLS, FILING_TOOLS
-register_aiera_tools(mcp, include=EVENT_TOOLS + FILING_TOOLS)
+# Package integration with Pydantic validation
+from aiera_mcp.tools import register_tools
+register_tools(mcp)
 
-# Register all tools except Third Bridge
-from aiera_mcp import THIRD_BRIDGE_TOOLS
-register_aiera_tools(mcp, exclude=THIRD_BRIDGE_TOOLS)
+# Selective tool registration - include only specific tools
+register_tools(mcp, include_tools=['find_events', 'get_event'])
+
+# Selective tool registration - exclude specific tools
+register_tools(mcp, exclude_tools=['delete_transcrippet', 'create_transcrippet'])
 
 # Or configure globally
 from aiera_mcp import set_api_key_provider
@@ -109,7 +111,15 @@ from aiera_mcp import find_events, make_aiera_request, correct_bloomberg_ticker
 ### Utilities
 - **API Functions**: `make_aiera_request`
 - **Data Correction**: `correct_bloomberg_ticker`, `correct_keywords`, `correct_categories`, `correct_provided_ids`, `correct_event_type`, `correct_transcript_section`
-- **Registration**: `register_aiera_tools` - Register all tools with any FastMCP server instance
+- **Registration**:
+  - `register_aiera_tools` - Register all tools with any FastMCP server instance (for standalone server)
+  - `register_tools` - Registry-based registration with Pydantic validation and selective filtering (for package integration)
+- **Tool Discovery**:
+  - `get_all_tool_names` - Get list of all available tool names
+  - `get_categories` - Get all tool categories
+  - `get_tools_by_category` - Filter tools by category
+  - `get_tools_by_read_only` - Filter tools by read-only status
+  - `get_destructive_tools` - Get all potentially destructive tools
 - **Authentication**: `set_api_key_provider`, `get_api_key`, `clear_api_key_provider` - OAuth compatibility functions
 
 ### Constants
@@ -248,6 +258,32 @@ register_aiera_tools(mcp, include=EVENT_TOOLS, exclude=FILING_TOOLS)
 ```
 </details>
 
+## Selective Tool Registration
+
+The package supports selective registration to include or exclude specific tools:
+
+```python
+from aiera_mcp.tools import register_tools, get_all_tool_names, get_destructive_tools
+
+# Get available tools
+all_tools = get_all_tool_names()
+print(f"Available tools: {all_tools}")
+
+# Register only read-only tools (exclude destructive operations)
+destructive_tools = list(get_destructive_tools().keys())
+register_tools(mcp, exclude_tools=destructive_tools)
+
+# Register only event-related tools
+event_tools = ['find_events', 'get_event', 'get_upcoming_events']
+register_tools(mcp, include_tools=event_tools)
+
+# Error handling with suggestions
+try:
+    register_tools(mcp, include_tools=['find_event'])  # Typo
+except ValueError as e:
+    print(e)  # Will suggest: "Did you mean: find_event -> ['find_events', 'get_event']"
+```
+
 ## Usage Examples
 
 Once integrated, you can prompt Claude to access Aiera data:
@@ -263,7 +299,10 @@ Get the latest earnings call transcript for Apple Inc. and summarize key points
 - **OAuth Compatible**: Seamlessly integrates with OAuth authentication systems (e.g., aiera-public-mcp)
 - **Multi-Authentication**: Supports both environment variables and OAuth providers
 - **Data Validation**: Built-in utilities for correcting tickers, keywords, and other parameters
-- **Easy Registration**: Single function to register all tools with any MCP server
+- **Selective Registration**: Include or exclude specific tools, with intelligent error handling and suggestions
+- **Tool Discovery**: Helper functions to explore available tools by category, permissions, and functionality
+- **Type Safety**: Pydantic-based parameter validation with automatic schema generation
+- **Registry Pattern**: Centralized tool metadata and configuration management
 - **Development Ready**: Full development environment with testing and linting tools
 
 Some endpoints may require special permissions. Contact your Aiera representative for more details.
@@ -285,6 +324,33 @@ register_aiera_tools(mcp, get_current_api_key)
 ```
 
 The package automatically handles API key resolution with fallback from OAuth provider to environment variable.
+
+## Testing
+
+### Integration Tests
+
+This project includes comprehensive integration tests that validate the MCP tools against the real Aiera API.
+
+**Quick Start:**
+```bash
+# Set up API key
+echo "export AIERA_API_KEY=your_api_key_here" > .env
+
+# Run core integration tests
+./scripts/run_integration_tests.sh
+
+# Run extended test suite
+./scripts/run_integration_tests.sh --extended
+```
+
+**Manual Testing:**
+```bash
+# Individual test examples
+source .env && uv run pytest tests/integration/test_events_integration.py::TestEventsIntegration::test_find_events_real_api -v
+source .env && uv run pytest tests/integration/test_filings_integration.py::TestFilingsIntegration::test_find_filings_real_api -v
+```
+
+For detailed testing instructions, see [INTEGRATION_TESTING.md](INTEGRATION_TESTING.md).
 
 ## Links
 - [Aiera REST Documentation](https://rest.aiera.com)
