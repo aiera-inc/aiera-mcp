@@ -3,14 +3,19 @@
 """Unit tests for company_docs models."""
 
 import pytest
-from datetime import datetime, date
 from pydantic import ValidationError
 
 from aiera_mcp.tools.company_docs.models import (
-    FindCompanyDocsArgs, GetCompanyDocArgs, SearchArgs,
-    FindCompanyDocsResponse, GetCompanyDocResponse,
-    GetCompanyDocCategoriesResponse, GetCompanyDocKeywordsResponse,
-    CompanyDocItem, CompanyDocDetails, CategoryKeyword
+    FindCompanyDocsArgs,
+    GetCompanyDocArgs,
+    SearchArgs,
+    FindCompanyDocsResponse,
+    GetCompanyDocResponse,
+    GetCompanyDocCategoriesResponse,
+    GetCompanyDocKeywordsResponse,
+    CompanyDocItem,
+    CompanyDocDetails,
+    CategoryKeyword,
 )
 from aiera_mcp.tools.common.models import CitationInfo
 
@@ -23,16 +28,13 @@ class TestCompanyDocsModels:
         """Test CompanyDocItem model creation."""
         doc_data = {
             "doc_id": 12345,
-            "company": {
-                "company_id": 67890,
-                "name": "Test Company"
-            },
+            "company": {"company_id": 67890, "name": "Test Company"},
             "title": "Test Document",
             "category": "Sustainability",
             "keywords": ["ESG", "environment"],
             "publish_date": "2023-09-15T00:00:00Z",
             "source_url": "https://example.com/test-doc.pdf",
-            "summary": ["Test document summary"]
+            "summary": ["Test document summary"],
         }
 
         doc = CompanyDocItem(**doc_data)
@@ -51,15 +53,12 @@ class TestCompanyDocsModels:
         """Test CompanyDocItem with only required fields."""
         minimal_data = {
             "doc_id": 12345,
-            "company": {
-                "company_id": 67890,
-                "name": "Test Company"
-            },
+            "company": {"company_id": 67890, "name": "Test Company"},
             "title": "Test Document",
             "category": "Sustainability",
             "publish_date": "2023-09-15T00:00:00Z",
             "source_url": "https://example.com/test-doc.pdf",
-            "summary": ["Test summary"]
+            "summary": ["Test summary"],
         }
 
         doc = CompanyDocItem(**minimal_data)
@@ -74,17 +73,16 @@ class TestCompanyDocsModels:
         """Test CompanyDocDetails inherits from CompanyDocItem."""
         details_data = {
             "doc_id": 12345,
-            "company": {
-                "company_id": 67890,
-                "name": "Test Company"
-            },
+            "company": {"company_id": 67890, "name": "Test Company"},
             "title": "Test Document",
             "category": "Sustainability",
             "publish_date": "2023-09-15T00:00:00Z",
             "source_url": "https://example.com/test-doc.pdf",
             "summary": "Test document summary",  # CompanyDocDetails uses string, not list
             "content_preview": "Test content preview...",
-            "attachments": [{"name": "file.pdf", "url": "https://example.com/file.pdf"}]
+            "attachments": [
+                {"name": "file.pdf", "url": "https://example.com/file.pdf"}
+            ],
         }
 
         details = CompanyDocDetails(**details_data)
@@ -101,10 +99,7 @@ class TestCompanyDocsModels:
 
     def test_category_keyword_model(self):
         """Test CategoryKeyword model."""
-        category_data = {
-            "name": "Sustainability",
-            "count": 25
-        }
+        category_data = {"name": "Sustainability", "count": 25}
 
         category = CategoryKeyword(**category_data)
 
@@ -125,7 +120,7 @@ class TestFindCompanyDocsArgs:
             categories="Sustainability,Governance",
             keywords="ESG,climate",
             page=1,
-            page_size=50
+            page_size=50,
         )
 
         assert args.start_date == "2023-09-01"
@@ -138,10 +133,7 @@ class TestFindCompanyDocsArgs:
 
     def test_find_company_docs_args_defaults(self):
         """Test FindCompanyDocsArgs with default values."""
-        args = FindCompanyDocsArgs(
-            start_date="2023-09-01",
-            end_date="2023-09-30"
-        )
+        args = FindCompanyDocsArgs(start_date="2023-09-01", end_date="2023-09-30")
 
         assert args.page == 1  # Default value
         assert args.page_size == 50  # Default value
@@ -171,49 +163,43 @@ class TestFindCompanyDocsArgs:
         """Test pagination parameter validation."""
         # Valid pagination
         args = FindCompanyDocsArgs(
-            start_date="2023-09-01",
-            end_date="2023-09-30",
-            page=5,
-            page_size=25
+            start_date="2023-09-01", end_date="2023-09-30", page=5, page_size=25
         )
         assert args.page == 5
         assert args.page_size == 25
 
         # Page must be >= 1
         with pytest.raises(ValidationError):
-            FindCompanyDocsArgs(
-                start_date="2023-09-01",
-                end_date="2023-09-30",
-                page=0
-            )
+            FindCompanyDocsArgs(start_date="2023-09-01", end_date="2023-09-30", page=0)
 
         # Page size must be between 1 and 100
         with pytest.raises(ValidationError):
             FindCompanyDocsArgs(
-                start_date="2023-09-01",
-                end_date="2023-09-30",
-                page_size=0
+                start_date="2023-09-01", end_date="2023-09-30", page_size=0
             )
 
         with pytest.raises(ValidationError):
             FindCompanyDocsArgs(
-                start_date="2023-09-01",
-                end_date="2023-09-30",
-                page_size=101
+                start_date="2023-09-01", end_date="2023-09-30", page_size=101
             )
 
-    @pytest.mark.parametrize("field_name,field_value", [
-        ("watchlist_id", 123),
-        ("index_id", 456),
-        ("sector_id", 789),
-        ("subsector_id", 101)
-    ])
-    def test_find_company_docs_args_numeric_field_serialization(self, field_name, field_value):
+    @pytest.mark.parametrize(
+        "field_name,field_value",
+        [
+            ("watchlist_id", 123),
+            ("index_id", 456),
+            ("sector_id", 789),
+            ("subsector_id", 101),
+        ],
+    )
+    def test_find_company_docs_args_numeric_field_serialization(
+        self, field_name, field_value
+    ):
         """Test that numeric fields are serialized as strings."""
         args_data = {
             "start_date": "2023-09-01",
             "end_date": "2023-09-30",
-            field_name: field_value
+            field_name: field_value,
         }
         args = FindCompanyDocsArgs(**args_data)
 
@@ -227,7 +213,7 @@ class TestFindCompanyDocsArgs:
         args = FindCompanyDocsArgs(
             start_date="2023-09-01",
             end_date="2023-09-30",
-            bloomberg_ticker="AAPL"  # Missing :US
+            bloomberg_ticker="AAPL",  # Missing :US
         )
 
         # Check if ticker correction is applied
@@ -241,12 +227,15 @@ class TestFindCompanyDocsArgs:
             start_date="2023-09-01",
             end_date="2023-09-30",
             categories="Sustainability, Governance",  # With spaces
-            keywords="ESG, climate"  # With spaces
+            keywords="ESG, climate",  # With spaces
         )
 
         # Check if format correction is applied
         # This depends on the actual implementation in utils.py
-        assert args.categories in ["Sustainability, Governance", "Sustainability,Governance"]
+        assert args.categories in [
+            "Sustainability, Governance",
+            "Sustainability,Governance",
+        ]
         assert args.keywords in ["ESG, climate", "ESG,climate"]
 
 
@@ -271,11 +260,7 @@ class TestSearchArgs:
 
     def test_valid_search_args(self):
         """Test valid SearchArgs creation."""
-        args = SearchArgs(
-            search="sustainability",
-            page=2,
-            page_size=25
-        )
+        args = SearchArgs(search="sustainability", page=2, page_size=25)
 
         assert args.search == "sustainability"
         assert args.page == 2
@@ -321,15 +306,12 @@ class TestCompanyDocsResponses:
                     "total_count": 1,
                     "current_page": 1,
                     "total_pages": 1,
-                    "page_size": 50
+                    "page_size": 50,
                 },
                 "data": [
                     {
                         "doc_id": 123,
-                        "company": {
-                            "company_id": 456,
-                            "name": "Test Company"
-                        },
+                        "company": {"company_id": 456, "name": "Test Company"},
                         "title": "Test Document",
                         "category": "Sustainability",
                         "publish_date": "2023-09-15T00:00:00Z",
@@ -338,12 +320,12 @@ class TestCompanyDocsResponses:
                         "keywords": ["test"],
                         "citation_information": {
                             "title": "Test Citation",
-                            "url": "https://example.com"
-                        }
+                            "url": "https://example.com",
+                        },
                     }
-                ]
+                ],
             },
-            "instructions": ["Test instruction"]
+            "instructions": ["Test instruction"],
         }
 
         response = FindCompanyDocsResponse.model_validate(response_data)
@@ -360,10 +342,7 @@ class TestCompanyDocsResponses:
         response_data = {
             "document": {
                 "doc_id": 123,
-                "company": {
-                    "company_id": 456,
-                    "name": "Test Company"
-                },
+                "company": {"company_id": 456, "name": "Test Company"},
                 "title": "Test Document",
                 "category": "Sustainability",
                 "publish_date": "2023-09-15T00:00:00Z",
@@ -374,10 +353,10 @@ class TestCompanyDocsResponses:
                 "attachments": [],
                 "citation_information": {
                     "title": "Test Citation",
-                    "url": "https://example.com"
-                }
+                    "url": "https://example.com",
+                },
             },
-            "instructions": ["Test instruction"]
+            "instructions": ["Test instruction"],
         }
 
         response = GetCompanyDocResponse.model_validate(response_data)
@@ -396,14 +375,11 @@ class TestCompanyDocsResponses:
                     "total_count": 2,
                     "current_page": 1,
                     "total_pages": 1,
-                    "page_size": 50
+                    "page_size": 50,
                 },
-                "data": {
-                    "sustainability": 25,
-                    "governance": 18
-                }
+                "data": {"sustainability": 25, "governance": 18},
             },
-            "instructions": ["Categories retrieved"]
+            "instructions": ["Categories retrieved"],
         }
 
         response = GetCompanyDocCategoriesResponse.model_validate(response_data)
@@ -423,14 +399,11 @@ class TestCompanyDocsResponses:
                     "total_count": 2,
                     "current_page": 1,
                     "total_pages": 1,
-                    "page_size": 50
+                    "page_size": 50,
                 },
-                "data": {
-                    "ESG": 15,
-                    "climate": 23
-                }
+                "data": {"ESG": 15, "climate": 23},
             },
-            "instructions": ["Keywords retrieved"]
+            "instructions": ["Keywords retrieved"],
         }
 
         response = GetCompanyDocKeywordsResponse.model_validate(response_data)
@@ -455,7 +428,7 @@ class TestCompanyDocsModelValidation:
             categories="Sustainability",
             keywords="ESG",
             page=2,
-            page_size=25
+            page_size=25,
         )
 
         # Serialize to dict
@@ -497,7 +470,7 @@ class TestCompanyDocsModelValidation:
             category="Test",
             publish_date="2023-09-15T00:00:00Z",
             source_url="https://example.com/test.pdf",
-            summary=["Test summary"]
+            summary=["Test summary"],
         )
         assert doc.publish_date == "2023-09-15T00:00:00Z"
 
@@ -509,7 +482,7 @@ class TestCompanyDocsModelValidation:
             category="Test",
             publish_date="2023-09-15T10:30:00Z",
             source_url="https://example.com/test.pdf",
-            summary=["Test summary"]
+            summary=["Test summary"],
         )
         assert doc_with_datetime.publish_date == "2023-09-15T10:30:00Z"
 
@@ -524,7 +497,7 @@ class TestCompanyDocsModelValidation:
             publish_date="2023-09-15T00:00:00Z",
             source_url="https://example.com/test.pdf",
             summary=["Test summary"],
-            keywords=[]
+            keywords=[],
         )
         assert doc.keywords == []
 
@@ -537,7 +510,7 @@ class TestCompanyDocsModelValidation:
             publish_date="2023-09-15T00:00:00Z",
             source_url="https://example.com/test.pdf",
             summary=["Test summary"],
-            keywords=["ESG", "sustainability", "climate"]
+            keywords=["ESG", "sustainability", "climate"],
         )
         assert len(doc_with_keywords.keywords) == 3
         assert "ESG" in doc_with_keywords.keywords
@@ -553,7 +526,7 @@ class TestCompanyDocsModelValidation:
             publish_date="2023-09-15T00:00:00Z",
             source_url="https://example.com/test.pdf",
             summary="Test summary",
-            content_preview="Test preview"
+            content_preview="Test preview",
         )
         assert doc.attachments == []
 
@@ -569,8 +542,8 @@ class TestCompanyDocsModelValidation:
             content_preview="Test preview",
             attachments=[
                 {"name": "report.pdf", "url": "https://example.com/report.pdf"},
-                {"name": "summary.pdf", "url": "https://example.com/summary.pdf"}
-            ]
+                {"name": "summary.pdf", "url": "https://example.com/summary.pdf"},
+            ],
         )
         assert len(doc_with_attachments.attachments) == 2
         assert doc_with_attachments.attachments[0]["name"] == "report.pdf"

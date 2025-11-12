@@ -4,8 +4,7 @@ import os
 import httpx
 import logging
 from datetime import datetime
-from typing import Any, Dict, Optional, Callable, List, Set
-from contextlib import asynccontextmanager
+from typing import Any, Dict, Optional, Callable, List
 from collections.abc import AsyncIterator
 
 from mcp.server import Server
@@ -17,11 +16,12 @@ logger = logging.getLogger(__name__)
 
 # Import API key provider functions from package
 try:
-    from . import get_api_key
+    pass
 except ImportError:
     # Fallback for standalone usage
     def get_api_key() -> Optional[str]:
         return os.getenv("AIERA_API_KEY")
+
 
 # Global HTTP client for Lambda environment with proper configuration
 _lambda_http_client: Optional[httpx.AsyncClient] = None
@@ -41,7 +41,9 @@ def get_lambda_http_client() -> httpx.AsyncClient:
     if _lambda_http_client is None:
         # Configure client with connection pooling and timeouts
         _lambda_http_client = httpx.AsyncClient(
-            limits=httpx.Limits(max_keepalive_connections=10, max_connections=20, keepalive_expiry=30.0),
+            limits=httpx.Limits(
+                max_keepalive_connections=10, max_connections=20, keepalive_expiry=30.0
+            ),
             timeout=httpx.Timeout(30.0),
             follow_redirects=True,
         )
@@ -131,10 +133,12 @@ def register_aiera_tools(
     # Configure API key provider if provided
     if api_key_provider:
         from . import set_api_key_provider
+
         set_api_key_provider(api_key_provider)
 
     # Get the tool registry
     from .tools.registry import TOOL_REGISTRY
+
     return TOOL_REGISTRY
 
 
@@ -153,8 +157,8 @@ async def run_server():
             tools.append(
                 Tool(
                     name=tool_name,
-                    description=tool_config['description'],
-                    inputSchema=tool_config['input_schema'],
+                    description=tool_config["description"],
+                    inputSchema=tool_config["input_schema"],
                 )
             )
         return tools
@@ -174,21 +178,26 @@ async def run_server():
 
         try:
             # Parse arguments using the Pydantic model
-            parsed_args = tool_config['args_model'](**arguments)
+            parsed_args = tool_config["args_model"](**arguments)
             logger.debug(f"Arguments parsed successfully for {name}")
 
             # Call the tool function
-            result = await tool_config['function'](parsed_args)
+            result = await tool_config["function"](parsed_args)
 
             # Convert result to dict if needed
-            if hasattr(result, 'model_dump'):
+            if hasattr(result, "model_dump"):
                 result_dict = result.model_dump()
             else:
                 result_dict = result
 
             # Return as TextContent
             import json
-            result_text = json.dumps(result_dict, indent=2) if not isinstance(result_dict, str) else result_dict
+
+            result_text = (
+                json.dumps(result_dict, indent=2)
+                if not isinstance(result_dict, str)
+                else result_dict
+            )
 
             logger.info(f"Tool {name} completed successfully")
             return [TextContent(type="text", text=result_text)]
@@ -214,4 +223,5 @@ def run(transport: str = "stdio"):
         raise ValueError("Only stdio transport is currently supported")
 
     import asyncio
+
     asyncio.run(run_server())

@@ -8,9 +8,13 @@ from datetime import datetime
 from pydantic import ValidationError
 
 from aiera_mcp.tools.third_bridge.models import (
-    FindThirdBridgeEventsArgs, GetThirdBridgeEventArgs,
-    FindThirdBridgeEventsResponse, GetThirdBridgeEventResponse,
-    ThirdBridgeEventItem, ThirdBridgeEventDetails, ThirdBridgeCitationBlock
+    FindThirdBridgeEventsArgs,
+    GetThirdBridgeEventArgs,
+    FindThirdBridgeEventsResponse,
+    GetThirdBridgeEventResponse,
+    ThirdBridgeEventItem,
+    ThirdBridgeEventDetails,
+    ThirdBridgeCitationBlock,
 )
 from aiera_mcp.tools.common.models import CitationInfo
 
@@ -33,8 +37,8 @@ class TestThirdBridgeModels:
                 "title": "Apple Supply Chain Analysis",
                 "url": "https://thirdbridge.com/event/tb123",
                 "expert_name": "Jane Smith",
-                "expert_title": "Former Apple Supply Chain Director"
-            }
+                "expert_title": "Former Apple Supply Chain Director",
+            },
         }
 
         event = ThirdBridgeEventItem(**event_data)
@@ -57,7 +61,7 @@ class TestThirdBridgeModels:
             "title": "Test Event",
             "language": "EN",
             "agenda": ["Basic agenda item"],
-            "insights": ["Basic insight"]
+            "insights": ["Basic insight"],
         }
 
         event = ThirdBridgeEventItem(**minimal_data)
@@ -83,9 +87,9 @@ class TestThirdBridgeModels:
                 "title": "Apple Supply Chain Analysis",
                 "url": "https://thirdbridge.com/event/tb123",
                 "expert_name": "Jane Smith",
-                "expert_title": "Former Apple Supply Chain Director"
+                "expert_title": "Former Apple Supply Chain Director",
             },
-            "transcript": "Full transcript of the discussion..."
+            "transcript": "Full transcript of the discussion...",
         }
 
         details = ThirdBridgeEventDetails(**details_data)
@@ -114,7 +118,7 @@ class TestFindThirdBridgeEventsArgs:
             end_date="2023-10-31",
             bloomberg_ticker="AAPL:US",
             page=1,
-            page_size=50
+            page_size=50,
         )
 
         assert args.start_date == "2023-10-01"
@@ -125,10 +129,7 @@ class TestFindThirdBridgeEventsArgs:
 
     def test_find_third_bridge_events_args_defaults(self):
         """Test FindThirdBridgeEventsArgs with default values."""
-        args = FindThirdBridgeEventsArgs(
-            start_date="2023-10-01",
-            end_date="2023-10-31"
-        )
+        args = FindThirdBridgeEventsArgs(start_date="2023-10-01", end_date="2023-10-31")
 
         assert args.page == 1  # Default value
         assert args.page_size == 50  # Default value
@@ -156,10 +157,7 @@ class TestFindThirdBridgeEventsArgs:
         """Test pagination parameter validation."""
         # Valid pagination
         args = FindThirdBridgeEventsArgs(
-            start_date="2023-10-01",
-            end_date="2023-10-31",
-            page=5,
-            page_size=25
+            start_date="2023-10-01", end_date="2023-10-31", page=5, page_size=25
         )
         assert args.page == 5
         assert args.page_size == 25
@@ -167,38 +165,37 @@ class TestFindThirdBridgeEventsArgs:
         # Page must be >= 1
         with pytest.raises(ValidationError):
             FindThirdBridgeEventsArgs(
-                start_date="2023-10-01",
-                end_date="2023-10-31",
-                page=0
+                start_date="2023-10-01", end_date="2023-10-31", page=0
             )
 
         # Page size must be between 1 and 100
         with pytest.raises(ValidationError):
             FindThirdBridgeEventsArgs(
-                start_date="2023-10-01",
-                end_date="2023-10-31",
-                page_size=0
+                start_date="2023-10-01", end_date="2023-10-31", page_size=0
             )
 
         with pytest.raises(ValidationError):
             FindThirdBridgeEventsArgs(
-                start_date="2023-10-01",
-                end_date="2023-10-31",
-                page_size=101
+                start_date="2023-10-01", end_date="2023-10-31", page_size=101
             )
 
-    @pytest.mark.parametrize("field_name,field_value", [
-        ("watchlist_id", 123),
-        ("index_id", 456),
-        ("sector_id", 789),
-        ("subsector_id", 101)
-    ])
-    def test_find_third_bridge_events_args_numeric_field_serialization(self, field_name, field_value):
+    @pytest.mark.parametrize(
+        "field_name,field_value",
+        [
+            ("watchlist_id", 123),
+            ("index_id", 456),
+            ("sector_id", 789),
+            ("subsector_id", 101),
+        ],
+    )
+    def test_find_third_bridge_events_args_numeric_field_serialization(
+        self, field_name, field_value
+    ):
         """Test that numeric fields are serialized as strings."""
         args_data = {
             "start_date": "2023-10-01",
             "end_date": "2023-10-31",
-            field_name: field_value
+            field_name: field_value,
         }
         args = FindThirdBridgeEventsArgs(**args_data)
 
@@ -212,7 +209,7 @@ class TestFindThirdBridgeEventsArgs:
         args = FindThirdBridgeEventsArgs(
             start_date="2023-10-01",
             end_date="2023-10-31",
-            bloomberg_ticker="AAPL"  # Missing :US
+            bloomberg_ticker="AAPL",  # Missing :US
         )
 
         # Check if ticker correction is applied
@@ -241,7 +238,10 @@ class TestThirdBridgeResponses:
 
     def test_find_third_bridge_events_response(self):
         """Test FindThirdBridgeEventsResponse model."""
-        from aiera_mcp.tools.third_bridge.models import ThirdBridgeResponseData, ThirdBridgePaginationInfo
+        from aiera_mcp.tools.third_bridge.models import (
+            ThirdBridgeResponseData,
+            ThirdBridgePaginationInfo,
+        )
 
         events = [
             ThirdBridgeEventItem(
@@ -251,7 +251,7 @@ class TestThirdBridgeResponses:
                 title="Test Event",
                 language="EN",
                 agenda=["Test agenda"],
-                insights=["Test insight"]
+                insights=["Test insight"],
             )
         ]
 
@@ -259,26 +259,20 @@ class TestThirdBridgeResponses:
             CitationInfo(
                 title="Test Citation",
                 url="https://example.com",
-                timestamp=datetime(2023, 10, 20, 14, 0, 0)
+                timestamp=datetime(2023, 10, 20, 14, 0, 0),
             )
         ]
 
         pagination = ThirdBridgePaginationInfo(
-            total_count=1,
-            current_page=1,
-            total_pages=1,
-            page_size=50
+            total_count=1, current_page=1, total_pages=1, page_size=50
         )
 
-        response_data = ThirdBridgeResponseData(
-            pagination=pagination,
-            data=events
-        )
+        response_data = ThirdBridgeResponseData(pagination=pagination, data=events)
 
         response = FindThirdBridgeEventsResponse(
             response=response_data,
             instructions=["Test instruction"],
-            citation_information=citations
+            citation_information=citations,
         )
 
         assert len(response.response.data) == 1
@@ -298,13 +292,13 @@ class TestThirdBridgeResponses:
             language="EN",
             agenda="Test agenda",  # Optional[str] in ThirdBridgeEventDetails
             insights="Test insights",  # Optional[str] in ThirdBridgeEventDetails
-            transcript="Test transcript"
+            transcript="Test transcript",
         )
 
         response = GetThirdBridgeEventResponse(
             event=event_details,
             instructions=["Test instruction"],
-            citation_information=[]
+            citation_information=[],
         )
 
         assert isinstance(response.event, ThirdBridgeEventDetails)
@@ -324,7 +318,7 @@ class TestThirdBridgeModelValidation:
             end_date="2023-10-31",
             bloomberg_ticker="AAPL:US",
             page=2,
-            page_size=25
+            page_size=25,
         )
 
         # Serialize to dict
@@ -363,7 +357,7 @@ class TestThirdBridgeModelValidation:
             title="Test Event",
             language="EN",
             agenda=["Test agenda"],
-            insights=["Test insight"]
+            insights=["Test insight"],
         )
         assert event.call_date == "2023-10-20T14:00:00Z"
 
@@ -375,7 +369,7 @@ class TestThirdBridgeModelValidation:
             title="Test Event",
             language="EN",
             agenda=["Test agenda"],
-            insights=["Test insight"]
+            insights=["Test insight"],
         )
         assert event_with_seconds.call_date == "2023-10-20T14:30:45Z"
 
@@ -389,7 +383,7 @@ class TestThirdBridgeModelValidation:
             title="Test Event",
             language="EN",
             agenda=["Test agenda"],
-            insights=["Test insight"]
+            insights=["Test insight"],
         )
         assert event.citation_block is None
 
@@ -406,8 +400,8 @@ class TestThirdBridgeModelValidation:
                 "title": "Test Event",
                 "url": "https://thirdbridge.com/event/tb124",
                 "expert_name": "Jane Smith",
-                "expert_title": "Former Executive"
-            }
+                "expert_title": "Former Executive",
+            },
         )
         assert event_with_citation.citation_block.expert_name == "Jane Smith"
         assert event_with_citation.citation_block.expert_title == "Former Executive"
@@ -423,7 +417,7 @@ class TestThirdBridgeModelValidation:
             language="EN",
             agenda=None,  # This overrides the List[str] from parent with Optional[str]
             insights=None,  # This overrides the List[str] from parent with Optional[str]
-            transcript=None
+            transcript=None,
         )
         assert details.agenda is None
         assert details.insights is None
@@ -438,7 +432,7 @@ class TestThirdBridgeModelValidation:
             language="EN",
             agenda="Test agenda",
             insights="Test insights",
-            transcript="Test transcript"
+            transcript="Test transcript",
         )
         assert details_full.agenda == "Test agenda"
         assert details_full.insights == "Test insights"
@@ -454,7 +448,7 @@ class TestThirdBridgeModelValidation:
             title="Short",
             language="EN",
             agenda=["Test"],
-            insights=["Test"]
+            insights=["Test"],
         )
         assert event.title == "Short"
 
@@ -467,7 +461,7 @@ class TestThirdBridgeModelValidation:
             title=long_title,
             language="EN",
             agenda=["Test"],
-            insights=["Test"]
+            insights=["Test"],
         )
         assert event_long.title == long_title
 
@@ -479,7 +473,7 @@ class TestThirdBridgeModelValidation:
             title="",
             language="EN",
             agenda=["Test"],
-            insights=["Test"]
+            insights=["Test"],
         )
         assert event_empty.title == ""
 
@@ -493,7 +487,7 @@ class TestThirdBridgeModelValidation:
             title="Test Event",
             language="EN",
             agenda=["Supply chain discussion", "Market outlook"],
-            insights=["Key insight 1", "Key insight 2"]
+            insights=["Key insight 1", "Key insight 2"],
         )
         assert len(event.agenda) == 2
         assert event.agenda[0] == "Supply chain discussion"
@@ -508,7 +502,7 @@ class TestThirdBridgeModelValidation:
             title="Test Event",
             language="EN",
             agenda=[],
-            insights=[]
+            insights=[],
         )
         assert len(event_empty.agenda) == 0
         assert len(event_empty.insights) == 0
@@ -532,8 +526,8 @@ class TestThirdBridgeEventItemDateTimeSerialization:
                 "title": "Test Event",
                 "url": "https://thirdbridge.com/event/tb123",
                 "expert_name": "Jane Expert",
-                "expert_title": "Former Executive"
-            }
+                "expert_title": "Former Executive",
+            },
         )
 
         # Test model_dump serialization
@@ -555,7 +549,7 @@ class TestThirdBridgeEventItemDateTimeSerialization:
             language="EN",
             agenda="Test agenda",  # Optional[str] in EventDetails
             insights="Test insights",  # Optional[str] in EventDetails
-            transcript="Test transcript"
+            transcript="Test transcript",
         )
 
         # Test model_dump serialization
@@ -568,7 +562,10 @@ class TestThirdBridgeEventItemDateTimeSerialization:
 
     def test_third_bridge_response_json_serialization(self):
         """Test that complete Third Bridge response models can be serialized to JSON."""
-        from aiera_mcp.tools.third_bridge.models import ThirdBridgeResponseData, ThirdBridgePaginationInfo
+        from aiera_mcp.tools.third_bridge.models import (
+            ThirdBridgeResponseData,
+            ThirdBridgePaginationInfo,
+        )
 
         test_datetime = datetime(2024, 1, 15, 14, 30, 0)
 
@@ -580,35 +577,29 @@ class TestThirdBridgeEventItemDateTimeSerialization:
             title="Test Third Bridge Event",
             language="EN",
             agenda=["Test agenda"],
-            insights=["Test insight"]
+            insights=["Test insight"],
         )
 
         # Create citation with datetime
         citation = CitationInfo(
             title="Third Bridge Citation",
             url="https://thirdbridge.com/event/123",
-            timestamp=test_datetime
+            timestamp=test_datetime,
         )
 
         # Create pagination info
         pagination = ThirdBridgePaginationInfo(
-            total_count=1,
-            current_page=1,
-            total_pages=1,
-            page_size=50
+            total_count=1, current_page=1, total_pages=1, page_size=50
         )
 
         # Create response data container
-        response_data = ThirdBridgeResponseData(
-            pagination=pagination,
-            data=[event]
-        )
+        response_data = ThirdBridgeResponseData(pagination=pagination, data=[event])
 
         # Create response with new structure
         response = FindThirdBridgeEventsResponse(
             response=response_data,
             instructions=["Third Bridge instruction"],
-            citation_information=[citation]
+            citation_information=[citation],
         )
 
         # Test that entire response can be JSON serialized
@@ -633,7 +624,7 @@ class TestThirdBridgeEventItemDateTimeSerialization:
             title="Minimal Event",
             language="EN",
             agenda=["Minimal agenda"],
-            insights=["Minimal insight"]
+            insights=["Minimal insight"],
         )
 
         # Test JSON serialization with minimal fields

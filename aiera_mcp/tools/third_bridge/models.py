@@ -3,8 +3,7 @@
 """Third Bridge domain models for Aiera MCP."""
 
 from pydantic import BaseModel, Field, field_validator, field_serializer
-from typing import Optional, List, Dict, Any
-from datetime import datetime
+from typing import Optional, List, Any
 
 from ..common.models import BaseAieraResponse, PaginatedResponse
 
@@ -13,7 +12,16 @@ from ..common.models import BaseAieraResponse, PaginatedResponse
 class BaseToolArgs(BaseModel):
     """Base class for all Aiera MCP tool arguments with common serializers."""
 
-    @field_serializer('watchlist_id', 'index_id', 'sector_id', 'subsector_id', 'page', 'page_size', when_used='always', check_fields=False)
+    @field_serializer(
+        "watchlist_id",
+        "index_id",
+        "sector_id",
+        "subsector_id",
+        "page",
+        "page_size",
+        when_used="always",
+        check_fields=False,
+    )
     def serialize_numeric_fields(self, value: Any) -> str:
         """Convert numeric fields to strings for API requests."""
         if value is None:
@@ -24,62 +32,60 @@ class BaseToolArgs(BaseModel):
 class BloombergTickerMixin(BaseModel):
     """Mixin for models with bloomberg_ticker field."""
 
-    @field_validator('bloomberg_ticker', mode='before', check_fields=False)
+    @field_validator("bloomberg_ticker", mode="before", check_fields=False)
     @classmethod
     def validate_bloomberg_ticker(cls, v):
         """Automatically correct Bloomberg ticker format."""
         if v is None:
             return v
         from ..utils import correct_bloomberg_ticker
+
         return correct_bloomberg_ticker(v)
 
 
 # Parameter models (extracted from params.py)
 class FindThirdBridgeEventsArgs(BaseToolArgs, BloombergTickerMixin):
     """Find expert insight events from Third Bridge filtered by date range and optional filters."""
+
     start_date: str = Field(
         description="Start date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET).",
-        pattern=r"^\d{4}-\d{2}-\d{2}$"
+        pattern=r"^\d{4}-\d{2}-\d{2}$",
     )
     end_date: str = Field(
         description="End date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET).",
-        pattern=r"^\d{4}-\d{2}-\d{2}$"
+        pattern=r"^\d{4}-\d{2}-\d{2}$",
     )
     bloomberg_ticker: Optional[str] = Field(
         default=None,
-        description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces."
+        description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces.",
     )
     watchlist_id: Optional[int] = Field(
         default=None,
-        description="ID of a specific watchlist. Use get_available_watchlists to find valid IDs."
+        description="ID of a specific watchlist. Use get_available_watchlists to find valid IDs.",
     )
     index_id: Optional[int] = Field(
         default=None,
-        description="ID of a specific index. Use get_available_indexes to find valid IDs."
+        description="ID of a specific index. Use get_available_indexes to find valid IDs.",
     )
     sector_id: Optional[int] = Field(
         default=None,
-        description="ID of a specific sector. Use get_sectors_and_subsectors to find valid IDs."
+        description="ID of a specific sector. Use get_sectors_and_subsectors to find valid IDs.",
     )
     subsector_id: Optional[int] = Field(
         default=None,
-        description="ID of a specific subsector. Use get_sectors_and_subsectors to find valid IDs."
+        description="ID of a specific subsector. Use get_sectors_and_subsectors to find valid IDs.",
     )
     page: int = Field(
-        default=1,
-        ge=1,
-        description="Page number for pagination (1-based)."
+        default=1, ge=1, description="Page number for pagination (1-based)."
     )
     page_size: int = Field(
-        default=50,
-        ge=1,
-        le=100,
-        description="Number of items per page (1-100)."
+        default=50, ge=1, le=100, description="Number of items per page (1-100)."
     )
 
 
 class GetThirdBridgeEventArgs(BaseToolArgs):
     """Get detailed information about a specific Third Bridge expert insight event."""
+
     event_id: str = Field(
         description="Unique identifier for the Third Bridge event. Obtained from find_third_bridge_events results."
     )
@@ -88,6 +94,7 @@ class GetThirdBridgeEventArgs(BaseToolArgs):
 # Citation models
 class ThirdBridgeCitationBlock(BaseModel):
     """Citation information for Third Bridge events."""
+
     title: str = Field(description="Event title")
     url: str = Field(description="URL to the event")
     expert_name: Optional[str] = Field(None, description="Expert name")
@@ -97,18 +104,24 @@ class ThirdBridgeCitationBlock(BaseModel):
 # Response models (extracted from responses.py)
 class ThirdBridgeEventItem(BaseModel):
     """Third Bridge event item."""
+
     event_id: str = Field(description="Event identifier")
     content_type: str = Field(description="Content type (e.g., FORUM, COMMUNITY)")
     call_date: str = Field(description="Event date and time as string")
     title: str = Field(description="Event title")
     language: str = Field(description="Event language")
     agenda: List[str] = Field(description="Event agenda items")
-    insights: Optional[List[str]] = Field(None, description="Key insights from the event (can be null)")
-    citation_block: Optional[ThirdBridgeCitationBlock] = Field(None, description="Citation information")
+    insights: Optional[List[str]] = Field(
+        None, description="Key insights from the event (can be null)"
+    )
+    citation_block: Optional[ThirdBridgeCitationBlock] = Field(
+        None, description="Citation information"
+    )
 
 
 class ThirdBridgeEventDetails(BaseModel):
     """Detailed Third Bridge event information."""
+
     event_id: str = Field(description="Event identifier")
     content_type: str = Field(description="Content type (e.g., FORUM, COMMUNITY)")
     call_date: str = Field(description="Event date and time as string")
@@ -117,27 +130,35 @@ class ThirdBridgeEventDetails(BaseModel):
     agenda: Optional[str] = Field(None, description="Event agenda as string")
     insights: Optional[str] = Field(None, description="Key insights as string")
     transcript: Optional[str] = Field(None, description="Event transcript")
-    citation_block: Optional[ThirdBridgeCitationBlock] = Field(None, description="Citation information")
+    citation_block: Optional[ThirdBridgeCitationBlock] = Field(
+        None, description="Citation information"
+    )
 
 
 # Response classes
 class ThirdBridgePaginationInfo(BaseModel):
     """Pagination information from Third Bridge API."""
+
     total_count: int = Field(description="Total number of events")
     current_page: int = Field(description="Current page number")
     total_pages: int = Field(description="Total number of pages")
     page_size: int = Field(description="Number of events per page")
 
+
 class ThirdBridgeResponseData(BaseModel):
     """Third Bridge response data container."""
+
     pagination: ThirdBridgePaginationInfo = Field(description="Pagination information")
     data: List[ThirdBridgeEventItem] = Field(description="List of Third Bridge events")
 
+
 class FindThirdBridgeEventsResponse(BaseAieraResponse):
     """Response for find_third_bridge_events tool - matches actual API structure."""
+
     response: ThirdBridgeResponseData = Field(description="Response data container")
 
 
 class GetThirdBridgeEventResponse(BaseAieraResponse):
     """Response for get_third_bridge_event tool."""
+
     event: ThirdBridgeEventDetails = Field(description="Detailed Third Bridge event")

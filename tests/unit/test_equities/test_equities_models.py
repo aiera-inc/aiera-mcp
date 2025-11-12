@@ -3,17 +3,28 @@
 """Unit tests for equities models."""
 
 import pytest
-from datetime import datetime
 from pydantic import ValidationError
 
 from aiera_mcp.tools.equities.models import (
-    FindEquitiesArgs, GetEquitySummariesArgs, GetIndexConstituentsArgs,
-    GetWatchlistConstituentsArgs, EmptyArgs, SearchArgs,
-    FindEquitiesResponse, GetEquitySummariesResponse, GetSectorsSubsectorsResponse,
-    GetAvailableIndexesResponse, GetIndexConstituentsResponse,
-    GetAvailableWatchlistsResponse, GetWatchlistConstituentsResponse,
-    EquityItem, EquityDetails, EquitySummary, SectorSubsector,
-    IndexItem, WatchlistItem
+    FindEquitiesArgs,
+    GetEquitySummariesArgs,
+    GetIndexConstituentsArgs,
+    GetWatchlistConstituentsArgs,
+    EmptyArgs,
+    SearchArgs,
+    FindEquitiesResponse,
+    GetEquitySummariesResponse,
+    GetSectorsSubsectorsResponse,
+    GetAvailableIndexesResponse,
+    GetIndexConstituentsResponse,
+    GetAvailableWatchlistsResponse,
+    GetWatchlistConstituentsResponse,
+    EquityItem,
+    EquityDetails,
+    EquitySummary,
+    SectorSubsector,
+    IndexItem,
+    WatchlistItem,
 )
 from aiera_mcp.tools.common.models import CitationInfo
 
@@ -33,7 +44,7 @@ class TestEquitiesModels:
             "sector": "Technology",
             "subsector": "Software",
             "country": "United States",
-            "market_cap": 1000000000.0
+            "market_cap": 1000000000.0,
         }
 
         equity = EquityItem(**equity_data)
@@ -54,7 +65,7 @@ class TestEquitiesModels:
             "equity_id": 12345,
             "company_name": "Test Company",
             "ticker": "TEST",
-            "bloomberg_ticker": "TEST:US"
+            "bloomberg_ticker": "TEST:US",
         }
 
         equity = EquityItem(**minimal_data)
@@ -77,13 +88,13 @@ class TestEquitiesModels:
             "key_metrics": {
                 "pe_ratio": 25.5,
                 "price_to_book": 3.2,
-                "dividend_yield": 2.1
+                "dividend_yield": 2.1,
             },
             "analyst_coverage": {
                 "avg_rating": "Buy",
                 "price_target": "$150.00",
-                "num_analysts": 12
-            }
+                "num_analysts": 12,
+            },
         }
 
         summary = EquitySummary(**summary_data)
@@ -115,13 +126,13 @@ class TestEquitiesModels:
             "summary": EquitySummary(
                 description="Test description",
                 recent_events=["Event 1"],
-                key_metrics={"pe_ratio": 25.5}
+                key_metrics={"pe_ratio": 25.5},
             ),
             "identifiers": {
                 "isin": "US1234567890",
                 "cusip": "123456789",
-                "ric": "TEST.O"
-            }
+                "ric": "TEST.O",
+            },
         }
 
         details = EquityDetails(**details_data)
@@ -143,12 +154,7 @@ class TestEquitiesModels:
         sector_data = {
             "sector_id": 10,
             "name": "Technology",
-            "subsectors": [
-                {
-                    "subsector_id": 1010,
-                    "name": "Software"
-                }
-            ]
+            "subsectors": [{"subsector_id": 1010, "name": "Software"}],
         }
 
         sector = SectorSubsector(**sector_data)
@@ -163,10 +169,7 @@ class TestEquitiesModels:
 
     def test_sector_subsector_no_subsector(self):
         """Test SectorSubsector without subsector."""
-        sector_data = {
-            "sector_id": 20,
-            "name": "Healthcare"
-        }
+        sector_data = {"sector_id": 20, "name": "Healthcare"}
 
         sector = SectorSubsector(**sector_data)
 
@@ -178,11 +181,7 @@ class TestEquitiesModels:
 
     def test_index_item_creation(self):
         """Test IndexItem model creation."""
-        index_data = {
-            "index_id": 1,
-            "name": "S&P 500",
-            "symbol": "SPX"
-        }
+        index_data = {"index_id": 1, "name": "S&P 500", "symbol": "SPX"}
 
         index = IndexItem(**index_data)
 
@@ -196,28 +195,29 @@ class TestEquitiesModels:
         watchlist_data = {
             "watchlist_id": 123,
             "name": "Tech Giants",
-            "description": "Large technology companies"
+            "description": "Large technology companies",
         }
 
         watchlist = WatchlistItem(**watchlist_data)
 
         assert watchlist.watchlist_id == 123
         assert watchlist.name == "Tech Giants"
-        assert watchlist.watchlist_name == "Tech Giants"  # backward compatibility property
+        assert (
+            watchlist.watchlist_name == "Tech Giants"
+        )  # backward compatibility property
         assert watchlist.description == "Large technology companies"
 
     def test_watchlist_item_no_description(self):
         """Test WatchlistItem without description."""
-        watchlist_data = {
-            "watchlist_id": 456,
-            "name": "My Watchlist"
-        }
+        watchlist_data = {"watchlist_id": 456, "name": "My Watchlist"}
 
         watchlist = WatchlistItem(**watchlist_data)
 
         assert watchlist.watchlist_id == 456
         assert watchlist.name == "My Watchlist"
-        assert watchlist.watchlist_name == "My Watchlist"  # backward compatibility property
+        assert (
+            watchlist.watchlist_name == "My Watchlist"
+        )  # backward compatibility property
         assert watchlist.description is None
 
 
@@ -233,7 +233,7 @@ class TestFindEquitiesArgs:
             ticker="AAPL",
             search="Apple",
             page=1,
-            page_size=50
+            page_size=50,
         )
 
         assert args.bloomberg_ticker == "AAPL:US"
@@ -280,17 +280,22 @@ class TestFindEquitiesArgs:
 
         # Model dump should serialize numeric fields as strings
         dumped = args.model_dump(exclude_none=True)
-        assert dumped['page'] == "2"
-        assert dumped['page_size'] == "25"
+        assert dumped["page"] == "2"
+        assert dumped["page_size"] == "25"
 
-    @pytest.mark.parametrize("identifier_type,identifier_value", [
-        ("bloomberg_ticker", "AAPL:US"),
-        ("isin", "US0378331005"),
-        ("ric", "AAPL.O"),
-        ("ticker", "AAPL"),
-        ("permid", "4295905573")
-    ])
-    def test_find_equities_args_identifier_types(self, identifier_type, identifier_value):
+    @pytest.mark.parametrize(
+        "identifier_type,identifier_value",
+        [
+            ("bloomberg_ticker", "AAPL:US"),
+            ("isin", "US0378331005"),
+            ("ric", "AAPL.O"),
+            ("ticker", "AAPL"),
+            ("permid", "4295905573"),
+        ],
+    )
+    def test_find_equities_args_identifier_types(
+        self, identifier_type, identifier_value
+    ):
         """Test various identifier types."""
         args_data = {identifier_type: identifier_value}
         args = FindEquitiesArgs(**args_data)
@@ -399,7 +404,7 @@ class TestEmptyAndSearchArgs:
         # Should create successfully with no fields
         dumped = args.model_dump()
         # Should have no fields or only serializer fields
-        assert len([k for k in dumped.keys() if not k.startswith('_')]) == 0
+        assert len([k for k in dumped.keys() if not k.startswith("_")]) == 0
 
     def test_search_args_defaults(self):
         """Test SearchArgs with defaults."""
@@ -429,7 +434,7 @@ class TestEquitiesResponses:
                 equity_id=12345,
                 company_name="Test Company",
                 ticker="TEST",
-                bloomberg_ticker="TEST:US"
+                bloomberg_ticker="TEST:US",
             )
         ]
 
@@ -441,9 +446,9 @@ class TestEquitiesResponses:
                     "total_count": 1,
                     "current_page": 1,
                     "total_pages": 1,
-                    "page_size": 50
-                }
-            }
+                    "page_size": 50,
+                },
+            },
         )
 
         assert len(response.response.data) == 1
@@ -461,13 +466,12 @@ class TestEquitiesResponses:
                 equity_id=12345,
                 company_name="Test Company",
                 ticker="TEST",
-                bloomberg_ticker="TEST:US"
+                bloomberg_ticker="TEST:US",
             )
         ]
 
         response = GetEquitySummariesResponse(
-            instructions=["Test instruction"],
-            response=summaries
+            instructions=["Test instruction"], response=summaries
         )
 
         assert len(response.response) == 1
@@ -481,38 +485,27 @@ class TestEquitiesResponses:
             SectorSubsector(
                 sector_id=10,
                 name="Technology",
-                subsectors=[
-                    {
-                        "subsector_id": 1010,
-                        "name": "Software"
-                    }
-                ]
+                subsectors=[{"subsector_id": 1010, "name": "Software"}],
             )
         ]
 
         response = GetSectorsSubsectorsResponse(
-            instructions=["Sectors retrieved"],
-            response=sectors
+            instructions=["Sectors retrieved"], response=sectors
         )
 
         assert len(response.response) == 1
         assert response.response[0].name == "Technology"
-        assert response.response[0].sector_name == "Technology"  # backward compatibility
+        assert (
+            response.response[0].sector_name == "Technology"
+        )  # backward compatibility
         assert response.instructions == ["Sectors retrieved"]
 
     def test_get_available_indexes_response(self):
         """Test GetAvailableIndexesResponse model."""
-        indexes = [
-            IndexItem(
-                index_id=1,
-                name="S&P 500",
-                symbol="SPX"
-            )
-        ]
+        indexes = [IndexItem(index_id=1, name="S&P 500", symbol="SPX")]
 
         response = GetAvailableIndexesResponse(
-            instructions=["Indexes retrieved"],
-            response=indexes
+            instructions=["Indexes retrieved"], response=indexes
         )
 
         assert len(response.response) == 1
@@ -527,7 +520,7 @@ class TestEquitiesResponses:
                 equity_id=12345,
                 company_name="Test Company",
                 ticker="TEST",
-                bloomberg_ticker="TEST:US"
+                bloomberg_ticker="TEST:US",
             )
         ]
 
@@ -538,7 +531,7 @@ class TestEquitiesResponses:
             page=1,
             page_size=50,
             instructions=["Constituents retrieved"],
-            citation_information=[]
+            citation_information=[],
         )
 
         assert response.index_name == "S&P 500"
@@ -550,15 +543,12 @@ class TestEquitiesResponses:
         """Test GetAvailableWatchlistsResponse model."""
         watchlists = [
             WatchlistItem(
-                watchlist_id=123,
-                name="Tech Giants",
-                description="Large tech companies"
+                watchlist_id=123, name="Tech Giants", description="Large tech companies"
             )
         ]
 
         response = GetAvailableWatchlistsResponse(
-            instructions=["Watchlists retrieved"],
-            response=watchlists
+            instructions=["Watchlists retrieved"], response=watchlists
         )
 
         assert len(response.response) == 1
@@ -572,7 +562,7 @@ class TestEquitiesResponses:
                 equity_id=12345,
                 company_name="Test Company",
                 ticker="TEST",
-                bloomberg_ticker="TEST:US"
+                bloomberg_ticker="TEST:US",
             )
         ]
 
@@ -583,7 +573,7 @@ class TestEquitiesResponses:
             page=1,
             page_size=50,
             instructions=["Constituents retrieved"],
-            citation_information=[]
+            citation_information=[],
         )
 
         assert response.watchlist_name == "Tech Giants"
@@ -599,10 +589,7 @@ class TestEquitiesModelValidation:
     def test_model_serialization_roundtrip(self):
         """Test model serialization and deserialization."""
         original_args = FindEquitiesArgs(
-            bloomberg_ticker="AAPL:US",
-            search="Apple",
-            page=2,
-            page_size=25
+            bloomberg_ticker="AAPL:US", search="Apple", page=2, page_size=25
         )
 
         # Serialize to dict
@@ -637,7 +624,6 @@ class TestEquitiesModelValidation:
         assert page_size_schema["minimum"] == 1
         assert page_size_schema["maximum"] == 100
 
-
     def test_equity_summary_complex_data_types(self):
         """Test equity summary handles complex data types."""
         complex_metrics = {
@@ -648,11 +634,8 @@ class TestEquitiesModelValidation:
             "shares_outstanding": 16400000000,
             "revenue_growth": "15%",
             "is_profitable": True,
-            "financial_ratios": {
-                "current_ratio": 1.2,
-                "debt_to_equity": 0.3
-            },
-            "segments": ["iPhone", "Services", "Mac", "iPad", "Wearables"]
+            "financial_ratios": {"current_ratio": 1.2, "debt_to_equity": 0.3},
+            "segments": ["iPhone", "Services", "Mac", "iPad", "Wearables"],
         }
 
         complex_analyst_coverage = {
@@ -666,15 +649,15 @@ class TestEquitiesModelValidation:
                 "buy": 5,
                 "hold": 2,
                 "sell": 0,
-                "strong_sell": 0
-            }
+                "strong_sell": 0,
+            },
         }
 
         summary = EquitySummary(
             description="Complex company description",
             recent_events=["Q4 Earnings", "Product Launch", "Acquisition"],
             key_metrics=complex_metrics,
-            analyst_coverage=complex_analyst_coverage
+            analyst_coverage=complex_analyst_coverage,
         )
 
         # Verify complex data is handled properly
@@ -694,7 +677,7 @@ class TestEquitiesModelValidation:
             "ric": "AAPL.O",
             "sedol": "2046251",
             "figi": "BBG000B9XRY4",
-            "permid": "4295905573"
+            "permid": "4295905573",
         }
 
         details = EquityDetails(
@@ -702,7 +685,7 @@ class TestEquitiesModelValidation:
             company_name="Test Company",
             ticker="TEST",
             bloomberg_ticker="TEST:US",
-            identifiers=identifiers
+            identifiers=identifiers,
         )
 
         assert details.identifiers["isin"] == "US0378331005"

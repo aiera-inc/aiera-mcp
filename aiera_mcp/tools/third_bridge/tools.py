@@ -3,7 +3,6 @@
 """Third Bridge event tools for Aiera MCP."""
 
 import logging
-from typing import Any, Dict
 from datetime import datetime
 
 from .models import (
@@ -12,7 +11,7 @@ from .models import (
     FindThirdBridgeEventsResponse,
     GetThirdBridgeEventResponse,
     ThirdBridgeEventItem,
-    ThirdBridgeEventDetails
+    ThirdBridgeEventDetails,
 )
 from ..base import get_http_client, get_api_key_from_context, make_aiera_request
 from ..common.models import CitationInfo
@@ -21,7 +20,9 @@ from ..common.models import CitationInfo
 logger = logging.getLogger(__name__)
 
 
-async def find_third_bridge_events(args: FindThirdBridgeEventsArgs) -> FindThirdBridgeEventsResponse:
+async def find_third_bridge_events(
+    args: FindThirdBridgeEventsArgs,
+) -> FindThirdBridgeEventsResponse:
     """Find expert insight events from Third Bridge, filtering by a date range and (optionally) by ticker, index, watchlist, sector, or subsector."""
     logger.info("tool called: find_third_bridge_events")
 
@@ -45,7 +46,9 @@ async def find_third_bridge_events(args: FindThirdBridgeEventsArgs) -> FindThird
     return FindThirdBridgeEventsResponse.model_validate(raw_response)
 
 
-async def get_third_bridge_event(args: GetThirdBridgeEventArgs) -> GetThirdBridgeEventResponse:
+async def get_third_bridge_event(
+    args: GetThirdBridgeEventArgs,
+) -> GetThirdBridgeEventResponse:
     """Retrieve an expert insight events from Third Bridge, including agenda, insights, transcript, and other metadata."""
     logger.info("tool called: get_third_bridge_event")
 
@@ -57,8 +60,8 @@ async def get_third_bridge_event(args: GetThirdBridgeEventArgs) -> GetThirdBridg
     params["include_transcripts"] = "true"
 
     # Handle special field mapping: event_id -> event_ids
-    if 'event_id' in params:
-        params['event_ids'] = str(params.pop('event_id'))
+    if "event_id" in params:
+        params["event_ids"] = str(params.pop("event_id"))
 
     raw_response = await make_aiera_request(
         client=client,
@@ -92,10 +95,14 @@ async def get_third_bridge_event(args: GetThirdBridgeEventArgs) -> GetThirdBridg
         call_date=event_data.get("call_date", ""),
         title=event_data.get("title", ""),
         language=event_data.get("language", ""),
-        agenda=event_data.get("agenda"),  # This should be Optional[str] in ThirdBridgeEventDetails
-        insights=event_data.get("insights"),  # This should be Optional[str] in ThirdBridgeEventDetails
+        agenda=event_data.get(
+            "agenda"
+        ),  # This should be Optional[str] in ThirdBridgeEventDetails
+        insights=event_data.get(
+            "insights"
+        ),  # This should be Optional[str] in ThirdBridgeEventDetails
         citation_block=event_data.get("citation_block"),
-        transcript=event_data.get("transcript")
+        transcript=event_data.get("transcript"),
     )
 
     # Build citation using citation_block from new API format
@@ -106,22 +113,26 @@ async def get_third_bridge_event(args: GetThirdBridgeEventArgs) -> GetThirdBridg
         timestamp = None
         try:
             if event_data.get("call_date"):
-                timestamp = datetime.fromisoformat(event_data["call_date"].replace("Z", "+00:00"))
+                timestamp = datetime.fromisoformat(
+                    event_data["call_date"].replace("Z", "+00:00")
+                )
             else:
                 timestamp = datetime.now()
         except (ValueError, AttributeError):
             timestamp = datetime.now()
 
-        citations.append(CitationInfo(
-            title=f"Third Bridge: {citation_block.get('title', event_data.get('title', ''))}",
-            url=citation_block.get("url"),
-            timestamp=timestamp
-        ))
+        citations.append(
+            CitationInfo(
+                title=f"Third Bridge: {citation_block.get('title', event_data.get('title', ''))}",
+                url=citation_block.get("url"),
+                timestamp=timestamp,
+            )
+        )
 
     return GetThirdBridgeEventResponse(
         event=event_details,
         instructions=raw_response.get("instructions", []),
-        citation_information=citations
+        citation_information=citations,
     )
 
 

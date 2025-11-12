@@ -4,7 +4,6 @@
 
 from pydantic import BaseModel, Field, field_validator, field_serializer
 from typing import Optional, List, Any
-from datetime import datetime
 
 from ..common.models import BaseAieraResponse
 
@@ -13,7 +12,16 @@ from ..common.models import BaseAieraResponse
 class BaseToolArgs(BaseModel):
     """Base class for all Aiera MCP tool arguments with common serializers."""
 
-    @field_serializer('watchlist_id', 'index_id', 'sector_id', 'subsector_id', 'page', 'page_size', when_used='always', check_fields=False)
+    @field_serializer(
+        "watchlist_id",
+        "index_id",
+        "sector_id",
+        "subsector_id",
+        "page",
+        "page_size",
+        when_used="always",
+        check_fields=False,
+    )
     def serialize_numeric_fields(self, value: Any) -> str:
         """Convert numeric fields to strings for API requests."""
         if value is None:
@@ -24,53 +32,64 @@ class BaseToolArgs(BaseModel):
 class ProvidedIdsMixin(BaseModel):
     """Mixin for models with ID fields that need correction."""
 
-    @field_validator('transcrippet_id', 'event_id', 'equity_id', 'speaker_id', 'transcript_item_id', mode='before', check_fields=False)
+    @field_validator(
+        "transcrippet_id",
+        "event_id",
+        "equity_id",
+        "speaker_id",
+        "transcript_item_id",
+        mode="before",
+        check_fields=False,
+    )
     @classmethod
     def validate_provided_ids(cls, v):
         """Automatically correct provided ID formats."""
         if v is None:
             return v
         from ..utils import correct_provided_ids
+
         return correct_provided_ids(v)
 
 
 # Parameter models (extracted from params.py)
 class FindTranscrippetsArgs(BaseToolArgs, ProvidedIdsMixin):
     """Find Transcrippets™ filtered by various identifiers and date ranges."""
+
     transcrippet_id: Optional[str] = Field(
         default=None,
-        description="Transcrippet ID(s). For multiple IDs, use comma-separated list without spaces."
+        description="Transcrippet ID(s). For multiple IDs, use comma-separated list without spaces.",
     )
     event_id: Optional[str] = Field(
         default=None,
-        description="Event ID(s) to filter by. For multiple IDs, use comma-separated list without spaces."
+        description="Event ID(s) to filter by. For multiple IDs, use comma-separated list without spaces.",
     )
     equity_id: Optional[str] = Field(
         default=None,
-        description="Equity ID(s) to filter by. For multiple IDs, use comma-separated list without spaces."
+        description="Equity ID(s) to filter by. For multiple IDs, use comma-separated list without spaces.",
     )
     speaker_id: Optional[str] = Field(
         default=None,
-        description="Speaker ID(s) to filter by. For multiple IDs, use comma-separated list without spaces."
+        description="Speaker ID(s) to filter by. For multiple IDs, use comma-separated list without spaces.",
     )
     transcript_item_id: Optional[str] = Field(
         default=None,
-        description="Transcript item ID(s) to filter by. For multiple IDs, use comma-separated list without spaces."
+        description="Transcript item ID(s) to filter by. For multiple IDs, use comma-separated list without spaces.",
     )
     created_start_date: Optional[str] = Field(
         default=None,
         description="Start date for transcrippet creation filter in ISO format (YYYY-MM-DD).",
-        pattern=r"^\d{4}-\d{2}-\d{2}$"
+        pattern=r"^\d{4}-\d{2}-\d{2}$",
     )
     created_end_date: Optional[str] = Field(
         default=None,
         description="End date for transcrippet creation filter in ISO format (YYYY-MM-DD).",
-        pattern=r"^\d{4}-\d{2}-\d{2}$"
+        pattern=r"^\d{4}-\d{2}-\d{2}$",
     )
 
 
 class CreateTranscrippetArgs(BaseToolArgs):
     """Create a new Transcrippet™ from an event transcript segment."""
+
     event_id: int = Field(
         description="Event ID from which to create the transcrippet. Use find_events to obtain valid event IDs."
     )
@@ -81,20 +100,19 @@ class CreateTranscrippetArgs(BaseToolArgs):
         description="ID of the starting transcript item for the segment."
     )
     transcript_item_offset: int = Field(
-        ge=0,
-        description="Character offset within the starting transcript item."
+        ge=0, description="Character offset within the starting transcript item."
     )
     transcript_end_item_id: int = Field(
         description="ID of the ending transcript item for the segment."
     )
     transcript_end_item_offset: int = Field(
-        ge=0,
-        description="Character offset within the ending transcript item."
+        ge=0, description="Character offset within the ending transcript item."
     )
 
 
 class DeleteTranscrippetArgs(BaseToolArgs):
     """Delete a Transcrippet™ by its ID."""
+
     transcrippet_id: str = Field(
         description="Unique identifier for the transcrippet to delete. This operation cannot be undone."
     )
@@ -103,6 +121,7 @@ class DeleteTranscrippetArgs(BaseToolArgs):
 # Response models (extracted from responses.py)
 class TranscrippetItem(BaseModel):
     """Individual transcrippet item - matches actual API structure."""
+
     transcrippet_id: int = Field(description="Transcrippet identifier")
     company_id: int = Field(description="Company identifier")
     equity_id: int = Field(description="Equity identifier")
@@ -122,26 +141,33 @@ class TranscrippetItem(BaseModel):
     start_ms: int = Field(description="Start time in milliseconds")
     transcript: str = Field(description="Transcript text")
     transcrippet_guid: str = Field(description="Transcrippet GUID")
-    transcription_audio_offset_seconds: int = Field(description="Audio offset in seconds")
+    transcription_audio_offset_seconds: int = Field(
+        description="Audio offset in seconds"
+    )
     trimmed_audio_url: str = Field(description="Trimmed audio URL")
     word_durations_ms: List[int] = Field(description="Word durations in milliseconds")
     speaker_name: Optional[str] = Field(default=None, description="Speaker name")
     speaker_title: Optional[str] = Field(default=None, description="Speaker title")
-    public_url: Optional[str] = Field(default=None, description="Public URL for viewing the transcrippet")
+    public_url: Optional[str] = Field(
+        default=None, description="Public URL for viewing the transcrippet"
+    )
 
 
 # Response classes
 class FindTranscrippetsResponse(BaseAieraResponse):
     """Response for find_transcrippets tool - matches actual API structure."""
+
     response: List[TranscrippetItem] = Field(description="List of transcrippets")
 
 
 class CreateTranscrippetResponse(BaseAieraResponse):
     """Response for create_transcrippet tool - matches actual API structure."""
+
     response: TranscrippetItem = Field(description="Created transcrippet")
 
 
 class DeleteTranscrippetResponse(BaseAieraResponse):
     """Response for delete_transcrippet tool."""
+
     success: bool = Field(description="Whether deletion was successful")
     message: str = Field(description="Success or error message")

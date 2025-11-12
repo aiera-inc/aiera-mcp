@@ -3,8 +3,6 @@
 """Search tools for Aiera MCP server."""
 
 import logging
-from typing import Dict, Any
-from datetime import datetime
 
 from ..base import get_http_client, get_api_key_from_context, make_aiera_request
 from .models import (
@@ -42,11 +40,7 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
     # Start with standard OpenSearch query, try ML inference as enhancement if available
     must_clauses = [
         # Event filter as MUST clause - gives baseline score > 0
-        {
-            "terms": {
-                "transcript_event_id": [event_id for event_id in args.event_ids]
-            }
-        }
+        {"terms": {"transcript_event_id": [event_id for event_id in args.event_ids]}}
     ]
 
     # Add transcript section filter if provided with multiple field variations
@@ -57,9 +51,9 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
                     {"term": {"section.keyword": args.transcript_section}},
                     {"term": {"transcript_section.keyword": args.transcript_section}},
                     {"term": {"section": args.transcript_section}},
-                    {"term": {"transcript_section": args.transcript_section}}
+                    {"term": {"transcript_section": args.transcript_section}},
                 ],
-                "minimum_should_match": 1
+                "minimum_should_match": 1,
             }
         }
         must_clauses.append(section_filter)
@@ -70,24 +64,17 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
                 "must": must_clauses,
                 "should": [
                     # Text search for BOOSTING on top of baseline score
-                    {
-                        "match": {
-                            "text": {
-                                "query": args.query_text,
-                                "boost": 2.0
-                            }
-                        }
-                    },
+                    {"match": {"text": {"query": args.query_text, "boost": 2.0}}},
                     # Multi-field search for broader boosting
                     {
                         "multi_match": {
                             "query": args.query_text,
                             "fields": ["text", "title", "speaker_name"],
                             "type": "best_fields",
-                            "boost": 1.5
+                            "boost": 1.5,
                         }
-                    }
-                ]
+                    },
+                ],
                 # NO minimum_should_match - should clauses are optional for boosting
             }
         },
@@ -102,23 +89,15 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
             "speaker_title",
             "date",
             "section",
-            "transcript_section"
+            "transcript_section",
         ],
-        "sort": [
-            {
-                "_score": {
-                    "order": "desc"
-                }
-            }
-        ]
+        "sort": [{"_score": {"order": "desc"}}],
     }
 
     # ML query optimized for pipeline search - let ML do the semantic matching
     ml_query = {
         "query": {
-            "bool": {
-                "must": must_clauses  # Use the same must clauses as base query
-            }
+            "bool": {"must": must_clauses}  # Use the same must clauses as base query
         },
         "size": args.max_results,
         "min_score": args.min_score,
@@ -131,21 +110,11 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
             "speaker_title",
             "date",
             "section",
-            "transcript_section"
+            "transcript_section",
         ],
-        "sort": [
-            {
-                "_score": {
-                    "order": "desc"
-                }
-            }
-        ],
+        "sort": [{"_score": {"order": "desc"}}],
         "search_pipeline": "embedding_script_pipeline",
-        "ext": {
-            "ml_inference": {
-                "query_text": args.query_text
-            }
-        }
+        "ext": {"ml_inference": {"query_text": args.query_text}},
     }
 
     # Try ML inference search first, fall back to standard search if it fails
@@ -162,14 +131,22 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
         logger.info("ML inference search succeeded")
 
         # Check if we got good results
-        if raw_response and "response" in raw_response and raw_response["response"].get("result"):
+        if (
+            raw_response
+            and "response" in raw_response
+            and raw_response["response"].get("result")
+        ):
             return SearchTranscriptsResponse.model_validate(raw_response)
         else:
-            logger.info("ML inference returned no results, falling back to standard search")
+            logger.info(
+                "ML inference returned no results, falling back to standard search"
+            )
             raise Exception("ML inference returned no results")
 
     except Exception as ml_error:
-        logger.info(f"ML inference search failed: {str(ml_error)}, falling back to standard search")
+        logger.info(
+            f"ML inference search failed: {str(ml_error)}, falling back to standard search"
+        )
 
         try:
             # Fall back to standard search without ML inference
@@ -186,7 +163,9 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
             return SearchTranscriptsResponse.model_validate(raw_response)
 
         except Exception as pipeline_error:
-            logger.info(f"Pipeline search failed: {str(pipeline_error)}, trying direct search")
+            logger.info(
+                f"Pipeline search failed: {str(pipeline_error)}, trying direct search"
+            )
 
             # Try direct search without pipeline as final fallback
             base_query.pop("search_pipeline", None)
@@ -216,21 +195,38 @@ async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
     api_key = await get_api_key_from_context(None)
 
     company_name = args.company_name.strip()
-    logger.info(f"SearchFilings: enhanced search for '{company_name}' filings, start_date='{args.start_date}', end_date='{args.end_date}', document_types={args.document_types}")
+    logger.info(
+        f"SearchFilings: enhanced search for '{company_name}' filings, start_date='{args.start_date}', end_date='{args.end_date}', document_types={args.document_types}"
+    )
 
     # Build flexible company name search using multiple strategies
     should_clauses = [
         # Primary: match_phrase (works well for exact company names)
         {"match_phrase": {"title": {"query": company_name, "boost": 15.0}}},
-
         # Secondary: flexible wildcard matching
-        {"wildcard": {"title": {"value": f"*{company_name}*", "case_insensitive": True, "boost": 8.0}}},
-
+        {
+            "wildcard": {
+                "title": {
+                    "value": f"*{company_name}*",
+                    "case_insensitive": True,
+                    "boost": 8.0,
+                }
+            }
+        },
         # For compound names, try individual words
-        *[{"wildcard": {"title": {"value": f"*{word.strip()}*", "case_insensitive": True, "boost": 6.0}}}
-          for word in company_name.replace("&", " ").replace("  ", " ").split()
-          if len(word.strip()) > 2],  # Skip short words like "&"
-
+        *[
+            {
+                "wildcard": {
+                    "title": {
+                        "value": f"*{word.strip()}*",
+                        "case_insensitive": True,
+                        "boost": 6.0,
+                    }
+                }
+            }
+            for word in company_name.replace("&", " ").replace("  ", " ").split()
+            if len(word.strip()) > 2
+        ],  # Skip short words like "&"
         # Structured company field matches (fallback since these are often empty)
         {"term": {"company_name.keyword": company_name}},
         {"term": {"issuer_name.keyword": company_name}},
@@ -245,22 +241,29 @@ async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
         for doc_type in args.document_types:
             doc_type_upper = doc_type.upper()
             # Use match_phrase for document type matching
-            doc_type_filters.extend([
-                # Primary: exact phrase match for the document type
-                {"match_phrase": {"title": {"query": doc_type_upper, "boost": 10.0}}},
-                {"match_phrase": {"title": {"query": doc_type.lower(), "boost": 8.0}}},
-                # Structured field matching as fallback
-                {"term": {"document_type.keyword": doc_type_upper}},
-                {"term": {"form_type.keyword": doc_type_upper}},
-                {"term": {"filing_type.keyword": doc_type_upper}},
-            ])
+            doc_type_filters.extend(
+                [
+                    # Primary: exact phrase match for the document type
+                    {
+                        "match_phrase": {
+                            "title": {"query": doc_type_upper, "boost": 10.0}
+                        }
+                    },
+                    {
+                        "match_phrase": {
+                            "title": {"query": doc_type.lower(), "boost": 8.0}
+                        }
+                    },
+                    # Structured field matching as fallback
+                    {"term": {"document_type.keyword": doc_type_upper}},
+                    {"term": {"form_type.keyword": doc_type_upper}},
+                    {"term": {"filing_type.keyword": doc_type_upper}},
+                ]
+            )
 
         if doc_type_filters:
             document_type_filter = {
-                "bool": {
-                    "should": doc_type_filters,
-                    "minimum_should_match": 1
-                }
+                "bool": {"should": doc_type_filters, "minimum_should_match": 1}
             }
             filter_clauses.append(document_type_filter)
 
@@ -276,41 +279,63 @@ async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
 
     # Add amendments filter
     if not args.include_amendments:
-        filter_clauses.append({
-            "bool": {
-                "must_not": {
-                    "regexp": {
-                        "filing_type": ".*[/]A"
-                    }
-                }
-            }
-        })
+        filter_clauses.append(
+            {"bool": {"must_not": {"regexp": {"filing_type": ".*[/]A"}}}}
+        )
 
     # Add filing type boosting if no specific document types are requested
     if not args.document_types:
-        logger.info(f"No document types specified for '{company_name}', adding filing type boosting for important SEC forms")
+        logger.info(
+            f"No document types specified for '{company_name}', adding filing type boosting for important SEC forms"
+        )
         # Define filing type priorities with boost scores
         priority_filings = {
             # Core periodic reports (highest priority)
-            '10-K': 15.0,    # Annual report - most comprehensive
-            '10-Q': 12.0,    # Quarterly report - regular updates
-            '8-K': 10.0,     # Current report - material events
+            "10-K": 15.0,  # Annual report - most comprehensive
+            "10-Q": 12.0,  # Quarterly report - regular updates
+            "8-K": 10.0,  # Current report - material events
             # International and specialized forms (medium-high priority)
-            '20-F': 8.0,     # Annual report for foreign companies
-            'DEF 14A': 7.0,  # Proxy statement
-            'S-1': 6.0,      # Registration statement for IPOs
-            'S-3': 5.0,      # Registration statement for seasoned companies
+            "20-F": 8.0,  # Annual report for foreign companies
+            "DEF 14A": 7.0,  # Proxy statement
+            "S-1": 6.0,  # Registration statement for IPOs
+            "S-3": 5.0,  # Registration statement for seasoned companies
         }
 
         filing_boosting_clauses = []
         # Add boosting for each priority filing type
         for filing_type, boost_score in priority_filings.items():
             # Boost in title patterns (common SEC filing title formats)
-            filing_boosting_clauses.extend([
-                {"wildcard": {"title": {"value": f"*- {filing_type}", "case_insensitive": True, "boost": boost_score * 0.8}}},
-                {"wildcard": {"title": {"value": f"* - {filing_type}", "case_insensitive": True, "boost": boost_score * 0.8}}},
-                {"wildcard": {"title": {"value": f"*{filing_type}*", "case_insensitive": True, "boost": boost_score * 0.6}}},
-            ])
+            filing_boosting_clauses.extend(
+                [
+                    {
+                        "wildcard": {
+                            "title": {
+                                "value": f"*- {filing_type}",
+                                "case_insensitive": True,
+                                "boost": boost_score * 0.8,
+                            }
+                        }
+                    },
+                    {
+                        "wildcard": {
+                            "title": {
+                                "value": f"* - {filing_type}",
+                                "case_insensitive": True,
+                                "boost": boost_score * 0.8,
+                            }
+                        }
+                    },
+                    {
+                        "wildcard": {
+                            "title": {
+                                "value": f"*{filing_type}*",
+                                "case_insensitive": True,
+                                "boost": boost_score * 0.6,
+                            }
+                        }
+                    },
+                ]
+            )
 
         should_clauses.extend(filing_boosting_clauses)
 
@@ -330,16 +355,25 @@ async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
             "bool": {
                 "should": should_clauses,
                 "filter": filter_clauses,
-                "minimum_should_match": 1
+                "minimum_should_match": 1,
             }
         },
         "_source": [
-            "content_id", "title", "company_name", "issuer_name", "entity_name",
-            "document_type", "form_type", "filing_type", "date", "filing_date", "filing_id"
+            "content_id",
+            "title",
+            "company_name",
+            "issuer_name",
+            "entity_name",
+            "document_type",
+            "form_type",
+            "filing_type",
+            "date",
+            "filing_date",
+            "filing_id",
         ],
         "sort": sort_clause,
         "timeout": "15s",
-        "search_pipeline": "embedding_script_pipeline"
+        "search_pipeline": "embedding_script_pipeline",
     }
 
     raw_response = await make_aiera_request(
@@ -354,7 +388,9 @@ async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
     return SearchFilingsResponse.model_validate(raw_response)
 
 
-async def search_filing_chunks(args: SearchFilingChunksArgs) -> SearchFilingChunksResponse:
+async def search_filing_chunks(
+    args: SearchFilingChunksArgs,
+) -> SearchFilingChunksResponse:
     """Semantic search within SEC filing document chunks using embedding-based matching.
 
     Extracts relevant filing content chunks filtered by company, date, and filing type
@@ -372,25 +408,20 @@ async def search_filing_chunks(args: SearchFilingChunksArgs) -> SearchFilingChun
 
     # Add text search clauses if query_text is provided
     if args.query_text and args.query_text.strip():
-        should_clauses.extend([
-            # Primary text search
-            {
-                "match": {
-                    "text": {
+        should_clauses.extend(
+            [
+                # Primary text search
+                {"match": {"text": {"query": args.query_text, "boost": 2.0}}},
+                # Title/summary search
+                {
+                    "multi_match": {
                         "query": args.query_text,
-                        "boost": 2.0
+                        "fields": ["title^1.5", "summary"],
+                        "boost": 1.5,
                     }
-                }
-            },
-            # Title/summary search
-            {
-                "multi_match": {
-                    "query": args.query_text,
-                    "fields": ["title^1.5", "summary"],
-                    "boost": 1.5
-                }
-            }
-        ])
+                },
+            ]
+        )
 
     # Add company search if company_name is provided using precise filtering
     if args.company_name and args.company_name.strip():
@@ -398,23 +429,84 @@ async def search_filing_chunks(args: SearchFilingChunksArgs) -> SearchFilingChun
             "bool": {
                 "should": [
                     # High priority: exact matches and close variations
-                    {"term": {"company_common_name.keyword": {"value": args.company_name, "boost": 5.0}}},
-                    {"term": {"company_legal_name.keyword": {"value": args.company_name, "boost": 5.0}}},
-                    {"match_phrase": {"company_common_name": {"query": args.company_name, "boost": 4.0}}},
-                    {"match_phrase": {"company_legal_name": {"query": args.company_name, "boost": 4.0}}},
-
+                    {
+                        "term": {
+                            "company_common_name.keyword": {
+                                "value": args.company_name,
+                                "boost": 5.0,
+                            }
+                        }
+                    },
+                    {
+                        "term": {
+                            "company_legal_name.keyword": {
+                                "value": args.company_name,
+                                "boost": 5.0,
+                            }
+                        }
+                    },
+                    {
+                        "match_phrase": {
+                            "company_common_name": {
+                                "query": args.company_name,
+                                "boost": 4.0,
+                            }
+                        }
+                    },
+                    {
+                        "match_phrase": {
+                            "company_legal_name": {
+                                "query": args.company_name,
+                                "boost": 4.0,
+                            }
+                        }
+                    },
                     # Medium priority: word-based matching (more precise than wildcards)
-                    {"match": {"company_common_name": {"query": args.company_name, "boost": 3.0, "operator": "and"}}},
-                    {"match": {"company_legal_name": {"query": args.company_name, "boost": 3.0, "operator": "and"}}},
-
+                    {
+                        "match": {
+                            "company_common_name": {
+                                "query": args.company_name,
+                                "boost": 3.0,
+                                "operator": "and",
+                            }
+                        }
+                    },
+                    {
+                        "match": {
+                            "company_legal_name": {
+                                "query": args.company_name,
+                                "boost": 3.0,
+                                "operator": "and",
+                            }
+                        }
+                    },
                     # Lower priority: fuzzy matching for typos (limited fuzziness)
-                    {"fuzzy": {"company_common_name": {"value": args.company_name, "fuzziness": 1, "boost": 2.0}}},
-                    {"fuzzy": {"company_legal_name": {"value": args.company_name, "fuzziness": 1, "boost": 2.0}}},
-
+                    {
+                        "fuzzy": {
+                            "company_common_name": {
+                                "value": args.company_name,
+                                "fuzziness": 1,
+                                "boost": 2.0,
+                            }
+                        }
+                    },
+                    {
+                        "fuzzy": {
+                            "company_legal_name": {
+                                "value": args.company_name,
+                                "fuzziness": 1,
+                                "boost": 2.0,
+                            }
+                        }
+                    },
                     # Title matching with phrase search
-                    {"match_phrase": {"title": {"query": args.company_name, "boost": 2.5}}},
+                    {
+                        "match_phrase": {
+                            "title": {"query": args.company_name, "boost": 2.5}
+                        }
+                    },
                 ],
-                "minimum_should_match": 1
+                "minimum_should_match": 1,
             }
         }
 
@@ -445,9 +537,9 @@ async def search_filing_chunks(args: SearchFilingChunksArgs) -> SearchFilingChun
             "bool": {
                 "should": [
                     {"term": {"filing_type": args.filing_type}},
-                    {"wildcard": {"title": f"*{args.filing_type.upper()}*"}}
+                    {"wildcard": {"title": f"*{args.filing_type.upper()}*"}},
                 ],
-                "minimum_should_match": 1
+                "minimum_should_match": 1,
             }
         }
         must_filters.append(filing_type_filter)
@@ -467,9 +559,7 @@ async def search_filing_chunks(args: SearchFilingChunksArgs) -> SearchFilingChun
         # Filter out empty strings and strip whitespace
         valid_content_ids = [cid.strip() for cid in args.content_ids if cid.strip()]
         if valid_content_ids:
-            content_ids_filter = {
-                "terms": {"content_id": valid_content_ids}
-            }
+            content_ids_filter = {"terms": {"content_id": valid_content_ids}}
             must_filters.append(content_ids_filter)
 
     # Build base query structure
@@ -478,7 +568,7 @@ async def search_filing_chunks(args: SearchFilingChunksArgs) -> SearchFilingChun
             "bool": {
                 "should": should_clauses,
                 "filter": must_filters,
-                "minimum_should_match": 1
+                "minimum_should_match": 1,
             }
         },
         "size": args.max_results,
@@ -492,7 +582,7 @@ async def search_filing_chunks(args: SearchFilingChunksArgs) -> SearchFilingChun
             "filing_id",
             "filing_form_id",
             "date",
-            "chunk_id"
+            "chunk_id",
         ],
     }
 
@@ -509,9 +599,9 @@ async def search_filing_chunks(args: SearchFilingChunksArgs) -> SearchFilingChun
             "filing_id",
             "filing_form_id",
             "date",
-            "chunk_id"
+            "chunk_id",
         ],
-        "search_pipeline": "embedding_script_pipeline"
+        "search_pipeline": "embedding_script_pipeline",
     }
 
     # Use simplified filter logic for ML query (complex filters can slow down ML inference)
@@ -529,55 +619,47 @@ async def search_filing_chunks(args: SearchFilingChunksArgs) -> SearchFilingChun
 
     # Add simple filing type filter
     if args.filing_type and args.filing_type.strip():
-        ml_filters.append({
-            "term": {"filing_type": args.filing_type}
-        })
+        ml_filters.append({"term": {"filing_type": args.filing_type}})
 
     # Add simple company filter
     if args.company_name and args.company_name.strip():
-        ml_filters.append({
-            "match": {
-                "company_common_name": {
-                    "query": args.company_name,
-                    "operator": "and"
+        ml_filters.append(
+            {
+                "match": {
+                    "company_common_name": {
+                        "query": args.company_name,
+                        "operator": "and",
+                    }
                 }
             }
-        })
+        )
 
     # Add filing IDs filter for ML
     if args.filing_ids:
         valid_filing_ids = [fid.strip() for fid in args.filing_ids if fid.strip()]
         if valid_filing_ids:
-            ml_filters.append({
-                "terms": {"filing_id": [int(fid) for fid in valid_filing_ids]}
-            })
+            ml_filters.append(
+                {"terms": {"filing_id": [int(fid) for fid in valid_filing_ids]}}
+            )
 
     # Add content IDs filter for ML
     if args.content_ids:
         valid_content_ids = [cid.strip() for cid in args.content_ids if cid.strip()]
         if valid_content_ids:
-            ml_filters.append({
-                "terms": {"content_id": valid_content_ids}
-            })
+            ml_filters.append({"terms": {"content_id": valid_content_ids}})
 
-    ml_query["query"] = {
-        "bool": {
-            "filter": ml_filters
-        }
-    }
+    ml_query["query"] = {"bool": {"filter": ml_filters}}
 
     # Try ML inference enhancement first if we have query text to embed
     if args.query_text and args.query_text.strip():
         # Add ML inference extension for embedding search
-        ml_query["ext"] = {
-            "ml_inference": {
-                "query_text": args.query_text.strip()
-            }
-        }
+        ml_query["ext"] = {"ml_inference": {"query_text": args.query_text.strip()}}
 
         try:
             # Try with ML inference enhancement
-            logger.info(f"FilingChunkSearch: Attempting ML inference search for company='{args.company_name}', query='{args.query_text}'")
+            logger.info(
+                f"FilingChunkSearch: Attempting ML inference search for company='{args.company_name}', query='{args.query_text}'"
+            )
 
             raw_response = await make_aiera_request(
                 client=client,
@@ -588,18 +670,28 @@ async def search_filing_chunks(args: SearchFilingChunksArgs) -> SearchFilingChun
                 data=ml_query,
             )
 
-            if raw_response and "response" in raw_response and raw_response["response"].get("result"):
+            if (
+                raw_response
+                and "response" in raw_response
+                and raw_response["response"].get("result")
+            ):
                 logger.info("FilingChunkSearch ML inference successful")
                 return SearchFilingChunksResponse.model_validate(raw_response)
             else:
-                logger.warning("FilingChunkSearch: ML inference returned no results, trying fallback")
+                logger.warning(
+                    "FilingChunkSearch: ML inference returned no results, trying fallback"
+                )
                 raise Exception("ML inference returned no results")
 
         except Exception as ml_error:
-            logger.warning(f"FilingChunkSearch: ML inference failed ({str(ml_error)}), falling back to standard search")
+            logger.warning(
+                f"FilingChunkSearch: ML inference failed ({str(ml_error)}), falling back to standard search"
+            )
     else:
         # No query text provided, skip ML inference
-        logger.info(f"FilingChunkSearch: No query text provided, using standard filtered search for company='{args.company_name}'")
+        logger.info(
+            f"FilingChunkSearch: No query text provided, using standard filtered search for company='{args.company_name}'"
+        )
 
     # Fall back to standard search without ML inference
     try:
@@ -622,18 +714,28 @@ async def search_filing_chunks(args: SearchFilingChunksArgs) -> SearchFilingChun
             return SearchFilingChunksResponse(
                 instructions=[],
                 response={
-                    "pagination": {"total_count": 0, "current_page": 1, "page_size": args.max_results},
-                    "result": []
-                }
+                    "pagination": {
+                        "total_count": 0,
+                        "current_page": 1,
+                        "page_size": args.max_results,
+                    },
+                    "result": [],
+                },
             )
 
     except Exception as fallback_error:
-        logger.error(f"FilingChunkSearch: Fallback search also failed: {str(fallback_error)}")
+        logger.error(
+            f"FilingChunkSearch: Fallback search also failed: {str(fallback_error)}"
+        )
         # Return empty response structure
         return SearchFilingChunksResponse(
             instructions=[],
             response={
-                "pagination": {"total_count": 0, "current_page": 1, "page_size": args.max_results},
-                "result": []
-            }
+                "pagination": {
+                    "total_count": 0,
+                    "current_page": 1,
+                    "page_size": args.max_results,
+                },
+                "result": [],
+            },
         )

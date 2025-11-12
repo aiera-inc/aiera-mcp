@@ -3,7 +3,6 @@
 """Company document tools for Aiera MCP."""
 
 import logging
-from datetime import datetime, date
 
 from .models import (
     FindCompanyDocsArgs,
@@ -15,7 +14,7 @@ from .models import (
     GetCompanyDocKeywordsResponse,
     CompanyDocItem,
     CompanyDocDetails,
-    CategoryKeyword
+    CategoryKeyword,
 )
 from ..base import get_http_client, get_api_key_from_context, make_aiera_request
 from ..common.models import CitationInfo
@@ -59,8 +58,8 @@ async def get_company_doc(args: GetCompanyDocArgs) -> GetCompanyDocResponse:
     params["include_content"] = "true"
 
     # Handle special field mapping: company_doc_id -> company_doc_ids
-    if 'company_doc_id' in params:
-        params['company_doc_ids'] = str(params.pop('company_doc_id'))
+    if "company_doc_id" in params:
+        params["company_doc_ids"] = str(params.pop("company_doc_id"))
 
     raw_response = await make_aiera_request(
         client=client,
@@ -79,13 +78,15 @@ async def get_company_doc(args: GetCompanyDocArgs) -> GetCompanyDocResponse:
     # Create the response structure expected by GetCompanyDocResponse
     response_data = {
         "document": doc_data,
-        "instructions": raw_response.get("instructions", [])
+        "instructions": raw_response.get("instructions", []),
     }
 
     return GetCompanyDocResponse.model_validate(response_data)
 
 
-async def get_company_doc_categories(args: SearchArgs) -> GetCompanyDocCategoriesResponse:
+async def get_company_doc_categories(
+    args: SearchArgs,
+) -> GetCompanyDocCategoriesResponse:
     """Retrieve a list of all categories associated with company documents."""
     logger.info("tool called: get_company_doc_categories")
 

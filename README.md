@@ -52,15 +52,20 @@ dependencies = [
 ```bash
 git clone https://github.com/aiera-inc/aiera-mcp.git
 cd aiera-mcp
-uv sync  # or pip install -e .
+uv sync --group dev  # Install with dev dependencies
 ```
 
-2. **Set up environment variables**:
+2. **Set up pre-commit hooks** (recommended for development):
+```bash
+uv run pre-commit install
+```
+
+3. **Set up environment variables**:
 ```bash
 export AIERA_API_KEY="your-aiera-api-key"
 ```
 
-3. **Run standalone server**:
+4. **Run standalone server**:
 ```bash
 uv run entrypoint.py
 ```
@@ -333,30 +338,69 @@ The package automatically handles API key resolution with fallback from OAuth pr
 
 ## Testing
 
-### Integration Tests
+### Manual Integration Testing
 
-This project includes comprehensive integration tests that validate the MCP tools against the real Aiera API.
+Since integration tests have been removed, use the manual testing script to validate the MCP tools against the real Aiera API.
 
-**Quick Start:**
+**Setup:**
 ```bash
 # Set up API key
-echo "export AIERA_API_KEY=your_api_key_here" > .env
-
-# Run core integration tests
-./scripts/run_integration_tests.sh
-
-# Run extended test suite
-./scripts/run_integration_tests.sh --extended
+export AIERA_API_KEY="your_api_key_here"
 ```
 
-**Manual Testing:**
+**Manual Testing Script:**
 ```bash
-# Individual test examples
-source .env && uv run pytest tests/integration/test_events_integration.py::TestEventsIntegration::test_find_events_real_api -v
-source .env && uv run pytest tests/integration/test_filings_integration.py::TestFilingsIntegration::test_find_filings_real_api -v
+# Test all available tools
+AIERA_API_KEY=your_api_key_here uv run python scripts/manual_test.py
+
+# Test specific tool categories
+AIERA_API_KEY=your_api_key_here uv run python scripts/manual_test.py find_events
+AIERA_API_KEY=your_api_key_here uv run python scripts/manual_test.py find_filings
+AIERA_API_KEY=your_api_key_here uv run python scripts/manual_test.py create_transcrippet
 ```
 
-For detailed testing instructions, see [INTEGRATION_TESTING.md](INTEGRATION_TESTING.md).
+The manual test script:
+- Makes direct API calls and compares them with tool outputs
+- Tests each tool function individually
+- Logs discrepancies and issues to help with debugging
+- Provides comprehensive validation of tool behavior
+
+## Development
+
+### Version Management
+
+This package uses automatic semantic versioning based on Git tags:
+
+**Creating a Release:**
+```bash
+# 1. Ensure all changes are committed and pushed
+git add . && git commit -m "Prepare release"
+
+# 2. Create and push a version tag
+git tag v1.2.3  # Use semantic versioning
+git push origin v1.2.3
+
+# 3. Create GitHub release (optional but recommended)
+gh release create v1.2.3 --generate-notes
+```
+
+**Version Formats:**
+- Released versions: `1.2.3` (from Git tags like `v1.2.3`)
+- Development versions: `1.2.4.dev5+g1a2b3c4` (auto-generated from commits)
+
+The package version is automatically determined from Git history using `hatch-vcs`.
+
+### Pre-commit Hooks
+
+This project uses pre-commit for code quality:
+
+```bash
+# Install hooks (one time setup)
+uv run pre-commit install
+
+# Run manually
+uv run pre-commit run --all-files
+```
 
 ## Links
 - [Aiera REST Documentation](https://rest.aiera.com)
@@ -365,7 +409,7 @@ For detailed testing instructions, see [INTEGRATION_TESTING.md](INTEGRATION_TEST
 
 ## Privacy Policy
 
-This MCP server interacts with Aiera's API to fetch relevant financial data. 
+This MCP server interacts with Aiera's API to fetch relevant financial data.
 All data requests are subject to Aiera's privacy policy and terms of service, and require an active account.
 
 - **Aiera Privacy Policy**: https://aiera.com/privacy-policy/

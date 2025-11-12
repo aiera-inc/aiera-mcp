@@ -8,8 +8,12 @@ from datetime import datetime
 from pydantic import ValidationError
 
 from aiera_mcp.tools.common.models import (
-    CitationInfo, BaseAieraResponse, PaginatedResponse,
-    BaseAieraArgs, EmptyArgs, SearchArgs
+    CitationInfo,
+    BaseAieraResponse,
+    PaginatedResponse,
+    BaseAieraArgs,
+    EmptyArgs,
+    SearchArgs,
 )
 
 
@@ -23,7 +27,7 @@ class TestCitationInfo:
             "title": "Test Citation",
             "url": "https://example.com/document",
             "timestamp": datetime(2024, 1, 15, 14, 30, 0),
-            "source": "Test Source"
+            "source": "Test Source",
         }
 
         citation = CitationInfo(**citation_data)
@@ -50,7 +54,7 @@ class TestCitationInfo:
             title="Test Citation",
             url="https://example.com",
             timestamp=test_datetime,
-            source="Test Source"
+            source="Test Source",
         )
 
         # Test model_dump serialization
@@ -66,7 +70,7 @@ class TestCitationInfo:
             title="Test Citation",
             url="https://example.com",
             timestamp=None,
-            source="Test Source"
+            source="Test Source",
         )
 
         # Test model_dump serialization
@@ -83,7 +87,7 @@ class TestCitationInfo:
             title="JSON Test Citation",
             url="https://example.com/json",
             timestamp=test_datetime,
-            source="JSON Test"
+            source="JSON Test",
         )
 
         # Test full JSON serialization
@@ -133,14 +137,10 @@ class TestBaseModels:
         """Test BaseAieraResponse model."""
         test_datetime = datetime(2024, 1, 15, 14, 30, 0)
 
-        citation = CitationInfo(
-            title="Response Citation",
-            timestamp=test_datetime
-        )
+        citation = CitationInfo(title="Response Citation", timestamp=test_datetime)
 
         response = BaseAieraResponse(
-            instructions=["Test instruction"],
-            citation_information=[citation]
+            instructions=["Test instruction"], citation_information=[citation]
         )
 
         assert response.instructions == ["Test instruction"]
@@ -161,17 +161,14 @@ class TestBaseModels:
         """Test PaginatedResponse model."""
         test_datetime = datetime(2024, 1, 15, 14, 30, 0)
 
-        citation = CitationInfo(
-            title="Paginated Citation",
-            timestamp=test_datetime
-        )
+        citation = CitationInfo(title="Paginated Citation", timestamp=test_datetime)
 
         response = PaginatedResponse(
             total=100,
             page=2,
             page_size=25,
             instructions=["Paginated results"],
-            citation_information=[citation]
+            citation_information=[citation],
         )
 
         assert response.total == 100
@@ -205,8 +202,7 @@ class TestCommonModelValidation:
 
         # Valid URL formats (basic test)
         citation = CitationInfo(
-            title="URL Test",
-            url="https://example.com/path/to/document"
+            title="URL Test", url="https://example.com/path/to/document"
         )
         assert citation.url == "https://example.com/path/to/document"
 
@@ -221,8 +217,7 @@ class TestCommonModelValidation:
 
         for test_dt in formats_to_test:
             citation = CitationInfo(
-                title=f"DateTime Test {test_dt.isoformat()}",
-                timestamp=test_dt
+                title=f"DateTime Test {test_dt.isoformat()}", timestamp=test_dt
             )
 
             serialized = citation.model_dump()

@@ -3,14 +3,19 @@
 """SEC filing tools for Aiera MCP."""
 
 import logging
-from typing import Any, Dict
-from datetime import datetime, date
+from datetime import datetime
 
 from ..base import get_http_client, get_api_key_from_context, make_aiera_request
 from .models import (
-    FindFilingsArgs, GetFilingArgs,
-    FindFilingsResponse, GetFilingResponse,
-    FilingItem, FilingDetails, FilingSummary, CitationInfo, EquityInfo
+    FindFilingsArgs,
+    GetFilingArgs,
+    FindFilingsResponse,
+    GetFilingResponse,
+    FilingItem,
+    FilingDetails,
+    FilingSummary,
+    CitationInfo,
+    EquityInfo,
 )
 
 # Setup logging
@@ -49,31 +54,41 @@ async def find_filings(args: FindFilingsArgs) -> FindFilingsResponse:
 
             try:
                 if filing_data.get("filing_date"):
-                    filing_date = datetime.fromisoformat(filing_data["filing_date"].replace("Z", "+00:00")).date()
+                    filing_date = datetime.fromisoformat(
+                        filing_data["filing_date"].replace("Z", "+00:00")
+                    ).date()
             except (ValueError, AttributeError):
                 pass
 
             try:
                 if filing_data.get("period_end_date"):
-                    period_end_date = datetime.fromisoformat(filing_data["period_end_date"].replace("Z", "+00:00")).date()
+                    period_end_date = datetime.fromisoformat(
+                        filing_data["period_end_date"].replace("Z", "+00:00")
+                    ).date()
             except (ValueError, AttributeError):
                 pass
 
             try:
                 if filing_data.get("release_date"):
-                    release_date = datetime.fromisoformat(filing_data["release_date"].replace("Z", "+00:00")).date()
+                    release_date = datetime.fromisoformat(
+                        filing_data["release_date"].replace("Z", "+00:00")
+                    ).date()
             except (ValueError, AttributeError):
                 pass
 
             try:
                 if filing_data.get("arrival_date"):
-                    arrival_date = datetime.fromisoformat(filing_data["arrival_date"].replace("Z", "+00:00")).date()
+                    arrival_date = datetime.fromisoformat(
+                        filing_data["arrival_date"].replace("Z", "+00:00")
+                    ).date()
             except (ValueError, AttributeError):
                 pass
 
             try:
                 if filing_data.get("pulled_date"):
-                    pulled_date = datetime.fromisoformat(filing_data["pulled_date"].replace("Z", "+00:00")).date()
+                    pulled_date = datetime.fromisoformat(
+                        filing_data["pulled_date"].replace("Z", "+00:00")
+                    ).date()
             except (ValueError, AttributeError):
                 pass
 
@@ -83,8 +98,10 @@ async def find_filings(args: FindFilingsArgs) -> FindFilingsResponse:
                 equity_data = filing_data["equity"]
                 if isinstance(equity_data, dict):
                     equity_info = {
-                        "company_name": equity_data.get("name") or equity_data.get("company_name"),
-                        "ticker": equity_data.get("bloomberg_ticker") or equity_data.get("ticker")
+                        "company_name": equity_data.get("name")
+                        or equity_data.get("company_name"),
+                        "ticker": equity_data.get("bloomberg_ticker")
+                        or equity_data.get("ticker"),
                     }
 
             # Create new filing structure matching the actual response
@@ -104,7 +121,7 @@ async def find_filings(args: FindFilingsArgs) -> FindFilingsResponse:
                 "pulled_date": pulled_date,
                 "json_synced": filing_data.get("json_synced"),
                 "datafiles_synced": filing_data.get("datafiles_synced"),
-                "summary": filing_data.get("summary")
+                "summary": filing_data.get("summary"),
             }
             filings_data.append(parsed_filing)
 
@@ -117,11 +134,7 @@ async def find_filings(args: FindFilingsArgs) -> FindFilingsResponse:
         logger.warning(f"Failed to parse API response: {e}")
         # Return empty response for malformed data
         return FindFilingsResponse(
-            instructions=[],
-            response={
-                "data": [],
-                "pagination": None
-            }
+            instructions=[], response={"data": [], "pagination": None}
         )
 
 
@@ -137,8 +150,8 @@ async def get_filing(args: GetFilingArgs) -> GetFilingResponse:
     params["include_content"] = "true"
 
     # Handle special field mapping: filing_id -> filing_ids
-    if 'filing_id' in params:
-        params['filing_ids'] = str(params.pop('filing_id'))
+    if "filing_id" in params:
+        params["filing_ids"] = str(params.pop("filing_id"))
 
     raw_response = await make_aiera_request(
         client=client,
@@ -171,23 +184,31 @@ async def get_filing(args: GetFilingArgs) -> GetFilingResponse:
 
     try:
         if filing_data.get("filing_date"):
-            filing_date = datetime.fromisoformat(filing_data["filing_date"].replace("Z", "+00:00")).date()
+            filing_date = datetime.fromisoformat(
+                filing_data["filing_date"].replace("Z", "+00:00")
+            ).date()
     except (ValueError, AttributeError):
         pass
 
     try:
         if filing_data.get("period_end_date"):
-            period_end_date = datetime.fromisoformat(filing_data["period_end_date"].replace("Z", "+00:00")).date()
+            period_end_date = datetime.fromisoformat(
+                filing_data["period_end_date"].replace("Z", "+00:00")
+            ).date()
     except (ValueError, AttributeError):
         pass
 
     # Build filing summary
     summary = None
-    if filing_data.get("summary") or filing_data.get("key_points") or filing_data.get("financial_highlights"):
+    if (
+        filing_data.get("summary")
+        or filing_data.get("key_points")
+        or filing_data.get("financial_highlights")
+    ):
         summary = FilingSummary(
             summary=filing_data.get("summary"),
             key_points=filing_data.get("key_points", []),
-            financial_highlights=filing_data.get("financial_highlights", {})
+            financial_highlights=filing_data.get("financial_highlights", {}),
         )
 
     # Build detailed filing
@@ -199,30 +220,40 @@ async def get_filing(args: GetFilingArgs) -> GetFilingResponse:
         filing_date=filing_date,
         period_end_date=period_end_date,
         is_amendment=filing_data.get("is_amendment", 0),
-        equity=EquityInfo(
-            company_name=equity_data.get("company_name", ""),
-            ticker=equity_data.get("ticker", "")
-        ) if equity_data else None,
+        equity=(
+            EquityInfo(
+                company_name=equity_data.get("company_name", ""),
+                ticker=equity_data.get("ticker", ""),
+            )
+            if equity_data
+            else None
+        ),
         form_number=filing_data.get("form_number", ""),
         form_name=filing_data.get("form_name", ""),
         summary=summary,
         content_preview=filing_data.get("content_preview"),
-        document_count=filing_data.get("document_count", 1)
+        document_count=filing_data.get("document_count", 1),
     )
 
     # Build citation
     citations = []
     if filing_data.get("official_url"):
-        citations.append(CitationInfo(
-            title=f"{filing_data.get('company_name', '')} {filing_data.get('form_type', '')} Filing",
-            url=filing_data.get("official_url"),
-            timestamp=datetime.combine(filing_date, datetime.min.time()) if filing_date else None
-        ))
+        citations.append(
+            CitationInfo(
+                title=f"{filing_data.get('company_name', '')} {filing_data.get('form_type', '')} Filing",
+                url=filing_data.get("official_url"),
+                timestamp=(
+                    datetime.combine(filing_date, datetime.min.time())
+                    if filing_date
+                    else None
+                ),
+            )
+        )
 
     return GetFilingResponse(
         filing=filing_details,
         instructions=raw_response.get("instructions", []),
-        citation_information=citations
+        citation_information=citations,
     )
 
 

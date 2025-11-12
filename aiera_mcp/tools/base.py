@@ -7,7 +7,6 @@ import httpx
 import logging
 import contextvars
 from typing import Any, Dict, Optional
-from datetime import datetime
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -17,7 +16,7 @@ AIERA_BASE_URL = "https://premium.aiera.com/api"
 DEFAULT_HEADERS = {
     "Content-Type": "application/json",
     "User-Agent": "Aiera-MCP/1.0.0",
-    "X-MCP-Origin": "local_mcp"
+    "X-MCP-Origin": "local_mcp",
 }
 
 # Citation prompt for UI clients
@@ -47,7 +46,9 @@ def get_lambda_http_client() -> httpx.AsyncClient:
     if _lambda_http_client is None:
         # Configure client with connection pooling and timeouts
         _lambda_http_client = httpx.AsyncClient(
-            limits=httpx.Limits(max_keepalive_connections=10, max_connections=20, keepalive_expiry=30.0),
+            limits=httpx.Limits(
+                max_keepalive_connections=10, max_connections=20, keepalive_expiry=30.0
+            ),
             timeout=httpx.Timeout(30.0),
             follow_redirects=True,
         )
@@ -59,7 +60,9 @@ async def get_http_client(ctx) -> httpx.AsyncClient:
     """Get HTTP client from context."""
     # Try to get client from lifespan context first
     try:
-        if hasattr(ctx, "request_context") and hasattr(ctx.request_context, "lifespan_context"):
+        if hasattr(ctx, "request_context") and hasattr(
+            ctx.request_context, "lifespan_context"
+        ):
             client = ctx.request_context.lifespan_context.get("http_client")
             if client:
                 return client
@@ -79,11 +82,13 @@ async def get_api_key_from_context(ctx) -> str:
     # Check if API key is already stored in context variable
     try:
         from .. import get_api_key
+
         api_key = get_api_key()
     except ImportError:
         # Fallback for standalone usage
         def get_api_key() -> Optional[str]:
             return os.getenv("AIERA_API_KEY")
+
         api_key = get_api_key()
 
     # If API key already set (e.g., from query parameter or OAuth), use it
@@ -96,18 +101,23 @@ async def get_api_key_from_context(ctx) -> str:
         # Try to import and use OAuth authentication
         try:
             from ..auth import validate_auth_context, get_current_api_key
+
             await validate_auth_context(ctx)
             api_key = get_current_api_key()
 
             if not api_key:
                 # This is the critical issue - if OAuth succeeds but no API key found,
                 # we should NOT fall back to environment variables
-                logger.error("OAuth authentication succeeded but no API key found in user claims")
+                logger.error(
+                    "OAuth authentication succeeded but no API key found in user claims"
+                )
                 raise ValueError("No API key found in authenticated user claims")
 
         except ImportError:
             # OAuth not available, fall back to environment variable
-            logger.debug("OAuth authentication not available, using environment variable")
+            logger.debug(
+                "OAuth authentication not available, using environment variable"
+            )
             api_key = os.getenv("AIERA_API_KEY")
 
     except Exception as e:
@@ -117,7 +127,9 @@ async def get_api_key_from_context(ctx) -> str:
         # This should only be used as absolute last resort
         if os.getenv("AWS_LAMBDA_FUNCTION_NAME") and os.getenv("AIERA_API_KEY"):
             logger.warning("Using Lambda environment API key as emergency fallback")
-            logger.warning("This should only happen during Lambda cold starts or system issues")
+            logger.warning(
+                "This should only happen during Lambda cold starts or system issues"
+            )
 
             api_key = os.getenv("AIERA_API_KEY")
 
@@ -200,9 +212,13 @@ async def make_aiera_request(
             )
         # For 504 Gateway Timeout, provide a more informative message
         elif response.status_code == 504:
-            raise Exception(f"API request timed out (504). The API endpoint may be experiencing heavy load. Please retry in a moment.")
+            raise Exception(
+                f"API request timed out (504). The API endpoint may be experiencing heavy load. Please retry in a moment."
+            )
         else:
-            raise Exception(f"API request failed: {response.status_code} - {response.text}")
+            raise Exception(
+                f"API request failed: {response.status_code} - {response.text}"
+            )
 
     if return_type == "json":
         response_data = response.json()
@@ -222,5 +238,3 @@ async def make_aiera_request(
         "instructions": instructions,
         "response": response_data,
     }
-
-

@@ -3,7 +3,6 @@
 """Aiera MCP Tools package."""
 
 import logging
-from typing import List
 
 from .registry import (
     TOOL_REGISTRY,
@@ -25,7 +24,7 @@ __all__ = [
     "get_tools_by_category",
     "get_tools_by_read_only",
     "get_destructive_tools",
-    "TOOL_REGISTRY"
+    "TOOL_REGISTRY",
 ]
 
 # Note: Tool registration is now handled directly in server.py

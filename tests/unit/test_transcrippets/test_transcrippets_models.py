@@ -7,9 +7,13 @@ from datetime import datetime
 from pydantic import ValidationError
 
 from aiera_mcp.tools.transcrippets.models import (
-    FindTranscrippetsArgs, CreateTranscrippetArgs, DeleteTranscrippetArgs,
-    FindTranscrippetsResponse, CreateTranscrippetResponse, DeleteTranscrippetResponse,
-    TranscrippetItem
+    FindTranscrippetsArgs,
+    CreateTranscrippetArgs,
+    DeleteTranscrippetArgs,
+    FindTranscrippetsResponse,
+    CreateTranscrippetResponse,
+    DeleteTranscrippetResponse,
+    TranscrippetItem,
 )
 from aiera_mcp.tools.common.models import CitationInfo
 
@@ -42,7 +46,7 @@ class TestTranscrippetsModels:
             "transcrippet_guid": "guid-123-456",
             "transcription_audio_offset_seconds": 30,
             "trimmed_audio_url": "https://example.com/audio/trans123_trimmed.mp3",
-            "word_durations_ms": [500, 300, 400, 600, 350, 800, 200, 450]
+            "word_durations_ms": [500, 300, 400, 600, 350, 800, 200, 450],
         }
 
         transcrippet = TranscrippetItem(**transcrippet_data)
@@ -50,7 +54,10 @@ class TestTranscrippetsModels:
         assert transcrippet.transcrippet_id == 123
         assert transcrippet.company_name == "Apple Inc"
         assert transcrippet.event_title == "Q4 2023 Earnings Call"
-        assert transcrippet.transcript == "I'm pleased to report that Q4 was another strong quarter..."
+        assert (
+            transcrippet.transcript
+            == "I'm pleased to report that Q4 was another strong quarter..."
+        )
         assert transcrippet.transcrippet_guid == "guid-123-456"
         assert transcrippet.created == "2023-10-26T22:00:00Z"
 
@@ -58,7 +65,7 @@ class TestTranscrippetsModels:
         """Test TranscrippetItem requires all fields for API-matching structure."""
         minimal_data = {
             "transcrippet_id": 123,
-            "company_id": 456
+            "company_id": 456,
             # Missing other required fields
         }
 
@@ -93,7 +100,7 @@ class TestTranscrippetsModels:
             "word_durations_ms": [500, 300, 400, 600, 350, 800, 200, 450],
             "speaker_name": "Tim Cook",
             "speaker_title": "Chief Executive Officer",
-            "public_url": "https://public.aiera.com/shared/transcrippet.html?id=guid-123-456"
+            "public_url": "https://public.aiera.com/shared/transcrippet.html?id=guid-123-456",
         }
 
         item = TranscrippetItem(**item_data)
@@ -102,14 +109,20 @@ class TestTranscrippetsModels:
         assert item.transcrippet_id == 123
         assert item.company_name == "Apple Inc"
         assert item.event_title == "Q4 2023 Earnings Call"
-        assert item.transcript == "I'm pleased to report that Q4 was another strong quarter..."
+        assert (
+            item.transcript
+            == "I'm pleased to report that Q4 was another strong quarter..."
+        )
 
         # Test speaker fields
         assert item.speaker_name == "Tim Cook"
         assert item.speaker_title == "Chief Executive Officer"
 
         # Test public URL field
-        assert item.public_url == "https://public.aiera.com/shared/transcrippet.html?id=guid-123-456"
+        assert (
+            item.public_url
+            == "https://public.aiera.com/shared/transcrippet.html?id=guid-123-456"
+        )
 
 
 @pytest.mark.unit
@@ -125,7 +138,7 @@ class TestFindTranscrippetsArgs:
             speaker_id="speaker456",
             transcript_item_id="item789",
             created_start_date="2023-10-01",
-            created_end_date="2023-10-31"
+            created_end_date="2023-10-31",
         )
 
         assert args.transcrippet_id == "trans123,trans456"
@@ -152,8 +165,7 @@ class TestFindTranscrippetsArgs:
         """Test date format validation."""
         # Valid date format
         args = FindTranscrippetsArgs(
-            created_start_date="2023-10-01",
-            created_end_date="2023-10-31"
+            created_start_date="2023-10-01", created_end_date="2023-10-31"
         )
         assert args.created_start_date == "2023-10-01"
         assert args.created_end_date == "2023-10-31"
@@ -175,7 +187,7 @@ class TestFindTranscrippetsArgs:
         args = FindTranscrippetsArgs(
             transcrippet_id="123, 456, 789",  # With spaces
             event_id="event1,event2",
-            equity_id="eq1"
+            equity_id="eq1",
         )
 
         # Check if ID format correction is applied
@@ -195,7 +207,7 @@ class TestCreateTranscrippetArgs:
             transcript_item_id=789,
             transcript_item_offset=0,
             transcript_end_item_id=790,
-            transcript_end_item_offset=100
+            transcript_end_item_offset=100,
         )
 
         assert args.event_id == 12345
@@ -213,7 +225,7 @@ class TestCreateTranscrippetArgs:
             transcript_item_id=789,
             transcript_item_offset=0,
             transcript_end_item_id=790,
-            transcript_end_item_offset=100
+            transcript_end_item_offset=100,
         )
 
         assert args.event_id == 12345
@@ -228,7 +240,7 @@ class TestCreateTranscrippetArgs:
             transcript_item_id=789,
             transcript_item_offset=0,
             transcript_end_item_id=790,
-            transcript_end_item_offset=100
+            transcript_end_item_offset=100,
         )
         assert args.transcript_item_offset == 0
         assert args.transcript_end_item_offset == 100
@@ -241,7 +253,7 @@ class TestCreateTranscrippetArgs:
                 transcript_item_id=789,
                 transcript_item_offset=-1,  # Invalid: must be >= 0
                 transcript_end_item_id=790,
-                transcript_end_item_offset=100
+                transcript_end_item_offset=100,
             )
 
         with pytest.raises(ValidationError):
@@ -251,7 +263,7 @@ class TestCreateTranscrippetArgs:
                 transcript_item_id=789,
                 transcript_item_offset=0,
                 transcript_end_item_id=790,
-                transcript_end_item_offset=-1  # Invalid: must be >= 0
+                transcript_end_item_offset=-1,  # Invalid: must be >= 0
             )
 
     def test_create_transcrippet_args_missing_required_fields(self):
@@ -263,7 +275,7 @@ class TestCreateTranscrippetArgs:
                 transcript_item_id=789,
                 transcript_item_offset=0,
                 transcript_end_item_id=790,
-                transcript_end_item_offset=100
+                transcript_end_item_offset=100,
             )
 
         # Missing transcript
@@ -273,7 +285,7 @@ class TestCreateTranscrippetArgs:
                 transcript_item_id=789,
                 transcript_item_offset=0,
                 transcript_end_item_id=790,
-                transcript_end_item_offset=100
+                transcript_end_item_offset=100,
             )
 
 
@@ -321,7 +333,7 @@ class TestTranscrippetsResponses:
                 transcrippet_guid="guid-123-456",
                 transcription_audio_offset_seconds=30,
                 trimmed_audio_url="https://example.com/audio/trans123_trimmed.mp3",
-                word_durations_ms=[500, 300, 400, 600, 350, 800, 200, 450]
+                word_durations_ms=[500, 300, 400, 600, 350, 800, 200, 450],
             )
         ]
 
@@ -329,14 +341,14 @@ class TestTranscrippetsResponses:
             CitationInfo(
                 title="Test Citation",
                 url="https://example.com",
-                timestamp=datetime(2023, 10, 26, 22, 0, 0)
+                timestamp=datetime(2023, 10, 26, 22, 0, 0),
             )
         ]
 
         response = FindTranscrippetsResponse(
             response=transcrippets,
             instructions=["Test instruction"],
-            citation_information=citations
+            citation_information=citations,
         )
 
         assert len(response.response) == 1
@@ -370,13 +382,13 @@ class TestTranscrippetsResponses:
             word_durations_ms=[600, 400, 500, 700, 350, 900, 250, 550],
             speaker_name="Tim Cook",
             speaker_title="Chief Executive Officer",
-            public_url="https://public.aiera.com/shared/transcrippet.html?id=guid-456-789"
+            public_url="https://public.aiera.com/shared/transcrippet.html?id=guid-456-789",
         )
 
         response = CreateTranscrippetResponse(
             response=transcrippet_item,
             instructions=["Test instruction"],
-            citation_information=[]
+            citation_information=[],
         )
 
         assert isinstance(response.response, TranscrippetItem)
@@ -390,7 +402,7 @@ class TestTranscrippetsResponses:
             success=True,
             message="Transcrippet deleted successfully",
             instructions=["Deletion completed"],
-            citation_information=[]
+            citation_information=[],
         )
 
         assert response.success is True
@@ -402,7 +414,7 @@ class TestTranscrippetsResponses:
             success=False,
             message="Transcrippet not found",
             instructions=[],
-            citation_information=[]
+            citation_information=[],
         )
 
         assert failed_response.success is False
@@ -419,7 +431,7 @@ class TestTranscrippetsModelValidation:
             transcrippet_id="trans123,trans456",
             event_id="event789",
             created_start_date="2023-10-01",
-            created_end_date="2023-10-31"
+            created_end_date="2023-10-31",
         )
 
         # Serialize to dict
@@ -465,7 +477,6 @@ class TestTranscrippetsModelValidation:
         assert "transcript_end_item_id" in required_fields
         assert "transcript_end_item_offset" in required_fields
 
-
     def test_datetime_field_handling(self):
         """Test datetime field handling in API structure."""
         # Create full transcrippet with datetime string fields
@@ -491,7 +502,7 @@ class TestTranscrippetsModelValidation:
             "transcrippet_guid": "guid-123-456",
             "transcription_audio_offset_seconds": 30,
             "trimmed_audio_url": "https://example.com/audio/trans123_trimmed.mp3",
-            "word_durations_ms": [500, 300, 400]
+            "word_durations_ms": [500, 300, 400],
         }
 
         transcrippet = TranscrippetItem(**transcrippet_data)
@@ -508,7 +519,7 @@ class TestTranscrippetsModelValidation:
         with pytest.raises(Exception):  # Pydantic ValidationError
             TranscrippetItem(
                 transcrippet_id=123,
-                company_id=456
+                company_id=456,
                 # Missing other required API fields
             )
 
@@ -536,7 +547,7 @@ class TestTranscrippetsModelValidation:
                 transcrippet_guid="guid-123-456",
                 transcription_audio_offset_seconds=30,
                 trimmed_audio_url="https://example.com/audio/trans123_trimmed.mp3",
-                word_durations_ms=[500, 300, 400]
+                word_durations_ms=[500, 300, 400],
             )
 
     def test_transcrippet_item_transcript_field(self):
@@ -567,11 +578,14 @@ class TestTranscrippetsModelValidation:
             "word_durations_ms": [500, 300, 400],
             "speaker_name": "Spencer Adam Neumann",
             "speaker_title": "Chief Financial Officer",
-            "public_url": "https://public.aiera.com/shared/transcrippet.html?id=guid-123-456"
+            "public_url": "https://public.aiera.com/shared/transcrippet.html?id=guid-123-456",
         }
 
         item = TranscrippetItem(**item_data)
-        assert item.transcript == "Sure, I'll take that one. I think we're a long way from equilibrium."
+        assert (
+            item.transcript
+            == "Sure, I'll take that one. I think we're a long way from equilibrium."
+        )
         assert item.speaker_name == "Spencer Adam Neumann"
         assert item.speaker_title == "Chief Financial Officer"
 
@@ -579,19 +593,41 @@ class TestTranscrippetsModelValidation:
         """Test that the models match expected API structure."""
         # Test that all required fields from API structure are present
         required_fields = [
-            'transcrippet_id', 'company_id', 'equity_id', 'event_id',
-            'transcript_item_id', 'user_id', 'audio_url', 'company_name',
-            'company_ticker', 'created', 'end_ms', 'event_date', 'event_title',
-            'event_type', 'modified', 'start_ms', 'transcript', 'transcrippet_guid',
-            'transcription_audio_offset_seconds', 'trimmed_audio_url', 'word_durations_ms'
+            "transcrippet_id",
+            "company_id",
+            "equity_id",
+            "event_id",
+            "transcript_item_id",
+            "user_id",
+            "audio_url",
+            "company_name",
+            "company_ticker",
+            "created",
+            "end_ms",
+            "event_date",
+            "event_title",
+            "event_type",
+            "modified",
+            "start_ms",
+            "transcript",
+            "transcrippet_guid",
+            "transcription_audio_offset_seconds",
+            "trimmed_audio_url",
+            "word_durations_ms",
         ]
 
         # Verify all required fields exist in the model schema
         schema = TranscrippetItem.model_json_schema()
-        properties = schema.get('properties', {})
-        required = schema.get('required', [])
+        properties = schema.get("properties", {})
+        required = schema.get("required", [])
 
         for field in required_fields:
-            assert field in properties, f"Field {field} missing from TranscrippetItem schema"
-            if field in ['transcrippet_id', 'company_id', 'equity_id']:  # Key fields should be required
+            assert (
+                field in properties
+            ), f"Field {field} missing from TranscrippetItem schema"
+            if field in [
+                "transcrippet_id",
+                "company_id",
+                "equity_id",
+            ]:  # Key fields should be required
                 assert field in required, f"Field {field} should be required"

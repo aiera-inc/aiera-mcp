@@ -1,0 +1,44 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-merge-conflict
+      - id: debug-statements
+
+  - repo: https://github.com/psf/black
+    rev: 25.1.0
+    hooks:
+      - id: black
+        language_version: python3.12
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.1.1
+    hooks:
+      - id: flake8
+        args: ['--select=F402,F404,F812,F823,F831,F821,F822,E112,E113,E901,E902,E999', '--ignore=G001,G002,G003']
+
+  - repo: https://github.com/returntocorp/semgrep
+    rev: v1.107.0
+    hooks:
+      - id: semgrep
+        types: [python]
+        args: ['-f', 'semgrep.yml', '--error']
+
+  - repo: https://github.com/hadialqattan/pycln
+    rev: v2.5.0
+    hooks:
+      - id: pycln
+        args: [--config=pyproject.toml]
+
+  - repo: local
+    hooks:
+      - id: pytest-cov
+        name: pytest-cov
+        entry: poetry run pytest --cov=aiera_mcp --cov-report=term-missing
+        verbose: true
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [ pre-push ]

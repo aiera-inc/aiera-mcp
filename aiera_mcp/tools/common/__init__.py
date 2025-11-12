@@ -7,10 +7,8 @@ from .models import (
     BaseAieraArgs,
     BaseAieraResponse,
     PaginatedResponse,
-
     # Common models
     CitationInfo,
-
     # Common argument types
     EmptyArgs,
     SearchArgs,

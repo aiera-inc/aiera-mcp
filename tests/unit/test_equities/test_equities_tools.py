@@ -4,22 +4,38 @@
 
 import pytest
 import pytest_asyncio
-from datetime import datetime
 from unittest.mock import AsyncMock
 
 from aiera_mcp.tools.equities.tools import (
-    find_equities, get_equity_summaries, get_sectors_and_subsectors,
-    get_available_indexes, get_index_constituents,
-    get_available_watchlists, get_watchlist_constituents
+    find_equities,
+    get_equity_summaries,
+    get_sectors_and_subsectors,
+    get_available_indexes,
+    get_index_constituents,
+    get_available_watchlists,
+    get_watchlist_constituents,
 )
 from aiera_mcp.tools.equities.models import (
-    FindEquitiesArgs, GetEquitySummariesArgs, GetIndexConstituentsArgs,
-    GetWatchlistConstituentsArgs, EmptyArgs, SearchArgs,
-    FindEquitiesResponse, GetEquitySummariesResponse, GetSectorsSubsectorsResponse,
-    GetAvailableIndexesResponse, GetIndexConstituentsResponse,
-    GetAvailableWatchlistsResponse, GetWatchlistConstituentsResponse,
-    EquityItem, EquityDetails, EquitySummary, EquitySummaryItem, SectorSubsector,
-    IndexItem, WatchlistItem
+    FindEquitiesArgs,
+    GetEquitySummariesArgs,
+    GetIndexConstituentsArgs,
+    GetWatchlistConstituentsArgs,
+    EmptyArgs,
+    SearchArgs,
+    FindEquitiesResponse,
+    GetEquitySummariesResponse,
+    GetSectorsSubsectorsResponse,
+    GetAvailableIndexesResponse,
+    GetIndexConstituentsResponse,
+    GetAvailableWatchlistsResponse,
+    GetWatchlistConstituentsResponse,
+    EquityItem,
+    EquityDetails,
+    EquitySummary,
+    EquitySummaryItem,
+    SectorSubsector,
+    IndexItem,
+    WatchlistItem,
 )
 
 
@@ -28,16 +44,16 @@ class TestFindEquities:
     """Test the find_equities tool."""
 
     @pytest.mark.asyncio
-    async def test_find_equities_success(self, mock_http_dependencies, equities_api_responses):
+    async def test_find_equities_success(
+        self, mock_http_dependencies, equities_api_responses
+    ):
         """Test successful equities search."""
         # Setup
-        mock_http_dependencies['mock_make_request'].return_value = equities_api_responses["find_equities_success"]
-
-        args = FindEquitiesArgs(
-            bloomberg_ticker="AAPL:US",
-            page=1,
-            page_size=50
+        mock_http_dependencies["mock_make_request"].return_value = (
+            equities_api_responses["find_equities_success"]
         )
+
+        args = FindEquitiesArgs(bloomberg_ticker="AAPL:US", page=1, page_size=50)
 
         # Execute
         result = await find_equities(args)
@@ -57,25 +73,22 @@ class TestFindEquities:
         assert first_equity.subsector_id == 10
 
         # Check API call was made correctly
-        mock_http_dependencies['mock_make_request'].assert_called_once()
-        call_args = mock_http_dependencies['mock_make_request'].call_args
-        assert call_args[1]['method'] == "GET"
-        assert call_args[1]['endpoint'] == "/chat-support/find-equities"
+        mock_http_dependencies["mock_make_request"].assert_called_once()
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        assert call_args[1]["method"] == "GET"
+        assert call_args[1]["endpoint"] == "/chat-support/find-equities"
 
         # Check parameters were passed correctly
-        params = call_args[1]['params']
-        assert params['bloomberg_ticker'] == "AAPL:US"
-        assert params['include_company_metadata'] == "true"
+        params = call_args[1]["params"]
+        assert params["bloomberg_ticker"] == "AAPL:US"
+        assert params["include_company_metadata"] == "true"
 
     @pytest.mark.asyncio
     async def test_find_equities_empty_results(self, mock_http_dependencies):
         """Test find_equities with empty results."""
         # Setup
-        empty_response = {
-            "response": {"data": [], "total": 0},
-            "instructions": []
-        }
-        mock_http_dependencies['mock_make_request'].return_value = empty_response
+        empty_response = {"response": {"data": [], "total": 0}, "instructions": []}
+        mock_http_dependencies["mock_make_request"].return_value = empty_response
 
         args = FindEquitiesArgs(search="nonexistent")
 
@@ -87,17 +100,28 @@ class TestFindEquities:
         assert len(result.response.data) == 0
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("identifier_type,identifier_value", [
-        ("bloomberg_ticker", "AAPL:US"),
-        ("ticker", "AAPL"),
-        ("isin", "US0378331005"),
-        ("ric", "AAPL.O"),
-        ("permid", "4295905573")
-    ])
-    async def test_find_equities_different_identifiers(self, mock_http_dependencies, equities_api_responses, identifier_type, identifier_value):
+    @pytest.mark.parametrize(
+        "identifier_type,identifier_value",
+        [
+            ("bloomberg_ticker", "AAPL:US"),
+            ("ticker", "AAPL"),
+            ("isin", "US0378331005"),
+            ("ric", "AAPL.O"),
+            ("permid", "4295905573"),
+        ],
+    )
+    async def test_find_equities_different_identifiers(
+        self,
+        mock_http_dependencies,
+        equities_api_responses,
+        identifier_type,
+        identifier_value,
+    ):
         """Test find_equities with different identifier types."""
         # Setup
-        mock_http_dependencies['mock_make_request'].return_value = equities_api_responses["find_equities_success"]
+        mock_http_dependencies["mock_make_request"].return_value = (
+            equities_api_responses["find_equities_success"]
+        )
 
         args_data = {identifier_type: identifier_value}
         args = FindEquitiesArgs(**args_data)
@@ -107,35 +131,39 @@ class TestFindEquities:
 
         # Verify
         assert isinstance(result, FindEquitiesResponse)
-        call_args = mock_http_dependencies['mock_make_request'].call_args
-        assert call_args[1]['params'][identifier_type] == identifier_value
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        assert call_args[1]["params"][identifier_type] == identifier_value
 
     @pytest.mark.asyncio
-    async def test_find_equities_pagination(self, mock_http_dependencies, equities_api_responses):
+    async def test_find_equities_pagination(
+        self, mock_http_dependencies, equities_api_responses
+    ):
         """Test find_equities with pagination parameters."""
         # Setup
-        mock_http_dependencies['mock_make_request'].return_value = equities_api_responses["find_equities_success"]
-
-        args = FindEquitiesArgs(
-            search="tech",
-            page=2,
-            page_size=25
+        mock_http_dependencies["mock_make_request"].return_value = (
+            equities_api_responses["find_equities_success"]
         )
+
+        args = FindEquitiesArgs(search="tech", page=2, page_size=25)
 
         # Execute
         result = await find_equities(args)
 
         # Verify API call parameters
-        call_args = mock_http_dependencies['mock_make_request'].call_args
-        params = call_args[1]['params']
-        assert params['page'] == "2"  # Should be serialized as string
-        assert params['page_size'] == "25"
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        params = call_args[1]["params"]
+        assert params["page"] == "2"  # Should be serialized as string
+        assert params["page_size"] == "25"
 
     @pytest.mark.asyncio
-    async def test_find_equities_citations_generated(self, mock_http_dependencies, equities_api_responses):
+    async def test_find_equities_citations_generated(
+        self, mock_http_dependencies, equities_api_responses
+    ):
         """Test that find_equities generates proper citations."""
         # Setup
-        mock_http_dependencies['mock_make_request'].return_value = equities_api_responses["find_equities_success"]
+        mock_http_dependencies["mock_make_request"].return_value = (
+            equities_api_responses["find_equities_success"]
+        )
 
         args = FindEquitiesArgs(bloomberg_ticker="AAPL:US")
 
@@ -152,10 +180,14 @@ class TestGetEquitySummaries:
     """Test the get_equity_summaries tool."""
 
     @pytest.mark.asyncio
-    async def test_get_equity_summaries_success(self, mock_http_dependencies, equities_api_responses):
+    async def test_get_equity_summaries_success(
+        self, mock_http_dependencies, equities_api_responses
+    ):
         """Test successful equity summaries retrieval."""
         # Setup
-        mock_http_dependencies['mock_make_request'].return_value = equities_api_responses["get_equity_summaries_success"]
+        mock_http_dependencies["mock_make_request"].return_value = (
+            equities_api_responses["get_equity_summaries_success"]
+        )
 
         args = GetEquitySummariesArgs(bloomberg_ticker="AAPL:US")
 
@@ -187,21 +219,24 @@ class TestGetEquitySummaries:
         assert leader.title == "CEO"
         assert leader.event_count == 15
 
-
         # Check API call parameters
-        call_args = mock_http_dependencies['mock_make_request'].call_args
-        assert call_args[1]['method'] == "GET"
-        assert call_args[1]['endpoint'] == "/chat-support/equity-summaries"
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        assert call_args[1]["method"] == "GET"
+        assert call_args[1]["endpoint"] == "/chat-support/equity-summaries"
 
-        params = call_args[1]['params']
-        assert params['bloomberg_ticker'] == "AAPL:US"
-        assert params['lookback'] == "90"
+        params = call_args[1]["params"]
+        assert params["bloomberg_ticker"] == "AAPL:US"
+        assert params["lookback"] == "90"
 
     @pytest.mark.asyncio
-    async def test_get_equity_summaries_multiple_tickers(self, mock_http_dependencies, equities_api_responses):
+    async def test_get_equity_summaries_multiple_tickers(
+        self, mock_http_dependencies, equities_api_responses
+    ):
         """Test get_equity_summaries with multiple tickers."""
         # Setup
-        mock_http_dependencies['mock_make_request'].return_value = equities_api_responses["get_equity_summaries_success"]
+        mock_http_dependencies["mock_make_request"].return_value = (
+            equities_api_responses["get_equity_summaries_success"]
+        )
 
         args = GetEquitySummariesArgs(bloomberg_ticker="AAPL:US,MSFT:US")
 
@@ -209,9 +244,9 @@ class TestGetEquitySummaries:
         result = await get_equity_summaries(args)
 
         # Verify
-        call_args = mock_http_dependencies['mock_make_request'].call_args
-        params = call_args[1]['params']
-        assert params['bloomberg_ticker'] == "AAPL:US,MSFT:US"
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        params = call_args[1]["params"]
+        assert params["bloomberg_ticker"] == "AAPL:US,MSFT:US"
 
     @pytest.mark.asyncio
     async def test_get_equity_summaries_minimal_data(self, mock_http_dependencies):
@@ -227,9 +262,9 @@ class TestGetEquitySummaries:
                     # No summary fields
                 }
             ],
-            "instructions": []
+            "instructions": [],
         }
-        mock_http_dependencies['mock_make_request'].return_value = minimal_response
+        mock_http_dependencies["mock_make_request"].return_value = minimal_response
 
         args = GetEquitySummariesArgs(bloomberg_ticker="TEST:US")
 
@@ -262,20 +297,20 @@ class TestGetSectorsAndSubsectors:
                         {
                             "subsector_id": 1010,
                             "name": "Software",
-                            "gics_code": "45103010"
+                            "gics_code": "45103010",
                         }
-                    ]
+                    ],
                 },
                 {
                     "sector_id": 20,
                     "name": "Healthcare",
                     "gics_code": "35",
-                    "subsectors": []
-                }
+                    "subsectors": [],
+                },
             ],
-            "instructions": []
+            "instructions": [],
         }
-        mock_http_dependencies['mock_make_request'].return_value = sectors_response
+        mock_http_dependencies["mock_make_request"].return_value = sectors_response
 
         args = SearchArgs()
 
@@ -299,7 +334,9 @@ class TestGetSectorsAndSubsectors:
         # Check backward compatibility properties
         assert first_sector.sector_name == "Technology"  # property alias
         assert first_sector.subsector_id == 1010  # property from first subsector
-        assert first_sector.subsector_name == "Software"  # property from first subsector
+        assert (
+            first_sector.subsector_name == "Software"
+        )  # property from first subsector
 
         # Check sector without subsector
         second_sector = result.response[1]
@@ -313,8 +350,8 @@ class TestGetSectorsAndSubsectors:
         assert second_sector.subsector_name is None  # no subsectors
 
         # Check API call
-        call_args = mock_http_dependencies['mock_make_request'].call_args
-        assert call_args[1]['endpoint'] == "/chat-support/get-sectors-and-subsectors"
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        assert call_args[1]["endpoint"] == "/chat-support/get-sectors-and-subsectors"
 
 
 @pytest.mark.unit
@@ -331,18 +368,18 @@ class TestGetAvailableIndexes:
                     "index_id": 3,
                     "name": "S&P 500",
                     "symbol": "SPX",
-                    "short_name": "SP500"
+                    "short_name": "SP500",
                 },
                 {
                     "index_id": 8,
                     "name": "NASDAQ 100",
                     "symbol": "NDX",
-                    "short_name": "NDX"
-                }
+                    "short_name": "NDX",
+                },
             ],
-            "instructions": []
+            "instructions": [],
         }
-        mock_http_dependencies['mock_make_request'].return_value = indexes_response
+        mock_http_dependencies["mock_make_request"].return_value = indexes_response
 
         args = EmptyArgs()
 
@@ -367,8 +404,8 @@ class TestGetAvailableIndexes:
         assert second_index.symbol == "NDX"
 
         # Check API call
-        call_args = mock_http_dependencies['mock_make_request'].call_args
-        assert call_args[1]['endpoint'] == "/chat-support/available-indexes"
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        assert call_args[1]["endpoint"] == "/chat-support/available-indexes"
 
 
 @pytest.mark.unit
@@ -376,10 +413,14 @@ class TestGetIndexConstituents:
     """Test the get_index_constituents tool."""
 
     @pytest.mark.asyncio
-    async def test_get_index_constituents_success(self, mock_http_dependencies, equities_api_responses):
+    async def test_get_index_constituents_success(
+        self, mock_http_dependencies, equities_api_responses
+    ):
         """Test successful index constituents retrieval."""
         # Setup
-        mock_http_dependencies['mock_make_request'].return_value = equities_api_responses["find_equities_success"]
+        mock_http_dependencies["mock_make_request"].return_value = (
+            equities_api_responses["find_equities_success"]
+        )
 
         args = GetIndexConstituentsArgs(index="SP500")
 
@@ -400,20 +441,20 @@ class TestGetIndexConstituents:
         assert constituent.company_name == "Apple Inc"
 
         # Check API call
-        call_args = mock_http_dependencies['mock_make_request'].call_args
-        assert call_args[1]['endpoint'] == "/chat-support/index-constituents/SP500"
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        assert call_args[1]["endpoint"] == "/chat-support/index-constituents/SP500"
 
     @pytest.mark.asyncio
-    async def test_get_index_constituents_pagination(self, mock_http_dependencies, equities_api_responses):
+    async def test_get_index_constituents_pagination(
+        self, mock_http_dependencies, equities_api_responses
+    ):
         """Test index constituents with pagination."""
         # Setup
-        mock_http_dependencies['mock_make_request'].return_value = equities_api_responses["find_equities_success"]
-
-        args = GetIndexConstituentsArgs(
-            index="SP500",
-            page=2,
-            page_size=25
+        mock_http_dependencies["mock_make_request"].return_value = (
+            equities_api_responses["find_equities_success"]
         )
+
+        args = GetIndexConstituentsArgs(index="SP500", page=2, page_size=25)
 
         # Execute
         result = await get_index_constituents(args)
@@ -422,10 +463,10 @@ class TestGetIndexConstituents:
         assert result.page == 2
         assert result.page_size == 25
 
-        call_args = mock_http_dependencies['mock_make_request'].call_args
-        params = call_args[1]['params']
-        assert params['page'] == "2"
-        assert params['page_size'] == "25"
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        params = call_args[1]["params"]
+        assert params["page"] == "2"
+        assert params["page_size"] == "25"
 
 
 @pytest.mark.unit
@@ -442,18 +483,18 @@ class TestGetAvailableWatchlists:
                     "watchlist_id": 2074,
                     "name": "Tech Giants",
                     "description": "Large technology companies",
-                    "type": "watchlist"
+                    "type": "watchlist",
                 },
                 {
                     "watchlist_id": 19269607,
                     "name": "My Watchlist",
-                    "type": "watchlist"
+                    "type": "watchlist",
                     # No description
-                }
+                },
             ],
-            "instructions": []
+            "instructions": [],
         }
-        mock_http_dependencies['mock_make_request'].return_value = watchlists_response
+        mock_http_dependencies["mock_make_request"].return_value = watchlists_response
 
         args = EmptyArgs()
 
@@ -478,8 +519,8 @@ class TestGetAvailableWatchlists:
         assert second_watchlist.description is None
 
         # Check API call
-        call_args = mock_http_dependencies['mock_make_request'].call_args
-        assert call_args[1]['endpoint'] == "/chat-support/available-watchlists"
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        assert call_args[1]["endpoint"] == "/chat-support/available-watchlists"
 
 
 @pytest.mark.unit
@@ -487,12 +528,18 @@ class TestGetWatchlistConstituents:
     """Test the get_watchlist_constituents tool."""
 
     @pytest.mark.asyncio
-    async def test_get_watchlist_constituents_success(self, mock_http_dependencies, equities_api_responses):
+    async def test_get_watchlist_constituents_success(
+        self, mock_http_dependencies, equities_api_responses
+    ):
         """Test successful watchlist constituents retrieval."""
         # Setup - modify response to include metadata
         response_with_metadata = equities_api_responses["find_equities_success"].copy()
-        response_with_metadata["response"]["metadata"] = {"watchlist_name": "Tech Giants"}
-        mock_http_dependencies['mock_make_request'].return_value = response_with_metadata
+        response_with_metadata["response"]["metadata"] = {
+            "watchlist_name": "Tech Giants"
+        }
+        mock_http_dependencies["mock_make_request"].return_value = (
+            response_with_metadata
+        )
 
         args = GetWatchlistConstituentsArgs(watchlist_id="123")
 
@@ -511,14 +558,18 @@ class TestGetWatchlistConstituents:
         assert constituent.company_name == "Apple Inc"
 
         # Check API call
-        call_args = mock_http_dependencies['mock_make_request'].call_args
-        assert call_args[1]['endpoint'] == "/chat-support/watchlist-constituents/123"
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        assert call_args[1]["endpoint"] == "/chat-support/watchlist-constituents/123"
 
     @pytest.mark.asyncio
-    async def test_get_watchlist_constituents_no_metadata(self, mock_http_dependencies, equities_api_responses):
+    async def test_get_watchlist_constituents_no_metadata(
+        self, mock_http_dependencies, equities_api_responses
+    ):
         """Test watchlist constituents without metadata."""
         # Setup
-        mock_http_dependencies['mock_make_request'].return_value = equities_api_responses["find_equities_success"]
+        mock_http_dependencies["mock_make_request"].return_value = (
+            equities_api_responses["find_equities_success"]
+        )
 
         args = GetWatchlistConstituentsArgs(watchlist_id="456")
 
@@ -537,7 +588,9 @@ class TestEquitiesToolsErrorHandling:
     async def test_handle_malformed_response(self, mock_http_dependencies):
         """Test handling of malformed API responses."""
         # Setup - malformed response
-        mock_http_dependencies['mock_make_request'].return_value = {"invalid": "response"}
+        mock_http_dependencies["mock_make_request"].return_value = {
+            "invalid": "response"
+        }
 
         args = FindEquitiesArgs(search="test")
 
@@ -549,13 +602,18 @@ class TestEquitiesToolsErrorHandling:
         assert len(result.response.data) == 0
         assert result.response.pagination is None
 
-
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("exception_type", [ConnectionError, TimeoutError, ValueError])
-    async def test_network_errors_propagate(self, mock_http_dependencies, exception_type):
+    @pytest.mark.parametrize(
+        "exception_type", [ConnectionError, TimeoutError, ValueError]
+    )
+    async def test_network_errors_propagate(
+        self, mock_http_dependencies, exception_type
+    ):
         """Test that network errors are properly propagated."""
         # Setup - make_aiera_request raises exception
-        mock_http_dependencies['mock_make_request'].side_effect = exception_type("Test error")
+        mock_http_dependencies["mock_make_request"].side_effect = exception_type(
+            "Test error"
+        )
 
         args = FindEquitiesArgs(search="test")
 
@@ -572,19 +630,21 @@ class TestEquitiesToolsErrorHandling:
                 {
                     "sector_id": 10,
                     "name": "Technology",
-                    "gics_code": "45"
+                    "gics_code": "45",
                     # Missing subsectors array
                 },
                 {
                     "sector_id": 20,
                     "name": "Healthcare",
                     "gics_code": "35",
-                    "subsectors": []  # Empty subsectors array
-                }
+                    "subsectors": [],  # Empty subsectors array
+                },
             ],
-            "instructions": []
+            "instructions": [],
         }
-        mock_http_dependencies['mock_make_request'].return_value = missing_sector_response
+        mock_http_dependencies["mock_make_request"].return_value = (
+            missing_sector_response
+        )
 
         args = SearchArgs()
 
