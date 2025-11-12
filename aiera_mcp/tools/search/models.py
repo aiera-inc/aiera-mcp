@@ -2,69 +2,167 @@
 
 """Pydantic models for Aiera search tools."""
 
-from typing import List, Optional
+from typing import List, Optional, Any, Union
 from datetime import datetime
-from pydantic import BaseModel, Field, field_validator, field_serializer
+from pydantic import BaseModel, Field, field_validator, field_serializer, model_validator, ValidationInfo
+from pydantic_core import PydanticCustomError
 
 from ..common.models import BaseAieraArgs, BaseAieraResponse
 
 
 class SearchTranscriptsArgs(BaseAieraArgs):
-    """Perform a semantic search against all event transcripts."""
-    search: str = Field(description="Search query text for semantic search against transcripts")
-    event_ids: Optional[str] = Field(
-        default=None,
-        description="Comma-separated list of event IDs to filter by. Use find_events to obtain valid event IDs."
-    )
-    equity_ids: Optional[str] = Field(
-        default=None,
-        description="Comma-separated list of equity IDs to filter by. Use find_equities to obtain valid equity IDs."
-    )
-    start_date: Optional[str] = Field(
-        default=None,
-        description="Start date for filtering in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET)."
-    )
-    end_date: Optional[str] = Field(
-        default=None,
-        description="End date for filtering in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET)."
-    )
-    transcript_section: Optional[str] = Field(
-        default=None,
-        description="Filter by transcript section. Must be one of: 'presentation', 'q_and_a'."
-    )
-    event_type: Optional[str] = Field(
-        default="earnings",
-        description="Filter by event type. Options: 'earnings', 'presentation', 'shareholder_meeting', 'investor_meeting', 'special_situation'."
-    )
-    page: int = Field(default=1, description="Page number for pagination (1-based).", ge=1)
-    page_size: int = Field(default=50, description="Number of items per page (1-100).", ge=1, le=100)
+    """Semantic search within specific transcript events using embedding-based matching.
 
+    Tool for extracting detailed transcript content from events identified
+    in prior searches. Provides speaker attribution and contextual results.
+    """
+    query_text: str = Field(
+        description="Search query for semantic matching within transcripts. Examples: 'earnings guidance', 'regulatory concerns', 'revenue growth'"
+    )
+    event_ids: List[int] = Field(
+        description="List of specific event IDs to search within. Obtained from source identification using CompanyEventsFinder."
+    )
+    max_results: int = Field(
+        default=20,
+        description="Maximum number of transcript segments to return across all events (10-50 recommended for optimal performance)"
+    )
+    index: str = Field(
+        default="content_v1_transcript_processed",
+        description="Transcript content index with processed segments, embeddings, and speaker attribution"
+    )
+    min_score: float = Field(
+        default=0.2,
+        description="Minimum relevance score threshold for returned segments (0.0-1.0). Lower values are more permissive and return more results. Default 0.2 balances relevance with coverage."
+    )
+    transcript_section: str = Field(
+        default="",
+        description="Optional filter for specific transcript sections. Options: 'presentation' (prepared remarks), 'q_and_a' (Q&A session). If not provided, searches all sections."
+    )
 
 class SearchFilingsArgs(BaseAieraArgs):
-    """Perform a semantic search against all SEC filings."""
-    search: str = Field(description="Search query text for semantic search against SEC filings")
-    filing_ids: Optional[str] = Field(
-        default=None,
-        description="Comma-separated list of filing IDs to filter by. Use find_filings to obtain valid filing IDs."
+    """SEC filing discovery tool for identifying relevant filings before detailed content analysis.
+
+    Returns filing metadata (excluding full text) optimized for filing identification and
+    integration with FilingChunkSearch. Supports 60+ SEC document types with intelligent
+    company name matching and comprehensive filtering capabilities.
+    """
+    company_name: str = Field(
+        description="Company name to search filings for. Supports fuzzy matching for variations like 'Microsoft Corp', 'MSFT', 'Microsoft Corporation'. Examples: 'Apple', 'Tesla Inc', 'Amazon.com'"
     )
-    equity_ids: Optional[str] = Field(
-        default=None,
-        description="Comma-separated list of equity IDs to filter by. Use find_equities to obtain valid equity IDs."
+    start_date: str = Field(
+        default="",
+        description="Start date for filing search in YYYY-MM-DD format. Example: '2024-01-01'. If not provided, defaults to 6 months ago."
     )
-    filing_types: Optional[str] = Field(
-        default=None,
-        description="Comma-separated list of filing types to filter by (e.g., '10-K', '10-Q', '8-K')."
+    end_date: str = Field(
+        default="",
+        description="End date for filing search in YYYY-MM-DD format. Example: '2024-12-31'. If not provided, defaults to today."
     )
-    start_date: Optional[str] = Field(
-        default=None,
-        description="Start date for filtering in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET)."
+    document_types: List[str] = Field(
+        default=[],
+        description="Optional filter for specific SEC document types. Examples: ['10-K'], ['10-Q'], ['8-K'], ['4'], ['3', '4', '5'] (insider trading), ['SC 13D'], ['DEF 14A'], ['S-1'] (IPOs), ['20-F'] (foreign companies). Supports 60+ document types. Leave empty for all filing types."
     )
-    end_date: Optional[str] = Field(
-        default=None,
-        description="End date for filtering in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET)."
+    max_results: int = Field(
+        default=5,
+        description="Maximum number of filings to return (5-20 recommended for performance). Higher values may cause timeouts on large datasets."
     )
-    page: int = Field(default=1, description="Page number for pagination (1-based).", ge=1)
-    page_size: int = Field(default=50, description="Number of items per page (1-100).", ge=1, le=100)
+    fuzzy_matching: bool = Field(
+        default=True,
+        description="Enable intelligent company name matching for subsidiaries, abbreviations, and name variations. Recommended for comprehensive results."
+    )
+    sort_by: str = Field(
+        default="desc",
+        description="Sort order for results: 'desc' (newest first), 'asc' (oldest first), 'relevance' (best matches first)"
+    )
+    include_amendments: bool = Field(
+        default=False,
+        description="Include amended filings (like 10-K/A, 10-Q/A). False returns only original filings for cleaner results."
+    )
+
+
+class SearchFilingChunksArgs(BaseAieraArgs):
+    """Semantic search within SEC filing document chunks using embedding-based matching.
+
+    Extracts relevant filing content chunks filtered by company, date, and filing type
+    with high-quality semantic relevance scoring.
+    """
+    query_text: str = Field(
+        default="",
+        description="Search query for semantic matching within filing chunks. Examples: 'revenue guidance', 'risk factors', 'acquisition strategy'. Optional if company_name or filing_type is provided."
+    )
+    company_name: str = Field(
+        default="",
+        description="Company name to filter filing chunks. Uses fuzzy search across company_name and company_legal_name fields. Supports variations like 'Apple Inc', 'AAPL', 'Apple Corporation'. Optional if query_text or filing_type is provided."
+    )
+    start_date: str = Field(
+        default="",
+        description="Start date for filing chunks search in YYYY-MM-DD format. Example: '2024-01-01'. If not provided, defaults to 6 months ago."
+    )
+    end_date: str = Field(
+        default="",
+        description="End date for filing chunks search in YYYY-MM-DD format. Example: '2024-12-31'. If not provided, defaults to today."
+    )
+    filing_type: str = Field(
+        default="",
+        description="Filter for specific filing types. Examples: '10-K', '10-Q', '8-K', '4', 'DEF 14A'. Optional if query_text or company_name is provided."
+    )
+    filing_ids: List[str] = Field(
+        default_factory=list,
+        description="Filter for specific filing IDs. Use to search chunks within specific filing documents. Examples: ['AAPL-10Q-2024-Q1', 'AAPL-10K-2023']. Optional."
+    )
+    content_ids: List[str] = Field(
+        default_factory=list,
+        description="Filter for specific content_ids. Use to search within specific content pieces/chunks. Examples: ['25003532', '24964901']. Provides precise targeting of individual document chunks. Optional."
+    )
+    max_results: int = Field(
+        default=20,
+        description="Maximum number of filing chunks to return (10-50 recommended for optimal performance)"
+    )
+    index: str = Field(
+        default="content_v1_filing_chunks",
+        description="Filing chunks index with processed segments, embeddings, and company attribution"
+    )
+    min_score: float = Field(
+        default=0.2,
+        description="Minimum relevance score threshold for returned chunks (0.0-1.0). Lower values are more permissive and return more results."
+    )
+
+    @field_validator('query_text', 'company_name', 'filing_type', 'filing_ids', 'content_ids')
+    @classmethod
+    def validate_at_least_one_search_param(cls, v, info):
+        """Ensure at least one of query_text, company_name, filing_type, filing_ids, or content_ids is provided."""
+        # Get all field values at validation time
+        if info.context and 'all_fields' in info.context:
+            all_fields = info.context['all_fields']
+        else:
+            # During individual field validation, we can't check other fields yet
+            return v
+
+        query_text = all_fields.get('query_text', '').strip()
+        company_name = all_fields.get('company_name', '').strip()
+        filing_type = all_fields.get('filing_type', '').strip()
+        filing_ids = all_fields.get('filing_ids', [])
+        content_ids = all_fields.get('content_ids', [])
+
+        if not any([query_text, company_name, filing_type, filing_ids, content_ids]):
+            raise ValueError(
+                "At least one of 'query_text', 'company_name', 'filing_type', 'filing_ids', or 'content_ids' must be provided"
+            )
+        return v
+
+    @model_validator(mode='after')
+    def validate_search_parameters(self):
+        """Ensure at least one search parameter is provided."""
+        if not any([
+            self.query_text.strip(),
+            self.company_name.strip(),
+            self.filing_type.strip(),
+            self.filing_ids,
+            self.content_ids
+        ]):
+            raise ValueError(
+                "At least one of 'query_text', 'company_name', 'filing_type', 'filing_ids', or 'content_ids' must be provided"
+            )
+        return self
 
 
 # Search result item models
@@ -84,7 +182,6 @@ class TranscriptSearchItem(BaseModel):
     text: str = Field(description="The matching text content from the transcript")
     primary_equity_id: int = Field(description="Primary equity identifier")
     title: str = Field(description="Title of the event/transcript")
-    score: float = Field(alias="_score", description="Search relevance score (aliased from _score)")
     citation_information: TranscriptSearchCitation = Field(description="Citation details for this result")
 
     @field_serializer('date')
@@ -98,13 +195,46 @@ class TranscriptSearchResult(BaseModel):
     result: List[TranscriptSearchItem] = Field(description="List of transcript search results")
 
 
+# Search response pagination structure
+class SearchTotalCount(BaseModel):
+    """Total count structure from search API."""
+    value: int = Field(description="Total count value")
+    relation: str = Field(description="Relation type (e.g., 'eq')")
+
+class SearchPaginationInfo(BaseModel):
+    """Pagination information from search API."""
+    total_count: Union[SearchTotalCount, int] = Field(description="Total count information - can be object or integer")
+    current_page: int = Field(description="Current page number")
+    page_size: int = Field(description="Number of items per page")
+
+    @field_validator('total_count', mode='before')
+    @classmethod
+    def validate_total_count(cls, v):
+        """Handle both object and integer formats for total_count."""
+        if isinstance(v, int):
+            # Convert integer to expected object format
+            return SearchTotalCount(value=v, relation="eq")
+        elif isinstance(v, dict):
+            # Already in object format, let Pydantic handle validation
+            return v
+        else:
+            # Let Pydantic handle other cases
+            return v
+
+class SearchResponseData(BaseModel):
+    """Search response data container."""
+    pagination: SearchPaginationInfo = Field(description="Pagination information")
+    result: Optional[List[Any]] = Field(description="Search results (can be null)")
+
+class TranscriptSearchResponseData(BaseModel):
+    """Transcript search response data container with typed results."""
+    pagination: SearchPaginationInfo = Field(description="Pagination information")
+    result: Optional[List[TranscriptSearchItem]] = Field(description="Transcript search results (can be null)")
+
 # Response models
 class SearchTranscriptsResponse(BaseAieraResponse):
-    """Response for search_transcripts tool."""
-    instrument_type: str = Field(default="transcript_search", description="Type of instrument searched")
-    error_messages: List[str] = Field(default=[], description="List of error messages if any")
-    error_count: int = Field(default=0, description="Count of errors encountered")
-    result: List[TranscriptSearchItem] = Field(description="List of transcript search results")
+    """Response for search_transcripts tool - matches actual API structure."""
+    response: TranscriptSearchResponseData = Field(description="Response data container")
 
 
 class FilingSearchCitation(BaseModel):
@@ -133,8 +263,29 @@ class FilingSearchItem(BaseModel):
 
 
 class SearchFilingsResponse(BaseAieraResponse):
-    """Response for search_filings tool."""
-    instrument_type: str = Field(default="filing_search", description="Type of instrument searched")
-    error_messages: List[str] = Field(default=[], description="List of error messages if any")
-    error_count: int = Field(default=0, description="Count of errors encountered")
-    result: List[FilingSearchItem] = Field(description="List of filing search results")
+    """Response for search_filings tool - matches actual API structure."""
+    response: SearchResponseData = Field(description="Response data container")
+
+
+class FilingChunkSearchItem(BaseModel):
+    """Individual filing chunk search result item."""
+    date: datetime = Field(description="Date and time of the filing")
+    primary_company_id: int = Field(description="Primary company identifier")
+    content_id: str = Field(description="Filing chunk content identifier")
+    filing_id: str = Field(description="Filing identifier")
+    text: str = Field(description="The matching text content from the filing chunk")
+    primary_equity_id: int = Field(description="Primary equity identifier")
+    title: str = Field(description="Title of the filing")
+    filing_type: Optional[str] = Field(default=None, description="Type of SEC filing (e.g., '10-K', '10-Q', '8-K')")
+    score: float = Field(alias="_score", description="Search relevance score (aliased from _score)")
+    citation_information: FilingSearchCitation = Field(description="Citation details for this result")
+
+    @field_serializer('date')
+    def serialize_date(self, value: datetime) -> str:
+        """Serialize datetime to ISO format string for JSON compatibility."""
+        return value.isoformat()
+
+
+class SearchFilingChunksResponse(BaseAieraResponse):
+    """Response for search_filing_chunks tool - matches actual API structure."""
+    response: SearchResponseData = Field(description="Response data container")

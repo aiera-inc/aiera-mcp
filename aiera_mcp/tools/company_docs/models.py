@@ -135,15 +135,30 @@ class SearchArgs(BaseToolArgs):
 
 
 # Response models (extracted from responses.py)
+class CompanyInfo(BaseModel):
+    """Company information in document."""
+    company_id: int = Field(description="Company identifier")
+    name: str = Field(description="Company name")
+
+class DocumentCitationInfo(BaseModel):
+    """Citation information for document."""
+    title: str = Field(description="Citation title")
+    url: str = Field(description="Citation URL")
+
 class CompanyDocItem(BaseModel):
-    """Individual company document item."""
-    doc_id: str = Field(description="Document identifier")
-    company_name: str = Field(description="Company name")
-    title: str = Field(description="Document title")
+    """Individual company document item - matches actual API structure."""
+    doc_id: int = Field(description="Document identifier")
+    company: CompanyInfo = Field(description="Company information")
+    publish_date: str = Field(description="Publication date as string")
     category: str = Field(description="Document category")
+    title: str = Field(description="Document title")
+    source_url: str = Field(description="Source URL")
+    summary: List[str] = Field(description="Document summary as list of strings")
     keywords: List[str] = Field(default=[], description="Document keywords")
-    publish_date: date = Field(description="Publication date")
-    document_type: Optional[str] = Field(description="Type of document")
+    processed: Optional[str] = Field(None, description="Processing date")
+    created: Optional[str] = Field(None, description="Creation date")
+    modified: Optional[str] = Field(None, description="Modification date")
+    citation_information: Optional[DocumentCitationInfo] = Field(None, description="Citation information")
 
 
 class CompanyDocDetails(CompanyDocItem):
@@ -159,10 +174,23 @@ class CategoryKeyword(BaseModel):
     count: int = Field(description="Usage count")
 
 
+# Response pagination structure
+class CompanyDocPaginationInfo(BaseModel):
+    """Pagination information from company docs API."""
+    total_count: int = Field(description="Total number of documents")
+    current_page: int = Field(description="Current page number")
+    total_pages: int = Field(description="Total number of pages")
+    page_size: int = Field(description="Number of documents per page")
+
+class CompanyDocResponseData(BaseModel):
+    """Company docs response data container."""
+    pagination: CompanyDocPaginationInfo = Field(description="Pagination information")
+    data: List[CompanyDocItem] = Field(description="List of company documents")
+
 # Response classes
-class FindCompanyDocsResponse(PaginatedResponse):
-    """Response for find_company_docs tool."""
-    documents: List[CompanyDocItem] = Field(description="List of company documents")
+class FindCompanyDocsResponse(BaseAieraResponse):
+    """Response for find_company_docs tool - matches actual API structure."""
+    response: CompanyDocResponseData = Field(description="Response data container")
 
 
 class GetCompanyDocResponse(BaseAieraResponse):
@@ -170,11 +198,16 @@ class GetCompanyDocResponse(BaseAieraResponse):
     document: CompanyDocDetails = Field(description="Detailed document information")
 
 
-class GetCompanyDocCategoriesResponse(PaginatedResponse):
-    """Response for get_company_doc_categories tool."""
-    categories: List[CategoryKeyword] = Field(description="List of document categories")
+# Categories and Keywords response structures
+class CategoriesKeywordsResponseData(BaseModel):
+    """Categories/Keywords response data container."""
+    pagination: CompanyDocPaginationInfo = Field(description="Pagination information")
+    data: Dict[str, int] = Field(description="Dictionary of categories/keywords with counts")
 
+class GetCompanyDocCategoriesResponse(BaseAieraResponse):
+    """Response for get_company_doc_categories tool - matches actual API structure."""
+    response: CategoriesKeywordsResponseData = Field(description="Response data container")
 
-class GetCompanyDocKeywordsResponse(PaginatedResponse):
-    """Response for get_company_doc_keywords tool."""
-    keywords: List[CategoryKeyword] = Field(description="List of document keywords")
+class GetCompanyDocKeywordsResponse(BaseAieraResponse):
+    """Response for get_company_doc_keywords tool - matches actual API structure."""
+    response: CategoriesKeywordsResponseData = Field(description="Response data container")

@@ -36,52 +36,52 @@ async def find_events(args: FindEventsArgs) -> FindEventsResponse:
         params=params,
     )
 
-    # Transform raw response to structured format
-    # Handle both old format (response.data) and new format (data directly)
-    if "response" in raw_response:
-        api_data = raw_response.get("response", {})
-        events_data = api_data.get("data", [])
-        total_count = api_data.get("total", 0)
-    else:
-        # New API format with pagination object
-        events_data = raw_response.get("data", [])
-        pagination = raw_response.get("pagination", {})
-        total_count = pagination.get("total_count", len(events_data))
+    # Return the structured response that matches the actual API format
+    # Parse individual events to match new model structure
+    if "response" in raw_response and "data" in raw_response["response"]:
+        events_data = []
+        for event_data in raw_response["response"]["data"]:
+            # Parse event date
+            event_date = datetime.now()
+            if event_data.get("event_date"):
+                try:
+                    event_date = datetime.fromisoformat(event_data["event_date"].replace("Z", "+00:00"))
+                except:
+                    pass
 
-    events = []
-    citations = []
+            # Extract equity info in the format expected by EquityInfo model
+            equity_info = None
+            if "equity" in event_data:
+                equity_data = event_data["equity"]
+                if isinstance(equity_data, dict):
+                    equity_info = {
+                        "equity_id": equity_data.get("equity_id"),
+                        "company_id": equity_data.get("company_id"),
+                        "name": equity_data.get("name"),
+                        "bloomberg_ticker": equity_data.get("bloomberg_ticker"),
+                        "sector_id": equity_data.get("sector_id"),
+                        "subsector_id": equity_data.get("subsector_id"),
+                        "primary_equity": equity_data.get("primary_equity")
+                    }
 
-    for event_data in events_data:
-        # Extract event information
-        # Try different field names for event ID
-        event_id = event_data.get("event_id") or event_data.get("id") or ""
-        event_item = EventItem(
-            event_id=str(event_id),
-            title=event_data.get("title", ""),
-            event_type=EventType(event_data.get("event_type", "earnings")),
-            event_date=datetime.fromisoformat(event_data.get("event_date").replace("Z", "+00:00")) if event_data.get("event_date") else datetime.now(),
-            company_name=event_data.get("company_name"),
-            ticker=event_data.get("ticker"),
-            event_status=event_data.get("status")
-        )
-        events.append(event_item)
+            # Create new event structure matching the actual response
+            parsed_event = {
+                "event_id": event_data.get("event_id"),
+                "title": event_data.get("title", ""),
+                "event_type": event_data.get("event_type", ""),
+                "event_date": event_date,
+                "equity": equity_info,
+                "event_category": event_data.get("event_category"),
+                "expected_language": event_data.get("expected_language"),
+                "grouping": event_data.get("grouping"),
+                "summary": event_data.get("summary"),
+                "citation_information": event_data.get("citation_information")
+            }
+            events_data.append(parsed_event)
 
-        # Add citation if we have URL information
-        if event_data.get("url"):
-            citations.append(CitationInfo(
-                title=event_data.get("title"),
-                url=event_data.get("url"),
-                timestamp=event_item.event_date
-            ))
+        raw_response["response"]["data"] = events_data
 
-    return FindEventsResponse(
-        events=events,
-        total=total_count,
-        page=args.page,
-        page_size=args.page_size,
-        instructions=raw_response.get("instructions", []),
-        citation_information=citations
-    )
+    return FindEventsResponse.model_validate(raw_response)
 
 
 async def get_event(args: GetEventArgs) -> GetEventResponse:
@@ -107,52 +107,57 @@ async def get_event(args: GetEventArgs) -> GetEventResponse:
         params=params,
     )
 
-    # Transform raw response to structured format
-    # Handle both old format (response.data) and new format (data directly)
-    if "response" in raw_response:
-        api_data = raw_response.get("response", {})
-        events_data = api_data.get("data", [])
-        total_count = api_data.get("total", 0)
+    # Extract event data from the nested response structure
+    if "response" in raw_response and "event" in raw_response["response"]:
+        event_data = raw_response["response"]["event"]
     else:
-        # New API format with pagination object
-        events_data = raw_response.get("data", [])
-        pagination = raw_response.get("pagination", {})
-        total_count = pagination.get("total_count", len(events_data))
-
-    if not events_data:
         raise ValueError(f"Event not found: {args.event_id}")
 
-    event_data = events_data[0]  # Get the first (and should be only) event
+    # Parse event date
+    event_date = datetime.now()
+    if event_data.get("event_date"):
+        try:
+            event_date = datetime.fromisoformat(event_data["event_date"].replace("Z", "+00:00"))
+        except:
+            pass
 
-    # Build detailed event
-    # Try different field names for event ID
-    event_id = event_data.get("event_id") or event_data.get("id") or ""
-    event_details = EventDetails(
-        event_id=str(event_id),
-        title=event_data.get("title", ""),
-        event_type=EventType(event_data.get("event_type", "earnings")),
-        event_date=datetime.fromisoformat(event_data.get("event_date").replace("Z", "+00:00")) if event_data.get("event_date") else datetime.now(),
-        company_name=event_data.get("company_name"),
-        ticker=event_data.get("ticker"),
-        event_status=event_data.get("status"),
-        description=event_data.get("description"),
-        transcript_preview=event_data.get("transcript_preview"),
-        audio_url=event_data.get("audio_url")
-    )
+    # Extract equity info in the format expected by EquityInfo model
+    equity_info = None
+    if "equity" in event_data:
+        equity_data = event_data["equity"]
+        if isinstance(equity_data, dict):
+            equity_info = {
+                "equity_id": equity_data.get("equity_id"),
+                "company_id": equity_data.get("company_id"),
+                "name": equity_data.get("name"),
+                "bloomberg_ticker": equity_data.get("bloomberg_ticker"),
+                "sector_id": equity_data.get("sector_id"),
+                "subsector_id": equity_data.get("subsector_id"),
+                "primary_equity": equity_data.get("primary_equity")
+            }
 
-    # Build citation
-    citations = []
-    if event_data.get("url"):
-        citations.append(CitationInfo(
-            title=event_data.get("title"),
-            url=event_data.get("url"),
-            timestamp=event_details.event_date
-        ))
+    # Create event details structure
+    event_details_data = {
+        "event_id": event_data.get("event_id"),
+        "title": event_data.get("title", ""),
+        "event_type": event_data.get("event_type", ""),
+        "event_date": event_date,
+        "equity": equity_info,
+        "event_category": event_data.get("event_category"),
+        "expected_language": event_data.get("expected_language"),
+        "grouping": event_data.get("grouping"),
+        "summary": event_data.get("summary"),
+        "citation_information": event_data.get("citation_information"),
+        "description": event_data.get("description"),
+        "transcript_preview": event_data.get("transcript_preview"),
+        "audio_url": event_data.get("audio_url")
+    }
+
+    event_details = EventDetails.model_validate(event_details_data)
 
     return GetEventResponse(
         event=event_details,
-        instructions=raw_response.get("instructions", []),
-        citation_information=citations
+        instructions=raw_response.get("instructions", [])
     )
 
 
@@ -174,49 +179,59 @@ async def get_upcoming_events(args: GetUpcomingEventsArgs) -> GetUpcomingEventsR
         params=params,
     )
 
-    # Transform raw response to structured format
-    # Handle both old format (response.data) and new format (data directly)
+    # Parse the response structure for upcoming events (has estimates and actuals)
+    def parse_event_list(event_list):
+        """Parse a list of events to match the new model structure."""
+        parsed_events = []
+        for event_data in event_list:
+            # Parse event date
+            event_date = datetime.now()
+            if event_data.get("event_date"):
+                try:
+                    event_date = datetime.fromisoformat(event_data["event_date"].replace("Z", "+00:00"))
+                except:
+                    pass
+
+            # Extract equity info in the format expected by EquityInfo model
+            equity_info = None
+            if "equity" in event_data:
+                equity_data = event_data["equity"]
+                if isinstance(equity_data, dict):
+                    equity_info = {
+                        "equity_id": equity_data.get("equity_id"),
+                        "company_id": equity_data.get("company_id"),
+                        "name": equity_data.get("name"),
+                        "bloomberg_ticker": equity_data.get("bloomberg_ticker"),
+                        "sector_id": equity_data.get("sector_id"),
+                        "subsector_id": equity_data.get("subsector_id"),
+                        "primary_equity": equity_data.get("primary_equity")
+                    }
+
+            # Create new event structure matching the actual response
+            parsed_event = {
+                "event_id": event_data.get("event_id"),
+                "title": event_data.get("title", ""),
+                "event_type": event_data.get("event_type", ""),
+                "event_date": event_date,
+                "equity": equity_info,
+                "event_category": event_data.get("event_category"),
+                "expected_language": event_data.get("expected_language"),
+                "grouping": event_data.get("grouping"),
+                "summary": event_data.get("summary"),
+                "citation_information": event_data.get("citation_information")
+            }
+            parsed_events.append(parsed_event)
+        return parsed_events
+
+    # Process the estimates and actuals lists
     if "response" in raw_response:
-        api_data = raw_response.get("response", {})
-        events_data = api_data.get("data", [])
-        total_count = api_data.get("total", 0)
-    else:
-        # New API format with pagination object
-        events_data = raw_response.get("data", [])
-        pagination = raw_response.get("pagination", {})
-        total_count = pagination.get("total_count", len(events_data))
+        response_data = raw_response["response"]
+        if "estimates" in response_data:
+            response_data["estimates"] = parse_event_list(response_data["estimates"])
+        if "actuals" in response_data:
+            response_data["actuals"] = parse_event_list(response_data["actuals"])
 
-    events = []
-    citations = []
-
-    for event_data in events_data:
-        # Extract event information
-        # Try different field names for event ID
-        event_id = event_data.get("event_id") or event_data.get("id") or ""
-        event_item = EventItem(
-            event_id=str(event_id),
-            title=event_data.get("title", ""),
-            event_type=EventType(event_data.get("event_type", "earnings")),
-            event_date=datetime.fromisoformat(event_data.get("event_date").replace("Z", "+00:00")) if event_data.get("event_date") else datetime.now(),
-            company_name=event_data.get("company_name"),
-            ticker=event_data.get("ticker"),
-            event_status=event_data.get("status", "upcoming")
-        )
-        events.append(event_item)
-
-        # Add citation if we have URL information
-        if event_data.get("url"):
-            citations.append(CitationInfo(
-                title=event_data.get("title"),
-                url=event_data.get("url"),
-                timestamp=event_item.event_date
-            ))
-
-    return GetUpcomingEventsResponse(
-        events=events,
-        instructions=raw_response.get("instructions", []),
-        citation_information=citations
-    )
+    return GetUpcomingEventsResponse.model_validate(raw_response)
 
 
 # Legacy registration functions removed - all tools now registered via registry

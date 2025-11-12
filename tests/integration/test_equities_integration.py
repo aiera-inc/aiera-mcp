@@ -41,8 +41,7 @@ class TestEquitiesIntegration:
         """Test find_equities with real API."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # Test with Apple ticker
             args = FindEquitiesArgs(
@@ -79,8 +78,7 @@ class TestEquitiesIntegration:
         """Test find_equities with search query."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # Test search for Apple
             args = FindEquitiesArgs(
@@ -111,8 +109,7 @@ class TestEquitiesIntegration:
         """Test get_equity_summaries with real API."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # Test with multiple popular tickers
             args = GetEquitySummariesArgs(
@@ -127,7 +124,7 @@ class TestEquitiesIntegration:
 
             # If we found summaries, verify their structure
             for summary in result.summaries:
-                assert isinstance(summary, EquitySummary)
+                assert isinstance(summary, EquityDetails)
                 assert summary.equity_id
                 assert summary.company_name
                 assert summary.bloomberg_ticker
@@ -144,8 +141,7 @@ class TestEquitiesIntegration:
         """Test get_sectors_and_subsectors with real API."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # Test without search to get all sectors
             args = SearchArgs()
@@ -175,8 +171,7 @@ class TestEquitiesIntegration:
         """Test get_sectors_and_subsectors with search query."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # Test search for Technology sector
             args = SearchArgs(search="Technology")
@@ -202,8 +197,7 @@ class TestEquitiesIntegration:
         """Test get_available_indexes with real API."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             args = EmptyArgs()
             result = await get_available_indexes(args)
@@ -231,8 +225,7 @@ class TestEquitiesIntegration:
         """Test get_index_constituents with real API."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # First get available indexes
             empty_args = EmptyArgs()
@@ -245,8 +238,8 @@ class TestEquitiesIntegration:
             await api_rate_limiter.wait()
 
             # Test with the first available index
-            first_index_id = indexes_result.indexes[0].index_id
-            args = GetIndexConstituentsArgs(index_id=first_index_id)
+            first_index_name = indexes_result.indexes[0].symbol  # Use symbol as the index identifier
+            args = GetIndexConstituentsArgs(index=first_index_name)
 
             result = await get_index_constituents(args)
 
@@ -272,8 +265,7 @@ class TestEquitiesIntegration:
         """Test get_available_watchlists with real API."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             args = EmptyArgs()
             result = await get_available_watchlists(args)
@@ -300,8 +292,7 @@ class TestEquitiesIntegration:
         """Test get_watchlist_constituents with real API."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # First get available watchlists
             empty_args = EmptyArgs()
@@ -341,8 +332,7 @@ class TestEquitiesIntegration:
         """Test equities pagination with real API."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # Test first page with search to ensure we have results
             args_page1 = FindEquitiesArgs(
@@ -386,8 +376,7 @@ class TestEquitiesIntegration:
         """Test equities API error handling with invalid API key."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_api_key_from_context', return_value="invalid-api-key"):
+        with patch('aiera_mcp.tools.base.get_api_key_from_context', return_value="invalid-api-key"):
 
             args = FindEquitiesArgs(search="Apple")
 
@@ -414,8 +403,7 @@ class TestEquitiesIntegration:
     ):
         """Test multiple equity tools working together."""
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # 1. Find an equity
             await api_rate_limiter.wait()
@@ -460,8 +448,7 @@ class TestEquitiesIntegration:
         """Test that equity responses include proper citation information."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             args = FindEquitiesArgs(search="Apple", page_size=5)
             result = await find_equities(args)

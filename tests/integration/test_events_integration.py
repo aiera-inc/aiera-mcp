@@ -33,8 +33,7 @@ class TestEventsIntegration:
         """Test find_events with real API."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
             # Test with a date range that should have events
             date_range = sample_date_ranges[0]  # Q4 2023 earnings season
             args = FindEventsArgs(
@@ -76,8 +75,7 @@ class TestEventsIntegration:
         """Test find_events with ticker filter."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # Test with Apple ticker
             args = FindEventsArgs(
@@ -109,8 +107,7 @@ class TestEventsIntegration:
         """Test get_event with real API (requires finding an event first)."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # First find an event
             find_args = FindEventsArgs(
@@ -158,8 +155,7 @@ class TestEventsIntegration:
         """Test get_upcoming_events with real API."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # Test with future date range
             args = GetUpcomingEventsArgs(
@@ -190,8 +186,7 @@ class TestEventsIntegration:
         """Test events API error handling with invalid API key."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_api_key_from_context', return_value="invalid-api-key"):
+        with patch('aiera_mcp.tools.base.get_api_key_from_context', return_value="invalid-api-key"):
 
             args = FindEventsArgs(
                 start_date="2023-10-01",
@@ -222,8 +217,7 @@ class TestEventsIntegration:
         """Test events pagination with real API."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # Test first page
             args_page1 = FindEventsArgs(
@@ -271,8 +265,7 @@ class TestEventsIntegration:
 
         event_types = ["earnings", "presentation", "investor_meeting"]
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             for event_type in event_types:
                 await api_rate_limiter.wait()

@@ -20,47 +20,46 @@ class TestFilingsModels:
 
     def test_filing_item_creation(self):
         """Test FilingItem model creation."""
+        from aiera_mcp.tools.filings.models import EquityInfo
         filing_data = {
-            "filing_id": "12345",
-            "company_name": "Test Company",
-            "company_ticker": "TEST",
-            "form_type": "10-K",
+            "filing_id": 12345,
             "title": "Annual Report",
-            "filing_date": date(2023, 10, 27),
-            "period_end_date": date(2023, 9, 30),
-            "is_amendment": False,
-            "official_url": "https://sec.gov/filing/12345"
+            "filing_date": datetime(2023, 10, 27),
+            "period_end_date": datetime(2023, 9, 30),
+            "is_amendment": 0,  # Changed to integer
+            "equity": EquityInfo(
+                company_name="Test Company",
+                ticker="TEST"
+            ),
+            "form_number": "10-K"  # Changed from form_type
         }
 
         filing = FilingItem(**filing_data)
 
-        assert filing.filing_id == "12345"
-        assert filing.company_name == "Test Company"
-        assert filing.company_ticker == "TEST"
-        assert filing.form_type == "10-K"
+        assert filing.filing_id == 12345
+        assert filing.equity.company_name == "Test Company"
+        assert filing.equity.ticker == "TEST"
+        assert filing.form_number == "10-K"
         assert filing.title == "Annual Report"
-        assert filing.filing_date == date(2023, 10, 27)
-        assert filing.period_end_date == date(2023, 9, 30)
-        assert not filing.is_amendment
-        assert filing.official_url == "https://sec.gov/filing/12345"
+        assert filing.filing_date == datetime(2023, 10, 27)
+        assert filing.period_end_date == datetime(2023, 9, 30)
+        assert filing.is_amendment == 0
 
     def test_filing_item_optional_fields(self):
         """Test FilingItem with only required fields."""
         minimal_data = {
-            "filing_id": "12345",
-            "company_name": "Test Company",
-            "form_type": "10-K",
+            "filing_id": 12345,
             "title": "Annual Report",
-            "filing_date": date(2023, 10, 27),
-            "is_amendment": False
+            "filing_date": datetime(2023, 10, 27),
+            "is_amendment": 0
         }
 
         filing = FilingItem(**minimal_data)
 
-        assert filing.filing_id == "12345"
-        assert filing.company_ticker is None
+        assert filing.filing_id == 12345
+        assert filing.equity is None
         assert filing.period_end_date is None
-        assert filing.official_url is None
+        assert filing.form_number is None
 
     def test_filing_summary_creation(self):
         """Test FilingSummary model creation."""
@@ -92,13 +91,17 @@ class TestFilingsModels:
 
     def test_filing_details_inherits_filing_item(self):
         """Test FilingDetails inherits from FilingItem."""
+        from aiera_mcp.tools.filings.models import EquityInfo
         details_data = {
-            "filing_id": "12345",
-            "company_name": "Test Company",
-            "form_type": "10-K",
+            "filing_id": 12345,
             "title": "Annual Report",
-            "filing_date": date(2023, 10, 27),
-            "is_amendment": False,
+            "filing_date": datetime(2023, 10, 27),
+            "is_amendment": 0,
+            "equity": EquityInfo(
+                company_name="Test Company",
+                ticker="TEST"
+            ),
+            "form_number": "10-K",
             "summary": FilingSummary(
                 summary="Test summary",
                 key_points=["Point 1"],
@@ -111,9 +114,9 @@ class TestFilingsModels:
         details = FilingDetails(**details_data)
 
         # Test inherited fields
-        assert details.filing_id == "12345"
-        assert details.company_name == "Test Company"
-        assert details.form_type == "10-K"
+        assert details.filing_id == 12345
+        assert details.equity.company_name == "Test Company"
+        assert details.form_number == "10-K"
 
         # Test new fields
         assert details.summary.summary == "Test summary"
@@ -264,7 +267,7 @@ class TestGetFilingArgs:
 
     def test_valid_get_filing_args(self):
         """Test valid GetFilingArgs creation."""
-        args = GetFilingArgs(filing_id="12345")
+        args = GetFilingArgs(filing_id="12345")  # String as per model definition
         assert args.filing_id == "12345"
 
     def test_get_filing_args_required_field(self):
@@ -282,50 +285,45 @@ class TestFilingsResponses:
 
     def test_find_filings_response(self):
         """Test FindFilingsResponse model."""
+        from aiera_mcp.tools.filings.models import EquityInfo, ApiResponseData
         filings = [
             FilingItem(
-                filing_id="12345",
-                company_name="Test Company",
-                form_type="10-K",
+                filing_id=12345,
                 title="Annual Report",
-                filing_date=date(2023, 10, 27),
-                is_amendment=False
-            )
-        ]
-
-        citations = [
-            CitationInfo(
-                title="Test Filing Citation",
-                url="https://sec.gov/filing/12345",
-                timestamp=datetime(2023, 10, 27, 0, 0, 0)
+                filing_date=datetime(2023, 10, 27),
+                is_amendment=0,
+                equity=EquityInfo(
+                    company_name="Test Company",
+                    ticker="TEST"
+                ),
+                form_number="10-K"
             )
         ]
 
         response = FindFilingsResponse(
-            filings=filings,
-            total=1,
-            page=1,
-            page_size=50,
             instructions=["Test instruction"],
-            citation_information=citations
+            response=ApiResponseData(
+                data=filings
+            )
         )
 
-        assert len(response.filings) == 1
-        assert response.total == 1
-        assert response.page == 1
-        assert response.page_size == 50
+        assert len(response.response.data) == 1
         assert response.instructions == ["Test instruction"]
-        assert len(response.citation_information) == 1
+        assert response.response.data[0].equity.company_name == "Test Company"
 
     def test_get_filing_response(self):
         """Test GetFilingResponse model."""
+        from aiera_mcp.tools.filings.models import EquityInfo
         filing_details = FilingDetails(
-            filing_id="12345",
-            company_name="Test Company",
-            form_type="10-K",
+            filing_id=12345,
             title="Annual Report",
-            filing_date=date(2023, 10, 27),
-            is_amendment=False,
+            filing_date=datetime(2023, 10, 27),
+            is_amendment=0,
+            equity=EquityInfo(
+                company_name="Test Company",
+                ticker="TEST"
+            ),
+            form_number="10-K",
             summary=FilingSummary(
                 summary="Test summary",
                 key_points=["Point 1"],
@@ -336,15 +334,12 @@ class TestFilingsResponses:
         )
 
         response = GetFilingResponse(
-            filing=filing_details,
-            instructions=["Test instruction"],
-            citation_information=[]
+            filing=filing_details
         )
 
         assert isinstance(response.filing, FilingDetails)
-        assert response.filing.filing_id == "12345"
+        assert response.filing.filing_id == 12345
         assert response.filing.summary.summary == "Test summary"
-        assert response.instructions == ["Test instruction"]
 
 
 @pytest.mark.unit
@@ -393,14 +388,12 @@ class TestFilingsModelValidation:
         """Test filing item handles different date formats."""
         # Test with date object
         filing = FilingItem(
-            filing_id="123",
-            company_name="Test",
-            form_type="10-K",
+            filing_id=123,
             title="Test",
-            filing_date=date(2023, 10, 27),
-            is_amendment=False
+            filing_date=datetime(2023, 10, 27),  # FilingItem uses datetime, not date
+            is_amendment=0
         )
-        assert filing.filing_date == date(2023, 10, 27)
+        assert filing.filing_date == datetime(2023, 10, 27)
 
     def test_filing_summary_empty_collections(self):
         """Test filing summary handles empty collections properly."""
@@ -422,12 +415,10 @@ class TestFilingsModelValidation:
     def test_filing_details_optional_summary(self):
         """Test filing details with None summary."""
         details = FilingDetails(
-            filing_id="123",
-            company_name="Test",
-            form_type="10-K",
+            filing_id=123,
             title="Test",
-            filing_date=date(2023, 10, 27),
-            is_amendment=False,
+            filing_date=datetime(2023, 10, 27),
+            is_amendment=0,
             summary=None,
             content_preview="Preview",
             document_count=1

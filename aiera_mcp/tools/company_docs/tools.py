@@ -42,57 +42,9 @@ async def find_company_docs(args: FindCompanyDocsArgs) -> FindCompanyDocsRespons
         params=params,
     )
 
-    # Transform raw response to structured format
-    # Handle both old format (response.data) and new format (data directly)
-    if "response" in raw_response:
-        api_data = raw_response.get("response", {})
-        docs_data = api_data.get("data", [])
-        total_count = api_data.get("total", 0)
-    else:
-        # New API format with pagination object
-        docs_data = raw_response.get("data", [])
-        pagination = raw_response.get("pagination", {})
-        total_count = pagination.get("total_count", len(docs_data))
-
-    documents = []
-    citations = []
-
-    for doc_data in docs_data:
-        # Parse publish date safely
-        publish_date = None
-        try:
-            if doc_data.get("publish_date"):
-                publish_date = datetime.fromisoformat(doc_data["publish_date"].replace("Z", "+00:00")).date()
-        except (ValueError, AttributeError):
-            publish_date = date.today()
-
-        doc_item = CompanyDocItem(
-            doc_id=str(doc_data.get("id", "")),
-            company_name=doc_data.get("company_name", ""),
-            title=doc_data.get("title", ""),
-            category=doc_data.get("category", ""),
-            keywords=doc_data.get("keywords", []),
-            publish_date=publish_date or date.today(),
-            document_type=doc_data.get("document_type")
-        )
-        documents.append(doc_item)
-
-        # Add citation if we have URL information
-        if doc_data.get("url"):
-            citations.append(CitationInfo(
-                title=doc_data.get("title", ""),
-                url=doc_data.get("url"),
-                timestamp=datetime.combine(publish_date, datetime.min.time()) if publish_date else None
-            ))
-
-    return FindCompanyDocsResponse(
-        documents=documents,
-        total=total_count,
-        page=args.page,
-        page_size=args.page_size,
-        instructions=raw_response.get("instructions", []),
-        citation_information=citations
-    )
+    # Return the structured response directly - no transformation needed
+    # since FindCompanyDocsResponse model now matches the actual API format
+    return FindCompanyDocsResponse.model_validate(raw_response)
 
 
 async def get_company_doc(args: GetCompanyDocArgs) -> GetCompanyDocResponse:
@@ -118,59 +70,19 @@ async def get_company_doc(args: GetCompanyDocArgs) -> GetCompanyDocResponse:
         params=params,
     )
 
-    # Transform raw response to structured format
-    # Handle both old format (response.data) and new format (data directly)
-    if "response" in raw_response:
-        api_data = raw_response.get("response", {})
-        docs_data = api_data.get("data", [])
-        total_count = api_data.get("total", 0)
+    # Extract document from the nested response structure
+    if "response" in raw_response and "document" in raw_response["response"]:
+        doc_data = raw_response["response"]["document"]
     else:
-        # New API format with pagination object
-        docs_data = raw_response.get("data", [])
-        pagination = raw_response.get("pagination", {})
-        total_count = pagination.get("total_count", len(docs_data))
-
-    if not docs_data:
         raise ValueError(f"Document not found: {args.company_doc_id}")
 
-    doc_data = docs_data[0]  # Get the first (and should be only) document
+    # Create the response structure expected by GetCompanyDocResponse
+    response_data = {
+        "document": doc_data,
+        "instructions": raw_response.get("instructions", [])
+    }
 
-    # Parse publish date safely
-    publish_date = None
-    try:
-        if doc_data.get("publish_date"):
-            publish_date = datetime.fromisoformat(doc_data["publish_date"].replace("Z", "+00:00")).date()
-    except (ValueError, AttributeError):
-        publish_date = date.today()
-
-    # Build detailed document
-    doc_details = CompanyDocDetails(
-        doc_id=str(doc_data.get("id", "")),
-        company_name=doc_data.get("company_name", ""),
-        title=doc_data.get("title", ""),
-        category=doc_data.get("category", ""),
-        keywords=doc_data.get("keywords", []),
-        publish_date=publish_date or date.today(),
-        document_type=doc_data.get("document_type"),
-        summary=doc_data.get("summary"),
-        content_preview=doc_data.get("content_preview"),
-        attachments=doc_data.get("attachments", [])
-    )
-
-    # Build citation
-    citations = []
-    if doc_data.get("url"):
-        citations.append(CitationInfo(
-            title=doc_data.get("title", ""),
-            url=doc_data.get("url"),
-            timestamp=datetime.combine(publish_date, datetime.min.time()) if publish_date else None
-        ))
-
-    return GetCompanyDocResponse(
-        document=doc_details,
-        instructions=raw_response.get("instructions", []),
-        citation_information=citations
-    )
+    return GetCompanyDocResponse.model_validate(response_data)
 
 
 async def get_company_doc_categories(args: SearchArgs) -> GetCompanyDocCategoriesResponse:
@@ -191,38 +103,9 @@ async def get_company_doc_categories(args: SearchArgs) -> GetCompanyDocCategorie
         params=params,
     )
 
-    # Transform raw response to structured format
-    # Handle both old format (response.data) and new format (data directly)
-    if "response" in raw_response:
-        api_data = raw_response.get("response", {})
-        categories_data = api_data.get("data", [])
-        total_count = api_data.get("total", 0)
-    else:
-        # New API format with pagination object
-        categories_data = raw_response.get("data", [])
-        pagination = raw_response.get("pagination", {})
-        total_count = pagination.get("total_count", len(categories_data))
-
-    categories = []
-    for category_data in categories_data:
-        category_item = CategoryKeyword(
-            name=category_data.get("name", category_data.get("category", "")),
-            count=category_data.get("count", 0)
-        )
-        categories.append(category_item)
-
-    # Default pagination values since this endpoint may not provide them
-    page = getattr(args, 'page', 1)
-    page_size = getattr(args, 'page_size', 50)
-
-    return GetCompanyDocCategoriesResponse(
-        categories=categories,
-        total=total_count,
-        page=page,
-        page_size=page_size,
-        instructions=raw_response.get("instructions", []),
-        citation_information=[CitationInfo(title="Company Document Categories", source="Aiera")]
-    )
+    # Return the structured response directly - no transformation needed
+    # since GetCompanyDocCategoriesResponse model now matches the actual API format
+    return GetCompanyDocCategoriesResponse.model_validate(raw_response)
 
 
 async def get_company_doc_keywords(args: SearchArgs) -> GetCompanyDocKeywordsResponse:
@@ -243,38 +126,9 @@ async def get_company_doc_keywords(args: SearchArgs) -> GetCompanyDocKeywordsRes
         params=params,
     )
 
-    # Transform raw response to structured format
-    # Handle both old format (response.data) and new format (data directly)
-    if "response" in raw_response:
-        api_data = raw_response.get("response", {})
-        keywords_data = api_data.get("data", [])
-        total_count = api_data.get("total", 0)
-    else:
-        # New API format with pagination object
-        keywords_data = raw_response.get("data", [])
-        pagination = raw_response.get("pagination", {})
-        total_count = pagination.get("total_count", len(keywords_data))
-
-    keywords = []
-    for keyword_data in keywords_data:
-        keyword_item = CategoryKeyword(
-            name=keyword_data.get("name", keyword_data.get("keyword", "")),
-            count=keyword_data.get("count", 0)
-        )
-        keywords.append(keyword_item)
-
-    # Default pagination values since this endpoint may not provide them
-    page = getattr(args, 'page', 1)
-    page_size = getattr(args, 'page_size', 50)
-
-    return GetCompanyDocKeywordsResponse(
-        keywords=keywords,
-        total=total_count,
-        page=page,
-        page_size=page_size,
-        instructions=raw_response.get("instructions", []),
-        citation_information=[CitationInfo(title="Company Document Keywords", source="Aiera")]
-    )
+    # Return the structured response directly - no transformation needed
+    # since GetCompanyDocKeywordsResponse model now matches the actual API format
+    return GetCompanyDocKeywordsResponse.model_validate(raw_response)
 
 
 # Legacy registration functions removed - all tools now registered via registry

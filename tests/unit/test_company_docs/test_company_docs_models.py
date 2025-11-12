@@ -22,50 +22,67 @@ class TestCompanyDocsModels:
     def test_company_doc_item_creation(self):
         """Test CompanyDocItem model creation."""
         doc_data = {
-            "doc_id": "doc123",
-            "company_name": "Test Company",
+            "doc_id": 12345,
+            "company": {
+                "company_id": 67890,
+                "name": "Test Company"
+            },
             "title": "Test Document",
             "category": "Sustainability",
             "keywords": ["ESG", "environment"],
-            "publish_date": date(2023, 9, 15),
-            "document_type": "report"
+            "publish_date": "2023-09-15T00:00:00Z",
+            "source_url": "https://example.com/test-doc.pdf",
+            "summary": ["Test document summary"]
         }
 
         doc = CompanyDocItem(**doc_data)
 
-        assert doc.doc_id == "doc123"
-        assert doc.company_name == "Test Company"
+        assert doc.doc_id == 12345
+        assert doc.company.name == "Test Company"
+        assert doc.company.company_id == 67890
         assert doc.title == "Test Document"
         assert doc.category == "Sustainability"
         assert doc.keywords == ["ESG", "environment"]
-        assert doc.publish_date == date(2023, 9, 15)
-        assert doc.document_type == "report"
+        assert doc.publish_date == "2023-09-15T00:00:00Z"
+        assert doc.source_url == "https://example.com/test-doc.pdf"
+        assert doc.summary == ["Test document summary"]
 
     def test_company_doc_item_optional_fields(self):
         """Test CompanyDocItem with only required fields."""
         minimal_data = {
-            "doc_id": "doc123",
-            "company_name": "Test Company",
+            "doc_id": 12345,
+            "company": {
+                "company_id": 67890,
+                "name": "Test Company"
+            },
             "title": "Test Document",
             "category": "Sustainability",
-            "publish_date": date(2023, 9, 15)
+            "publish_date": "2023-09-15T00:00:00Z",
+            "source_url": "https://example.com/test-doc.pdf",
+            "summary": ["Test summary"]
         }
 
         doc = CompanyDocItem(**minimal_data)
 
-        assert doc.doc_id == "doc123"
+        assert doc.doc_id == 12345
         assert doc.keywords == []  # Default value
-        assert doc.document_type is None
+        assert doc.processed is None
+        assert doc.created is None
+        assert doc.modified is None
 
     def test_company_doc_details_inherits_doc_item(self):
         """Test CompanyDocDetails inherits from CompanyDocItem."""
         details_data = {
-            "doc_id": "doc123",
-            "company_name": "Test Company",
+            "doc_id": 12345,
+            "company": {
+                "company_id": 67890,
+                "name": "Test Company"
+            },
             "title": "Test Document",
             "category": "Sustainability",
-            "publish_date": date(2023, 9, 15),
-            "summary": "Test document summary",
+            "publish_date": "2023-09-15T00:00:00Z",
+            "source_url": "https://example.com/test-doc.pdf",
+            "summary": "Test document summary",  # CompanyDocDetails uses string, not list
             "content_preview": "Test content preview...",
             "attachments": [{"name": "file.pdf", "url": "https://example.com/file.pdf"}]
         }
@@ -73,8 +90,8 @@ class TestCompanyDocsModels:
         details = CompanyDocDetails(**details_data)
 
         # Test inherited fields
-        assert details.doc_id == "doc123"
-        assert details.company_name == "Test Company"
+        assert details.doc_id == 12345
+        assert details.company.name == "Test Company"
         assert details.title == "Test Document"
 
         # Test new fields
@@ -143,12 +160,12 @@ class TestFindCompanyDocsArgs:
         with pytest.raises(ValidationError) as exc_info:
             FindCompanyDocsArgs(start_date="09/01/2023", end_date="2023-09-30")
 
-        assert "string does not match expected pattern" in str(exc_info.value)
+        assert "String should match pattern" in str(exc_info.value)
 
         with pytest.raises(ValidationError) as exc_info:
             FindCompanyDocsArgs(start_date="2023-09-01", end_date="invalid-date")
 
-        assert "string does not match expected pattern" in str(exc_info.value)
+        assert "String should match pattern" in str(exc_info.value)
 
     def test_find_company_docs_args_pagination_validation(self):
         """Test pagination parameter validation."""
@@ -297,105 +314,131 @@ class TestCompanyDocsResponses:
 
     def test_find_company_docs_response(self):
         """Test FindCompanyDocsResponse model."""
-        documents = [
-            CompanyDocItem(
-                doc_id="doc123",
-                company_name="Test Company",
-                title="Test Document",
-                category="Sustainability",
-                publish_date=date(2023, 9, 15)
-            )
-        ]
+        # Use proper new model structure
+        response_data = {
+            "response": {
+                "pagination": {
+                    "total_count": 1,
+                    "current_page": 1,
+                    "total_pages": 1,
+                    "page_size": 50
+                },
+                "data": [
+                    {
+                        "doc_id": 123,
+                        "company": {
+                            "company_id": 456,
+                            "name": "Test Company"
+                        },
+                        "title": "Test Document",
+                        "category": "Sustainability",
+                        "publish_date": "2023-09-15T00:00:00Z",
+                        "source_url": "https://example.com/test.pdf",
+                        "summary": ["Test summary"],
+                        "keywords": ["test"],
+                        "citation_information": {
+                            "title": "Test Citation",
+                            "url": "https://example.com"
+                        }
+                    }
+                ]
+            },
+            "instructions": ["Test instruction"]
+        }
 
-        citations = [
-            CitationInfo(
-                title="Test Citation",
-                url="https://example.com",
-                timestamp=datetime(2023, 9, 15, 0, 0, 0)
-            )
-        ]
+        response = FindCompanyDocsResponse.model_validate(response_data)
 
-        response = FindCompanyDocsResponse(
-            documents=documents,
-            total=1,
-            page=1,
-            page_size=50,
-            instructions=["Test instruction"],
-            citation_information=citations
-        )
-
-        assert len(response.documents) == 1
-        assert response.total == 1
-        assert response.page == 1
-        assert response.page_size == 50
+        assert len(response.response.data) == 1
+        assert response.response.pagination.total_count == 1
+        assert response.response.pagination.current_page == 1
+        assert response.response.pagination.page_size == 50
         assert response.instructions == ["Test instruction"]
-        assert len(response.citation_information) == 1
 
     def test_get_company_doc_response(self):
         """Test GetCompanyDocResponse model."""
-        doc_details = CompanyDocDetails(
-            doc_id="doc123",
-            company_name="Test Company",
-            title="Test Document",
-            category="Sustainability",
-            publish_date=date(2023, 9, 15),
-            summary="Test summary",
-            content_preview="Test preview"
-        )
+        # Use proper structure for GetCompanyDocResponse
+        response_data = {
+            "document": {
+                "doc_id": 123,
+                "company": {
+                    "company_id": 456,
+                    "name": "Test Company"
+                },
+                "title": "Test Document",
+                "category": "Sustainability",
+                "publish_date": "2023-09-15T00:00:00Z",
+                "source_url": "https://example.com/test.pdf",
+                "summary": "Test summary",
+                "content_preview": "Test preview",
+                "keywords": ["test"],
+                "attachments": [],
+                "citation_information": {
+                    "title": "Test Citation",
+                    "url": "https://example.com"
+                }
+            },
+            "instructions": ["Test instruction"]
+        }
 
-        response = GetCompanyDocResponse(
-            document=doc_details,
-            instructions=["Test instruction"],
-            citation_information=[]
-        )
+        response = GetCompanyDocResponse.model_validate(response_data)
 
         assert isinstance(response.document, CompanyDocDetails)
-        assert response.document.doc_id == "doc123"
+        assert response.document.doc_id == 123
         assert response.document.summary == "Test summary"
         assert response.instructions == ["Test instruction"]
 
     def test_get_company_doc_categories_response(self):
         """Test GetCompanyDocCategoriesResponse model."""
-        categories = [
-            CategoryKeyword(name="Sustainability", count=25),
-            CategoryKeyword(name="Governance", count=18)
-        ]
+        # Use proper structure for GetCompanyDocCategoriesResponse
+        response_data = {
+            "response": {
+                "pagination": {
+                    "total_count": 2,
+                    "current_page": 1,
+                    "total_pages": 1,
+                    "page_size": 50
+                },
+                "data": {
+                    "sustainability": 25,
+                    "governance": 18
+                }
+            },
+            "instructions": ["Categories retrieved"]
+        }
 
-        response = GetCompanyDocCategoriesResponse(
-            categories=categories,
-            total=2,
-            page=1,
-            page_size=50,
-            instructions=["Categories retrieved"],
-            citation_information=[]
-        )
+        response = GetCompanyDocCategoriesResponse.model_validate(response_data)
 
-        assert len(response.categories) == 2
-        assert response.categories[0].name == "Sustainability"
-        assert response.categories[0].count == 25
-        assert response.total == 2
+        assert isinstance(response.response.data, dict)
+        assert response.response.data["sustainability"] == 25
+        assert response.response.data["governance"] == 18
+        assert response.response.pagination.total_count == 2
         assert response.instructions == ["Categories retrieved"]
 
     def test_get_company_doc_keywords_response(self):
         """Test GetCompanyDocKeywordsResponse model."""
-        keywords = [
-            CategoryKeyword(name="ESG", count=15),
-            CategoryKeyword(name="climate", count=23)
-        ]
+        # Use proper structure for GetCompanyDocKeywordsResponse
+        response_data = {
+            "response": {
+                "pagination": {
+                    "total_count": 2,
+                    "current_page": 1,
+                    "total_pages": 1,
+                    "page_size": 50
+                },
+                "data": {
+                    "ESG": 15,
+                    "climate": 23
+                }
+            },
+            "instructions": ["Keywords retrieved"]
+        }
 
-        response = GetCompanyDocKeywordsResponse(
-            keywords=keywords,
-            total=2,
-            page=1,
-            page_size=50,
-            instructions=["Keywords retrieved"],
-            citation_information=[]
-        )
+        response = GetCompanyDocKeywordsResponse.model_validate(response_data)
 
-        assert len(response.keywords) == 2
-        assert response.keywords[0].name == "ESG"
-        assert response.keywords[0].count == 15
-        assert response.total == 2
+        assert isinstance(response.response.data, dict)
+        assert response.response.data["ESG"] == 15
+        assert response.response.data["climate"] == 23
+        assert response.response.pagination.total_count == 2
         assert response.instructions == ["Keywords retrieved"]
 
 
@@ -446,46 +489,54 @@ class TestCompanyDocsModelValidation:
 
     def test_date_field_validation(self):
         """Test date field validation with various formats."""
-        # Valid ISO date
+        # Valid ISO date string
         doc = CompanyDocItem(
-            doc_id="doc123",
-            company_name="Test Company",
+            doc_id=123,
+            company={"company_id": 456, "name": "Test Company"},
             title="Test Document",
             category="Test",
-            publish_date=date(2023, 9, 15)
+            publish_date="2023-09-15T00:00:00Z",
+            source_url="https://example.com/test.pdf",
+            summary=["Test summary"]
         )
-        assert isinstance(doc.publish_date, date)
+        assert doc.publish_date == "2023-09-15T00:00:00Z"
 
-        # Test with datetime object (should work)
+        # Test with different ISO format
         doc_with_datetime = CompanyDocItem(
-            doc_id="doc124",
-            company_name="Test Company",
+            doc_id=124,
+            company={"company_id": 456, "name": "Test Company"},
             title="Test Document",
             category="Test",
-            publish_date=datetime(2023, 9, 15, 10, 30, 0).date()
+            publish_date="2023-09-15T10:30:00Z",
+            source_url="https://example.com/test.pdf",
+            summary=["Test summary"]
         )
-        assert isinstance(doc_with_datetime.publish_date, date)
+        assert doc_with_datetime.publish_date == "2023-09-15T10:30:00Z"
 
     def test_keywords_list_handling(self):
         """Test keywords list handling."""
         # Empty list
         doc = CompanyDocItem(
-            doc_id="doc123",
-            company_name="Test Company",
+            doc_id=123,
+            company={"company_id": 456, "name": "Test Company"},
             title="Test Document",
             category="Test",
-            publish_date=date(2023, 9, 15),
+            publish_date="2023-09-15T00:00:00Z",
+            source_url="https://example.com/test.pdf",
+            summary=["Test summary"],
             keywords=[]
         )
         assert doc.keywords == []
 
         # List with multiple keywords
         doc_with_keywords = CompanyDocItem(
-            doc_id="doc124",
-            company_name="Test Company",
+            doc_id=124,
+            company={"company_id": 456, "name": "Test Company"},
             title="Test Document",
             category="Test",
-            publish_date=date(2023, 9, 15),
+            publish_date="2023-09-15T00:00:00Z",
+            source_url="https://example.com/test.pdf",
+            summary=["Test summary"],
             keywords=["ESG", "sustainability", "climate"]
         )
         assert len(doc_with_keywords.keywords) == 3
@@ -495,21 +546,27 @@ class TestCompanyDocsModelValidation:
         """Test attachments list handling in CompanyDocDetails."""
         # Empty attachments
         doc = CompanyDocDetails(
-            doc_id="doc123",
-            company_name="Test Company",
+            doc_id=123,
+            company={"company_id": 456, "name": "Test Company"},
             title="Test Document",
             category="Test",
-            publish_date=date(2023, 9, 15)
+            publish_date="2023-09-15T00:00:00Z",
+            source_url="https://example.com/test.pdf",
+            summary="Test summary",
+            content_preview="Test preview"
         )
         assert doc.attachments == []
 
         # With attachments
         doc_with_attachments = CompanyDocDetails(
-            doc_id="doc124",
-            company_name="Test Company",
+            doc_id=124,
+            company={"company_id": 456, "name": "Test Company"},
             title="Test Document",
             category="Test",
-            publish_date=date(2023, 9, 15),
+            publish_date="2023-09-15T00:00:00Z",
+            source_url="https://example.com/test.pdf",
+            summary="Test summary",
+            content_preview="Test preview",
             attachments=[
                 {"name": "report.pdf", "url": "https://example.com/report.pdf"},
                 {"name": "summary.pdf", "url": "https://example.com/summary.pdf"}

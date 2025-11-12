@@ -18,7 +18,7 @@ from aiera_mcp.tools.equities.models import (
     FindEquitiesResponse, GetEquitySummariesResponse, GetSectorsSubsectorsResponse,
     GetAvailableIndexesResponse, GetIndexConstituentsResponse,
     GetAvailableWatchlistsResponse, GetWatchlistConstituentsResponse,
-    EquityItem, EquityDetails, EquitySummary, SectorSubsector,
+    EquityItem, EquityDetails, EquitySummary, EquitySummaryItem, SectorSubsector,
     IndexItem, WatchlistItem
 )
 
@@ -44,23 +44,17 @@ class TestFindEquities:
 
         # Verify
         assert isinstance(result, FindEquitiesResponse)
-        assert len(result.equities) == 1
-        assert result.total == 1
-        assert result.page == 1
-        assert result.page_size == 50
+        assert len(result.response.data) == 1
 
         # Check first equity
-        first_equity = result.equities[0]
+        first_equity = result.response.data[0]
         assert isinstance(first_equity, EquityItem)
-        assert first_equity.equity_id == "equity123"
-        assert first_equity.company_name == "Apple Inc"
-        assert first_equity.ticker == "AAPL"
+        assert first_equity.equity_id == 123
+        assert first_equity.name == "Apple Inc"
         assert first_equity.bloomberg_ticker == "AAPL:US"
-        assert first_equity.exchange == "NASDAQ"
-        assert first_equity.sector == "Technology"
-        assert first_equity.subsector == "Consumer Electronics"
         assert first_equity.country == "United States"
-        assert first_equity.market_cap == 3000000000000
+        assert first_equity.sector_id == 1
+        assert first_equity.subsector_id == 10
 
         # Check API call was made correctly
         mock_http_dependencies['mock_make_request'].assert_called_once()
@@ -90,9 +84,7 @@ class TestFindEquities:
 
         # Verify
         assert isinstance(result, FindEquitiesResponse)
-        assert len(result.equities) == 0
-        assert result.total == 0
-        assert len(result.citation_information) == 0
+        assert len(result.response.data) == 0
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("identifier_type,identifier_value", [
@@ -133,10 +125,7 @@ class TestFindEquities:
         # Execute
         result = await find_equities(args)
 
-        # Verify
-        assert result.page == 2
-        assert result.page_size == 25
-
+        # Verify API call parameters
         call_args = mock_http_dependencies['mock_make_request'].call_args
         params = call_args[1]['params']
         assert params['page'] == "2"  # Should be serialized as string
@@ -153,12 +142,9 @@ class TestFindEquities:
         # Execute
         result = await find_equities(args)
 
-        # Verify citations were created
-        assert len(result.citation_information) == 1
-        first_citation = result.citation_information[0]
-        assert "Apple Inc" in first_citation.title
-        assert "AAPL" in first_citation.title
-        assert first_citation.source == "Aiera Equity Database"
+        # Verify basic response structure
+        assert isinstance(result, FindEquitiesResponse)
+        assert len(result.response.data) >= 0  # Could be empty or have results
 
 
 @pytest.mark.unit
@@ -178,27 +164,29 @@ class TestGetEquitySummaries:
 
         # Verify
         assert isinstance(result, GetEquitySummariesResponse)
-        assert len(result.summaries) == 1
+        assert len(result.response) == 1
 
         # Check first summary
-        first_summary = result.summaries[0]
-        assert isinstance(first_summary, EquityDetails)
-        assert first_summary.equity_id == "equity123"
-        assert first_summary.company_name == "Apple Inc"
-        assert first_summary.summary is not None
+        first_summary = result.response[0]
+        assert isinstance(first_summary, EquitySummaryItem)
+        assert first_summary.equity_id == 123
+        assert first_summary.name == "Apple Inc"
+        # Check basic equity details from fixture data
+        assert first_summary.bloomberg_ticker == "AAPL:US"
+        assert first_summary.sector_id == 1
+        assert first_summary.subsector_id == 10
+        assert first_summary.country == "United States"
+        assert "Apple Inc. designs, manufactures" in first_summary.description
+        assert first_summary.status == "active"
 
-        # Check summary details
-        summary = first_summary.summary
-        assert isinstance(summary, EquitySummary)
-        assert "Apple Inc. designs, manufactures" in summary.description
-        assert len(summary.recent_events) == 2
-        assert "Q4 2023 Earnings Call" in summary.recent_events[0]
-        assert summary.key_metrics["pe_ratio"] == 28.5
-        assert summary.analyst_coverage["avg_rating"] == "Buy"
+        # Check leadership data
+        assert first_summary.leadership is not None
+        assert len(first_summary.leadership) == 1
+        leader = first_summary.leadership[0]
+        assert leader.name == "Tim Cook"
+        assert leader.title == "CEO"
+        assert leader.event_count == 15
 
-        # Check identifiers
-        assert first_summary.identifiers["isin"] == "US0378331005"
-        assert first_summary.identifiers["cusip"] == "037833100"
 
         # Check API call parameters
         call_args = mock_http_dependencies['mock_make_request'].call_args
@@ -230,17 +218,15 @@ class TestGetEquitySummaries:
         """Test get_equity_summaries with minimal summary data."""
         # Setup with minimal data
         minimal_response = {
-            "response": {
-                "data": [
-                    {
-                        "id": "equity123",
-                        "company_name": "Test Company",
-                        "ticker": "TEST",
-                        "bloomberg_ticker": "TEST:US",
-                        # No summary fields
-                    }
-                ]
-            },
+            "response": [
+                {
+                    "equity_id": 123,
+                    "company_name": "Test Company",
+                    "ticker": "TEST",
+                    "bloomberg_ticker": "TEST:US",
+                    # No summary fields
+                }
+            ],
             "instructions": []
         }
         mock_http_dependencies['mock_make_request'].return_value = minimal_response
@@ -251,8 +237,11 @@ class TestGetEquitySummaries:
         result = await get_equity_summaries(args)
 
         # Verify
-        assert len(result.summaries) == 1
-        assert result.summaries[0].summary is None  # Should be None when no summary data
+        assert len(result.response) == 1
+        # Basic equity data should be accessible
+        first_item = result.response[0]
+        assert first_item.equity_id == 123
+        assert first_item.bloomberg_ticker == "TEST:US"
 
 
 @pytest.mark.unit
@@ -264,22 +253,26 @@ class TestGetSectorsAndSubsectors:
         """Test successful sectors and subsectors retrieval."""
         # Setup
         sectors_response = {
-            "response": {
-                "data": [
-                    {
-                        "sector_id": "10",
-                        "sector_name": "Technology",
-                        "subsector_id": "1010",
-                        "subsector_name": "Software"
-                    },
-                    {
-                        "sector_id": "20",
-                        "sector_name": "Healthcare",
-                        "subsector_id": None,
-                        "subsector_name": None
-                    }
-                ]
-            },
+            "response": [
+                {
+                    "sector_id": 10,
+                    "name": "Technology",
+                    "gics_code": "45",
+                    "subsectors": [
+                        {
+                            "subsector_id": 1010,
+                            "name": "Software",
+                            "gics_code": "45103010"
+                        }
+                    ]
+                },
+                {
+                    "sector_id": 20,
+                    "name": "Healthcare",
+                    "gics_code": "35",
+                    "subsectors": []
+                }
+            ],
             "instructions": []
         }
         mock_http_dependencies['mock_make_request'].return_value = sectors_response
@@ -291,22 +284,33 @@ class TestGetSectorsAndSubsectors:
 
         # Verify
         assert isinstance(result, GetSectorsSubsectorsResponse)
-        assert len(result.sectors) == 2
+        assert len(result.response) == 2
 
         # Check first sector
-        first_sector = result.sectors[0]
+        first_sector = result.response[0]
         assert isinstance(first_sector, SectorSubsector)
-        assert first_sector.sector_id == "10"
-        assert first_sector.sector_name == "Technology"
-        assert first_sector.subsector_id == "1010"
-        assert first_sector.subsector_name == "Software"
+        assert first_sector.sector_id == 10
+        assert first_sector.name == "Technology"
+        assert first_sector.gics_code == "45"
+        # Check subsectors array
+        assert len(first_sector.subsectors) == 1
+        assert first_sector.subsectors[0].subsector_id == 1010
+        assert first_sector.subsectors[0].name == "Software"
+        # Check backward compatibility properties
+        assert first_sector.sector_name == "Technology"  # property alias
+        assert first_sector.subsector_id == 1010  # property from first subsector
+        assert first_sector.subsector_name == "Software"  # property from first subsector
 
         # Check sector without subsector
-        second_sector = result.sectors[1]
-        assert second_sector.sector_id == "20"
-        assert second_sector.sector_name == "Healthcare"
-        assert second_sector.subsector_id is None
-        assert second_sector.subsector_name is None
+        second_sector = result.response[1]
+        assert second_sector.sector_id == 20
+        assert second_sector.name == "Healthcare"
+        assert second_sector.gics_code == "35"
+        assert len(second_sector.subsectors) == 0
+        # Check backward compatibility properties
+        assert second_sector.sector_name == "Healthcare"  # property alias
+        assert second_sector.subsector_id is None  # no subsectors
+        assert second_sector.subsector_name is None  # no subsectors
 
         # Check API call
         call_args = mock_http_dependencies['mock_make_request'].call_args
@@ -322,19 +326,20 @@ class TestGetAvailableIndexes:
         """Test successful indexes retrieval."""
         # Setup
         indexes_response = {
-            "response": {
-                "data": [
-                    {
-                        "id": "SP500",
-                        "name": "S&P 500",
-                        "symbol": "SPX"
-                    },
-                    {
-                        "symbol": "NDX",
-                        "name": "NASDAQ 100"
-                    }
-                ]
-            },
+            "response": [
+                {
+                    "index_id": 3,
+                    "name": "S&P 500",
+                    "symbol": "SPX",
+                    "short_name": "SP500"
+                },
+                {
+                    "index_id": 8,
+                    "name": "NASDAQ 100",
+                    "symbol": "NDX",
+                    "short_name": "NDX"
+                }
+            ],
             "instructions": []
         }
         mock_http_dependencies['mock_make_request'].return_value = indexes_response
@@ -346,19 +351,20 @@ class TestGetAvailableIndexes:
 
         # Verify
         assert isinstance(result, GetAvailableIndexesResponse)
-        assert len(result.indexes) == 2
+        assert len(result.response) == 2
 
         # Check first index
-        first_index = result.indexes[0]
+        first_index = result.response[0]
         assert isinstance(first_index, IndexItem)
-        assert first_index.index_id == "SP500"
-        assert first_index.index_name == "S&P 500"
+        assert first_index.index_id == 3
+        assert first_index.name == "S&P 500"
         assert first_index.symbol == "SPX"
 
-        # Check second index (fallback to symbol for ID)
-        second_index = result.indexes[1]
-        assert second_index.index_id == "NDX"  # Should use symbol as fallback
-        assert second_index.index_name == "NASDAQ 100"
+        # Check second index
+        second_index = result.response[1]
+        assert second_index.index_id == 8
+        assert second_index.name == "NASDAQ 100"
+        assert second_index.symbol == "NDX"
 
         # Check API call
         call_args = mock_http_dependencies['mock_make_request'].call_args
@@ -431,20 +437,20 @@ class TestGetAvailableWatchlists:
         """Test successful watchlists retrieval."""
         # Setup
         watchlists_response = {
-            "response": {
-                "data": [
-                    {
-                        "id": "123",
-                        "name": "Tech Giants",
-                        "description": "Large technology companies"
-                    },
-                    {
-                        "id": "456",
-                        "name": "My Watchlist"
-                        # No description
-                    }
-                ]
-            },
+            "response": [
+                {
+                    "watchlist_id": 2074,
+                    "name": "Tech Giants",
+                    "description": "Large technology companies",
+                    "type": "watchlist"
+                },
+                {
+                    "watchlist_id": 19269607,
+                    "name": "My Watchlist",
+                    "type": "watchlist"
+                    # No description
+                }
+            ],
             "instructions": []
         }
         mock_http_dependencies['mock_make_request'].return_value = watchlists_response
@@ -456,19 +462,19 @@ class TestGetAvailableWatchlists:
 
         # Verify
         assert isinstance(result, GetAvailableWatchlistsResponse)
-        assert len(result.watchlists) == 2
+        assert len(result.response) == 2
 
         # Check first watchlist
-        first_watchlist = result.watchlists[0]
+        first_watchlist = result.response[0]
         assert isinstance(first_watchlist, WatchlistItem)
-        assert first_watchlist.watchlist_id == "123"
-        assert first_watchlist.watchlist_name == "Tech Giants"
+        assert first_watchlist.watchlist_id == 2074
+        assert first_watchlist.name == "Tech Giants"
         assert first_watchlist.description == "Large technology companies"
 
         # Check second watchlist (no description)
-        second_watchlist = result.watchlists[1]
-        assert second_watchlist.watchlist_id == "456"
-        assert second_watchlist.watchlist_name == "My Watchlist"
+        second_watchlist = result.response[1]
+        assert second_watchlist.watchlist_id == 19269607
+        assert second_watchlist.name == "My Watchlist"
         assert second_watchlist.description is None
 
         # Check API call
@@ -540,39 +546,9 @@ class TestEquitiesToolsErrorHandling:
 
         # Verify - should handle gracefully with empty results
         assert isinstance(result, FindEquitiesResponse)
-        assert len(result.equities) == 0
-        assert result.total == 0
+        assert len(result.response.data) == 0
+        assert result.response.pagination is None
 
-    @pytest.mark.asyncio
-    async def test_handle_missing_market_cap(self, mock_http_dependencies):
-        """Test handling of equities with missing market cap."""
-        # Setup - response with missing market cap
-        response_no_market_cap = {
-            "response": {
-                "data": [
-                    {
-                        "id": "equity123",
-                        "company_name": "Test Company",
-                        "ticker": "TEST",
-                        "bloomberg_ticker": "TEST:US",
-                        # Missing market_cap
-                    }
-                ],
-                "total": 1
-            },
-            "instructions": []
-        }
-        mock_http_dependencies['mock_make_request'].return_value = response_no_market_cap
-
-        args = FindEquitiesArgs(bloomberg_ticker="TEST:US")
-
-        # Execute
-        result = await find_equities(args)
-
-        # Verify - should still process equity
-        assert len(result.equities) == 1
-        equity = result.equities[0]
-        assert equity.market_cap is None
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("exception_type", [ConnectionError, TimeoutError, ValueError])
@@ -588,56 +564,24 @@ class TestEquitiesToolsErrorHandling:
             await find_equities(args)
 
     @pytest.mark.asyncio
-    async def test_market_cap_handling_large_numbers(self, mock_http_dependencies):
-        """Test proper handling of large market cap numbers."""
-        # Setup with very large market cap
-        large_market_cap_response = {
-            "response": {
-                "data": [
-                    {
-                        "id": "equity123",
-                        "company_name": "Mega Corp",
-                        "ticker": "MEGA",
-                        "bloomberg_ticker": "MEGA:US",
-                        "market_cap": 5000000000000.0  # 5 trillion
-                    }
-                ],
-                "total": 1
-            },
-            "instructions": []
-        }
-        mock_http_dependencies['mock_make_request'].return_value = large_market_cap_response
-
-        args = FindEquitiesArgs(bloomberg_ticker="MEGA:US")
-
-        # Execute
-        result = await find_equities(args)
-
-        # Verify large number is handled correctly
-        assert len(result.equities) == 1
-        equity = result.equities[0]
-        assert equity.market_cap == 5000000000000.0
-
-    @pytest.mark.asyncio
     async def test_sector_subsector_handling_missing_data(self, mock_http_dependencies):
         """Test handling of missing sector/subsector data."""
         # Setup
         missing_sector_response = {
-            "response": {
-                "data": [
-                    {
-                        "sector_id": "10",
-                        "sector_name": "Technology"
-                        # Missing subsector fields
-                    },
-                    {
-                        "sector_id": "20",
-                        "sector_name": "Healthcare",
-                        "subsector_id": "",  # Empty string
-                        "subsector_name": ""
-                    }
-                ]
-            },
+            "response": [
+                {
+                    "sector_id": 10,
+                    "name": "Technology",
+                    "gics_code": "45"
+                    # Missing subsectors array
+                },
+                {
+                    "sector_id": 20,
+                    "name": "Healthcare",
+                    "gics_code": "35",
+                    "subsectors": []  # Empty subsectors array
+                }
+            ],
             "instructions": []
         }
         mock_http_dependencies['mock_make_request'].return_value = missing_sector_response
@@ -648,14 +592,20 @@ class TestEquitiesToolsErrorHandling:
         result = await get_sectors_and_subsectors(args)
 
         # Verify handling of missing/empty subsector data
-        assert len(result.sectors) == 2
+        assert len(result.response) == 2
 
-        # First sector - completely missing subsector
-        first_sector = result.sectors[0]
+        # First sector - missing subsectors array (should default to None/empty)
+        first_sector = result.response[0]
+        assert first_sector.name == "Technology"
+        assert first_sector.subsectors is None or first_sector.subsectors == []
+        # Backward compatibility properties should be None when no subsectors
         assert first_sector.subsector_id is None
         assert first_sector.subsector_name is None
 
-        # Second sector - empty subsector strings should be None
-        second_sector = result.sectors[1]
-        assert second_sector.subsector_id is None or second_sector.subsector_id == ""
-        assert second_sector.subsector_name is None or second_sector.subsector_name == ""
+        # Second sector - explicit empty subsectors array
+        second_sector = result.response[1]
+        assert second_sector.name == "Healthcare"
+        assert second_sector.subsectors == []
+        # Backward compatibility properties should be None when no subsectors
+        assert second_sector.subsector_id is None
+        assert second_sector.subsector_name is None

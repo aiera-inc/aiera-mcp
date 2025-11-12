@@ -166,15 +166,43 @@ class GetUpcomingEventsArgs(BaseToolArgs, BloombergTickerMixin):
 
 
 # Response models (extracted from responses.py)
+class EquityInfo(BaseModel):
+    """Company equity information embedded in events."""
+    equity_id: Optional[int] = Field(None, description="Equity ID")
+    company_id: Optional[int] = Field(None, description="Company ID")
+    name: Optional[str] = Field(None, description="Name of the company")
+    bloomberg_ticker: Optional[str] = Field(None, description="Bloomberg ticker")
+    sector_id: Optional[int] = Field(None, description="Sector ID")
+    subsector_id: Optional[int] = Field(None, description="Subsector ID")
+    primary_equity: Optional[bool] = Field(None, description="Is primary equity")
+
+class GroupingInfo(BaseModel):
+    """Event grouping information."""
+    grouping_id: Optional[int] = Field(None, description="Grouping ID")
+    grouping_name: Optional[str] = Field(None, description="Grouping name")
+
+class SummaryInfo(BaseModel):
+    """Event summary information."""
+    title: Optional[str] = Field(None, description="Summary title")
+    summary: Optional[List[str]] = Field(None, description="Summary content as list")
+
+class CitationInfo(BaseModel):
+    """Citation information for events."""
+    title: Optional[str] = Field(None, description="Citation title")
+    url: Optional[str] = Field(None, description="Citation URL")
+
 class EventItem(BaseModel):
     """Basic event information."""
-    event_id: str = Field(..., description="Unique identifier for the event")
+    event_id: int = Field(..., description="Unique identifier for the event")
     title: str = Field(..., description="Event title")
-    event_type: EventType = Field(..., description="Type of event")
+    event_type: str = Field(..., description="Type of event")
     event_date: datetime = Field(..., description="Date and time of the event")
-    company_name: Optional[str] = Field(None, description="Name of the company")
-    ticker: Optional[str] = Field(None, description="Company ticker symbol")
-    event_status: Optional[str] = Field(None, description="Status of the event (confirmed, estimated, etc.)")
+    equity: Optional[EquityInfo] = Field(None, description="Company equity information")
+    event_category: Optional[str] = Field(None, description="Event category")
+    expected_language: Optional[str] = Field(None, description="Expected language of the event")
+    grouping: Optional[GroupingInfo] = Field(None, description="Event grouping information")
+    summary: Optional[SummaryInfo] = Field(None, description="Event summary")
+    citation_information: Optional[CitationInfo] = Field(None, description="Citation information")
 
     @field_serializer('event_date')
     def serialize_event_date(self, value: datetime) -> str:
@@ -189,9 +217,22 @@ class EventDetails(EventItem):
     audio_url: Optional[str] = Field(None, description="URL to event audio")
 
 
-class FindEventsResponse(PaginatedResponse):
-    """Response from finding events."""
-    events: List[EventItem] = Field(..., description="List of matching events")
+class ApiPaginationInfo(BaseModel):
+    """Pagination information from API response."""
+    total_count: Optional[int] = Field(None, description="Total number of items")
+    current_page: Optional[int] = Field(None, description="Current page number")
+    total_pages: Optional[int] = Field(None, description="Total number of pages")
+    page_size: Optional[int] = Field(None, description="Items per page")
+
+class ApiResponseData(BaseModel):
+    """API response structure with data and pagination."""
+    data: List[EventItem] = Field(..., description="List of events")
+    pagination: Optional[ApiPaginationInfo] = Field(None, description="Pagination information")
+
+class FindEventsResponse(BaseModel):
+    """Response from finding events - matches actual API structure."""
+    instructions: Optional[List[str]] = Field(None, description="API instructions")
+    response: ApiResponseData = Field(..., description="Response data")
 
 
 class GetEventResponse(BaseAieraResponse):
@@ -199,6 +240,12 @@ class GetEventResponse(BaseAieraResponse):
     event: EventDetails = Field(..., description="Detailed event information")
 
 
-class GetUpcomingEventsResponse(BaseAieraResponse):
-    """Response from getting upcoming events."""
-    events: List[EventItem] = Field(..., description="List of upcoming events")
+class UpcomingEventsData(BaseModel):
+    """Upcoming events response structure with estimates and actuals."""
+    estimates: Optional[List[EventItem]] = Field(None, description="Estimated events")
+    actuals: Optional[List[EventItem]] = Field(None, description="Actual/confirmed events")
+
+class GetUpcomingEventsResponse(BaseModel):
+    """Response from getting upcoming events - matches actual API structure."""
+    instructions: Optional[List[str]] = Field(None, description="API instructions")
+    response: UpcomingEventsData = Field(..., description="Response data")

@@ -40,58 +40,9 @@ async def find_third_bridge_events(args: FindThirdBridgeEventsArgs) -> FindThird
         params=params,
     )
 
-    # Transform raw response to structured format
-    # Handle both old format (response.data) and new format (data directly)
-    if "response" in raw_response:
-        api_data = raw_response.get("response", {})
-        events_data = api_data.get("data", [])
-        total_count = api_data.get("total", 0)
-    else:
-        # New API format with pagination object
-        events_data = raw_response.get("data", [])
-        pagination = raw_response.get("pagination", {})
-        total_count = pagination.get("total_count", len(events_data))
-
-    events = []
-    citations = []
-
-    for event_data in events_data:
-        # Parse event date safely
-        event_date = None
-        try:
-            if event_data.get("event_date"):
-                event_date = datetime.fromisoformat(event_data["event_date"].replace("Z", "+00:00"))
-            else:
-                event_date = datetime.now()
-        except (ValueError, AttributeError):
-            event_date = datetime.now()
-
-        event_item = ThirdBridgeEventItem(
-            event_id=str(event_data.get("id", "")),
-            title=event_data.get("title", ""),
-            company_name=event_data.get("company_name"),
-            event_date=event_date,
-            expert_name=event_data.get("expert_name"),
-            expert_title=event_data.get("expert_title")
-        )
-        events.append(event_item)
-
-        # Add citation if we have URL information
-        if event_data.get("url"):
-            citations.append(CitationInfo(
-                title=f"Third Bridge: {event_data.get('title', '')}",
-                url=event_data.get("url"),
-                timestamp=event_date
-            ))
-
-    return FindThirdBridgeEventsResponse(
-        events=events,
-        total=total_count,
-        page=args.page,
-        page_size=args.page_size,
-        instructions=raw_response.get("instructions", []),
-        citation_information=citations
-    )
+    # Return the structured response directly - no transformation needed
+    # since FindThirdBridgeEventsResponse model now matches the actual API format
+    return FindThirdBridgeEventsResponse.model_validate(raw_response)
 
 
 async def get_third_bridge_event(args: GetThirdBridgeEventArgs) -> GetThirdBridgeEventResponse:
@@ -134,36 +85,37 @@ async def get_third_bridge_event(args: GetThirdBridgeEventArgs) -> GetThirdBridg
 
     event_data = events_data[0]  # Get the first (and should be only) event
 
-    # Parse event date safely
-    event_date = None
-    try:
-        if event_data.get("event_date"):
-            event_date = datetime.fromisoformat(event_data["event_date"].replace("Z", "+00:00"))
-        else:
-            event_date = datetime.now()
-    except (ValueError, AttributeError):
-        event_date = datetime.now()
-
-    # Build detailed event
+    # Build detailed event using new API field names
     event_details = ThirdBridgeEventDetails(
-        event_id=str(event_data.get("id", "")),
+        event_id=event_data.get("event_id", ""),
+        content_type=event_data.get("content_type", ""),
+        call_date=event_data.get("call_date", ""),
         title=event_data.get("title", ""),
-        company_name=event_data.get("company_name"),
-        event_date=event_date,
-        expert_name=event_data.get("expert_name"),
-        expert_title=event_data.get("expert_title"),
-        agenda=event_data.get("agenda"),
-        insights=event_data.get("insights"),
+        language=event_data.get("language", ""),
+        agenda=event_data.get("agenda"),  # This should be Optional[str] in ThirdBridgeEventDetails
+        insights=event_data.get("insights"),  # This should be Optional[str] in ThirdBridgeEventDetails
+        citation_block=event_data.get("citation_block"),
         transcript=event_data.get("transcript")
     )
 
-    # Build citation
+    # Build citation using citation_block from new API format
     citations = []
-    if event_data.get("url"):
+    citation_block = event_data.get("citation_block")
+    if citation_block and citation_block.get("url"):
+        # Parse the call_date for timestamp
+        timestamp = None
+        try:
+            if event_data.get("call_date"):
+                timestamp = datetime.fromisoformat(event_data["call_date"].replace("Z", "+00:00"))
+            else:
+                timestamp = datetime.now()
+        except (ValueError, AttributeError):
+            timestamp = datetime.now()
+
         citations.append(CitationInfo(
-            title=f"Third Bridge: {event_data.get('title', '')}",
-            url=event_data.get("url"),
-            timestamp=event_date
+            title=f"Third Bridge: {citation_block.get('title', event_data.get('title', ''))}",
+            url=citation_block.get("url"),
+            timestamp=timestamp
         ))
 
     return GetThirdBridgeEventResponse(

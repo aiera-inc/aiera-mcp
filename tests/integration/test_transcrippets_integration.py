@@ -35,8 +35,7 @@ class TestTranscrippetsIntegration:
         """Test find_transcrippets with real API."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # Test with a date range that might have transcrippets
             date_range = sample_date_ranges[1]  # Q1 2024
@@ -76,8 +75,7 @@ class TestTranscrippetsIntegration:
         """Test find_transcrippets with ticker filter."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # Test with Apple ticker
             args = FindTranscrippetsArgs(
@@ -110,8 +108,7 @@ class TestTranscrippetsIntegration:
         """Test find_transcrippets with extended date range to increase chance of finding results."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # Test with a longer date range to increase chance of finding transcrippets
             args = FindTranscrippetsArgs(
@@ -145,8 +142,7 @@ class TestTranscrippetsIntegration:
         """Test find_transcrippets with search query."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # Test search for earnings-related transcrippets
             args = FindTranscrippetsArgs(
@@ -177,8 +173,7 @@ class TestTranscrippetsIntegration:
         """Test create_transcrippet with real API - requires complex transcript data."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # Creating transcrippets requires detailed transcript item data
             # that's not available in simple integration tests
@@ -236,8 +231,7 @@ class TestTranscrippetsIntegration:
         """Test delete_transcrippet with invalid transcrippet ID."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # Test with invalid transcrippet ID
             delete_args = DeleteTranscrippetArgs(transcrippet_id="invalid-transcrippet-id-12345")
@@ -262,8 +256,7 @@ class TestTranscrippetsIntegration:
         """Test transcrippets API error handling with invalid API key."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_api_key_from_context', return_value="invalid-api-key"):
+        with patch('aiera_mcp.tools.base.get_api_key_from_context', return_value="invalid-api-key"):
 
             args = FindTranscrippetsArgs(
                 start_date="2023-10-01",
@@ -293,8 +286,7 @@ class TestTranscrippetsIntegration:
         """Test that transcrippets return proper response structures even when no data exists."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # Test with a narrow date range that probably won't have transcrippets
             args = FindTranscrippetsArgs(
@@ -323,8 +315,7 @@ class TestTranscrippetsIntegration:
         """Test that transcrippets responses include citation information with public URLs."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             args = FindTranscrippetsArgs(
                 start_date="2023-01-01",
@@ -376,8 +367,7 @@ class TestTranscrippetsIntegration:
             }
         ]
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             for filter_combo in filter_combinations:
                 await api_rate_limiter.wait()
@@ -408,8 +398,7 @@ class TestTranscrippetsIntegration:
         """Test that transcrippets generate properly formatted public URLs."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             args = FindTranscrippetsArgs(
                 start_date="2023-01-01",
@@ -443,8 +432,7 @@ class TestTranscrippetsIntegration:
         """Test that transcrippets properly handle array response format (different from other APIs)."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             args = FindTranscrippetsArgs(
                 start_date="2023-01-01",

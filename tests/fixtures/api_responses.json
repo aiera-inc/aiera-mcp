@@ -4,54 +4,111 @@
       "response": {
         "data": [
           {
-            "id": "event123",
+            "event_id": 12345,
             "title": "Apple Inc Q4 2023 Earnings Call",
             "event_type": "earnings",
             "event_date": "2023-10-26T21:00:00Z",
-            "company_name": "Apple Inc",
-            "ticker": "AAPL",
-            "event_status": "confirmed",
-            "description": "Apple Inc quarterly earnings call for Q4 2023",
-            "transcript_preview": "Welcome to the Apple Q4 2023 earnings call. We'll begin with prepared remarks...",
-            "audio_url": "https://example.com/audio/event123.mp3",
-            "url": "https://aiera.com/event/event123"
+            "equity": {
+              "equity_id": 123,
+              "company_id": 456,
+              "name": "Apple Inc",
+              "bloomberg_ticker": "AAPL:US"
+            },
+            "citation_information": {
+              "title": "Apple Inc Q4 2023 Earnings Call",
+              "url": "https://aiera.com/event/12345"
+            }
           },
           {
-            "id": "event456",
+            "event_id": 67890,
             "title": "Microsoft Corp Investor Meeting",
             "event_type": "investor_meeting",
             "event_date": "2023-10-27T17:00:00Z",
-            "company_name": "Microsoft Corporation",
-            "ticker": "MSFT",
-            "event_status": "confirmed",
-            "description": "Microsoft investor meeting discussing cloud strategy",
-            "url": "https://aiera.com/event/event456"
+            "equity": {
+              "equity_id": 789,
+              "company_id": 101,
+              "name": "Microsoft Corporation",
+              "bloomberg_ticker": "MSFT:US"
+            },
+            "citation_information": {
+              "title": "Microsoft Corp Investor Meeting",
+              "url": "https://aiera.com/event/67890"
+            }
           }
         ],
-        "total": 2
+        "pagination": {
+          "total_count": 2,
+          "current_page": 1,
+          "total_pages": 1,
+          "page_size": 50
+        }
       },
       "instructions": ["Events found successfully"]
     },
     "get_event_success": {
       "response": {
-        "data": [
-          {
-            "id": "event123",
+        "event": {
+          "event_id": 12345,
+          "title": "Apple Inc Q4 2023 Earnings Call",
+          "event_type": "earnings",
+          "event_date": "2023-10-26T21:00:00Z",
+          "equity": {
+            "equity_id": 123,
+            "company_id": 456,
+            "name": "Apple Inc",
+            "bloomberg_ticker": "AAPL:US"
+          },
+          "description": "Apple Inc quarterly earnings call for Q4 2023",
+          "transcript_preview": "Welcome to the Apple Q4 2023 earnings call. We'll begin with prepared remarks from CEO Tim Cook...",
+          "audio_url": "https://example.com/audio/event12345.mp3",
+          "citation_information": {
             "title": "Apple Inc Q4 2023 Earnings Call",
+            "url": "https://aiera.com/event/12345"
+          }
+        }
+      },
+      "instructions": ["Event retrieved successfully"]
+    },
+    "get_upcoming_events_success": {
+      "response": {
+        "estimates": [
+          {
+            "event_id": 11111,
+            "title": "Apple Inc Q1 2024 Earnings Call (Estimated)",
             "event_type": "earnings",
-            "event_date": "2023-10-26T21:00:00Z",
-            "company_name": "Apple Inc",
-            "ticker": "AAPL",
-            "event_status": "confirmed",
-            "description": "Apple Inc quarterly earnings call for Q4 2023",
-            "transcript_preview": "Welcome to the Apple Q4 2023 earnings call. We'll begin with prepared remarks from CEO Tim Cook...",
-            "audio_url": "https://example.com/audio/event123.mp3",
-            "url": "https://aiera.com/event/event123",
-            "transcript": "Full transcript content here..."
+            "event_date": "2024-01-30T22:00:00Z",
+            "equity": {
+              "equity_id": 123,
+              "company_id": 456,
+              "name": "Apple Inc",
+              "bloomberg_ticker": "AAPL:US"
+            },
+            "citation_information": {
+              "title": "Apple Inc Q1 2024 Earnings Call (Estimated)",
+              "url": "https://aiera.com/event/11111"
+            }
+          }
+        ],
+        "actuals": [
+          {
+            "event_id": 22222,
+            "title": "Microsoft Corp Q4 2023 Earnings Call",
+            "event_type": "earnings",
+            "event_date": "2023-11-15T21:00:00Z",
+            "equity": {
+              "equity_id": 789,
+              "company_id": 101,
+              "name": "Microsoft Corporation",
+              "bloomberg_ticker": "MSFT:US"
+            },
+            "citation_information": {
+              "title": "Microsoft Corp Q4 2023 Earnings Call",
+              "url": "https://aiera.com/event/22222"
+            }
           }
         ]
       },
-      "instructions": ["Event retrieved successfully"]
+      "instructions": ["Upcoming events retrieved successfully"]
     }
   },
   "filings": {
@@ -59,15 +116,17 @@
       "response": {
         "data": [
           {
-            "id": "filing789",
-            "company_name": "Apple Inc",
-            "ticker": "AAPL",
-            "form_type": "10-K",
+            "filing_id": 789,
             "title": "Annual Report",
             "filing_date": "2023-10-27T00:00:00Z",
             "period_end_date": "2023-09-30T00:00:00Z",
-            "is_amendment": false,
-            "official_url": "https://sec.gov/filing/filing789"
+            "is_amendment": 0,
+            "equity": {
+              "company_name": "Apple Inc",
+              "ticker": "AAPL"
+            },
+            "form_number": "10-K",
+            "form_name": "10-K"
           }
         ],
         "total": 1
@@ -78,28 +137,18 @@
       "response": {
         "data": [
           {
-            "id": "filing789",
-            "company_name": "Apple Inc",
-            "ticker": "AAPL",
-            "form_type": "10-K",
+            "filing_id": 789,
             "title": "Annual Report",
             "filing_date": "2023-10-27T00:00:00Z",
             "period_end_date": "2023-09-30T00:00:00Z",
-            "is_amendment": false,
-            "official_url": "https://sec.gov/filing/filing789",
-            "summary": "Apple Inc's annual report for fiscal year 2023 showing record revenue and strong performance across all product categories.",
-            "key_points": [
-              "Record revenue of $394.3 billion",
-              "Strong iPhone sales in emerging markets",
-              "Services revenue grew 16% year-over-year"
-            ],
-            "financial_highlights": {
-              "revenue": "$394.3B",
-              "net_income": "$97.0B",
-              "gross_margin": "44.1%"
+            "is_amendment": 0,
+            "equity": {
+              "company_name": "Apple Inc",
+              "ticker": "AAPL"
             },
-            "content_preview": "This annual report contains forward-looking statements...",
-            "document_count": 1
+            "form_number": "10-K",
+            "form_name": "10-K",
+            "summary": "Apple Inc's annual report for fiscal year 2023 showing record revenue and strong performance across all product categories."
           }
         ]
       },
@@ -111,15 +160,15 @@
       "response": {
         "data": [
           {
-            "id": "equity123",
+            "equity_id": 123,
+            "company_id": 456,
+            "name": "Apple Inc",
             "company_name": "Apple Inc",
-            "ticker": "AAPL",
             "bloomberg_ticker": "AAPL:US",
-            "exchange": "NASDAQ",
-            "sector": "Technology",
-            "subsector": "Consumer Electronics",
+            "sector_id": 1,
+            "subsector_id": 10,
             "country": "United States",
-            "market_cap": 3000000000000
+            "primary_equity": true
           }
         ],
         "total": 1
@@ -127,77 +176,144 @@
       "instructions": ["Equity found successfully"]
     },
     "get_equity_summaries_success": {
-      "response": {
-        "data": [
-          {
-            "id": "equity123",
-            "company_name": "Apple Inc",
-            "ticker": "AAPL",
-            "bloomberg_ticker": "AAPL:US",
-            "exchange": "NASDAQ",
-            "sector": "Technology",
-            "subsector": "Consumer Electronics",
-            "country": "United States",
-            "market_cap": 3000000000000,
-            "description": "Apple Inc. designs, manufactures and markets smartphones, personal computers, tablets, wearables and accessories.",
-            "recent_events": [
-              "Q4 2023 Earnings Call",
-              "iPhone 15 Launch Event"
-            ],
-            "key_metrics": {
-              "pe_ratio": 28.5,
-              "price_to_book": 45.2,
-              "dividend_yield": 0.5
-            },
-            "analyst_coverage": {
-              "avg_rating": "Buy",
-              "price_target": "$200.00"
-            },
-            "identifiers": {
-              "isin": "US0378331005",
-              "cusip": "037833100"
+      "response": [
+        {
+          "equity_id": 123,
+          "company_id": 456,
+          "name": "Apple Inc",
+          "bloomberg_ticker": "AAPL:US",
+          "sector_id": 1,
+          "subsector_id": 10,
+          "country": "United States",
+          "description": "Apple Inc. designs, manufactures and markets smartphones, personal computers, tablets, wearables and accessories.",
+          "status": "active",
+          "leadership": [
+            {
+              "name": "Tim Cook",
+              "title": "CEO",
+              "event_count": 15,
+              "last_event_date": "2023-10-26T21:00:00Z"
             }
-          }
-        ]
-      },
+          ]
+        }
+      ],
       "instructions": ["Equity summary retrieved successfully"]
     }
   },
   "company_docs": {
     "find_company_docs_success": {
       "response": {
+        "pagination": {
+          "total_count": 1,
+          "current_page": 1,
+          "total_pages": 1,
+          "page_size": 50
+        },
         "data": [
           {
-            "id": "doc456",
-            "company_name": "Apple Inc",
-            "title": "Sustainability Report 2023",
-            "category": "Sustainability",
-            "keywords": ["environment", "carbon neutral", "renewable energy"],
+            "doc_id": 456789,
+            "company": {
+              "company_id": 12345,
+              "name": "Apple Inc"
+            },
             "publish_date": "2023-09-15T00:00:00Z",
-            "document_type": "report",
-            "url": "https://apple.com/sustainability/pdf/Apple_Environmental_Progress_Report_2023.pdf"
+            "category": "Sustainability",
+            "title": "Sustainability Report 2023",
+            "source_url": "https://apple.com/sustainability/pdf/Apple_Environmental_Progress_Report_2023.pdf",
+            "summary": ["Apple's commitment to environmental sustainability and carbon neutrality goals for 2030."],
+            "keywords": ["environment", "carbon neutral", "renewable energy"],
+            "citation_information": {
+              "title": "Sustainability Report 2023",
+              "url": "https://apple.com/sustainability/pdf/Apple_Environmental_Progress_Report_2023.pdf"
+            }
           }
-        ],
-        "total": 1
+        ]
       },
       "instructions": ["Company document found successfully"]
+    },
+    "get_company_doc_success": {
+      "response": {
+        "document": {
+          "doc_id": 456789,
+          "company": {
+            "company_id": 12345,
+            "name": "Apple Inc"
+          },
+          "publish_date": "2023-09-15T00:00:00Z",
+          "category": "Sustainability",
+          "title": "Sustainability Report 2023",
+          "source_url": "https://apple.com/sustainability/pdf/Apple_Environmental_Progress_Report_2023.pdf",
+          "summary": "Apple's comprehensive sustainability report covering environmental impact, carbon neutrality goals, and renewable energy initiatives.",
+          "content_preview": "This report outlines Apple's environmental initiatives and progress toward becoming carbon neutral across its entire business...",
+          "keywords": ["environment", "carbon neutral", "renewable energy"],
+          "attachments": [],
+          "citation_information": {
+            "title": "Sustainability Report 2023",
+            "url": "https://apple.com/sustainability/pdf/Apple_Environmental_Progress_Report_2023.pdf"
+          }
+        }
+      },
+      "instructions": ["Company document retrieved successfully"]
+    },
+    "get_company_doc_categories_success": {
+      "response": {
+        "pagination": {
+          "total_count": 3,
+          "current_page": 1,
+          "total_pages": 1,
+          "page_size": 50
+        },
+        "data": {
+          "sustainability": 15,
+          "annual_report": 8,
+          "earnings_release": 12
+        }
+      },
+      "instructions": ["Categories retrieved successfully"]
+    },
+    "get_company_doc_keywords_success": {
+      "response": {
+        "pagination": {
+          "total_count": 5,
+          "current_page": 1,
+          "total_pages": 1,
+          "page_size": 50
+        },
+        "data": {
+          "environment": 25,
+          "carbon neutral": 18,
+          "renewable energy": 22,
+          "ESG": 30,
+          "diversity": 12
+        }
+      },
+      "instructions": ["Keywords retrieved successfully"]
     }
   },
   "third_bridge": {
     "find_third_bridge_events_success": {
       "response": {
+        "pagination": {
+          "total_count": 1,
+          "current_page": 1,
+          "total_pages": 1,
+          "page_size": 50
+        },
         "data": [
           {
-            "id": "tb789",
-            "title": "Apple Supply Chain Analysis",
-            "company_name": "Apple Inc",
-            "event_date": "2023-10-20T14:00:00Z",
-            "expert_name": "Jane Smith",
-            "expert_title": "Former Apple Supply Chain Director",
-            "url": "https://thirdbridge.com/event/tb789"
+            "event_id": "11ea4e52843adb71969876b77b0061e1",
+            "content_type": "COMMUNITY",
+            "call_date": "2025-10-13T16:00:00",
+            "title": "Booking.com & OTA Platforms - Former Commercial Executive, Partnerships at Booking Holdings Inc",
+            "language": "eng",
+            "agenda": ["Over 20 years' experience in the travel industry", "Well-placed to discuss Booking's paid vs unpaid traffic split", "Knowledgeable on Booking's inventory-building process"],
+            "insights": null,
+            "citation_block": {
+              "title": "Booking.com & OTA Platforms - Former Commercial Executive, Partnerships at Booking Holdings Inc",
+              "url": "https://dashboard.aiera.com/companies?tabs[0]=evt%7C2829471"
+            }
           }
-        ],
-        "total": 1
+        ]
       },
       "instructions": ["Third Bridge event found successfully"]
     }
@@ -206,27 +322,57 @@
     "find_transcrippets_success": {
       "response": [
         {
-          "transcrippet_id": "trans123",
-          "transcrippet_guid": "guid-123-456",
-          "title": "CEO Comments on Q4 Performance",
+          "transcrippet_id": 123,
+          "company_id": 456,
+          "equity_id": 789,
+          "event_id": 101112,
+          "transcript_item_id": 131415,
+          "user_id": 161718,
+          "audio_url": "https://example.com/audio/trans123.mp3",
+          "company_logo_url": "https://example.com/logo/apple.png",
           "company_name": "Apple Inc",
+          "company_ticker": "AAPL",
+          "created": "2023-10-26T22:00:00Z",
+          "end_ms": 90000,
+          "event_date": "2023-10-26T21:00:00Z",
           "event_title": "Q4 2023 Earnings Call",
-          "transcript_preview": "I'm pleased to report that Q4 was another strong quarter...",
-          "created_date": "2023-10-26T22:00:00Z"
+          "event_type": "earnings",
+          "modified": "2023-10-26T22:05:00Z",
+          "start_ms": 60000,
+          "transcript": "I'm pleased to report that Q4 was another strong quarter...",
+          "transcrippet_guid": "guid-123-456",
+          "transcription_audio_offset_seconds": 30,
+          "trimmed_audio_url": "https://example.com/audio/trans123_trimmed.mp3",
+          "word_durations_ms": [500, 300, 400, 600, 350, 800, 200, 450]
         }
       ],
       "instructions": ["Transcrippet found successfully"]
     },
     "create_transcrippet_success": {
       "response": {
-        "transcrippet_id": "trans456",
-        "transcrippet_guid": "guid-456-789",
-        "title": "New Transcrippet",
-        "company_name": "Apple Inc",
-        "event_title": "Q4 2023 Earnings Call",
-        "transcript_text": "Full transcript text here...",
-        "created_date": "2023-10-26T22:05:00Z",
+        "transcrippet_id": 456,
+        "company_id": 789,
+        "equity_id": 101112,
+        "event_id": 131415,
+        "transcript_item_id": 161718,
+        "user_id": 192021,
         "audio_url": "https://example.com/audio/trans456.mp3",
+        "company_logo_url": "https://example.com/logo/apple.png",
+        "company_name": "Apple Inc",
+        "company_ticker": "AAPL",
+        "created": "2023-10-26T22:05:00Z",
+        "end_ms": 120000,
+        "event_date": "2023-10-26T21:00:00Z",
+        "event_title": "Q4 2023 Earnings Call",
+        "event_type": "earnings",
+        "modified": "2023-10-26T22:10:00Z",
+        "start_ms": 90000,
+        "transcript": "Full transcript text here...",
+        "transcrippet_guid": "guid-456-789",
+        "transcription_audio_offset_seconds": 45,
+        "trimmed_audio_url": "https://example.com/audio/trans456_trimmed.mp3",
+        "word_durations_ms": [600, 400, 500, 700, 350, 900, 250, 550],
+        "transcript_text": "Full transcript text here...",
         "speaker_name": "Tim Cook",
         "start_time": "00:05:30",
         "end_time": "00:06:45"

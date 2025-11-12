@@ -91,21 +91,34 @@ class GetFilingArgs(BaseToolArgs):
 
 
 # Response models (extracted from responses.py)
+class EquityInfo(BaseModel):
+    """Company equity information embedded in filings."""
+    company_name: Optional[str] = Field(None, description="Name of the company")
+    ticker: Optional[str] = Field(None, description="Company ticker symbol")
+
 class FilingItem(BaseModel):
     """Individual filing item."""
-    filing_id: str = Field(description="Unique filing identifier")
-    company_name: str = Field(description="Company name")
-    company_ticker: Optional[str] = Field(default=None, description="Company ticker")
-    form_type: str = Field(description="SEC form type (e.g., 10-K, 10-Q)")
+    filing_id: int = Field(description="Unique filing identifier")
     title: str = Field(description="Filing title")
-    filing_date: date = Field(description="Filing date")
-    period_end_date: Optional[date] = Field(default=None, description="Period end date")
-    is_amendment: bool = Field(description="Whether this is an amendment")
-    official_url: Optional[str] = Field(default=None, description="Official SEC.gov URL")
+    filing_date: Optional[datetime] = Field(default=None, description="Filing date")
+    period_end_date: Optional[datetime] = Field(default=None, description="Period end date")
+    is_amendment: int = Field(description="Whether this is an amendment (0/1)")
+    equity: Optional[EquityInfo] = Field(None, description="Company equity information")
+    form_number: Optional[str] = Field(None, description="SEC form number")
+    form_name: Optional[str] = Field(None, description="SEC form name")
+    filing_organization: Optional[str] = Field(None, description="Filing organization")
+    filing_system: Optional[str] = Field(None, description="Filing system")
+    release_date: Optional[datetime] = Field(None, description="Release date")
+    arrival_date: Optional[datetime] = Field(None, description="Arrival date")
+    pulled_date: Optional[datetime] = Field(None, description="Pulled date")
+    json_synced: Optional[bool] = Field(None, description="JSON sync status")
+    datafiles_synced: Optional[bool] = Field(None, description="Data files sync status")
+    summary: Optional[List[str]] = Field(None, description="Filing summary as list")
+    citation_information: Optional[Dict[str, str]] = Field(None, description="Citation information")
 
-    @field_serializer('filing_date', 'period_end_date')
-    def serialize_date_fields(self, value: Optional[date]) -> Optional[str]:
-        """Serialize date fields to ISO format string for JSON compatibility."""
+    @field_serializer('filing_date', 'period_end_date', 'release_date', 'arrival_date', 'pulled_date')
+    def serialize_datetime_fields(self, value: Optional[datetime]) -> Optional[str]:
+        """Serialize datetime fields to ISO format string for JSON compatibility."""
         if value is None:
             return None
         return value.isoformat()
@@ -125,9 +138,22 @@ class FilingDetails(FilingItem):
     document_count: int = Field(description="Number of documents in filing")
 
 
-class FindFilingsResponse(PaginatedResponse):
-    """Response for find_filings tool."""
-    filings: List[FilingItem] = Field(description="List of filings")
+class ApiPaginationInfo(BaseModel):
+    """Pagination information from API response."""
+    total_count: Optional[int] = Field(None, description="Total number of items")
+    current_page: Optional[int] = Field(None, description="Current page number")
+    total_pages: Optional[int] = Field(None, description="Total number of pages")
+    page_size: Optional[int] = Field(None, description="Items per page")
+
+class ApiResponseData(BaseModel):
+    """API response structure with data and pagination."""
+    data: List[FilingItem] = Field(..., description="List of filings")
+    pagination: Optional[ApiPaginationInfo] = Field(None, description="Pagination information")
+
+class FindFilingsResponse(BaseModel):
+    """Response for find_filings tool - matches actual API structure."""
+    instructions: Optional[List[str]] = Field(None, description="API instructions")
+    response: ApiResponseData = Field(..., description="Response data")
 
 
 class GetFilingResponse(BaseAieraResponse):

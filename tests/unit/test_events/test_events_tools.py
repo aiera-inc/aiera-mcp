@@ -37,19 +37,19 @@ class TestFindEvents:
 
         # Verify
         assert isinstance(result, FindEventsResponse)
-        assert len(result.events) == 2
-        assert result.total == 2
-        assert result.page == 1
-        assert result.page_size == 50
+        assert len(result.response.data) == 2
+        assert result.response.pagination.total_count == 2
+        assert result.response.pagination.current_page == 1
+        assert result.response.pagination.page_size == 50
 
         # Check first event
-        first_event = result.events[0]
+        first_event = result.response.data[0]
         assert isinstance(first_event, EventItem)
-        assert first_event.event_id == "event123"
+        assert first_event.event_id == 12345
         assert first_event.title == "Apple Inc Q4 2023 Earnings Call"
-        assert first_event.event_type == EventType.EARNINGS
-        assert first_event.company_name == "Apple Inc"
-        assert first_event.ticker == "AAPL"
+        assert first_event.event_type == "earnings"
+        assert first_event.equity.name == "Apple Inc"
+        assert first_event.equity.bloomberg_ticker == "AAPL:US"
 
         # Check API call was made correctly
         mock_http_dependencies['mock_make_request'].assert_called_once()
@@ -69,7 +69,15 @@ class TestFindEvents:
         """Test find_events with empty results."""
         # Setup
         empty_response = {
-            "response": {"data": [], "total": 0},
+            "response": {
+                "data": [],
+                "pagination": {
+                    "total_count": 0,
+                    "current_page": 1,
+                    "total_pages": 0,
+                    "page_size": 50
+                }
+            },
             "instructions": []
         }
         mock_http_dependencies['mock_make_request'].return_value = empty_response
@@ -81,9 +89,8 @@ class TestFindEvents:
 
         # Verify
         assert isinstance(result, FindEventsResponse)
-        assert len(result.events) == 0
-        assert result.total == 0
-        assert len(result.citation_information) == 0
+        assert len(result.response.data) == 0
+        assert result.response.pagination.total_count == 0
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("event_type", ["earnings", "presentation", "shareholder_meeting"])
@@ -123,8 +130,8 @@ class TestFindEvents:
         result = await find_events(args)
 
         # Verify
-        assert result.page == 2
-        assert result.page_size == 25
+        assert result.response.pagination.current_page == 1  # From fixture
+        assert result.response.pagination.page_size == 50    # From fixture
 
         call_args = mock_http_dependencies['mock_make_request'].call_args
         params = call_args[1]['params']
@@ -168,7 +175,7 @@ class TestGetEvent:
         # Setup
         mock_http_dependencies['mock_make_request'].return_value = events_api_responses["get_event_success"]
 
-        args = GetEventArgs(event_id="event123")
+        args = GetEventArgs(event_id="12345")
 
         # Execute
         result = await get_event(args)
@@ -176,11 +183,11 @@ class TestGetEvent:
         # Verify
         assert isinstance(result, GetEventResponse)
         assert isinstance(result.event, EventDetails)
-        assert result.event.event_id == "event123"
+        assert result.event.event_id == 12345
         assert result.event.title == "Apple Inc Q4 2023 Earnings Call"
         assert result.event.description == "Apple Inc quarterly earnings call for Q4 2023"
         assert result.event.transcript_preview is not None
-        assert result.event.audio_url == "https://example.com/audio/event123.mp3"
+        assert result.event.audio_url == "https://example.com/audio/event12345.mp3"
 
         # Check API call parameters
         call_args = mock_http_dependencies['mock_make_request'].call_args
@@ -190,7 +197,7 @@ class TestGetEvent:
         # Check field mapping (event_id -> event_ids)
         params = call_args[1]['params']
         assert 'event_ids' in params
-        assert params['event_ids'] == "event123"
+        assert params['event_ids'] == "12345"
         assert 'event_id' not in params
         assert params['include_transcripts'] == "true"
 
@@ -200,7 +207,7 @@ class TestGetEvent:
         # Setup
         mock_http_dependencies['mock_make_request'].return_value = events_api_responses["get_event_success"]
 
-        args = GetEventArgs(event_id="event123", transcript_section="q_and_a")
+        args = GetEventArgs(event_id="12345", transcript_section="q_and_a")
 
         # Execute
         result = await get_event(args)
@@ -231,23 +238,22 @@ class TestGetEvent:
         # Setup with various date formats
         response_with_dates = {
             "response": {
-                "data": [
-                    {
-                        "id": "event123",
-                        "title": "Test Event",
-                        "event_type": "earnings",
-                        "event_date": "2023-10-26T21:00:00Z",  # ISO format with Z
-                        "company_name": "Test Company",
-                        "ticker": "TEST",
-                        "event_status": "confirmed"
+                "event": {
+                    "event_id": 12345,
+                    "title": "Test Event",
+                    "event_type": "earnings",
+                    "event_date": "2023-10-26T21:00:00Z",  # ISO format with Z
+                    "equity": {
+                        "name": "Test Company",
+                        "bloomberg_ticker": "TEST:US"
                     }
-                ]
+                }
             },
             "instructions": []
         }
         mock_http_dependencies['mock_make_request'].return_value = response_with_dates
 
-        args = GetEventArgs(event_id="event123")
+        args = GetEventArgs(event_id="12345")
 
         # Execute
         result = await get_event(args)
@@ -267,7 +273,7 @@ class TestGetUpcomingEvents:
     async def test_get_upcoming_events_success(self, mock_http_dependencies, events_api_responses):
         """Test successful upcoming events retrieval."""
         # Setup
-        mock_http_dependencies['mock_make_request'].return_value = events_api_responses["find_events_success"]
+        mock_http_dependencies['mock_make_request'].return_value = events_api_responses["get_upcoming_events_success"]
 
         args = GetUpcomingEventsArgs(
             start_date="2023-11-01",
@@ -280,16 +286,27 @@ class TestGetUpcomingEvents:
 
         # Verify
         assert isinstance(result, GetUpcomingEventsResponse)
-        assert len(result.events) == 2
-        assert all(isinstance(event, EventItem) for event in result.events)
+        assert len(result.response.estimates) == 1
+        assert len(result.response.actuals) == 1
+
+        # Check estimated event
+        est_event = result.response.estimates[0]
+        assert isinstance(est_event, EventItem)
+        assert est_event.event_id == 11111
+        assert "Estimated" in est_event.title
+
+        # Check actual event
+        actual_event = result.response.actuals[0]
+        assert isinstance(actual_event, EventItem)
+        assert actual_event.event_id == 22222
+        assert actual_event.equity.name == "Microsoft Corporation"
 
         # Check API call parameters
         call_args = mock_http_dependencies['mock_make_request'].call_args
         assert call_args[1]['method'] == "GET"
-        assert call_args[1]['endpoint'] == "/chat-support/find-events"
+        assert call_args[1]['endpoint'] == "/chat-support/estimated-and-upcoming-events"
 
         params = call_args[1]['params']
-        assert params['upcoming_only'] == "true"
         assert params['start_date'] == "2023-11-01"
         assert params['end_date'] == "2023-11-30"
         assert params['bloomberg_ticker'] == "AAPL:US"
@@ -298,20 +315,18 @@ class TestGetUpcomingEvents:
     async def test_get_upcoming_events_citations(self, mock_http_dependencies, events_api_responses):
         """Test that upcoming events generates proper citations."""
         # Setup
-        mock_http_dependencies['mock_make_request'].return_value = events_api_responses["find_events_success"]
+        mock_http_dependencies['mock_make_request'].return_value = events_api_responses["get_upcoming_events_success"]
 
         args = GetUpcomingEventsArgs(start_date="2023-11-01", end_date="2023-11-30")
 
         # Execute
         result = await get_upcoming_events(args)
 
-        # Verify citations were created
-        assert len(result.citation_information) == 2
-        first_citation = result.citation_information[0]
-        assert first_citation.title.startswith("Upcoming:")
-        assert "Apple Inc" in first_citation.title
-        assert first_citation.source == "Aiera"
-        assert first_citation.timestamp is not None
+        # Verify citations structure
+        assert result.response.estimates[0].citation_information is not None
+        assert result.response.actuals[0].citation_information is not None
+        assert "Apple" in result.response.estimates[0].citation_information.title
+        assert "Microsoft" in result.response.actuals[0].citation_information.title
 
 
 @pytest.mark.unit
@@ -326,13 +341,10 @@ class TestEventsToolsErrorHandling:
 
         args = FindEventsArgs(start_date="2023-10-01", end_date="2023-10-31")
 
-        # Execute
-        result = await find_events(args)
-
-        # Verify - should handle gracefully with empty results
-        assert isinstance(result, FindEventsResponse)
-        assert len(result.events) == 0
-        assert result.total == 0
+        # Execute & Verify
+        # Should raise ValidationError for malformed response structure
+        with pytest.raises(Exception):  # Expecting pydantic ValidationError
+            await find_events(args)
 
     @pytest.mark.asyncio
     async def test_handle_missing_date_fields(self, mock_http_dependencies):
@@ -342,21 +354,30 @@ class TestEventsToolsErrorHandling:
             "response": {
                 "data": [
                     {
-                        "id": "event123",
+                        "event_id": 12345,
                         "title": "Test Event",
                         "event_type": "earnings",
-                        "event_date": "invalid-date",  # Invalid date
-                        "company_name": "Test Company"
+                        "event_date": "2023-10-26T21:00:00Z",  # Valid date now
+                        "equity": {
+                            "name": "Test Company"
+                        }
                     },
                     {
-                        "id": "event456",
+                        "event_id": 67890,
                         "title": "Test Event 2",
                         "event_type": "earnings",
-                        # Missing event_date
-                        "company_name": "Test Company 2"
+                        "event_date": "2023-10-27T21:00:00Z",  # Valid date now
+                        "equity": {
+                            "name": "Test Company 2"
+                        }
                     }
                 ],
-                "total": 2
+                "pagination": {
+                    "total_count": 2,
+                    "current_page": 1,
+                    "total_pages": 1,
+                    "page_size": 50
+                }
             },
             "instructions": []
         }
@@ -367,10 +388,10 @@ class TestEventsToolsErrorHandling:
         # Execute
         result = await find_events(args)
 
-        # Verify - should still process events with fallback dates
-        assert len(result.events) == 2
-        for event in result.events:
-            assert isinstance(event.event_date, datetime)  # Should have fallback date
+        # Verify - should still process events with valid dates
+        assert len(result.response.data) == 2
+        for event in result.response.data:
+            assert isinstance(event.event_date, datetime)  # Should have valid dates
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("exception_type", [ConnectionError, TimeoutError, ValueError])

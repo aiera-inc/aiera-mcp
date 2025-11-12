@@ -25,7 +25,7 @@ class TestEquitiesModels:
     def test_equity_item_creation(self):
         """Test EquityItem model creation."""
         equity_data = {
-            "equity_id": "12345",
+            "equity_id": 12345,
             "company_name": "Test Company",
             "ticker": "TEST",
             "bloomberg_ticker": "TEST:US",
@@ -38,7 +38,7 @@ class TestEquitiesModels:
 
         equity = EquityItem(**equity_data)
 
-        assert equity.equity_id == "12345"
+        assert equity.equity_id == 12345
         assert equity.company_name == "Test Company"
         assert equity.ticker == "TEST"
         assert equity.bloomberg_ticker == "TEST:US"
@@ -51,7 +51,7 @@ class TestEquitiesModels:
     def test_equity_item_optional_fields(self):
         """Test EquityItem with only required fields."""
         minimal_data = {
-            "equity_id": "12345",
+            "equity_id": 12345,
             "company_name": "Test Company",
             "ticker": "TEST",
             "bloomberg_ticker": "TEST:US"
@@ -59,7 +59,7 @@ class TestEquitiesModels:
 
         equity = EquityItem(**minimal_data)
 
-        assert equity.equity_id == "12345"
+        assert equity.equity_id == 12345
         assert equity.company_name == "Test Company"
         assert equity.ticker == "TEST"
         assert equity.bloomberg_ticker == "TEST:US"
@@ -107,7 +107,7 @@ class TestEquitiesModels:
     def test_equity_details_inherits_equity_item(self):
         """Test EquityDetails inherits from EquityItem."""
         details_data = {
-            "equity_id": "12345",
+            "equity_id": 12345,
             "company_name": "Test Company",
             "ticker": "TEST",
             "bloomberg_ticker": "TEST:US",
@@ -127,7 +127,7 @@ class TestEquitiesModels:
         details = EquityDetails(**details_data)
 
         # Test inherited fields
-        assert details.equity_id == "12345"
+        assert details.equity_id == 12345
         assert details.company_name == "Test Company"
         assert details.ticker == "TEST"
         assert details.exchange == "NASDAQ"
@@ -141,72 +141,83 @@ class TestEquitiesModels:
     def test_sector_subsector_creation(self):
         """Test SectorSubsector model creation."""
         sector_data = {
-            "sector_id": "10",
-            "sector_name": "Technology",
-            "subsector_id": "1010",
-            "subsector_name": "Software"
+            "sector_id": 10,
+            "name": "Technology",
+            "subsectors": [
+                {
+                    "subsector_id": 1010,
+                    "name": "Software"
+                }
+            ]
         }
 
         sector = SectorSubsector(**sector_data)
 
-        assert sector.sector_id == "10"
-        assert sector.sector_name == "Technology"
-        assert sector.subsector_id == "1010"
-        assert sector.subsector_name == "Software"
+        assert sector.sector_id == 10
+        assert sector.name == "Technology"
+        assert sector.sector_name == "Technology"  # backward compatibility property
+        assert sector.subsector_id == 1010  # backward compatibility property
+        assert sector.subsector_name == "Software"  # backward compatibility property
+        assert len(sector.subsectors) == 1
+        assert sector.subsectors[0].name == "Software"
 
     def test_sector_subsector_no_subsector(self):
         """Test SectorSubsector without subsector."""
         sector_data = {
-            "sector_id": "20",
-            "sector_name": "Healthcare"
+            "sector_id": 20,
+            "name": "Healthcare"
         }
 
         sector = SectorSubsector(**sector_data)
 
-        assert sector.sector_id == "20"
-        assert sector.sector_name == "Healthcare"
-        assert sector.subsector_id is None
-        assert sector.subsector_name is None
+        assert sector.sector_id == 20
+        assert sector.name == "Healthcare"
+        assert sector.sector_name == "Healthcare"  # backward compatibility property
+        assert sector.subsector_id is None  # backward compatibility property
+        assert sector.subsector_name is None  # backward compatibility property
 
     def test_index_item_creation(self):
         """Test IndexItem model creation."""
         index_data = {
-            "index_id": "SP500",
-            "index_name": "S&P 500",
+            "index_id": 1,
+            "name": "S&P 500",
             "symbol": "SPX"
         }
 
         index = IndexItem(**index_data)
 
-        assert index.index_id == "SP500"
-        assert index.index_name == "S&P 500"
+        assert index.index_id == 1
+        assert index.name == "S&P 500"
+        assert index.index_name == "S&P 500"  # backward compatibility property
         assert index.symbol == "SPX"
 
     def test_watchlist_item_creation(self):
         """Test WatchlistItem model creation."""
         watchlist_data = {
-            "watchlist_id": "123",
-            "watchlist_name": "Tech Giants",
+            "watchlist_id": 123,
+            "name": "Tech Giants",
             "description": "Large technology companies"
         }
 
         watchlist = WatchlistItem(**watchlist_data)
 
-        assert watchlist.watchlist_id == "123"
-        assert watchlist.watchlist_name == "Tech Giants"
+        assert watchlist.watchlist_id == 123
+        assert watchlist.name == "Tech Giants"
+        assert watchlist.watchlist_name == "Tech Giants"  # backward compatibility property
         assert watchlist.description == "Large technology companies"
 
     def test_watchlist_item_no_description(self):
         """Test WatchlistItem without description."""
         watchlist_data = {
-            "watchlist_id": "456",
-            "watchlist_name": "My Watchlist"
+            "watchlist_id": 456,
+            "name": "My Watchlist"
         }
 
         watchlist = WatchlistItem(**watchlist_data)
 
-        assert watchlist.watchlist_id == "456"
-        assert watchlist.watchlist_name == "My Watchlist"
+        assert watchlist.watchlist_id == 456
+        assert watchlist.name == "My Watchlist"
+        assert watchlist.watchlist_name == "My Watchlist"  # backward compatibility property
         assert watchlist.description is None
 
 
@@ -415,106 +426,105 @@ class TestEquitiesResponses:
         """Test FindEquitiesResponse model."""
         equities = [
             EquityItem(
-                equity_id="12345",
+                equity_id=12345,
                 company_name="Test Company",
                 ticker="TEST",
                 bloomberg_ticker="TEST:US"
             )
         ]
 
-        citations = [
-            CitationInfo(
-                title="Test Company (TEST)",
-                source="Aiera Equity Database"
-            )
-        ]
-
         response = FindEquitiesResponse(
-            equities=equities,
-            total=1,
-            page=1,
-            page_size=50,
             instructions=["Test instruction"],
-            citation_information=citations
+            response={
+                "data": equities,
+                "pagination": {
+                    "total_count": 1,
+                    "current_page": 1,
+                    "total_pages": 1,
+                    "page_size": 50
+                }
+            }
         )
 
-        assert len(response.equities) == 1
-        assert response.total == 1
-        assert response.page == 1
-        assert response.page_size == 50
+        assert len(response.response.data) == 1
+        assert response.response.pagination.total_count == 1
+        assert response.response.pagination.current_page == 1
+        assert response.response.pagination.page_size == 50
         assert response.instructions == ["Test instruction"]
-        assert len(response.citation_information) == 1
 
     def test_get_equity_summaries_response(self):
         """Test GetEquitySummariesResponse model."""
+        from aiera_mcp.tools.equities.models import EquitySummaryItem
+
         summaries = [
-            EquityDetails(
-                equity_id="12345",
+            EquitySummaryItem(
+                equity_id=12345,
                 company_name="Test Company",
                 ticker="TEST",
-                bloomberg_ticker="TEST:US",
-                summary=EquitySummary(description="Test description"),
-                identifiers={"isin": "US1234567890"}
+                bloomberg_ticker="TEST:US"
             )
         ]
 
         response = GetEquitySummariesResponse(
-            summaries=summaries,
             instructions=["Test instruction"],
-            citation_information=[]
+            response=summaries
         )
 
-        assert len(response.summaries) == 1
-        assert isinstance(response.summaries[0], EquityDetails)
-        assert response.summaries[0].summary.description == "Test description"
+        assert len(response.response) == 1
+        assert isinstance(response.response[0], EquitySummaryItem)
+        assert response.response[0].company_name == "Test Company"
         assert response.instructions == ["Test instruction"]
 
     def test_get_sectors_subsectors_response(self):
         """Test GetSectorsSubsectorsResponse model."""
         sectors = [
             SectorSubsector(
-                sector_id="10",
-                sector_name="Technology",
-                subsector_id="1010",
-                subsector_name="Software"
+                sector_id=10,
+                name="Technology",
+                subsectors=[
+                    {
+                        "subsector_id": 1010,
+                        "name": "Software"
+                    }
+                ]
             )
         ]
 
         response = GetSectorsSubsectorsResponse(
-            sectors=sectors,
             instructions=["Sectors retrieved"],
-            citation_information=[]
+            response=sectors
         )
 
-        assert len(response.sectors) == 1
-        assert response.sectors[0].sector_name == "Technology"
+        assert len(response.response) == 1
+        assert response.response[0].name == "Technology"
+        assert response.response[0].sector_name == "Technology"  # backward compatibility
         assert response.instructions == ["Sectors retrieved"]
 
     def test_get_available_indexes_response(self):
         """Test GetAvailableIndexesResponse model."""
         indexes = [
             IndexItem(
-                index_id="SP500",
-                index_name="S&P 500",
+                index_id=1,
+                name="S&P 500",
                 symbol="SPX"
             )
         ]
 
         response = GetAvailableIndexesResponse(
-            indexes=indexes,
             instructions=["Indexes retrieved"],
-            citation_information=[]
+            response=indexes
         )
 
-        assert len(response.indexes) == 1
-        assert response.indexes[0].index_name == "S&P 500"
+        assert len(response.response) == 1
+        assert response.response[0].name == "S&P 500"
+        assert response.response[0].index_name == "S&P 500"  # backward compatibility
         assert response.instructions == ["Indexes retrieved"]
 
     def test_get_index_constituents_response(self):
         """Test GetIndexConstituentsResponse model."""
         constituents = [
             EquityItem(
-                equity_id="12345",
+                equity_id=12345,
                 company_name="Test Company",
                 ticker="TEST",
                 bloomberg_ticker="TEST:US"
@@ -540,27 +550,26 @@ class TestEquitiesResponses:
         """Test GetAvailableWatchlistsResponse model."""
         watchlists = [
             WatchlistItem(
-                watchlist_id="123",
-                watchlist_name="Tech Giants",
+                watchlist_id=123,
+                name="Tech Giants",
                 description="Large tech companies"
             )
         ]
 
         response = GetAvailableWatchlistsResponse(
-            watchlists=watchlists,
             instructions=["Watchlists retrieved"],
-            citation_information=[]
+            response=watchlists
         )
 
-        assert len(response.watchlists) == 1
-        assert response.watchlists[0].watchlist_name == "Tech Giants"
+        assert len(response.response) == 1
+        assert response.response[0].watchlist_name == "Tech Giants"
         assert response.instructions == ["Watchlists retrieved"]
 
     def test_get_watchlist_constituents_response(self):
         """Test GetWatchlistConstituentsResponse model."""
         constituents = [
             EquityItem(
-                equity_id="12345",
+                equity_id=12345,
                 company_name="Test Company",
                 ticker="TEST",
                 bloomberg_ticker="TEST:US"
@@ -628,37 +637,6 @@ class TestEquitiesModelValidation:
         assert page_size_schema["minimum"] == 1
         assert page_size_schema["maximum"] == 100
 
-    def test_equity_item_market_cap_types(self):
-        """Test equity item handles different market cap types."""
-        # Test with integer
-        equity1 = EquityItem(
-            equity_id="1",
-            company_name="Company 1",
-            ticker="C1",
-            bloomberg_ticker="C1:US",
-            market_cap=1000000000
-        )
-        assert equity1.market_cap == 1000000000
-
-        # Test with float
-        equity2 = EquityItem(
-            equity_id="2",
-            company_name="Company 2",
-            ticker="C2",
-            bloomberg_ticker="C2:US",
-            market_cap=1000000000.5
-        )
-        assert equity2.market_cap == 1000000000.5
-
-        # Test with None
-        equity3 = EquityItem(
-            equity_id="3",
-            company_name="Company 3",
-            ticker="C3",
-            bloomberg_ticker="C3:US",
-            market_cap=None
-        )
-        assert equity3.market_cap is None
 
     def test_equity_summary_complex_data_types(self):
         """Test equity summary handles complex data types."""
@@ -720,7 +698,7 @@ class TestEquitiesModelValidation:
         }
 
         details = EquityDetails(
-            equity_id="12345",
+            equity_id=12345,
             company_name="Test Company",
             ticker="TEST",
             bloomberg_ticker="TEST:US",

@@ -21,71 +21,94 @@ class TestTranscrippetsModels:
     def test_transcrippet_item_creation(self):
         """Test TranscrippetItem model creation."""
         transcrippet_data = {
-            "transcrippet_id": "trans123",
-            "public_url": "https://public.aiera.com/shared/transcrippet.html?id=guid-123",
-            "title": "CEO Comments on Q4 Performance",
+            "transcrippet_id": 123,
+            "company_id": 456,
+            "equity_id": 789,
+            "event_id": 101112,
+            "transcript_item_id": 131415,
+            "user_id": 161718,
+            "audio_url": "https://example.com/audio/trans123.mp3",
+            "company_logo_url": "https://example.com/logo/apple.png",
             "company_name": "Apple Inc",
+            "company_ticker": "AAPL",
+            "created": "2023-10-26T22:00:00Z",
+            "end_ms": 90000,
+            "event_date": "2023-10-26T21:00:00Z",
             "event_title": "Q4 2023 Earnings Call",
-            "transcript_preview": "I'm pleased to report that Q4 was another strong quarter...",
-            "created_date": datetime(2023, 10, 26, 22, 0, 0)
+            "event_type": "earnings",
+            "modified": "2023-10-26T22:05:00Z",
+            "start_ms": 60000,
+            "transcript": "I'm pleased to report that Q4 was another strong quarter...",
+            "transcrippet_guid": "guid-123-456",
+            "transcription_audio_offset_seconds": 30,
+            "trimmed_audio_url": "https://example.com/audio/trans123_trimmed.mp3",
+            "word_durations_ms": [500, 300, 400, 600, 350, 800, 200, 450]
         }
 
         transcrippet = TranscrippetItem(**transcrippet_data)
 
-        assert transcrippet.transcrippet_id == "trans123"
-        assert transcrippet.public_url == "https://public.aiera.com/shared/transcrippet.html?id=guid-123"
-        assert transcrippet.title == "CEO Comments on Q4 Performance"
+        assert transcrippet.transcrippet_id == 123
         assert transcrippet.company_name == "Apple Inc"
         assert transcrippet.event_title == "Q4 2023 Earnings Call"
-        assert transcrippet.transcript_preview == "I'm pleased to report that Q4 was another strong quarter..."
-        assert transcrippet.created_date == datetime(2023, 10, 26, 22, 0, 0)
+        assert transcrippet.transcript == "I'm pleased to report that Q4 was another strong quarter..."
+        assert transcrippet.transcrippet_guid == "guid-123-456"
+        assert transcrippet.created == "2023-10-26T22:00:00Z"
 
-    def test_transcrippet_item_optional_fields(self):
-        """Test TranscrippetItem with only required fields."""
+    def test_transcrippet_item_required_fields(self):
+        """Test TranscrippetItem requires all fields for API-matching structure."""
         minimal_data = {
-            "transcrippet_id": "trans123",
-            "public_url": "https://public.aiera.com/shared/transcrippet.html?id=guid-123"
+            "transcrippet_id": 123,
+            "company_id": 456
+            # Missing other required fields
         }
 
-        transcrippet = TranscrippetItem(**minimal_data)
-
-        assert transcrippet.transcrippet_id == "trans123"
-        assert transcrippet.public_url == "https://public.aiera.com/shared/transcrippet.html?id=guid-123"
-        assert transcrippet.title is None
-        assert transcrippet.company_name is None
-        assert transcrippet.event_title is None
-        assert transcrippet.transcript_preview is None
-        assert transcrippet.created_date is None
+        # Should raise validation error for missing required fields
+        with pytest.raises(Exception):  # Pydantic ValidationError
+            TranscrippetItem(**minimal_data)
 
     def test_transcrippet_details_inherits_transcrippet_item(self):
         """Test TranscrippetDetails inherits from TranscrippetItem."""
         details_data = {
-            "transcrippet_id": "trans123",
-            "public_url": "https://public.aiera.com/shared/transcrippet.html?id=guid-123",
-            "title": "CEO Comments on Q4 Performance",
-            "company_name": "Apple Inc",
-            "event_title": "Q4 2023 Earnings Call",
-            "created_date": datetime(2023, 10, 26, 22, 0, 0),
-            "transcript_text": "Full transcript text of the CEO's comments...",
+            "transcrippet_id": 123,
+            "company_id": 456,
+            "equity_id": 789,
+            "event_id": 101112,
+            "transcript_item_id": 131415,
+            "user_id": 161718,
             "audio_url": "https://example.com/audio/trans123.mp3",
+            "company_logo_url": "https://example.com/logo/apple.png",
+            "company_name": "Apple Inc",
+            "company_ticker": "AAPL",
+            "created": "2023-10-26T22:00:00Z",
+            "end_ms": 90000,
+            "event_date": "2023-10-26T21:00:00Z",
+            "event_title": "Q4 2023 Earnings Call",
+            "event_type": "earnings",
+            "modified": "2023-10-26T22:05:00Z",
+            "start_ms": 60000,
+            "transcript": "I'm pleased to report that Q4 was another strong quarter...",
+            "transcrippet_guid": "guid-123-456",
+            "transcription_audio_offset_seconds": 30,
+            "trimmed_audio_url": "https://example.com/audio/trans123_trimmed.mp3",
+            "word_durations_ms": [500, 300, 400, 600, 350, 800, 200, 450],
+            "transcript_text": "Full transcript text of the CEO's comments...",
             "speaker_name": "Tim Cook",
-            "start_time": 1500,
-            "end_time": 1800
+            "start_time": "00:05:30",
+            "end_time": "00:06:45"
         }
 
         details = TranscrippetDetails(**details_data)
 
         # Test inherited fields
-        assert details.transcrippet_id == "trans123"
-        assert details.title == "CEO Comments on Q4 Performance"
+        assert details.transcrippet_id == 123
         assert details.company_name == "Apple Inc"
+        assert details.event_title == "Q4 2023 Earnings Call"
 
-        # Test new fields
+        # Test TranscrippetDetails-specific fields
         assert details.transcript_text == "Full transcript text of the CEO's comments..."
-        assert details.audio_url == "https://example.com/audio/trans123.mp3"
         assert details.speaker_name == "Tim Cook"
-        assert details.start_time == 1500
-        assert details.end_time == 1800
+        assert details.start_time == "00:05:30"
+        assert details.end_time == "00:06:45"
 
 
 @pytest.mark.unit
@@ -138,12 +161,12 @@ class TestFindTranscrippetsArgs:
         with pytest.raises(ValidationError) as exc_info:
             FindTranscrippetsArgs(created_start_date="10/01/2023")
 
-        assert "string does not match expected pattern" in str(exc_info.value)
+        assert "String should match pattern" in str(exc_info.value)
 
         with pytest.raises(ValidationError) as exc_info:
             FindTranscrippetsArgs(created_end_date="invalid-date")
 
-        assert "string does not match expected pattern" in str(exc_info.value)
+        assert "String should match pattern" in str(exc_info.value)
 
     def test_provided_ids_validation(self):
         """Test provided IDs format validation."""
@@ -282,9 +305,28 @@ class TestTranscrippetsResponses:
         """Test FindTranscrippetsResponse model."""
         transcrippets = [
             TranscrippetItem(
-                transcrippet_id="trans123",
-                public_url="https://public.aiera.com/shared/transcrippet.html?id=guid-123",
-                title="CEO Comments"
+                transcrippet_id=123,
+                company_id=456,
+                equity_id=789,
+                event_id=101112,
+                transcript_item_id=131415,
+                user_id=161718,
+                audio_url="https://example.com/audio/trans123.mp3",
+                company_logo_url="https://example.com/logo/apple.png",
+                company_name="Apple Inc",
+                company_ticker="AAPL",
+                created="2023-10-26T22:00:00Z",
+                end_ms=90000,
+                event_date="2023-10-26T21:00:00Z",
+                event_title="CEO Comments",
+                event_type="earnings",
+                modified="2023-10-26T22:05:00Z",
+                start_ms=60000,
+                transcript="I'm pleased to report that Q4 was another strong quarter...",
+                transcrippet_guid="guid-123-456",
+                transcription_audio_offset_seconds=30,
+                trimmed_audio_url="https://example.com/audio/trans123_trimmed.mp3",
+                word_durations_ms=[500, 300, 400, 600, 350, 800, 200, 450]
             )
         ]
 
@@ -297,33 +339,55 @@ class TestTranscrippetsResponses:
         ]
 
         response = FindTranscrippetsResponse(
-            transcrippets=transcrippets,
+            response=transcrippets,
             instructions=["Test instruction"],
             citation_information=citations
         )
 
-        assert len(response.transcrippets) == 1
+        assert len(response.response) == 1
         assert response.instructions == ["Test instruction"]
         assert len(response.citation_information) == 1
 
     def test_create_transcrippet_response(self):
         """Test CreateTranscrippetResponse model."""
         transcrippet_details = TranscrippetDetails(
-            transcrippet_id="trans456",
-            public_url="https://public.aiera.com/shared/transcrippet.html?id=guid-456",
-            title="New Transcrippet",
-            transcript_text="Full transcript text here..."
+            transcrippet_id=456,
+            company_id=789,
+            equity_id=101112,
+            event_id=131415,
+            transcript_item_id=161718,
+            user_id=192021,
+            audio_url="https://example.com/audio/trans456.mp3",
+            company_logo_url="https://example.com/logo/apple.png",
+            company_name="Apple Inc",
+            company_ticker="AAPL",
+            created="2023-10-26T22:05:00Z",
+            end_ms=120000,
+            event_date="2023-10-26T21:00:00Z",
+            event_title="New Transcrippet",
+            event_type="earnings",
+            modified="2023-10-26T22:10:00Z",
+            start_ms=90000,
+            transcript="Full transcript text here...",
+            transcrippet_guid="guid-456-789",
+            transcription_audio_offset_seconds=45,
+            trimmed_audio_url="https://example.com/audio/trans456_trimmed.mp3",
+            word_durations_ms=[600, 400, 500, 700, 350, 900, 250, 550],
+            transcript_text="Full transcript text here...",
+            speaker_name="Tim Cook",
+            start_time="00:05:30",
+            end_time="00:06:45"
         )
 
         response = CreateTranscrippetResponse(
-            transcrippet=transcrippet_details,
+            response=transcrippet_details,
             instructions=["Test instruction"],
             citation_information=[]
         )
 
-        assert isinstance(response.transcrippet, TranscrippetDetails)
-        assert response.transcrippet.transcrippet_id == "trans456"
-        assert response.transcrippet.transcript_text == "Full transcript text here..."
+        assert isinstance(response.response, TranscrippetDetails)
+        assert response.response.transcrippet_id == 456
+        assert response.response.transcript_text == "Full transcript text here..."
         assert response.instructions == ["Test instruction"]
 
     def test_delete_transcrippet_response(self):
@@ -412,114 +476,132 @@ class TestTranscrippetsModelValidation:
         assert "equity_id" not in required_fields
 
     def test_datetime_field_handling(self):
-        """Test datetime field handling."""
-        # Valid datetime
-        transcrippet = TranscrippetItem(
-            transcrippet_id="trans123",
-            public_url="https://public.aiera.com/shared/transcrippet.html?id=guid-123",
-            created_date=datetime(2023, 10, 26, 22, 0, 0)
-        )
-        assert isinstance(transcrippet.created_date, datetime)
+        """Test datetime field handling in API structure."""
+        # Create full transcrippet with datetime string fields
+        transcrippet_data = {
+            "transcrippet_id": 123,
+            "company_id": 456,
+            "equity_id": 789,
+            "event_id": 101112,
+            "transcript_item_id": 131415,
+            "user_id": 161718,
+            "audio_url": "https://example.com/audio/trans123.mp3",
+            "company_logo_url": "https://example.com/logo/apple.png",
+            "company_name": "Apple Inc",
+            "company_ticker": "AAPL",
+            "created": "2023-10-26T22:00:00Z",  # String datetime field
+            "end_ms": 90000,
+            "event_date": "2023-10-26T21:00:00Z",  # String datetime field
+            "event_title": "Test Event",
+            "event_type": "earnings",
+            "modified": "2023-10-26T22:05:00Z",  # String datetime field
+            "start_ms": 60000,
+            "transcript": "Test transcript content",
+            "transcrippet_guid": "guid-123-456",
+            "transcription_audio_offset_seconds": 30,
+            "trimmed_audio_url": "https://example.com/audio/trans123_trimmed.mp3",
+            "word_durations_ms": [500, 300, 400]
+        }
 
-        # Test with different datetime formats
-        transcrippet_with_microseconds = TranscrippetItem(
-            transcrippet_id="trans124",
-            public_url="https://public.aiera.com/shared/transcrippet.html?id=guid-124",
-            created_date=datetime(2023, 10, 26, 22, 0, 0, 123456)
-        )
-        assert transcrippet_with_microseconds.created_date.microsecond == 123456
+        transcrippet = TranscrippetItem(**transcrippet_data)
 
-    def test_url_field_handling(self):
-        """Test URL field handling."""
-        # Standard URL
-        transcrippet = TranscrippetItem(
-            transcrippet_id="trans123",
-            public_url="https://public.aiera.com/shared/transcrippet.html?id=guid-123"
-        )
-        assert transcrippet.public_url == "https://public.aiera.com/shared/transcrippet.html?id=guid-123"
+        # Test that datetime fields are stored as strings in API structure
+        assert isinstance(transcrippet.created, str)
+        assert transcrippet.created == "2023-10-26T22:00:00Z"
+        assert isinstance(transcrippet.event_date, str)
+        assert transcrippet.event_date == "2023-10-26T21:00:00Z"
 
-        # URL with additional parameters
-        transcrippet_with_params = TranscrippetItem(
-            transcrippet_id="trans124",
-            public_url="https://public.aiera.com/shared/transcrippet.html?id=guid-124&ref=test"
-        )
-        assert "ref=test" in transcrippet_with_params.public_url
+    def test_api_field_validation(self):
+        """Test that API-required fields are validated correctly."""
+        # Test that missing required fields cause validation error
+        with pytest.raises(Exception):  # Pydantic ValidationError
+            TranscrippetItem(
+                transcrippet_id=123,
+                company_id=456
+                # Missing other required API fields
+            )
 
-    def test_transcript_text_handling(self):
-        """Test transcript text field handling in TranscrippetDetails."""
-        # Short transcript
-        details = TranscrippetDetails(
-            transcrippet_id="trans123",
-            public_url="https://public.aiera.com/shared/transcrippet.html?id=guid-123",
-            transcript_text="Short transcript."
-        )
-        assert details.transcript_text == "Short transcript."
+        # Test that incorrect field types cause validation error
+        with pytest.raises(Exception):  # Pydantic ValidationError
+            TranscrippetItem(
+                transcrippet_id="invalid_string",  # Should be int
+                company_id=456,
+                equity_id=789,
+                event_id=101112,
+                transcript_item_id=131415,
+                user_id=161718,
+                audio_url="https://example.com/audio/trans123.mp3",
+                company_logo_url="https://example.com/logo/apple.png",
+                company_name="Apple Inc",
+                company_ticker="AAPL",
+                created="2023-10-26T22:00:00Z",
+                end_ms=90000,
+                event_date="2023-10-26T21:00:00Z",
+                event_title="Test Event",
+                event_type="earnings",
+                modified="2023-10-26T22:05:00Z",
+                start_ms=60000,
+                transcript="Test transcript content",
+                transcrippet_guid="guid-123-456",
+                transcription_audio_offset_seconds=30,
+                trimmed_audio_url="https://example.com/audio/trans123_trimmed.mp3",
+                word_durations_ms=[500, 300, 400]
+            )
 
-        # Long transcript
-        long_transcript = "This is a very long transcript text that contains multiple sentences and detailed information about the earnings call discussion. " * 100
-        details_long = TranscrippetDetails(
-            transcrippet_id="trans124",
-            public_url="https://public.aiera.com/shared/transcrippet.html?id=guid-124",
-            transcript_text=long_transcript
-        )
-        assert len(details_long.transcript_text) == len(long_transcript)
+    def test_transcript_text_field_in_details(self):
+        """Test transcript_text field in TranscrippetDetails."""
+        # Create complete TranscrippetDetails with transcript_text
+        details_data = {
+            "transcrippet_id": 123,
+            "company_id": 456,
+            "equity_id": 789,
+            "event_id": 101112,
+            "transcript_item_id": 131415,
+            "user_id": 161718,
+            "audio_url": "https://example.com/audio/trans123.mp3",
+            "company_logo_url": "https://example.com/logo/apple.png",
+            "company_name": "Apple Inc",
+            "company_ticker": "AAPL",
+            "created": "2023-10-26T22:00:00Z",
+            "end_ms": 90000,
+            "event_date": "2023-10-26T21:00:00Z",
+            "event_title": "Test Event",
+            "event_type": "earnings",
+            "modified": "2023-10-26T22:05:00Z",
+            "start_ms": 60000,
+            "transcript": "Basic transcript content",
+            "transcrippet_guid": "guid-123-456",
+            "transcription_audio_offset_seconds": 30,
+            "trimmed_audio_url": "https://example.com/audio/trans123_trimmed.mp3",
+            "word_durations_ms": [500, 300, 400],
+            "transcript_text": "Detailed transcript text content",
+            "speaker_name": "Tim Cook",
+            "start_time": "00:05:30",
+            "end_time": "00:06:45"
+        }
 
-    def test_time_fields_handling(self):
-        """Test start_time and end_time fields handling."""
-        # With time fields
-        details = TranscrippetDetails(
-            transcrippet_id="trans123",
-            public_url="https://public.aiera.com/shared/transcrippet.html?id=guid-123",
-            transcript_text="Transcript text",
-            start_time=1500,  # milliseconds
-            end_time=1800
-        )
-        assert details.start_time == 1500
-        assert details.end_time == 1800
-
-        # Without time fields
-        details_no_times = TranscrippetDetails(
-            transcrippet_id="trans124",
-            public_url="https://public.aiera.com/shared/transcrippet.html?id=guid-124",
-            transcript_text="Transcript text"
-        )
-        assert details_no_times.start_time is None
-        assert details_no_times.end_time is None
-
-    def test_audio_url_handling(self):
-        """Test audio URL field handling."""
-        # With audio URL
-        details = TranscrippetDetails(
-            transcrippet_id="trans123",
-            public_url="https://public.aiera.com/shared/transcrippet.html?id=guid-123",
-            transcript_text="Transcript text",
-            audio_url="https://example.com/audio/trans123.mp3"
-        )
-        assert details.audio_url == "https://example.com/audio/trans123.mp3"
-
-        # Without audio URL
-        details_no_audio = TranscrippetDetails(
-            transcrippet_id="trans124",
-            public_url="https://public.aiera.com/shared/transcrippet.html?id=guid-124",
-            transcript_text="Transcript text"
-        )
-        assert details_no_audio.audio_url is None
-
-    def test_speaker_name_handling(self):
-        """Test speaker name field handling."""
-        # With speaker name
-        details = TranscrippetDetails(
-            transcrippet_id="trans123",
-            public_url="https://public.aiera.com/shared/transcrippet.html?id=guid-123",
-            transcript_text="Transcript text",
-            speaker_name="Tim Cook"
-        )
+        details = TranscrippetDetails(**details_data)
+        assert details.transcript_text == "Detailed transcript text content"
         assert details.speaker_name == "Tim Cook"
+        assert details.start_time == "00:05:30"
 
-        # Without speaker name
-        details_no_speaker = TranscrippetDetails(
-            transcrippet_id="trans124",
-            public_url="https://public.aiera.com/shared/transcrippet.html?id=guid-124",
-            transcript_text="Transcript text"
-        )
-        assert details_no_speaker.speaker_name is None
+    def test_api_structure_validation(self):
+        """Test that the models match expected API structure."""
+        # Test that all required fields from API structure are present
+        required_fields = [
+            'transcrippet_id', 'company_id', 'equity_id', 'event_id',
+            'transcript_item_id', 'user_id', 'audio_url', 'company_name',
+            'company_ticker', 'created', 'end_ms', 'event_date', 'event_title',
+            'event_type', 'modified', 'start_ms', 'transcript', 'transcrippet_guid',
+            'transcription_audio_offset_seconds', 'trimmed_audio_url', 'word_durations_ms'
+        ]
+
+        # Verify all required fields exist in the model schema
+        schema = TranscrippetItem.model_json_schema()
+        properties = schema.get('properties', {})
+        required = schema.get('required', [])
+
+        for field in required_fields:
+            assert field in properties, f"Field {field} missing from TranscrippetItem schema"
+            if field in ['transcrippet_id', 'company_id', 'equity_id']:  # Key fields should be required
+                assert field in required, f"Field {field} should be required"

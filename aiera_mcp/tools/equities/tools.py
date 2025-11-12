@@ -53,51 +53,61 @@ async def find_equities(args: FindEquitiesArgs) -> FindEquitiesResponse:
         params=params,
     )
 
-    # Transform raw response to structured format
-    # Handle both old format (response.data) and new format (data directly)
-    if "response" in raw_response:
-        api_data = raw_response.get("response", {})
-        equities_data = api_data.get("data", [])
-        total_count = api_data.get("total", 0)
-    else:
-        # New API format with pagination object
-        equities_data = raw_response.get("data", [])
-        pagination = raw_response.get("pagination", {})
-        total_count = pagination.get("total_count", len(equities_data))
+    # Return the structured response that matches the actual API format
+    # Parse individual equities to match new model structure
+    if "response" in raw_response and "data" in raw_response["response"]:
+        equities_data = []
+        for equity_data in raw_response["response"]["data"]:
+            # Parse datetime fields
+            created = None
+            modified = None
+            if equity_data.get("created"):
+                try:
+                    created = datetime.fromisoformat(equity_data["created"].replace("Z", "+00:00"))
+                except:
+                    pass
+            if equity_data.get("modified"):
+                try:
+                    modified = datetime.fromisoformat(equity_data["modified"].replace("Z", "+00:00"))
+                except:
+                    pass
 
-    equities = []
-    citations = []
+            # Create new equity structure matching the actual response and new model
+            parsed_equity = {
+                "equity_id": equity_data.get("equity_id"),
+                "company_id": equity_data.get("company_id"),
+                "company_name": equity_data.get("name"),
+                "name": equity_data.get("name"),
+                "ticker": equity_data.get("bloomberg_ticker", "").split(":")[0] if equity_data.get("bloomberg_ticker") else None,
+                "bloomberg_ticker": equity_data.get("bloomberg_ticker", ""),
+                "exchange": equity_data.get("exchange"),
+                "sector": equity_data.get("sector"),
+                "subsector": equity_data.get("subsector"),
+                "sector_id": equity_data.get("sector_id"),
+                "subsector_id": equity_data.get("subsector_id"),
+                "country": equity_data.get("country"),
+                "market_cap": equity_data.get("market_cap"),
+                "primary_equity": equity_data.get("primary_equity"),
+                "created": created,
+                "modified": modified
+            }
+            equities_data.append(parsed_equity)
 
-    for equity_data in equities_data:
-        equity_item = EquityItem(
-            equity_id=str(equity_data.get("id", "")),
-            company_name=equity_data.get("company_name", ""),
-            ticker=equity_data.get("ticker", ""),
-            bloomberg_ticker=equity_data.get("bloomberg_ticker", ""),
-            exchange=equity_data.get("exchange"),
-            sector=equity_data.get("sector"),
-            subsector=equity_data.get("subsector"),
-            country=equity_data.get("country"),
-            market_cap=equity_data.get("market_cap")
+        raw_response["response"]["data"] = equities_data
+
+    # Handle malformed responses gracefully
+    try:
+        return FindEquitiesResponse.model_validate(raw_response)
+    except Exception as e:
+        logger.warning(f"Failed to parse API response: {e}")
+        # Return empty response for malformed data
+        return FindEquitiesResponse(
+            instructions=[],
+            response={
+                "data": [],
+                "pagination": None
+            }
         )
-        equities.append(equity_item)
-
-        # Add citation if we have useful information
-        if equity_data.get("company_name"):
-            citations.append(CitationInfo(
-                title=f"{equity_data.get('company_name')} ({equity_data.get('ticker', '')})",
-                url=None,  # Equity data typically doesn't have URLs
-                source="Aiera Equity Database"
-            ))
-
-    return FindEquitiesResponse(
-        equities=equities,
-        total=total_count,
-        page=args.page,
-        page_size=args.page_size,
-        instructions=raw_response.get("instructions", []),
-        citation_information=citations
-    )
 
 
 async def get_sectors_and_subsectors(args: SearchArgs) -> GetSectorsSubsectorsResponse:
@@ -118,33 +128,9 @@ async def get_sectors_and_subsectors(args: SearchArgs) -> GetSectorsSubsectorsRe
         params=params,
     )
 
-    # Transform raw response to structured format
-    # Handle both old format (response.data) and new format (data directly)
-    if "response" in raw_response:
-        api_data = raw_response.get("response", {})
-        sectors_data = api_data.get("data", [])
-        total_count = api_data.get("total", 0)
-    else:
-        # New API format with pagination object
-        sectors_data = raw_response.get("data", [])
-        pagination = raw_response.get("pagination", {})
-        total_count = pagination.get("total_count", len(sectors_data))
-
-    sectors = []
-    for sector_data in sectors_data:
-        sector_item = SectorSubsector(
-            sector_id=str(sector_data.get("sector_id", "")),
-            sector_name=sector_data.get("sector_name", ""),
-            subsector_id=str(sector_data.get("subsector_id", "")) if sector_data.get("subsector_id") else None,
-            subsector_name=sector_data.get("subsector_name")
-        )
-        sectors.append(sector_item)
-
-    return GetSectorsSubsectorsResponse(
-        sectors=sectors,
-        instructions=raw_response.get("instructions", []),
-        citation_information=[CitationInfo(title="GICS Sector Classification", source="Aiera")]
-    )
+    # Return the structured response directly - no transformation needed
+    # since GetSectorsSubsectorsResponse model now matches the actual API format
+    return GetSectorsSubsectorsResponse.model_validate(raw_response)
 
 
 async def get_equity_summaries(args: GetEquitySummariesArgs) -> GetEquitySummariesResponse:
@@ -166,64 +152,9 @@ async def get_equity_summaries(args: GetEquitySummariesArgs) -> GetEquitySummari
         params=params,
     )
 
-    # Transform raw response to structured format
-    # Handle both old format (response.data) and new format (data directly)
-    if "response" in raw_response:
-        api_data = raw_response.get("response", {})
-        summaries_data = api_data.get("data", [])
-        total_count = api_data.get("total", 0)
-    else:
-        # New API format with pagination object
-        summaries_data = raw_response.get("data", [])
-        pagination = raw_response.get("pagination", {})
-        total_count = pagination.get("total_count", len(summaries_data))
-
-    summaries = []
-    citations = []
-
-    for summary_data in summaries_data:
-        # Build equity summary
-        equity_summary = None
-        if (
-            summary_data.get("description") or
-            summary_data.get("recent_events") or
-            summary_data.get("key_metrics") or
-            summary_data.get("analyst_coverage")
-        ):
-            equity_summary = EquitySummary(
-                description=summary_data.get("description"),
-                recent_events=summary_data.get("recent_events", []),
-                key_metrics=summary_data.get("key_metrics", {}),
-                analyst_coverage=summary_data.get("analyst_coverage", {})
-            )
-
-        equity_details = EquityDetails(
-            equity_id=str(summary_data.get("id", "")),
-            company_name=summary_data.get("company_name", ""),
-            ticker=summary_data.get("ticker", ""),
-            bloomberg_ticker=summary_data.get("bloomberg_ticker", ""),
-            exchange=summary_data.get("exchange"),
-            sector=summary_data.get("sector"),
-            subsector=summary_data.get("subsector"),
-            country=summary_data.get("country"),
-            market_cap=summary_data.get("market_cap"),
-            summary=equity_summary,
-            identifiers=summary_data.get("identifiers", {})
-        )
-        summaries.append(equity_details)
-
-        # Add citation
-        if summary_data.get("company_name"):
-            citations.append(CitationInfo(
-                title=f"{summary_data.get('company_name')} Company Summary",
-                source="Aiera"
-            ))
-
-    return GetEquitySummariesResponse(
-        summaries=summaries,
-        instructions=raw_response.get("instructions", []),
-        citation_information=citations
-    )
+    # Return the structured response directly - no transformation needed
+    # since GetEquitySummariesResponse model now matches the actual API format
+    return GetEquitySummariesResponse.model_validate(raw_response)
 
 
 async def get_available_indexes(args: EmptyArgs) -> GetAvailableIndexesResponse:
@@ -244,32 +175,7 @@ async def get_available_indexes(args: EmptyArgs) -> GetAvailableIndexesResponse:
         params=params,
     )
 
-    # Transform raw response to structured format
-    # Handle both old format (response.data) and new format (data directly)
-    if "response" in raw_response:
-        api_data = raw_response.get("response", {})
-        indexes_data = api_data.get("data", [])
-        total_count = api_data.get("total", 0)
-    else:
-        # New API format with pagination object
-        indexes_data = raw_response.get("data", [])
-        pagination = raw_response.get("pagination", {})
-        total_count = pagination.get("total_count", len(indexes_data))
-
-    indexes = []
-    for index_data in indexes_data:
-        index_item = IndexItem(
-            index_id=str(index_data.get("id", index_data.get("symbol", ""))),
-            index_name=index_data.get("name", ""),
-            symbol=index_data.get("symbol", "")
-        )
-        indexes.append(index_item)
-
-    return GetAvailableIndexesResponse(
-        indexes=indexes,
-        instructions=raw_response.get("instructions", []),
-        citation_information=[CitationInfo(title="Available Market Indexes", source="Aiera")]
-    )
+    return GetAvailableIndexesResponse.model_validate(raw_response)
 
 
 async def get_index_constituents(args: GetIndexConstituentsArgs) -> GetIndexConstituentsResponse:
@@ -306,9 +212,22 @@ async def get_index_constituents(args: GetIndexConstituentsArgs) -> GetIndexCons
     citations = []
 
     for constituent_data in constituents_data:
+        # Handle equity_id - need to parse as int but handle empty strings
+        equity_id = constituent_data.get("id") or constituent_data.get("equity_id")
+        if isinstance(equity_id, str) and equity_id == "":
+            equity_id = 0  # Default for empty string
+        elif equity_id is None:
+            equity_id = 0
+        else:
+            try:
+                equity_id = int(equity_id)
+            except (ValueError, TypeError):
+                equity_id = 0
+
         equity_item = EquityItem(
-            equity_id=str(constituent_data.get("id", "")),
+            equity_id=equity_id,
             company_name=constituent_data.get("company_name", ""),
+            name=constituent_data.get("name"),
             ticker=constituent_data.get("ticker", ""),
             bloomberg_ticker=constituent_data.get("bloomberg_ticker", ""),
             exchange=constituent_data.get("exchange"),
@@ -348,32 +267,7 @@ async def get_available_watchlists(args: EmptyArgs) -> GetAvailableWatchlistsRes
         params=params,
     )
 
-    # Transform raw response to structured format
-    # Handle both old format (response.data) and new format (data directly)
-    if "response" in raw_response:
-        api_data = raw_response.get("response", {})
-        watchlists_data = api_data.get("data", [])
-        total_count = api_data.get("total", 0)
-    else:
-        # New API format with pagination object
-        watchlists_data = raw_response.get("data", [])
-        pagination = raw_response.get("pagination", {})
-        total_count = pagination.get("total_count", len(watchlists_data))
-
-    watchlists = []
-    for watchlist_data in watchlists_data:
-        watchlist_item = WatchlistItem(
-            watchlist_id=str(watchlist_data.get("id", "")),
-            watchlist_name=watchlist_data.get("name", ""),
-            description=watchlist_data.get("description")
-        )
-        watchlists.append(watchlist_item)
-
-    return GetAvailableWatchlistsResponse(
-        watchlists=watchlists,
-        instructions=raw_response.get("instructions", []),
-        citation_information=[CitationInfo(title="Available Watchlists", source="Aiera")]
-    )
+    return GetAvailableWatchlistsResponse.model_validate(raw_response)
 
 
 async def get_watchlist_constituents(args: GetWatchlistConstituentsArgs) -> GetWatchlistConstituentsResponse:
@@ -405,13 +299,26 @@ async def get_watchlist_constituents(args: GetWatchlistConstituentsArgs) -> GetW
         constituents_data = raw_response.get("data", [])
         pagination = raw_response.get("pagination", {})
         total_count = pagination.get("total_count", len(constituents_data))
-    metadata = api_data.get("metadata", {})
+    metadata = api_data.get("metadata", {}) if "response" in raw_response else {}
 
     constituents = []
     for constituent_data in constituents_data:
+        # Handle equity_id - need to parse as int but handle empty strings
+        equity_id = constituent_data.get("id") or constituent_data.get("equity_id")
+        if isinstance(equity_id, str) and equity_id == "":
+            equity_id = 0  # Default for empty string
+        elif equity_id is None:
+            equity_id = 0
+        else:
+            try:
+                equity_id = int(equity_id)
+            except (ValueError, TypeError):
+                equity_id = 0
+
         equity_item = EquityItem(
-            equity_id=str(constituent_data.get("id", "")),
+            equity_id=equity_id,
             company_name=constituent_data.get("company_name", ""),
+            name=constituent_data.get("name"),
             ticker=constituent_data.get("ticker", ""),
             bloomberg_ticker=constituent_data.get("bloomberg_ticker", ""),
             exchange=constituent_data.get("exchange"),

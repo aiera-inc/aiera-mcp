@@ -33,8 +33,7 @@ class TestFilingsIntegration:
         """Test find_filings with real API."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # Test with a date range that should have filings
             date_range = sample_date_ranges[1]  # Q1 2024
@@ -77,8 +76,7 @@ class TestFilingsIntegration:
         """Test find_filings with ticker filter."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # Test with Apple ticker - should have many filings
             args = FindFilingsArgs(
@@ -110,8 +108,7 @@ class TestFilingsIntegration:
         """Test different SEC form types."""
         form_types = ["10-K", "10-Q", "8-K"]
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             for form_type in form_types:
                 await api_rate_limiter.wait()
@@ -145,8 +142,7 @@ class TestFilingsIntegration:
         """Test get_filing with real API (requires finding a filing first)."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # First find a filing
             find_args = FindFilingsArgs(
@@ -196,8 +192,7 @@ class TestFilingsIntegration:
         """Test filings pagination with real API."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # Test first page with large date range to ensure we have results
             args_page1 = FindFilingsArgs(
@@ -243,8 +238,7 @@ class TestFilingsIntegration:
         """Test filings API error handling with invalid API key."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_api_key_from_context', return_value="invalid-api-key"):
+        with patch('aiera_mcp.tools.base.get_api_key_from_context', return_value="invalid-api-key"):
 
             args = FindFilingsArgs(
                 start_date="2023-10-01",
@@ -274,8 +268,7 @@ class TestFilingsIntegration:
         """Test get_filing with invalid filing ID."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # Test with invalid filing ID
             get_args = GetFilingArgs(filing_id="invalid-filing-id-12345")
@@ -301,8 +294,7 @@ class TestFilingsIntegration:
         """Test that filings responses include citation information."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             args = FindFilingsArgs(
                 start_date="2023-01-01",

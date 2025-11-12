@@ -36,8 +36,7 @@ class TestCompanyDocsIntegration:
         """Test find_company_docs with real API."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # Test with a date range that should have documents
             date_range = sample_date_ranges[1]  # Q1 2024
@@ -78,8 +77,7 @@ class TestCompanyDocsIntegration:
         """Test find_company_docs with ticker filter."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # Test with Apple ticker - should have many documents
             args = FindCompanyDocsArgs(
@@ -111,8 +109,7 @@ class TestCompanyDocsIntegration:
         """Test find_company_docs with search query."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # Test search for investor relations documents
             args = FindCompanyDocsArgs(
@@ -144,8 +141,7 @@ class TestCompanyDocsIntegration:
         """Test find_company_docs with category filter."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # Test with presentation category (common document type)
             args = FindCompanyDocsArgs(
@@ -177,8 +173,7 @@ class TestCompanyDocsIntegration:
         """Test get_company_doc with real API (requires finding a document first)."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # First find a document
             find_args = FindCompanyDocsArgs(
@@ -226,8 +221,7 @@ class TestCompanyDocsIntegration:
         """Test get_company_doc_categories with real API."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # Test without search to get all categories
             args = SearchArgs()
@@ -256,8 +250,7 @@ class TestCompanyDocsIntegration:
         """Test get_company_doc_categories with search query."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # Test search for presentation categories
             args = SearchArgs(search="presentation")
@@ -283,8 +276,7 @@ class TestCompanyDocsIntegration:
         """Test get_company_doc_keywords with real API."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # Test without search to get all keywords
             args = SearchArgs()
@@ -292,7 +284,7 @@ class TestCompanyDocsIntegration:
             result = await get_company_doc_keywords(args)
 
             # Verify response structure
-            assert isinstance(result, GetCategoryKeywordsResponse)
+            assert isinstance(result, GetCompanyDocKeywordsResponse)
             assert isinstance(result.keywords, list)
 
             # Should have some keywords
@@ -313,15 +305,14 @@ class TestCompanyDocsIntegration:
         """Test get_company_doc_keywords with search query."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # Test search for financial keywords
             args = SearchArgs(search="financial")
 
             result = await get_company_doc_keywords(args)
 
-            assert isinstance(result, GetCategoryKeywordsResponse)
+            assert isinstance(result, GetCompanyDocKeywordsResponse)
 
             # If we found keywords, they should be related to financial
             for keyword in result.keywords:
@@ -340,8 +331,7 @@ class TestCompanyDocsIntegration:
         """Test company docs pagination with real API."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # Test first page with large date range to ensure we have results
             args_page1 = FindCompanyDocsArgs(
@@ -387,8 +377,7 @@ class TestCompanyDocsIntegration:
         """Test company docs API error handling with invalid API key."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_api_key_from_context', return_value="invalid-api-key"):
+        with patch('aiera_mcp.tools.base.get_api_key_from_context', return_value="invalid-api-key"):
 
             args = FindCompanyDocsArgs(
                 start_date="2023-10-01",
@@ -418,11 +407,10 @@ class TestCompanyDocsIntegration:
         """Test get_company_doc with invalid document ID."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # Test with invalid document ID
-            get_args = GetCompanyDocArgs(company_doc_id="invalid-document-id-12345")
+            get_args = GetCompanyDocArgs(document_id="invalid-document-id-12345")
 
             # This should raise an exception or return an error
             try:
@@ -444,8 +432,7 @@ class TestCompanyDocsIntegration:
     ):
         """Test multiple company docs tools working together."""
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             # 1. Get available categories
             await api_rate_limiter.wait()
@@ -475,7 +462,7 @@ class TestCompanyDocsIntegration:
 
             # Verify all tools returned valid data
             assert isinstance(categories_result, GetCompanyDocCategoriesResponse)
-            assert isinstance(keywords_result, GetCategoryKeywordsResponse)
+            assert isinstance(keywords_result, GetCompanyDocKeywordsResponse)
             assert isinstance(find_result, FindCompanyDocsResponse)
 
     @pytest.mark.asyncio
@@ -490,8 +477,7 @@ class TestCompanyDocsIntegration:
         """Test that company docs responses include citation information."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.server.mcp', integration_mcp_server), \
-             patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
 
             args = FindCompanyDocsArgs(
                 start_date="2023-01-01",

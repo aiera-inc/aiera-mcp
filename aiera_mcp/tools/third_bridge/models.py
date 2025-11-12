@@ -3,7 +3,7 @@
 """Third Bridge domain models for Aiera MCP."""
 
 from pydantic import BaseModel, Field, field_validator, field_serializer
-from typing import Optional, List, Any
+from typing import Optional, List, Dict, Any
 from datetime import datetime
 
 from ..common.models import BaseAieraResponse, PaginatedResponse
@@ -85,33 +85,57 @@ class GetThirdBridgeEventArgs(BaseToolArgs):
     )
 
 
+# Citation models
+class ThirdBridgeCitationBlock(BaseModel):
+    """Citation information for Third Bridge events."""
+    title: str = Field(description="Event title")
+    url: str = Field(description="URL to the event")
+    expert_name: Optional[str] = Field(None, description="Expert name")
+    expert_title: Optional[str] = Field(None, description="Expert job title")
+
+
 # Response models (extracted from responses.py)
 class ThirdBridgeEventItem(BaseModel):
     """Third Bridge event item."""
     event_id: str = Field(description="Event identifier")
+    content_type: str = Field(description="Content type (e.g., FORUM, COMMUNITY)")
+    call_date: str = Field(description="Event date and time as string")
     title: str = Field(description="Event title")
-    company_name: Optional[str] = Field(description="Associated company")
-    event_date: datetime = Field(description="Event date and time")
-    expert_name: Optional[str] = Field(description="Expert name")
-    expert_title: Optional[str] = Field(description="Expert title/role")
-
-    @field_serializer('event_date')
-    def serialize_event_date(self, value: datetime) -> str:
-        """Serialize datetime to ISO format string for JSON compatibility."""
-        return value.isoformat()
+    language: str = Field(description="Event language")
+    agenda: List[str] = Field(description="Event agenda items")
+    insights: Optional[List[str]] = Field(None, description="Key insights from the event (can be null)")
+    citation_block: Optional[ThirdBridgeCitationBlock] = Field(None, description="Citation information")
 
 
-class ThirdBridgeEventDetails(ThirdBridgeEventItem):
+class ThirdBridgeEventDetails(BaseModel):
     """Detailed Third Bridge event information."""
-    agenda: Optional[str] = Field(description="Event agenda")
-    insights: Optional[str] = Field(description="Key insights")
-    transcript: Optional[str] = Field(description="Event transcript")
+    event_id: str = Field(description="Event identifier")
+    content_type: str = Field(description="Content type (e.g., FORUM, COMMUNITY)")
+    call_date: str = Field(description="Event date and time as string")
+    title: str = Field(description="Event title")
+    language: str = Field(description="Event language")
+    agenda: Optional[str] = Field(None, description="Event agenda as string")
+    insights: Optional[str] = Field(None, description="Key insights as string")
+    transcript: Optional[str] = Field(None, description="Event transcript")
+    citation_block: Optional[ThirdBridgeCitationBlock] = Field(None, description="Citation information")
 
 
 # Response classes
-class FindThirdBridgeEventsResponse(PaginatedResponse):
-    """Response for find_third_bridge_events tool."""
-    events: List[ThirdBridgeEventItem] = Field(description="List of Third Bridge events")
+class ThirdBridgePaginationInfo(BaseModel):
+    """Pagination information from Third Bridge API."""
+    total_count: int = Field(description="Total number of events")
+    current_page: int = Field(description="Current page number")
+    total_pages: int = Field(description="Total number of pages")
+    page_size: int = Field(description="Number of events per page")
+
+class ThirdBridgeResponseData(BaseModel):
+    """Third Bridge response data container."""
+    pagination: ThirdBridgePaginationInfo = Field(description="Pagination information")
+    data: List[ThirdBridgeEventItem] = Field(description="List of Third Bridge events")
+
+class FindThirdBridgeEventsResponse(BaseAieraResponse):
+    """Response for find_third_bridge_events tool - matches actual API structure."""
+    response: ThirdBridgeResponseData = Field(description="Response data container")
 
 
 class GetThirdBridgeEventResponse(BaseAieraResponse):

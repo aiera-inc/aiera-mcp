@@ -76,7 +76,7 @@ class APIResponseBuilder:
         """Build events API response."""
         events = events or [
             {
-                "id": "12345",
+                "id": 12345,
                 "title": "Apple Inc Q4 2023 Earnings Call",
                 "event_type": "earnings",
                 "event_date": "2023-10-26T21:00:00Z",

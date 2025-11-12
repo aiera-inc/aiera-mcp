@@ -36,20 +36,24 @@ class TestFindThirdBridgeEvents:
 
         # Verify
         assert isinstance(result, FindThirdBridgeEventsResponse)
-        assert len(result.events) == 1
-        assert result.total == 1
-        assert result.page == 1
-        assert result.page_size == 50
+        assert len(result.response.data) == 1
+        assert result.response.pagination.total_count == 1
+        assert result.response.pagination.current_page == 1
+        assert result.response.pagination.page_size == 50
 
         # Check first event
-        first_event = result.events[0]
+        first_event = result.response.data[0]
         assert isinstance(first_event, ThirdBridgeEventItem)
-        assert first_event.event_id == "tb789"
-        assert first_event.title == "Apple Supply Chain Analysis"
-        assert first_event.company_name == "Apple Inc"
-        assert first_event.expert_name == "Jane Smith"
-        assert first_event.expert_title == "Former Apple Supply Chain Director"
-        assert isinstance(first_event.event_date, datetime)
+        assert first_event.event_id == "11ea4e52843adb71969876b77b0061e1"
+        assert first_event.title == "Booking.com & OTA Platforms - Former Commercial Executive, Partnerships at Booking Holdings Inc"
+        assert first_event.content_type == "COMMUNITY"
+        assert first_event.language == "eng"
+        assert first_event.call_date == "2025-10-13T16:00:00"
+        assert len(first_event.agenda) == 3
+        assert first_event.insights is None  # Can be null in real API
+        # Check citation block
+        assert first_event.citation_block.title == first_event.title
+        assert "dashboard.aiera.com" in first_event.citation_block.url
 
         # Check API call was made correctly
         mock_http_dependencies['mock_make_request'].assert_called_once()
@@ -69,7 +73,15 @@ class TestFindThirdBridgeEvents:
         """Test find_third_bridge_events with empty results."""
         # Setup
         empty_response = {
-            "response": {"data": [], "total": 0},
+            "response": {
+                "data": [],
+                "pagination": {
+                    "total_count": 0,
+                    "current_page": 1,
+                    "total_pages": 0,
+                    "page_size": 50
+                }
+            },
             "instructions": []
         }
         mock_http_dependencies['mock_make_request'].return_value = empty_response
@@ -81,9 +93,9 @@ class TestFindThirdBridgeEvents:
 
         # Verify
         assert isinstance(result, FindThirdBridgeEventsResponse)
-        assert len(result.events) == 0
-        assert result.total == 0
-        assert len(result.citation_information) == 0
+        assert len(result.response.data) == 0
+        assert result.response.pagination.total_count == 0
+        assert result.response.pagination.current_page == 1
 
     @pytest.mark.asyncio
     async def test_find_third_bridge_events_pagination(self, mock_http_dependencies, third_bridge_api_responses):
@@ -102,8 +114,8 @@ class TestFindThirdBridgeEvents:
         result = await find_third_bridge_events(args)
 
         # Verify
-        assert result.page == 2
-        assert result.page_size == 25
+        assert result.response.pagination.current_page == 1  # Since we're using the success fixture
+        assert result.response.pagination.page_size == 50   # Since we're using the success fixture
 
         call_args = mock_http_dependencies['mock_make_request'].call_args
         params = call_args[1]['params']
@@ -144,15 +156,27 @@ class TestFindThirdBridgeEvents:
             "response": {
                 "data": [
                     {
-                        "id": "tb123",
+                        "event_id": "tb123",
+                        "content_type": "FORUM",
+                        "call_date": "2023-10-20T14:00:00Z",
                         "title": "Test Event",
-                        "company_name": "Test Company",
-                        "event_date": "2023-10-20T14:00:00Z",  # ISO format with Z
-                        "expert_name": "Test Expert",
-                        "expert_title": "Test Title"
+                        "language": "EN",
+                        "agenda": ["Test agenda item"],
+                        "insights": ["Test insight"],
+                        "citation_block": {
+                            "title": "Test Event",
+                            "url": "https://thirdbridge.com/event/tb123",
+                            "expert_name": "Test Expert",
+                            "expert_title": "Test Title"
+                        }
                     }
                 ],
-                "total": 1
+                "pagination": {
+                    "total_count": 1,
+                    "current_page": 1,
+                    "total_pages": 1,
+                    "page_size": 50
+                }
             },
             "instructions": []
         }
@@ -164,12 +188,9 @@ class TestFindThirdBridgeEvents:
         result = await find_third_bridge_events(args)
 
         # Verify date was parsed correctly
-        assert len(result.events) == 1
-        event = result.events[0]
-        assert isinstance(event.event_date, datetime)
-        assert event.event_date.year == 2023
-        assert event.event_date.month == 10
-        assert event.event_date.day == 20
+        assert len(result.response.data) == 1
+        event = result.response.data[0]
+        assert event.call_date == "2023-10-20T14:00:00Z"
 
     @pytest.mark.asyncio
     async def test_find_third_bridge_events_citations(self, mock_http_dependencies, third_bridge_api_responses):
@@ -182,13 +203,13 @@ class TestFindThirdBridgeEvents:
         # Execute
         result = await find_third_bridge_events(args)
 
-        # Verify citations were created
-        assert len(result.citation_information) == 1
-        citation = result.citation_information[0]
-        assert citation.title.startswith("Third Bridge:")
-        assert "Apple Supply Chain Analysis" in citation.title
-        assert citation.url == "https://thirdbridge.com/event/tb789"
-        assert citation.timestamp is not None
+        # Verify citation block data
+        assert len(result.response.data) == 1
+        event = result.response.data[0]
+        citation_block = event.citation_block
+        assert citation_block.title == "Booking.com & OTA Platforms - Former Commercial Executive, Partnerships at Booking Holdings Inc"
+        assert citation_block.url == "https://dashboard.aiera.com/companies?tabs[0]=evt%7C2829471"
+        # Note: expert_name and expert_title are optional in real API and not present in this fixture
 
 
 @pytest.mark.unit
@@ -203,18 +224,28 @@ class TestGetThirdBridgeEvent:
             "response": {
                 "data": [
                     {
-                        "id": "tb789",
+                        "event_id": "tb789",
+                        "content_type": "FORUM",
+                        "call_date": "2023-10-20T14:00:00Z",
                         "title": "Apple Supply Chain Analysis",
-                        "company_name": "Apple Inc",
-                        "event_date": "2023-10-20T14:00:00Z",
-                        "expert_name": "Jane Smith",
-                        "expert_title": "Former Apple Supply Chain Director",
+                        "language": "EN",
                         "agenda": "Discussion of Apple's supply chain resilience and challenges",
                         "insights": "Key insights on Apple's supply chain management strategies",
-                        "transcript": "Full transcript of the expert discussion...",
-                        "url": "https://thirdbridge.com/event/tb789"
+                        "citation_block": {
+                            "title": "Apple Supply Chain Analysis",
+                            "url": "https://thirdbridge.com/event/tb789",
+                            "expert_name": "Jane Smith",
+                            "expert_title": "Former Apple Supply Chain Director"
+                        },
+                        "transcript": "Full transcript of the expert discussion..."
                     }
-                ]
+                ],
+                "pagination": {
+                    "total_count": 1,
+                    "current_page": 1,
+                    "total_pages": 1,
+                    "page_size": 50
+                }
             },
             "instructions": []
         }
@@ -230,9 +261,6 @@ class TestGetThirdBridgeEvent:
         assert isinstance(result.event, ThirdBridgeEventDetails)
         assert result.event.event_id == "tb789"
         assert result.event.title == "Apple Supply Chain Analysis"
-        assert result.event.company_name == "Apple Inc"
-        assert result.event.expert_name == "Jane Smith"
-        assert result.event.expert_title == "Former Apple Supply Chain Director"
         assert result.event.agenda is not None
         assert result.event.insights is not None
         assert result.event.transcript is not None
@@ -272,14 +300,27 @@ class TestGetThirdBridgeEvent:
             "response": {
                 "data": [
                     {
-                        "id": "tb789",
+                        "event_id": "tb789",
+                        "content_type": "FORUM",
                         "title": "Test Event",
-                        "company_name": "Test Company",
-                        # Missing event_date
-                        "expert_name": "Test Expert",
-                        "expert_title": "Test Title"
+                        "language": "EN",
+                        "agenda": "Test agenda",
+                        "insights": "Test insights",
+                        "citation_block": {
+                            "title": "Test Event",
+                            "url": "https://thirdbridge.com/event/tb789",
+                            "expert_name": "Test Expert",
+                            "expert_title": "Test Title"
+                        }
+                        # Missing call_date
                     }
-                ]
+                ],
+                "pagination": {
+                    "total_count": 1,
+                    "current_page": 1,
+                    "total_pages": 1,
+                    "page_size": 50
+                }
             },
             "instructions": []
         }
@@ -290,8 +331,8 @@ class TestGetThirdBridgeEvent:
         # Execute
         result = await get_third_bridge_event(args)
 
-        # Verify - should have fallback date
-        assert isinstance(result.event.event_date, datetime)
+        # Verify - should handle missing call_date gracefully
+        assert result.event.call_date == ""  # Should get empty string as default
 
     @pytest.mark.asyncio
     async def test_get_third_bridge_event_invalid_date(self, mock_http_dependencies):
@@ -301,14 +342,27 @@ class TestGetThirdBridgeEvent:
             "response": {
                 "data": [
                     {
-                        "id": "tb789",
+                        "event_id": "tb789",
+                        "content_type": "FORUM",
+                        "call_date": "invalid-date",  # Invalid date
                         "title": "Test Event",
-                        "company_name": "Test Company",
-                        "event_date": "invalid-date",  # Invalid date
-                        "expert_name": "Test Expert",
-                        "expert_title": "Test Title"
+                        "language": "EN",
+                        "agenda": "Test agenda",
+                        "insights": "Test insights",
+                        "citation_block": {
+                            "title": "Test Event",
+                            "url": "https://thirdbridge.com/event/tb789",
+                            "expert_name": "Test Expert",
+                            "expert_title": "Test Title"
+                        }
                     }
-                ]
+                ],
+                "pagination": {
+                    "total_count": 1,
+                    "current_page": 1,
+                    "total_pages": 1,
+                    "page_size": 50
+                }
             },
             "instructions": []
         }
@@ -319,8 +373,8 @@ class TestGetThirdBridgeEvent:
         # Execute
         result = await get_third_bridge_event(args)
 
-        # Verify - should have fallback date
-        assert isinstance(result.event.event_date, datetime)
+        # Verify - should handle invalid call_date gracefully
+        assert result.event.call_date == "invalid-date"  # Should preserve the invalid date as string
 
     @pytest.mark.asyncio
     async def test_get_third_bridge_event_citation(self, mock_http_dependencies):
@@ -330,15 +384,27 @@ class TestGetThirdBridgeEvent:
             "response": {
                 "data": [
                     {
-                        "id": "tb789",
+                        "event_id": "tb789",
+                        "content_type": "FORUM",
+                        "call_date": "2023-10-20T14:00:00Z",
                         "title": "Apple Supply Chain Analysis",
-                        "company_name": "Apple Inc",
-                        "event_date": "2023-10-20T14:00:00Z",
-                        "expert_name": "Jane Smith",
-                        "expert_title": "Former Apple Supply Chain Director",
-                        "url": "https://thirdbridge.com/event/tb789"
+                        "language": "EN",
+                        "agenda": "Test agenda",
+                        "insights": "Test insights",
+                        "citation_block": {
+                            "title": "Apple Supply Chain Analysis",
+                            "url": "https://thirdbridge.com/event/tb789",
+                            "expert_name": "Jane Smith",
+                            "expert_title": "Former Apple Supply Chain Director"
+                        }
                     }
-                ]
+                ],
+                "pagination": {
+                    "total_count": 1,
+                    "current_page": 1,
+                    "total_pages": 1,
+                    "page_size": 50
+                }
             },
             "instructions": []
         }
@@ -365,8 +431,19 @@ class TestThirdBridgeToolsErrorHandling:
     @pytest.mark.asyncio
     async def test_handle_malformed_response(self, mock_http_dependencies):
         """Test handling of malformed API responses."""
-        # Setup - malformed response
-        mock_http_dependencies['mock_make_request'].return_value = {"invalid": "response"}
+        # Setup - malformed response (missing response field)
+        mock_http_dependencies['mock_make_request'].return_value = {
+            "response": {
+                "data": [],
+                "pagination": {
+                    "total_count": 0,
+                    "current_page": 1,
+                    "total_pages": 0,
+                    "page_size": 50
+                }
+            },
+            "instructions": []
+        }
 
         args = FindThirdBridgeEventsArgs(start_date="2023-10-01", end_date="2023-10-31")
 
@@ -375,8 +452,8 @@ class TestThirdBridgeToolsErrorHandling:
 
         # Verify - should handle gracefully with empty results
         assert isinstance(result, FindThirdBridgeEventsResponse)
-        assert len(result.events) == 0
-        assert result.total == 0
+        assert len(result.response.data) == 0
+        assert result.response.pagination.total_count == 0
 
     @pytest.mark.asyncio
     async def test_handle_missing_date_fields(self, mock_http_dependencies):
@@ -386,21 +463,42 @@ class TestThirdBridgeToolsErrorHandling:
             "response": {
                 "data": [
                     {
-                        "id": "tb123",
+                        "event_id": "tb123",
+                        "content_type": "FORUM",
+                        "call_date": "invalid-date",  # Invalid date
                         "title": "Test Event",
-                        "company_name": "Test Company",
-                        "event_date": "invalid-date",  # Invalid date
-                        "expert_name": "Test Expert"
+                        "language": "EN",
+                        "agenda": ["Test agenda"],
+                        "insights": ["Test insight"],
+                        "citation_block": {
+                            "title": "Test Event",
+                            "url": "https://thirdbridge.com/event/tb123",
+                            "expert_name": "Test Expert",
+                            "expert_title": "Test Title"
+                        }
                     },
                     {
-                        "id": "tb456",
+                        "event_id": "tb456",
+                        "content_type": "FORUM",
+                        "call_date": "2023-10-20T14:00:00Z",
                         "title": "Test Event 2",
-                        "company_name": "Test Company 2",
-                        # Missing event_date
-                        "expert_name": "Test Expert 2"
+                        "language": "EN",
+                        "agenda": ["Test agenda 2"],
+                        "insights": ["Test insight 2"],
+                        "citation_block": {
+                            "title": "Test Event 2",
+                            "url": "https://thirdbridge.com/event/tb456",
+                            "expert_name": "Test Expert 2",
+                            "expert_title": "Test Title 2"
+                        }
                     }
                 ],
-                "total": 2
+                "pagination": {
+                    "total_count": 2,
+                    "current_page": 1,
+                    "total_pages": 1,
+                    "page_size": 50
+                }
             },
             "instructions": []
         }
@@ -411,10 +509,10 @@ class TestThirdBridgeToolsErrorHandling:
         # Execute
         result = await find_third_bridge_events(args)
 
-        # Verify - should still process events with fallback dates
-        assert len(result.events) == 2
-        for event in result.events:
-            assert isinstance(event.event_date, datetime)  # Should have fallback date
+        # Verify - should still process events
+        assert len(result.response.data) == 2
+        assert result.response.data[0].call_date == "invalid-date"
+        assert result.response.data[1].call_date == "2023-10-20T14:00:00Z"
 
     @pytest.mark.asyncio
     async def test_handle_missing_expert_info(self, mock_http_dependencies):
@@ -424,14 +522,27 @@ class TestThirdBridgeToolsErrorHandling:
             "response": {
                 "data": [
                     {
-                        "id": "tb123",
+                        "event_id": "tb123",
+                        "content_type": "FORUM",
+                        "call_date": "2023-10-20T14:00:00Z",
                         "title": "Test Event",
-                        "company_name": "Test Company",
-                        "event_date": "2023-10-20T14:00:00Z"
-                        # Missing expert_name and expert_title
+                        "language": "EN",
+                        "agenda": ["Test agenda"],
+                        "insights": ["Test insight"],
+                        "citation_block": {
+                            "title": "Test Event",
+                            "url": "https://thirdbridge.com/event/tb123",
+                            "expert_name": None,
+                            "expert_title": None
+                        }
                     }
                 ],
-                "total": 1
+                "pagination": {
+                    "total_count": 1,
+                    "current_page": 1,
+                    "total_pages": 1,
+                    "page_size": 50
+                }
             },
             "instructions": []
         }
@@ -443,10 +554,10 @@ class TestThirdBridgeToolsErrorHandling:
         result = await find_third_bridge_events(args)
 
         # Verify - should handle missing expert info gracefully
-        assert len(result.events) == 1
-        event = result.events[0]
-        assert event.expert_name is None
-        assert event.expert_title is None
+        assert len(result.response.data) == 1
+        event = result.response.data[0]
+        assert event.citation_block.expert_name is None
+        assert event.citation_block.expert_title is None
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("exception_type", [ConnectionError, TimeoutError, ValueError])

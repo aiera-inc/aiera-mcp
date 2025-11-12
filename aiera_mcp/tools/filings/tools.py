@@ -10,7 +10,7 @@ from ..base import get_http_client, get_api_key_from_context, make_aiera_request
 from .models import (
     FindFilingsArgs, GetFilingArgs,
     FindFilingsResponse, GetFilingResponse,
-    FilingItem, FilingDetails, FilingSummary, CitationInfo
+    FilingItem, FilingDetails, FilingSummary, CitationInfo, EquityInfo
 )
 
 # Setup logging
@@ -35,71 +35,94 @@ async def find_filings(args: FindFilingsArgs) -> FindFilingsResponse:
         params=params,
     )
 
-    # Transform raw response to structured format
-    # Handle both old format (response.data) and new format (data directly)
-    if "response" in raw_response:
-        api_data = raw_response.get("response", {})
-        filings_data = api_data.get("data", [])
-        total_count = api_data.get("total", 0)
-    else:
-        # New API format with pagination object
-        filings_data = raw_response.get("data", [])
-        pagination = raw_response.get("pagination", {})
-        total_count = pagination.get("total_count", len(filings_data))
+    # Return the structured response that matches the actual API format
+    # Parse individual filings to match new model structure
+    if "response" in raw_response and "data" in raw_response["response"]:
+        filings_data = []
+        for filing_data in raw_response["response"]["data"]:
+            # Parse dates safely
+            filing_date = None
+            period_end_date = None
+            release_date = None
+            arrival_date = None
+            pulled_date = None
 
-    filings = []
-    citations = []
+            try:
+                if filing_data.get("filing_date"):
+                    filing_date = datetime.fromisoformat(filing_data["filing_date"].replace("Z", "+00:00")).date()
+            except (ValueError, AttributeError):
+                pass
 
-    for filing_data in filings_data:
-        # Parse dates safely
-        filing_date = None
-        period_end_date = None
+            try:
+                if filing_data.get("period_end_date"):
+                    period_end_date = datetime.fromisoformat(filing_data["period_end_date"].replace("Z", "+00:00")).date()
+            except (ValueError, AttributeError):
+                pass
 
-        try:
-            # API returns release_date, not filing_date
-            if filing_data.get("release_date"):
-                filing_date = datetime.fromisoformat(filing_data["release_date"].replace("Z", "+00:00")).date()
-        except (ValueError, AttributeError):
-            pass
+            try:
+                if filing_data.get("release_date"):
+                    release_date = datetime.fromisoformat(filing_data["release_date"].replace("Z", "+00:00")).date()
+            except (ValueError, AttributeError):
+                pass
 
-        try:
-            if filing_data.get("period_end_date"):
-                period_end_date = datetime.fromisoformat(filing_data["period_end_date"].replace("Z", "+00:00")).date()
-        except (ValueError, AttributeError):
-            pass
+            try:
+                if filing_data.get("arrival_date"):
+                    arrival_date = datetime.fromisoformat(filing_data["arrival_date"].replace("Z", "+00:00")).date()
+            except (ValueError, AttributeError):
+                pass
 
-        # Create filing item
-        # Handle API field mapping
-        equity_data = filing_data.get("equity", {})
-        filing_item = FilingItem(
-            filing_id=str(filing_data.get("filing_id", "")),
-            company_name=equity_data.get("name", ""),
-            company_ticker=equity_data.get("bloomberg_ticker"),
-            form_type=filing_data.get("form_number", ""),
-            title=filing_data.get("title", ""),
-            filing_date=filing_date or date.today(),
-            period_end_date=period_end_date,
-            is_amendment=filing_data.get("is_amendment", False),
-            official_url=filing_data.get("official_url")
+            try:
+                if filing_data.get("pulled_date"):
+                    pulled_date = datetime.fromisoformat(filing_data["pulled_date"].replace("Z", "+00:00")).date()
+            except (ValueError, AttributeError):
+                pass
+
+            # Extract company info from equity field if available
+            equity_info = None
+            if "equity" in filing_data:
+                equity_data = filing_data["equity"]
+                if isinstance(equity_data, dict):
+                    equity_info = {
+                        "company_name": equity_data.get("name") or equity_data.get("company_name"),
+                        "ticker": equity_data.get("bloomberg_ticker") or equity_data.get("ticker")
+                    }
+
+            # Create new filing structure matching the actual response
+            parsed_filing = {
+                "filing_id": filing_data.get("filing_id"),
+                "title": filing_data.get("title", ""),
+                "filing_date": filing_date,
+                "period_end_date": period_end_date,
+                "is_amendment": filing_data.get("is_amendment", 0),
+                "equity": equity_info,
+                "form_number": filing_data.get("form_number"),
+                "form_name": filing_data.get("form_name"),
+                "filing_organization": filing_data.get("filing_organization"),
+                "filing_system": filing_data.get("filing_system"),
+                "release_date": release_date,
+                "arrival_date": arrival_date,
+                "pulled_date": pulled_date,
+                "json_synced": filing_data.get("json_synced"),
+                "datafiles_synced": filing_data.get("datafiles_synced"),
+                "summary": filing_data.get("summary")
+            }
+            filings_data.append(parsed_filing)
+
+        raw_response["response"]["data"] = filings_data
+
+    # Handle malformed responses gracefully
+    try:
+        return FindFilingsResponse.model_validate(raw_response)
+    except Exception as e:
+        logger.warning(f"Failed to parse API response: {e}")
+        # Return empty response for malformed data
+        return FindFilingsResponse(
+            instructions=[],
+            response={
+                "data": [],
+                "pagination": None
+            }
         )
-        filings.append(filing_item)
-
-        # Add citation if we have URL information
-        if filing_data.get("official_url"):
-            citations.append(CitationInfo(
-                title=f"{filing_data.get('company_name', '')} {filing_data.get('form_type', '')} Filing",
-                url=filing_data.get("official_url"),
-                timestamp=datetime.combine(filing_date, datetime.min.time()) if filing_date else None
-            ))
-
-    return FindFilingsResponse(
-        filings=filings,
-        total=total_count,
-        page=args.page,
-        page_size=args.page_size,
-        instructions=raw_response.get("instructions", []),
-        citation_information=citations
-    )
 
 
 async def get_filing(args: GetFilingArgs) -> GetFilingResponse:
@@ -171,15 +194,17 @@ async def get_filing(args: GetFilingArgs) -> GetFilingResponse:
     # Handle API field mapping - get_filing returns different structure than find_filings
     equity_data = filing_data.get("equity", {})
     filing_details = FilingDetails(
-        filing_id=str(filing_data.get("filing_id", "")),
-        company_name=equity_data.get("name", "") or filing_data.get("company_name", ""),
-        company_ticker=equity_data.get("bloomberg_ticker") or filing_data.get("ticker"),
-        form_type=filing_data.get("form_number", "") or filing_data.get("form_type", ""),
+        filing_id=filing_data.get("filing_id", 0),
         title=filing_data.get("title", ""),
-        filing_date=filing_date or date.today(),
+        filing_date=filing_date,
         period_end_date=period_end_date,
-        is_amendment=filing_data.get("is_amendment", False),
-        official_url=filing_data.get("official_url"),
+        is_amendment=filing_data.get("is_amendment", 0),
+        equity=EquityInfo(
+            company_name=equity_data.get("company_name", ""),
+            ticker=equity_data.get("ticker", "")
+        ) if equity_data else None,
+        form_number=filing_data.get("form_number", ""),
+        form_name=filing_data.get("form_name", ""),
         summary=summary,
         content_preview=filing_data.get("content_preview"),
         document_count=filing_data.get("document_count", 1)

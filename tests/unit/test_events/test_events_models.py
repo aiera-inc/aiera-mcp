@@ -30,44 +30,24 @@ class TestEventsModels:
     def test_event_item_creation(self):
         """Test EventItem model creation."""
         event_data = {
-            "event_id": "12345",
+            "event_id": 12345,
             "title": "Test Event",
             "event_type": EventType.EARNINGS,
             "event_date": datetime(2023, 10, 26, 21, 0, 0),
-            "company_name": "Test Company",
-            "ticker": "TEST",
-            "event_status": "confirmed"
         }
 
         event = EventItem(**event_data)
 
-        assert event.event_id == "12345"
+        assert event.event_id == 12345
         assert event.title == "Test Event"
         assert event.event_type == EventType.EARNINGS
-        assert event.company_name == "Test Company"
-        assert event.ticker == "TEST"
-        assert event.event_status == "confirmed"
 
-    def test_event_item_optional_fields(self):
-        """Test EventItem with only required fields."""
-        minimal_data = {
-            "event_id": "12345",
-            "title": "Test Event",
-            "event_type": EventType.EARNINGS,
-            "event_date": datetime(2023, 10, 26, 21, 0, 0)
-        }
 
-        event = EventItem(**minimal_data)
-
-        assert event.event_id == "12345"
-        assert event.company_name is None
-        assert event.ticker is None
-        assert event.event_status is None
 
     def test_event_details_inherits_event_item(self):
         """Test EventDetails inherits from EventItem."""
         details_data = {
-            "event_id": "12345",
+            "event_id": 12345,
             "title": "Test Event",
             "event_type": EventType.EARNINGS,
             "event_date": datetime(2023, 10, 26, 21, 0, 0),
@@ -80,9 +60,8 @@ class TestEventsModels:
         details = EventDetails(**details_data)
 
         # Test inherited fields
-        assert details.event_id == "12345"
+        assert details.event_id == 12345
         assert details.title == "Test Event"
-        assert details.company_name == "Test Company"
 
         # Test new fields
         assert details.description == "Test event description"
@@ -135,12 +114,12 @@ class TestFindEventsArgs:
         with pytest.raises(ValidationError) as exc_info:
             FindEventsArgs(start_date="10/01/2023", end_date="2023-10-31")
 
-        assert "string does not match expected pattern" in str(exc_info.value)
+        assert "String should match pattern" in str(exc_info.value)
 
         with pytest.raises(ValidationError) as exc_info:
             FindEventsArgs(start_date="2023-10-01", end_date="invalid-date")
 
-        assert "string does not match expected pattern" in str(exc_info.value)
+        assert "String should match pattern" in str(exc_info.value)
 
     def test_find_events_args_event_type_validation(self):
         """Test event_type validation."""
@@ -153,15 +132,13 @@ class TestFindEventsArgs:
             )
             assert args.event_type == event_type
 
-        # Invalid event type
-        with pytest.raises(ValidationError) as exc_info:
-            FindEventsArgs(
-                start_date="2023-10-01",
-                end_date="2023-10-31",
-                event_type="invalid_type"
-            )
-
-        assert "event_type must be one of" in str(exc_info.value)
+        # Invalid event type gets corrected to default (earnings) by correction logic
+        args = FindEventsArgs(
+            start_date="2023-10-01",
+            end_date="2023-10-31",
+            event_type="invalid_type"
+        )
+        assert args.event_type == "earnings"  # Corrected to default
 
     def test_find_events_args_pagination_validation(self):
         """Test pagination parameter validation."""
@@ -288,41 +265,36 @@ class TestEventsResponses:
         """Test FindEventsResponse model."""
         events = [
             EventItem(
-                event_id="12345",
+                event_id=12345,
                 title="Test Event",
                 event_type=EventType.EARNINGS,
                 event_date=datetime(2023, 10, 26, 21, 0, 0)
             )
         ]
 
-        citations = [
-            CitationInfo(
-                title="Test Citation",
-                url="https://example.com",
-                timestamp=datetime(2023, 10, 26, 21, 0, 0)
-            )
-        ]
-
         response = FindEventsResponse(
-            events=events,
-            total=1,
-            page=1,
-            page_size=50,
             instructions=["Test instruction"],
-            citation_information=citations
+            response={
+                "data": events,
+                "pagination": {
+                    "total_count": 1,
+                    "current_page": 1,
+                    "total_pages": 1,
+                    "page_size": 50
+                }
+            }
         )
 
-        assert len(response.events) == 1
-        assert response.total == 1
-        assert response.page == 1
-        assert response.page_size == 50
+        assert len(response.response.data) == 1
+        assert response.response.pagination.total_count == 1
+        assert response.response.pagination.current_page == 1
+        assert response.response.pagination.page_size == 50
         assert response.instructions == ["Test instruction"]
-        assert len(response.citation_information) == 1
 
     def test_get_event_response(self):
         """Test GetEventResponse model."""
         event_details = EventDetails(
-            event_id="12345",
+            event_id=12345,
             title="Test Event",
             event_type=EventType.EARNINGS,
             event_date=datetime(2023, 10, 26, 21, 0, 0),
@@ -337,7 +309,7 @@ class TestEventsResponses:
         )
 
         assert isinstance(response.event, EventDetails)
-        assert response.event.event_id == "12345"
+        assert response.event.event_id == 12345
         assert response.event.description == "Test description"
         assert response.instructions == ["Test instruction"]
 
@@ -345,7 +317,7 @@ class TestEventsResponses:
         """Test GetUpcomingEventsResponse model."""
         events = [
             EventItem(
-                event_id="12345",
+                event_id=12345,
                 title="Upcoming Event",
                 event_type=EventType.EARNINGS,
                 event_date=datetime(2023, 11, 15, 21, 0, 0)
@@ -353,13 +325,15 @@ class TestEventsResponses:
         ]
 
         response = GetUpcomingEventsResponse(
-            events=events,
             instructions=["Upcoming events found"],
-            citation_information=[]
+            response={
+                "estimates": events,
+                "actuals": []
+            }
         )
 
-        assert len(response.events) == 1
-        assert response.events[0].title == "Upcoming Event"
+        assert len(response.response.estimates) == 1
+        assert response.response.estimates[0].title == "Upcoming Event"
         assert response.instructions == ["Upcoming events found"]
 
 
@@ -442,12 +416,10 @@ class TestEventItemDateTimeSerialization:
         test_datetime = datetime(2024, 1, 15, 14, 30, 0)
 
         event = EventItem(
-            event_id="123",
+            event_id=123,
             title="Test Event",
             event_type=EventType.EARNINGS,
-            event_date=test_datetime,
-            company_name="Test Corp",
-            ticker="TEST:US"
+            event_date=test_datetime
         )
 
         # Test model_dump serialization
@@ -462,7 +434,7 @@ class TestEventItemDateTimeSerialization:
         test_datetime = datetime(2024, 1, 15, 14, 30, 0)
 
         details = EventDetails(
-            event_id="123",
+            event_id=123,
             title="Test Event",
             event_type=EventType.EARNINGS,
             event_date=test_datetime,
@@ -516,27 +488,24 @@ class TestEventItemDateTimeSerialization:
 
         # Create event with datetime
         event = EventItem(
-            event_id="123",
+            event_id=123,
             title="Test Event",
             event_type=EventType.EARNINGS,
             event_date=test_datetime
         )
 
-        # Create citation with datetime
-        citation = CitationInfo(
-            title="Test Citation",
-            url="https://example.com",
-            timestamp=test_datetime
-        )
-
-        # Create response with both
+        # Create response with event
         response = FindEventsResponse(
-            events=[event],
-            total=1,
-            page=1,
-            page_size=50,
             instructions=["Test instruction"],
-            citation_information=[citation]
+            response={
+                "data": [event],
+                "pagination": {
+                    "total_count": 1,
+                    "current_page": 1,
+                    "total_pages": 1,
+                    "page_size": 50
+                }
+            }
         )
 
         # Test that entire response can be JSON serialized
@@ -549,5 +518,4 @@ class TestEventItemDateTimeSerialization:
 
         # Verify datetime fields were serialized as strings in JSON
         parsed = json.loads(json_str)
-        assert isinstance(parsed["events"][0]["event_date"], str)
-        assert isinstance(parsed["citation_information"][0]["timestamp"], str)
+        assert isinstance(parsed["response"]["data"][0]["event_date"], str)

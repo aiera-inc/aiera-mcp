@@ -41,50 +41,9 @@ async def find_transcrippets(args: FindTranscrippetsArgs) -> FindTranscrippetsRe
         params=params,
     )
 
-    # Transform raw response to structured format
-    # Note: Transcrippets API returns data differently than other endpoints
-    transcrippets_data = raw_response.get("response", [])
-    if not isinstance(transcrippets_data, list):
-        transcrippets_data = []
-
-    transcrippets = []
-    citations = []
-
-    for transcrippet_data in transcrippets_data:
-        # Parse created date safely
-        created_date = None
-        try:
-            if transcrippet_data.get("created_date"):
-                created_date = datetime.fromisoformat(transcrippet_data["created_date"].replace("Z", "+00:00"))
-        except (ValueError, AttributeError):
-            pass
-
-        # Generate public URL (preserving original logic)
-        public_url = f"https://public.aiera.com/shared/transcrippet.html?id={transcrippet_data.get('transcrippet_guid')}"
-
-        transcrippet_item = TranscrippetItem(
-            transcrippet_id=str(transcrippet_data.get("transcrippet_id", "")),
-            public_url=public_url,
-            title=transcrippet_data.get("title"),
-            company_name=transcrippet_data.get("company_name"),
-            event_title=transcrippet_data.get("event_title"),
-            transcript_preview=transcrippet_data.get("transcript_preview"),
-            created_date=created_date
-        )
-        transcrippets.append(transcrippet_item)
-
-        # Add citation with public URL
-        citations.append(CitationInfo(
-            title=transcrippet_data.get("title", f"Transcrippet {transcrippet_data.get('transcrippet_id', '')}"),
-            url=public_url,
-            timestamp=created_date
-        ))
-
-    return FindTranscrippetsResponse(
-        transcrippets=transcrippets,
-        instructions=raw_response.get("instructions", []),
-        citation_information=citations
-    )
+    # Return the structured response directly - no transformation needed
+    # since FindTranscrippetsResponse model now matches the actual API format
+    return FindTranscrippetsResponse.model_validate(raw_response)
 
 
 async def create_transcrippet(args: CreateTranscrippetArgs) -> CreateTranscrippetResponse:
@@ -105,52 +64,9 @@ async def create_transcrippet(args: CreateTranscrippetArgs) -> CreateTranscrippe
         data=data,
     )
 
-    # Transform raw response to structured format
-    transcrippet_data = raw_response.get("response", {})
-    if not isinstance(transcrippet_data, dict):
-        raise ValueError("Failed to create transcrippet")
-
-    # Parse created date safely
-    created_date = None
-    try:
-        if transcrippet_data.get("created_date"):
-            created_date = datetime.fromisoformat(transcrippet_data["created_date"].replace("Z", "+00:00"))
-        else:
-            created_date = datetime.now()
-    except (ValueError, AttributeError):
-        created_date = datetime.now()
-
-    # Generate public URL (preserving original logic)
-    public_url = f"https://public.aiera.com/shared/transcrippet.html?id={transcrippet_data.get('transcrippet_guid')}"
-
-    # Build detailed transcrippet
-    transcrippet_details = TranscrippetDetails(
-        transcrippet_id=str(transcrippet_data.get("transcrippet_id", "")),
-        public_url=public_url,
-        title=transcrippet_data.get("title"),
-        company_name=transcrippet_data.get("company_name"),
-        event_title=transcrippet_data.get("event_title"),
-        transcript_preview=transcrippet_data.get("transcript_preview"),
-        created_date=created_date,
-        transcript_text=transcrippet_data.get("transcript_text", ""),
-        audio_url=transcrippet_data.get("audio_url"),
-        speaker_name=transcrippet_data.get("speaker_name"),
-        start_time=transcrippet_data.get("start_time"),
-        end_time=transcrippet_data.get("end_time")
-    )
-
-    # Build citation
-    citations = [CitationInfo(
-        title=transcrippet_data.get("title", f"Transcrippet {transcrippet_data.get('transcrippet_id', '')}"),
-        url=public_url,
-        timestamp=created_date
-    )]
-
-    return CreateTranscrippetResponse(
-        transcrippet=transcrippet_details,
-        instructions=raw_response.get("instructions", []),
-        citation_information=citations
-    )
+    # Return the structured response directly - no transformation needed
+    # since CreateTranscrippetResponse model now matches the actual API format
+    return CreateTranscrippetResponse.model_validate(raw_response)
 
 
 async def delete_transcrippet(args: DeleteTranscrippetArgs) -> DeleteTranscrippetResponse:

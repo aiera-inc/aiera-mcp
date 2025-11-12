@@ -110,34 +110,48 @@ class DeleteTranscrippetArgs(BaseToolArgs):
 
 # Response models (extracted from responses.py)
 class TranscrippetItem(BaseModel):
-    """Individual transcrippet item."""
-    transcrippet_id: str = Field(description="Transcrippet identifier")
-    public_url: str = Field(description="Public URL for sharing")
-    title: Optional[str] = Field(description="Transcrippet title")
-    company_name: Optional[str] = Field(description="Associated company")
-    event_title: Optional[str] = Field(description="Source event title")
-    transcript_preview: Optional[str] = Field(description="Preview of transcript text")
-    created_date: Optional[datetime] = Field(description="Creation date")
+    """Individual transcrippet item - matches actual API structure."""
+    transcrippet_id: int = Field(description="Transcrippet identifier")
+    company_id: int = Field(description="Company identifier")
+    equity_id: int = Field(description="Equity identifier")
+    event_id: int = Field(description="Event identifier")
+    transcript_item_id: int = Field(description="Transcript item identifier")
+    user_id: int = Field(description="User identifier")
+    audio_url: str = Field(description="Audio URL")
+    company_logo_url: Optional[str] = Field(description="Company logo URL")
+    company_name: str = Field(description="Company name")
+    company_ticker: str = Field(description="Company ticker")
+    created: str = Field(description="Creation date")
+    end_ms: int = Field(description="End time in milliseconds")
+    event_date: str = Field(description="Event date")
+    event_title: str = Field(description="Event title")
+    event_type: str = Field(description="Event type")
+    modified: str = Field(description="Modification date")
+    start_ms: int = Field(description="Start time in milliseconds")
+    transcript: str = Field(description="Transcript text")
+    transcrippet_guid: str = Field(description="Transcrippet GUID")
+    transcription_audio_offset_seconds: int = Field(description="Audio offset in seconds")
+    trimmed_audio_url: str = Field(description="Trimmed audio URL")
+    word_durations_ms: List[int] = Field(description="Word durations in milliseconds")
 
 
 class TranscrippetDetails(TranscrippetItem):
     """Detailed transcrippet information."""
     transcript_text: str = Field(description="Full transcript text")
-    audio_url: Optional[str] = Field(description="Audio URL")
     speaker_name: Optional[str] = Field(description="Speaker name")
-    start_time: Optional[int] = Field(description="Start time in milliseconds")
-    end_time: Optional[int] = Field(description="End time in milliseconds")
+    start_time: Optional[str] = Field(description="Start time")
+    end_time: Optional[str] = Field(description="End time")
 
 
 # Response classes
 class FindTranscrippetsResponse(BaseAieraResponse):
-    """Response for find_transcrippets tool."""
-    transcrippets: List[TranscrippetItem] = Field(description="List of transcrippets")
+    """Response for find_transcrippets tool - matches actual API structure."""
+    response: List[TranscrippetItem] = Field(description="List of transcrippets")
 
 
 class CreateTranscrippetResponse(BaseAieraResponse):
-    """Response for create_transcrippet tool."""
-    transcrippet: TranscrippetDetails = Field(description="Created transcrippet")
+    """Response for create_transcrippet tool - matches actual API structure."""
+    response: TranscrippetDetails = Field(description="Created transcrippet")
 
 
 class DeleteTranscrippetResponse(BaseAieraResponse):

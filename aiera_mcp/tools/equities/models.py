@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field, field_validator, field_serializer
 from typing import Optional, List, Any, Dict
 from datetime import datetime, date
 
-from ..common.models import BaseAieraResponse, PaginatedResponse
+from ..common.models import BaseAieraResponse, PaginatedResponse, CitationInfo
 
 
 # Mixins for validation (extracted from original params.py)
@@ -144,16 +144,70 @@ class SearchArgs(BaseToolArgs):
 # Response models (extracted from responses.py)
 class EquityItem(BaseModel):
     """Individual equity item."""
-    equity_id: str = Field(description="Unique equity identifier")
-    company_name: str = Field(description="Company name")
-    ticker: str = Field(description="Primary ticker symbol")
+    equity_id: int = Field(description="Unique equity identifier")
+    company_id: Optional[int] = Field(None, description="Company ID")
+    company_name: Optional[str] = Field(None, description="Company name")
+    name: Optional[str] = Field(None, description="Company name (alias)")
+    ticker: Optional[str] = Field(None, description="Stock ticker")
     bloomberg_ticker: str = Field(description="Bloomberg ticker")
-    exchange: Optional[str] = Field(default=None, description="Primary exchange")
-    sector: Optional[str] = Field(default=None, description="GICS sector")
-    subsector: Optional[str] = Field(default=None, description="GICS subsector")
+    exchange: Optional[str] = Field(None, description="Stock exchange")
+    sector: Optional[str] = Field(None, description="Sector name")
+    subsector: Optional[str] = Field(None, description="Subsector name")
+    sector_id: Optional[int] = Field(None, description="Sector ID")
+    subsector_id: Optional[int] = Field(None, description="Subsector ID")
     country: Optional[str] = Field(default=None, description="Country of incorporation")
-    market_cap: Optional[float] = Field(default=None, description="Market capitalization")
+    market_cap: Optional[float] = Field(None, description="Market capitalization")
+    primary_equity: Optional[bool] = Field(None, description="Is primary equity")
+    created: Optional[datetime] = Field(None, description="Creation date")
+    modified: Optional[datetime] = Field(None, description="Modification date")
 
+    @field_serializer('created', 'modified')
+    def serialize_datetime_fields(self, value: Optional[datetime]) -> Optional[str]:
+        """Serialize datetime fields to ISO format string for JSON compatibility."""
+        if value is None:
+            return None
+        return value.isoformat()
+
+
+class LeadershipItem(BaseModel):
+    """Leadership information for equity summaries."""
+    name: str = Field(description="Person name")
+    title: str = Field(description="Job title")
+    event_count: Optional[int] = Field(None, description="Number of events")
+    last_event_date: Optional[datetime] = Field(None, description="Last event date")
+
+    @field_serializer('last_event_date')
+    def serialize_datetime(self, value: Optional[datetime]) -> Optional[str]:
+        if value is None:
+            return None
+        return value.isoformat()
+
+class EquitySummaryItem(BaseModel):
+    """Individual equity with full summary information."""
+    equity_id: int = Field(description="Unique equity identifier")
+    company_id: Optional[int] = Field(None, description="Company ID")
+    company_name: Optional[str] = Field(None, description="Company name")
+    name: Optional[str] = Field(None, description="Company name (alias)")
+    ticker: Optional[str] = Field(None, description="Stock ticker")
+    bloomberg_ticker: str = Field(description="Bloomberg ticker")
+    exchange: Optional[str] = Field(None, description="Stock exchange")
+    sector: Optional[str] = Field(None, description="Sector name")
+    subsector: Optional[str] = Field(None, description="Subsector name")
+    sector_id: Optional[int] = Field(None, description="Sector ID")
+    subsector_id: Optional[int] = Field(None, description="Subsector ID")
+    description: Optional[str] = Field(None, description="Company description")
+    country: Optional[str] = Field(None, description="Country")
+    market_cap: Optional[float] = Field(None, description="Market capitalization")
+    created: Optional[datetime] = Field(None, description="Creation date")
+    modified: Optional[datetime] = Field(None, description="Modification date")
+    status: Optional[str] = Field(None, description="Status")
+    leadership: Optional[List[LeadershipItem]] = Field(None, description="Leadership information")
+
+    @field_serializer('created', 'modified')
+    def serialize_datetime_fields(self, value: Optional[datetime]) -> Optional[str]:
+        if value is None:
+            return None
+        return value.isoformat()
 
 class EquitySummary(BaseModel):
     """Equity summary information."""
@@ -169,47 +223,100 @@ class EquityDetails(EquityItem):
     identifiers: Dict[str, str] = Field(default={}, description="Alternative identifiers")
 
 
+class SubsectorInfo(BaseModel):
+    """Subsector information."""
+    subsector_id: int = Field(description="Subsector ID")
+    name: str = Field(description="Subsector name")
+    gics_code: Optional[str] = Field(None, description="GICS subsector code")
+    gics_industry_code: Optional[str] = Field(None, description="GICS industry code")
+
 class SectorSubsector(BaseModel):
     """Sector and subsector information."""
-    sector_id: str = Field(description="Sector ID")
-    sector_name: str = Field(description="Sector name")
-    subsector_id: Optional[str] = Field(default=None, description="Subsector ID")
-    subsector_name: Optional[str] = Field(default=None, description="Subsector name")
+    sector_id: int = Field(description="Sector ID")
+    name: str = Field(description="Sector name")
+    gics_code: Optional[str] = Field(None, description="GICS sector code")
+    subsectors: Optional[List[SubsectorInfo]] = Field(None, description="List of subsectors")
+
+    # Backward compatibility properties
+    @property
+    def sector_name(self) -> str:
+        return self.name
+
+    # For single subsector access (legacy compatibility)
+    @property
+    def subsector_id(self) -> Optional[int]:
+        if self.subsectors and len(self.subsectors) > 0:
+            return self.subsectors[0].subsector_id
+        return None
+
+    @property
+    def subsector_name(self) -> Optional[str]:
+        if self.subsectors and len(self.subsectors) > 0:
+            return self.subsectors[0].name
+        return None
 
 
 class IndexItem(BaseModel):
     """Index information."""
-    index_id: str = Field(description="Index identifier")
-    index_name: str = Field(description="Index name")
-    symbol: str = Field(description="Index symbol")
+    index_id: int = Field(description="Index identifier")
+    name: str = Field(description="Index name")
+    symbol: Optional[str] = Field(None, description="Index symbol")
+    short_name: Optional[str] = Field(None, description="Index short name/symbol")
+
+    # Alias for backward compatibility
+    @property
+    def index_name(self) -> str:
+        return self.name
 
 
 class WatchlistItem(BaseModel):
     """Watchlist information."""
-    watchlist_id: str = Field(description="Watchlist identifier")
-    watchlist_name: str = Field(description="Watchlist name")
-    description: Optional[str] = Field(default=None, description="Watchlist description")
+    watchlist_id: int = Field(description="Watchlist identifier")
+    name: str = Field(description="Watchlist name")
+    description: Optional[str] = Field(None, description="Watchlist description")
+    type: Optional[str] = Field(None, description="Watchlist type")
+
+    # Alias for backward compatibility
+    @property
+    def watchlist_name(self) -> str:
+        return self.name
 
 
 # Response classes
-class FindEquitiesResponse(PaginatedResponse):
-    """Response for find_equities tool."""
-    equities: List[EquityItem] = Field(description="List of equities")
+class ApiPaginationInfo(BaseModel):
+    """Pagination information from API response."""
+    total_count: Optional[int] = Field(None, description="Total number of items")
+    current_page: Optional[int] = Field(None, description="Current page number")
+    total_pages: Optional[int] = Field(None, description="Total number of pages")
+    page_size: Optional[int] = Field(None, description="Items per page")
+
+class FindEquitiesApiResponseData(BaseModel):
+    """API response structure with data and pagination for find_equities."""
+    data: List[EquityItem] = Field(..., description="List of equities")
+    pagination: Optional[ApiPaginationInfo] = Field(None, description="Pagination information")
+
+class FindEquitiesResponse(BaseModel):
+    """Response for find_equities tool - matches actual API structure."""
+    instructions: Optional[List[str]] = Field(None, description="API instructions")
+    response: FindEquitiesApiResponseData = Field(..., description="Response data")
 
 
-class GetEquitySummariesResponse(BaseAieraResponse):
-    """Response for get_equity_summaries tool."""
-    summaries: List[EquityDetails] = Field(description="Detailed equity summaries")
+class GetEquitySummariesResponse(BaseModel):
+    """Response for get_equity_summaries tool - matches actual API structure."""
+    instructions: Optional[List[str]] = Field(None, description="API instructions")
+    response: List[EquitySummaryItem] = Field(..., description="List of equity summaries")
 
 
-class GetSectorsSubsectorsResponse(BaseAieraResponse):
-    """Response for get_sectors_and_subsectors tool."""
-    sectors: List[SectorSubsector] = Field(description="List of sectors and subsectors")
+class GetSectorsSubsectorsResponse(BaseModel):
+    """Response for get_sectors_and_subsectors tool - matches actual API structure."""
+    instructions: Optional[List[str]] = Field(None, description="API instructions")
+    response: List[SectorSubsector] = Field(..., description="List of sectors and subsectors")
 
 
-class GetAvailableIndexesResponse(BaseAieraResponse):
-    """Response for get_available_indexes tool."""
-    indexes: List[IndexItem] = Field(description="List of available indexes")
+class GetAvailableIndexesResponse(BaseModel):
+    """Response for get_available_indexes tool - matches actual API structure."""
+    instructions: Optional[List[str]] = Field(None, description="API instructions")
+    response: List[IndexItem] = Field(..., description="List of available indexes")
 
 
 class GetIndexConstituentsResponse(PaginatedResponse):
@@ -218,9 +325,10 @@ class GetIndexConstituentsResponse(PaginatedResponse):
     constituents: List[EquityItem] = Field(description="Index constituents")
 
 
-class GetAvailableWatchlistsResponse(BaseAieraResponse):
-    """Response for get_available_watchlists tool."""
-    watchlists: List[WatchlistItem] = Field(description="List of available watchlists")
+class GetAvailableWatchlistsResponse(BaseModel):
+    """Response for get_available_watchlists tool - matches actual API structure."""
+    instructions: Optional[List[str]] = Field(None, description="API instructions")
+    response: List[WatchlistItem] = Field(..., description="List of available watchlists")
 
 
 class GetWatchlistConstituentsResponse(PaginatedResponse):
