@@ -40,8 +40,14 @@ async def find_transcrippets(args: FindTranscrippetsArgs) -> FindTranscrippetsRe
         params=params,
     )
 
-    # Return the structured response directly - no transformation needed
-    # since FindTranscrippetsResponse model now matches the actual API format
+    # Add public URLs to each transcrippet in the response
+    if raw_response.get("response") and isinstance(raw_response["response"], list):
+        for transcrippet in raw_response["response"]:
+            if transcrippet.get("transcrippet_guid"):
+                guid = transcrippet["transcrippet_guid"]
+                transcrippet["public_url"] = f"https://public.aiera.com/shared/transcrippet.html?id={guid}"
+
+    # Return the structured response with the added public URLs
     return FindTranscrippetsResponse.model_validate(raw_response)
 
 
