@@ -3,7 +3,6 @@
 """Equity and company metadata tools for Aiera MCP."""
 
 import logging
-from typing import Any, Dict
 from datetime import datetime
 
 from .models import (
@@ -25,7 +24,7 @@ from .models import (
     EquitySummary,
     SectorSubsector,
     IndexItem,
-    WatchlistItem
+    WatchlistItem,
 )
 from ..base import get_http_client, get_api_key_from_context, make_aiera_request
 from ..common.models import CitationInfo
@@ -63,12 +62,16 @@ async def find_equities(args: FindEquitiesArgs) -> FindEquitiesResponse:
             modified = None
             if equity_data.get("created"):
                 try:
-                    created = datetime.fromisoformat(equity_data["created"].replace("Z", "+00:00"))
+                    created = datetime.fromisoformat(
+                        equity_data["created"].replace("Z", "+00:00")
+                    )
                 except:
                     pass
             if equity_data.get("modified"):
                 try:
-                    modified = datetime.fromisoformat(equity_data["modified"].replace("Z", "+00:00"))
+                    modified = datetime.fromisoformat(
+                        equity_data["modified"].replace("Z", "+00:00")
+                    )
                 except:
                     pass
 
@@ -78,7 +81,11 @@ async def find_equities(args: FindEquitiesArgs) -> FindEquitiesResponse:
                 "company_id": equity_data.get("company_id"),
                 "company_name": equity_data.get("name"),
                 "name": equity_data.get("name"),
-                "ticker": equity_data.get("bloomberg_ticker", "").split(":")[0] if equity_data.get("bloomberg_ticker") else None,
+                "ticker": (
+                    equity_data.get("bloomberg_ticker", "").split(":")[0]
+                    if equity_data.get("bloomberg_ticker")
+                    else None
+                ),
                 "bloomberg_ticker": equity_data.get("bloomberg_ticker", ""),
                 "exchange": equity_data.get("exchange"),
                 "sector": equity_data.get("sector"),
@@ -89,7 +96,7 @@ async def find_equities(args: FindEquitiesArgs) -> FindEquitiesResponse:
                 "market_cap": equity_data.get("market_cap"),
                 "primary_equity": equity_data.get("primary_equity"),
                 "created": created,
-                "modified": modified
+                "modified": modified,
             }
             equities_data.append(parsed_equity)
 
@@ -102,11 +109,7 @@ async def find_equities(args: FindEquitiesArgs) -> FindEquitiesResponse:
         logger.warning(f"Failed to parse API response: {e}")
         # Return empty response for malformed data
         return FindEquitiesResponse(
-            instructions=[],
-            response={
-                "data": [],
-                "pagination": None
-            }
+            instructions=[], response={"data": [], "pagination": None}
         )
 
 
@@ -133,7 +136,9 @@ async def get_sectors_and_subsectors(args: SearchArgs) -> GetSectorsSubsectorsRe
     return GetSectorsSubsectorsResponse.model_validate(raw_response)
 
 
-async def get_equity_summaries(args: GetEquitySummariesArgs) -> GetEquitySummariesResponse:
+async def get_equity_summaries(
+    args: GetEquitySummariesArgs,
+) -> GetEquitySummariesResponse:
     """Retrieve detailed summary information about one or more equities, filtered by ticker(s)."""
     logger.info("tool called: get_equity_summaries")
 
@@ -178,7 +183,9 @@ async def get_available_indexes(args: EmptyArgs) -> GetAvailableIndexesResponse:
     return GetAvailableIndexesResponse.model_validate(raw_response)
 
 
-async def get_index_constituents(args: GetIndexConstituentsArgs) -> GetIndexConstituentsResponse:
+async def get_index_constituents(
+    args: GetIndexConstituentsArgs,
+) -> GetIndexConstituentsResponse:
     """Retrieve the list of all equities within an index."""
     logger.info("tool called: get_index_constituents")
 
@@ -234,7 +241,7 @@ async def get_index_constituents(args: GetIndexConstituentsArgs) -> GetIndexCons
             sector=constituent_data.get("sector"),
             subsector=constituent_data.get("subsector"),
             country=constituent_data.get("country"),
-            market_cap=constituent_data.get("market_cap")
+            market_cap=constituent_data.get("market_cap"),
         )
         constituents.append(equity_item)
 
@@ -245,7 +252,9 @@ async def get_index_constituents(args: GetIndexConstituentsArgs) -> GetIndexCons
         page=args.page,
         page_size=args.page_size,
         instructions=raw_response.get("instructions", []),
-        citation_information=[CitationInfo(title=f"{args.index} Index Constituents", source="Aiera")]
+        citation_information=[
+            CitationInfo(title=f"{args.index} Index Constituents", source="Aiera")
+        ],
     )
 
 
@@ -270,7 +279,9 @@ async def get_available_watchlists(args: EmptyArgs) -> GetAvailableWatchlistsRes
     return GetAvailableWatchlistsResponse.model_validate(raw_response)
 
 
-async def get_watchlist_constituents(args: GetWatchlistConstituentsArgs) -> GetWatchlistConstituentsResponse:
+async def get_watchlist_constituents(
+    args: GetWatchlistConstituentsArgs,
+) -> GetWatchlistConstituentsResponse:
     """Retrieve the list of all equities within a watchlist."""
     logger.info("tool called: get_watchlist_constituents")
 
@@ -325,7 +336,7 @@ async def get_watchlist_constituents(args: GetWatchlistConstituentsArgs) -> GetW
             sector=constituent_data.get("sector"),
             subsector=constituent_data.get("subsector"),
             country=constituent_data.get("country"),
-            market_cap=constituent_data.get("market_cap")
+            market_cap=constituent_data.get("market_cap"),
         )
         constituents.append(equity_item)
 
@@ -336,7 +347,11 @@ async def get_watchlist_constituents(args: GetWatchlistConstituentsArgs) -> GetW
         page=args.page,
         page_size=args.page_size,
         instructions=raw_response.get("instructions", []),
-        citation_information=[CitationInfo(title=f"Watchlist {args.watchlist_id} Constituents", source="Aiera")]
+        citation_information=[
+            CitationInfo(
+                title=f"Watchlist {args.watchlist_id} Constituents", source="Aiera"
+            )
+        ],
     )
 
 

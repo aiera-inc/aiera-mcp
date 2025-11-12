@@ -3,8 +3,6 @@
 """Transcrippet tools for Aiera MCP."""
 
 import logging
-from typing import Any, Dict
-from datetime import datetime
 
 from .models import (
     FindTranscrippetsArgs,
@@ -45,13 +43,17 @@ async def find_transcrippets(args: FindTranscrippetsArgs) -> FindTranscrippetsRe
         for transcrippet in raw_response["response"]:
             if transcrippet.get("transcrippet_guid"):
                 guid = transcrippet["transcrippet_guid"]
-                transcrippet["public_url"] = f"https://public.aiera.com/shared/transcrippet.html?id={guid}"
+                transcrippet["public_url"] = (
+                    f"https://public.aiera.com/shared/transcrippet.html?id={guid}"
+                )
 
     # Return the structured response with the added public URLs
     return FindTranscrippetsResponse.model_validate(raw_response)
 
 
-async def create_transcrippet(args: CreateTranscrippetArgs) -> CreateTranscrippetResponse:
+async def create_transcrippet(
+    args: CreateTranscrippetArgs,
+) -> CreateTranscrippetResponse:
     """Create a new Transcrippet™ from an event transcript segment."""
     logger.info("tool called: create_transcrippet")
 
@@ -70,15 +72,21 @@ async def create_transcrippet(args: CreateTranscrippetArgs) -> CreateTranscrippe
     )
 
     # Add public URL to the response data before validation
-    if raw_response.get("response") and raw_response["response"].get("transcrippet_guid"):
+    if raw_response.get("response") and raw_response["response"].get(
+        "transcrippet_guid"
+    ):
         guid = raw_response["response"]["transcrippet_guid"]
-        raw_response["response"]["public_url"] = f"https://public.aiera.com/shared/transcrippet.html?id={guid}"
+        raw_response["response"][
+            "public_url"
+        ] = f"https://public.aiera.com/shared/transcrippet.html?id={guid}"
 
     # Return the structured response with the added public URL
     return CreateTranscrippetResponse.model_validate(raw_response)
 
 
-async def delete_transcrippet(args: DeleteTranscrippetArgs) -> DeleteTranscrippetResponse:
+async def delete_transcrippet(
+    args: DeleteTranscrippetArgs,
+) -> DeleteTranscrippetResponse:
     """Delete a Transcrippet™ by its ID."""
     logger.info("tool called: delete_transcrippet")
 
@@ -113,7 +121,7 @@ async def delete_transcrippet(args: DeleteTranscrippetArgs) -> DeleteTranscrippe
             success=success,
             message=message,
             instructions=raw_response.get("instructions", []),
-            citation_information=[]
+            citation_information=[],
         )
 
     except Exception as e:
@@ -121,7 +129,7 @@ async def delete_transcrippet(args: DeleteTranscrippetArgs) -> DeleteTranscrippe
             success=False,
             message=f"Failed to delete transcrippet: {str(e)}",
             instructions=[],
-            citation_information=[]
+            citation_information=[],
         )
 
 

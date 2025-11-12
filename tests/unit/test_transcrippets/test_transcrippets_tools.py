@@ -4,14 +4,21 @@
 
 import pytest
 import pytest_asyncio
-from datetime import datetime
 from unittest.mock import AsyncMock
 
-from aiera_mcp.tools.transcrippets.tools import find_transcrippets, create_transcrippet, delete_transcrippet
+from aiera_mcp.tools.transcrippets.tools import (
+    find_transcrippets,
+    create_transcrippet,
+    delete_transcrippet,
+)
 from aiera_mcp.tools.transcrippets.models import (
-    FindTranscrippetsArgs, CreateTranscrippetArgs, DeleteTranscrippetArgs,
-    FindTranscrippetsResponse, CreateTranscrippetResponse, DeleteTranscrippetResponse,
-    TranscrippetItem
+    FindTranscrippetsArgs,
+    CreateTranscrippetArgs,
+    DeleteTranscrippetArgs,
+    FindTranscrippetsResponse,
+    CreateTranscrippetResponse,
+    DeleteTranscrippetResponse,
+    TranscrippetItem,
 )
 
 
@@ -20,16 +27,20 @@ class TestFindTranscrippets:
     """Test the find_transcrippets tool."""
 
     @pytest.mark.asyncio
-    async def test_find_transcrippets_success(self, mock_http_dependencies, transcrippets_api_responses):
+    async def test_find_transcrippets_success(
+        self, mock_http_dependencies, transcrippets_api_responses
+    ):
         """Test successful transcrippets search."""
         # Setup
-        mock_http_dependencies['mock_make_request'].return_value = transcrippets_api_responses["find_transcrippets_success"]
+        mock_http_dependencies["mock_make_request"].return_value = (
+            transcrippets_api_responses["find_transcrippets_success"]
+        )
 
         args = FindTranscrippetsArgs(
             transcrippet_id="trans123",
             event_id="event456",
             created_start_date="2023-10-01",
-            created_end_date="2023-10-31"
+            created_end_date="2023-10-31",
         )
 
         # Execute
@@ -45,32 +56,32 @@ class TestFindTranscrippets:
         assert first_transcrippet.transcrippet_id == 123
         assert first_transcrippet.company_name == "Apple Inc"
         assert first_transcrippet.event_title == "Q4 2023 Earnings Call"
-        assert first_transcrippet.transcript == "I'm pleased to report that Q4 was another strong quarter..."
+        assert (
+            first_transcrippet.transcript
+            == "I'm pleased to report that Q4 was another strong quarter..."
+        )
         assert first_transcrippet.transcrippet_guid == "guid-123-456"
         assert first_transcrippet.created == "2023-10-26T22:00:00Z"
 
         # Check API call was made correctly
-        mock_http_dependencies['mock_make_request'].assert_called_once()
-        call_args = mock_http_dependencies['mock_make_request'].call_args
-        assert call_args[1]['method'] == "GET"
-        assert call_args[1]['endpoint'] == "/transcrippets/"
+        mock_http_dependencies["mock_make_request"].assert_called_once()
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        assert call_args[1]["method"] == "GET"
+        assert call_args[1]["endpoint"] == "/transcrippets/"
 
         # Check parameters were passed correctly
-        params = call_args[1]['params']
-        assert params['transcrippet_id'] == "trans123"
-        assert params['event_id'] == "event456"
-        assert params['created_start_date'] == "2023-10-01"
-        assert params['created_end_date'] == "2023-10-31"
+        params = call_args[1]["params"]
+        assert params["transcrippet_id"] == "trans123"
+        assert params["event_id"] == "event456"
+        assert params["created_start_date"] == "2023-10-01"
+        assert params["created_end_date"] == "2023-10-31"
 
     @pytest.mark.asyncio
     async def test_find_transcrippets_empty_results(self, mock_http_dependencies):
         """Test find_transcrippets with empty results."""
         # Setup - Note: transcrippets API returns array directly
-        empty_response = {
-            "response": [],
-            "instructions": []
-        }
-        mock_http_dependencies['mock_make_request'].return_value = empty_response
+        empty_response = {"response": [], "instructions": []}
+        mock_http_dependencies["mock_make_request"].return_value = empty_response
 
         args = FindTranscrippetsArgs()
 
@@ -86,11 +97,8 @@ class TestFindTranscrippets:
     async def test_find_transcrippets_malformed_response(self, mock_http_dependencies):
         """Test find_transcrippets with malformed response raises validation error."""
         # Setup - non-array response (should cause validation error)
-        malformed_response = {
-            "response": {"not": "an array"},
-            "instructions": []
-        }
-        mock_http_dependencies['mock_make_request'].return_value = malformed_response
+        malformed_response = {"response": {"not": "an array"}, "instructions": []}
+        mock_http_dependencies["mock_make_request"].return_value = malformed_response
 
         args = FindTranscrippetsArgs()
 
@@ -99,30 +107,34 @@ class TestFindTranscrippets:
             await find_transcrippets(args)
 
     @pytest.mark.asyncio
-    async def test_find_transcrippets_with_filters(self, mock_http_dependencies, transcrippets_api_responses):
+    async def test_find_transcrippets_with_filters(
+        self, mock_http_dependencies, transcrippets_api_responses
+    ):
         """Test find_transcrippets with various filters."""
         # Setup
-        mock_http_dependencies['mock_make_request'].return_value = transcrippets_api_responses["find_transcrippets_success"]
+        mock_http_dependencies["mock_make_request"].return_value = (
+            transcrippets_api_responses["find_transcrippets_success"]
+        )
 
         args = FindTranscrippetsArgs(
             transcrippet_id="trans123,trans456",
             event_id="event789",
             equity_id="eq123",
             speaker_id="speaker456",
-            transcript_item_id="item789"
+            transcript_item_id="item789",
         )
 
         # Execute
         result = await find_transcrippets(args)
 
         # Verify
-        call_args = mock_http_dependencies['mock_make_request'].call_args
-        params = call_args[1]['params']
-        assert params['transcrippet_id'] == "trans123,trans456"
-        assert params['event_id'] == "event789"
-        assert params['equity_id'] == "eq123"
-        assert params['speaker_id'] == "speaker456"
-        assert params['transcript_item_id'] == "item789"
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        params = call_args[1]["params"]
+        assert params["transcrippet_id"] == "trans123,trans456"
+        assert params["event_id"] == "event789"
+        assert params["equity_id"] == "eq123"
+        assert params["speaker_id"] == "speaker456"
+        assert params["transcript_item_id"] == "item789"
 
     @pytest.mark.asyncio
     async def test_find_transcrippets_date_parsing(self, mock_http_dependencies):
@@ -152,12 +164,12 @@ class TestFindTranscrippets:
                     "transcrippet_guid": "guid-123-456",
                     "transcription_audio_offset_seconds": 30,
                     "trimmed_audio_url": "https://example.com/audio/trans123_trimmed.mp3",
-                    "word_durations_ms": [500, 300, 400]
+                    "word_durations_ms": [500, 300, 400],
                 }
             ],
-            "instructions": []
+            "instructions": [],
         }
-        mock_http_dependencies['mock_make_request'].return_value = response_with_dates
+        mock_http_dependencies["mock_make_request"].return_value = response_with_dates
 
         args = FindTranscrippetsArgs()
 
@@ -170,7 +182,9 @@ class TestFindTranscrippets:
         assert transcrippet.created == "2023-10-26T22:00:00Z"
 
     @pytest.mark.asyncio
-    async def test_find_transcrippets_public_url_generation(self, mock_http_dependencies):
+    async def test_find_transcrippets_public_url_generation(
+        self, mock_http_dependencies
+    ):
         """Test that find_transcrippets generates proper public URLs."""
         # Setup
         response_with_guid = {
@@ -197,12 +211,12 @@ class TestFindTranscrippets:
                     "transcrippet_guid": "test-guid-123",
                     "transcription_audio_offset_seconds": 30,
                     "trimmed_audio_url": "https://example.com/audio/trans123_trimmed.mp3",
-                    "word_durations_ms": [500, 300, 400]
+                    "word_durations_ms": [500, 300, 400],
                 }
             ],
-            "instructions": []
+            "instructions": [],
         }
-        mock_http_dependencies['mock_make_request'].return_value = response_with_guid
+        mock_http_dependencies["mock_make_request"].return_value = response_with_guid
 
         args = FindTranscrippetsArgs()
 
@@ -213,13 +227,20 @@ class TestFindTranscrippets:
         assert len(result.response) == 1
         transcrippet = result.response[0]
         assert transcrippet.transcrippet_guid == "test-guid-123"
-        assert transcrippet.public_url == "https://public.aiera.com/shared/transcrippet.html?id=test-guid-123"
+        assert (
+            transcrippet.public_url
+            == "https://public.aiera.com/shared/transcrippet.html?id=test-guid-123"
+        )
 
     @pytest.mark.asyncio
-    async def test_find_transcrippets_citations(self, mock_http_dependencies, transcrippets_api_responses):
+    async def test_find_transcrippets_citations(
+        self, mock_http_dependencies, transcrippets_api_responses
+    ):
         """Test that find_transcrippets generates proper citations."""
         # Setup
-        mock_http_dependencies['mock_make_request'].return_value = transcrippets_api_responses["find_transcrippets_success"]
+        mock_http_dependencies["mock_make_request"].return_value = (
+            transcrippets_api_responses["find_transcrippets_success"]
+        )
 
         args = FindTranscrippetsArgs()
 
@@ -227,7 +248,10 @@ class TestFindTranscrippets:
         result = await find_transcrippets(args)
 
         # Verify basic response structure (raw API response has empty citation_information)
-        assert len(result.citation_information) == 0 or len(result.citation_information) >= 0
+        assert (
+            len(result.citation_information) == 0
+            or len(result.citation_information) >= 0
+        )
         # Verify the main data is present
         assert len(result.response) == 1
         assert result.response[0].transcrippet_guid == "guid-123-456"
@@ -238,10 +262,14 @@ class TestCreateTranscrippet:
     """Test the create_transcrippet tool."""
 
     @pytest.mark.asyncio
-    async def test_create_transcrippet_success(self, mock_http_dependencies, transcrippets_api_responses):
+    async def test_create_transcrippet_success(
+        self, mock_http_dependencies, transcrippets_api_responses
+    ):
         """Test successful transcrippet creation."""
         # Setup
-        mock_http_dependencies['mock_make_request'].return_value = transcrippets_api_responses["create_transcrippet_success"]
+        mock_http_dependencies["mock_make_request"].return_value = (
+            transcrippets_api_responses["create_transcrippet_success"]
+        )
 
         args = CreateTranscrippetArgs(
             event_id=12345,
@@ -249,7 +277,7 @@ class TestCreateTranscrippet:
             transcript_item_id=789,
             transcript_item_offset=0,
             transcript_end_item_id=790,
-            transcript_end_item_offset=100
+            transcript_end_item_offset=100,
         )
 
         # Execute
@@ -264,28 +292,35 @@ class TestCreateTranscrippet:
         assert result.response.audio_url == "https://example.com/audio/trans456.mp3"
         assert result.response.speaker_name == "Tim Cook"
         assert result.response.transcrippet_guid == "guid-456-789"
-        assert result.response.public_url == "https://public.aiera.com/shared/transcrippet.html?id=guid-456-789"
+        assert (
+            result.response.public_url
+            == "https://public.aiera.com/shared/transcrippet.html?id=guid-456-789"
+        )
 
         # Check API call was made correctly
-        mock_http_dependencies['mock_make_request'].assert_called_once()
-        call_args = mock_http_dependencies['mock_make_request'].call_args
-        assert call_args[1]['method'] == "POST"
-        assert call_args[1]['endpoint'] == "/transcrippets/create"
+        mock_http_dependencies["mock_make_request"].assert_called_once()
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        assert call_args[1]["method"] == "POST"
+        assert call_args[1]["endpoint"] == "/transcrippets/create"
 
         # Check data was passed correctly
-        data = call_args[1]['data']
-        assert data['event_id'] == 12345
-        assert data['transcript'] == "This is the transcript text content"
-        assert data['transcript_item_id'] == 789
-        assert data['transcript_item_offset'] == 0
-        assert data['transcript_end_item_id'] == 790
-        assert data['transcript_end_item_offset'] == 100
+        data = call_args[1]["data"]
+        assert data["event_id"] == 12345
+        assert data["transcript"] == "This is the transcript text content"
+        assert data["transcript_item_id"] == 789
+        assert data["transcript_item_offset"] == 0
+        assert data["transcript_end_item_id"] == 790
+        assert data["transcript_end_item_offset"] == 100
 
     @pytest.mark.asyncio
-    async def test_create_transcrippet_minimal_args(self, mock_http_dependencies, transcrippets_api_responses):
+    async def test_create_transcrippet_minimal_args(
+        self, mock_http_dependencies, transcrippets_api_responses
+    ):
         """Test create_transcrippet with minimal required arguments."""
         # Setup
-        mock_http_dependencies['mock_make_request'].return_value = transcrippets_api_responses["create_transcrippet_success"]
+        mock_http_dependencies["mock_make_request"].return_value = (
+            transcrippets_api_responses["create_transcrippet_success"]
+        )
 
         args = CreateTranscrippetArgs(
             event_id=12345,
@@ -293,7 +328,7 @@ class TestCreateTranscrippet:
             transcript_item_id=789,
             transcript_item_offset=0,
             transcript_end_item_id=790,
-            transcript_end_item_offset=100
+            transcript_end_item_offset=100,
         )
 
         # Execute
@@ -304,18 +339,15 @@ class TestCreateTranscrippet:
         assert isinstance(result.response, TranscrippetItem)
 
         # Check data was passed correctly
-        call_args = mock_http_dependencies['mock_make_request'].call_args
-        data = call_args[1]['data']
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        data = call_args[1]["data"]
 
     @pytest.mark.asyncio
     async def test_create_transcrippet_invalid_response(self, mock_http_dependencies):
         """Test create_transcrippet with invalid response."""
         # Setup - non-dict response
-        invalid_response = {
-            "response": "not a dict",
-            "instructions": []
-        }
-        mock_http_dependencies['mock_make_request'].return_value = invalid_response
+        invalid_response = {"response": "not a dict", "instructions": []}
+        mock_http_dependencies["mock_make_request"].return_value = invalid_response
 
         args = CreateTranscrippetArgs(
             event_id=12345,
@@ -323,7 +355,7 @@ class TestCreateTranscrippet:
             transcript_item_id=789,
             transcript_item_offset=0,
             transcript_end_item_id=790,
-            transcript_end_item_offset=100
+            transcript_end_item_offset=100,
         )
 
         # Execute & Verify
@@ -361,11 +393,11 @@ class TestCreateTranscrippet:
                 "transcript_text": "Full transcript text here...",
                 "speaker_name": "Test Speaker",
                 "start_time": "00:05:30",
-                "end_time": "00:06:45"
+                "end_time": "00:06:45",
             },
-            "instructions": []
+            "instructions": [],
         }
-        mock_http_dependencies['mock_make_request'].return_value = response_with_date
+        mock_http_dependencies["mock_make_request"].return_value = response_with_date
 
         args = CreateTranscrippetArgs(
             event_id=12345,
@@ -373,7 +405,7 @@ class TestCreateTranscrippet:
             transcript_item_id=789,
             transcript_item_offset=0,
             transcript_end_item_id=790,
-            transcript_end_item_offset=100
+            transcript_end_item_offset=100,
         )
 
         # Execute
@@ -383,10 +415,14 @@ class TestCreateTranscrippet:
         assert result.response.created == "2023-10-26T22:05:00Z"
 
     @pytest.mark.asyncio
-    async def test_create_transcrippet_citation(self, mock_http_dependencies, transcrippets_api_responses):
+    async def test_create_transcrippet_citation(
+        self, mock_http_dependencies, transcrippets_api_responses
+    ):
         """Test that create_transcrippet generates proper citation."""
         # Setup
-        mock_http_dependencies['mock_make_request'].return_value = transcrippets_api_responses["create_transcrippet_success"]
+        mock_http_dependencies["mock_make_request"].return_value = (
+            transcrippets_api_responses["create_transcrippet_success"]
+        )
 
         args = CreateTranscrippetArgs(
             event_id=12345,
@@ -394,7 +430,7 @@ class TestCreateTranscrippet:
             transcript_item_id=789,
             transcript_item_offset=0,
             transcript_end_item_id=790,
-            transcript_end_item_offset=100
+            transcript_end_item_offset=100,
         )
 
         # Execute
@@ -403,7 +439,10 @@ class TestCreateTranscrippet:
         # Verify basic response structure (API doesn't auto-generate citations)
         assert len(result.citation_information) == 0
         assert result.response.transcrippet_guid == "guid-456-789"
-        assert result.response.public_url == "https://public.aiera.com/shared/transcrippet.html?id=guid-456-789"
+        assert (
+            result.response.public_url
+            == "https://public.aiera.com/shared/transcrippet.html?id=guid-456-789"
+        )
         assert result.response.event_title == "Q4 2023 Earnings Call"
 
 
@@ -415,11 +454,8 @@ class TestDeleteTranscrippet:
     async def test_delete_transcrippet_success(self, mock_http_dependencies):
         """Test successful transcrippet deletion."""
         # Setup
-        success_response = {
-            "response": {"success": True},
-            "instructions": []
-        }
-        mock_http_dependencies['mock_make_request'].return_value = success_response
+        success_response = {"response": {"success": True}, "instructions": []}
+        mock_http_dependencies["mock_make_request"].return_value = success_response
 
         args = DeleteTranscrippetArgs(transcrippet_id="trans123")
 
@@ -432,24 +468,26 @@ class TestDeleteTranscrippet:
         assert result.message == "Transcrippet deleted successfully"
 
         # Check API call was made correctly
-        mock_http_dependencies['mock_make_request'].assert_called_once()
-        call_args = mock_http_dependencies['mock_make_request'].call_args
-        assert call_args[1]['method'] == "POST"
-        assert call_args[1]['endpoint'] == "/transcrippets/trans123/delete"
+        mock_http_dependencies["mock_make_request"].assert_called_once()
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        assert call_args[1]["method"] == "POST"
+        assert call_args[1]["endpoint"] == "/transcrippets/trans123/delete"
 
         # Check parameters were passed correctly
-        params = call_args[1]['params']
-        assert params['transcrippet_id'] == "trans123"
+        params = call_args[1]["params"]
+        assert params["transcrippet_id"] == "trans123"
 
     @pytest.mark.asyncio
-    async def test_delete_transcrippet_api_error_in_response(self, mock_http_dependencies):
+    async def test_delete_transcrippet_api_error_in_response(
+        self, mock_http_dependencies
+    ):
         """Test delete_transcrippet with API error in response."""
         # Setup
         error_response = {
             "response": {"error": "Transcrippet not found"},
-            "instructions": []
+            "instructions": [],
         }
-        mock_http_dependencies['mock_make_request'].return_value = error_response
+        mock_http_dependencies["mock_make_request"].return_value = error_response
 
         args = DeleteTranscrippetArgs(transcrippet_id="nonexistent")
 
@@ -465,11 +503,8 @@ class TestDeleteTranscrippet:
     async def test_delete_transcrippet_top_level_error(self, mock_http_dependencies):
         """Test delete_transcrippet with top-level error in response."""
         # Setup
-        error_response = {
-            "error": "Unauthorized access",
-            "instructions": []
-        }
-        mock_http_dependencies['mock_make_request'].return_value = error_response
+        error_response = {"error": "Unauthorized access", "instructions": []}
+        mock_http_dependencies["mock_make_request"].return_value = error_response
 
         args = DeleteTranscrippetArgs(transcrippet_id="trans123")
 
@@ -485,7 +520,9 @@ class TestDeleteTranscrippet:
     async def test_delete_transcrippet_network_exception(self, mock_http_dependencies):
         """Test delete_transcrippet with network exception."""
         # Setup
-        mock_http_dependencies['mock_make_request'].side_effect = ConnectionError("Network error")
+        mock_http_dependencies["mock_make_request"].side_effect = ConnectionError(
+            "Network error"
+        )
 
         args = DeleteTranscrippetArgs(transcrippet_id="trans123")
 
@@ -501,7 +538,9 @@ class TestDeleteTranscrippet:
     async def test_delete_transcrippet_generic_exception(self, mock_http_dependencies):
         """Test delete_transcrippet with generic exception."""
         # Setup
-        mock_http_dependencies['mock_make_request'].side_effect = ValueError("Some other error")
+        mock_http_dependencies["mock_make_request"].side_effect = ValueError(
+            "Some other error"
+        )
 
         args = DeleteTranscrippetArgs(transcrippet_id="trans123")
 
@@ -519,7 +558,9 @@ class TestTranscrippetsToolsErrorHandling:
     """Test error handling for transcrippets tools."""
 
     @pytest.mark.asyncio
-    async def test_find_transcrippets_handle_invalid_response_data(self, mock_http_dependencies):
+    async def test_find_transcrippets_handle_invalid_response_data(
+        self, mock_http_dependencies
+    ):
         """Test that find_transcrippets raises validation errors for invalid API responses."""
         # Setup - response with missing required fields (should cause validation error)
         response_with_missing_fields = {
@@ -527,13 +568,15 @@ class TestTranscrippetsToolsErrorHandling:
                 {
                     "transcrippet_id": "trans123",  # String instead of int
                     "transcrippet_guid": "guid-123",
-                    "title": "Test Transcrippet"
+                    "title": "Test Transcrippet",
                     # Missing many required fields like company_id, equity_id, etc.
                 }
             ],
-            "instructions": []
+            "instructions": [],
         }
-        mock_http_dependencies['mock_make_request'].return_value = response_with_missing_fields
+        mock_http_dependencies["mock_make_request"].return_value = (
+            response_with_missing_fields
+        )
 
         args = FindTranscrippetsArgs()
 
@@ -569,12 +612,14 @@ class TestTranscrippetsToolsErrorHandling:
                     "transcrippet_guid": "",  # Empty GUID to test missing case
                     "transcription_audio_offset_seconds": 30,
                     "trimmed_audio_url": "https://example.com/audio/trans123_trimmed.mp3",
-                    "word_durations_ms": [500, 300, 400]
+                    "word_durations_ms": [500, 300, 400],
                 }
             ],
-            "instructions": []
+            "instructions": [],
         }
-        mock_http_dependencies['mock_make_request'].return_value = response_with_missing_guid
+        mock_http_dependencies["mock_make_request"].return_value = (
+            response_with_missing_guid
+        )
 
         args = FindTranscrippetsArgs()
 
@@ -587,7 +632,9 @@ class TestTranscrippetsToolsErrorHandling:
         assert transcrippet.transcrippet_guid == ""
 
     @pytest.mark.asyncio
-    async def test_create_transcrippet_handle_invalid_date(self, mock_http_dependencies):
+    async def test_create_transcrippet_handle_invalid_date(
+        self, mock_http_dependencies
+    ):
         """Test create_transcrippet handles dates correctly."""
         # Setup with valid created date
         response_with_date = {
@@ -617,11 +664,11 @@ class TestTranscrippetsToolsErrorHandling:
                 "transcript_text": "Full transcript text here...",
                 "speaker_name": "Test Speaker",
                 "start_time": "00:05:30",
-                "end_time": "00:06:45"
+                "end_time": "00:06:45",
             },
-            "instructions": []
+            "instructions": [],
         }
-        mock_http_dependencies['mock_make_request'].return_value = response_with_date
+        mock_http_dependencies["mock_make_request"].return_value = response_with_date
 
         args = CreateTranscrippetArgs(
             event_id=12345,
@@ -629,7 +676,7 @@ class TestTranscrippetsToolsErrorHandling:
             transcript_item_id=789,
             transcript_item_offset=0,
             transcript_end_item_id=790,
-            transcript_end_item_offset=100
+            transcript_end_item_offset=100,
         )
 
         # Execute
@@ -639,11 +686,17 @@ class TestTranscrippetsToolsErrorHandling:
         assert result.response.created == "2023-10-26T22:05:00Z"
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("exception_type", [ConnectionError, TimeoutError, ValueError])
-    async def test_network_errors_propagate_find(self, mock_http_dependencies, exception_type):
+    @pytest.mark.parametrize(
+        "exception_type", [ConnectionError, TimeoutError, ValueError]
+    )
+    async def test_network_errors_propagate_find(
+        self, mock_http_dependencies, exception_type
+    ):
         """Test that network errors are properly propagated in find_transcrippets."""
         # Setup - make_aiera_request raises exception
-        mock_http_dependencies['mock_make_request'].side_effect = exception_type("Test error")
+        mock_http_dependencies["mock_make_request"].side_effect = exception_type(
+            "Test error"
+        )
 
         args = FindTranscrippetsArgs()
 
@@ -652,11 +705,17 @@ class TestTranscrippetsToolsErrorHandling:
             await find_transcrippets(args)
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("exception_type", [ConnectionError, TimeoutError, ValueError])
-    async def test_network_errors_propagate_create(self, mock_http_dependencies, exception_type):
+    @pytest.mark.parametrize(
+        "exception_type", [ConnectionError, TimeoutError, ValueError]
+    )
+    async def test_network_errors_propagate_create(
+        self, mock_http_dependencies, exception_type
+    ):
         """Test that network errors are properly propagated in create_transcrippet."""
         # Setup - make_aiera_request raises exception
-        mock_http_dependencies['mock_make_request'].side_effect = exception_type("Test error")
+        mock_http_dependencies["mock_make_request"].side_effect = exception_type(
+            "Test error"
+        )
 
         args = CreateTranscrippetArgs(
             event_id=12345,
@@ -664,7 +723,7 @@ class TestTranscrippetsToolsErrorHandling:
             transcript_item_id=789,
             transcript_item_offset=0,
             transcript_end_item_id=790,
-            transcript_end_item_offset=100
+            transcript_end_item_offset=100,
         )
 
         # Execute & Verify
@@ -672,25 +731,29 @@ class TestTranscrippetsToolsErrorHandling:
             await create_transcrippet(args)
 
     @pytest.mark.asyncio
-    async def test_provided_ids_handling(self, mock_http_dependencies, transcrippets_api_responses):
+    async def test_provided_ids_handling(
+        self, mock_http_dependencies, transcrippets_api_responses
+    ):
         """Test handling of provided IDs with format validation."""
         # Setup
-        mock_http_dependencies['mock_make_request'].return_value = transcrippets_api_responses["find_transcrippets_success"]
+        mock_http_dependencies["mock_make_request"].return_value = (
+            transcrippets_api_responses["find_transcrippets_success"]
+        )
 
         args = FindTranscrippetsArgs(
             transcrippet_id="123,456,789",  # Comma-separated IDs
             event_id="event1,event2",
             equity_id="eq1",
             speaker_id="speaker1,speaker2",
-            transcript_item_id="item1"
+            transcript_item_id="item1",
         )
 
         # Execute
         result = await find_transcrippets(args)
 
         # Verify - should pass through the IDs as provided
-        call_args = mock_http_dependencies['mock_make_request'].call_args
-        params = call_args[1]['params']
-        assert params['transcrippet_id'] == "123,456,789"
-        assert params['event_id'] == "event1,event2"
-        assert params['speaker_id'] == "speaker1,speaker2"
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        params = call_args[1]["params"]
+        assert params["transcrippet_id"] == "123,456,789"
+        assert params["event_id"] == "event1,event2"
+        assert params["speaker_id"] == "speaker1,speaker2"

@@ -6,11 +6,17 @@ import pytest
 import pytest_asyncio
 from unittest.mock import patch
 
-from aiera_mcp.tools.third_bridge.tools import find_third_bridge_events, get_third_bridge_event
+from aiera_mcp.tools.third_bridge.tools import (
+    find_third_bridge_events,
+    get_third_bridge_event,
+)
 from aiera_mcp.tools.third_bridge.models import (
-    FindThirdBridgeEventsArgs, GetThirdBridgeEventArgs,
-    FindThirdBridgeEventsResponse, GetThirdBridgeEventResponse,
-    ThirdBridgeEventItem, ThirdBridgeEventDetails
+    FindThirdBridgeEventsArgs,
+    GetThirdBridgeEventArgs,
+    FindThirdBridgeEventsResponse,
+    GetThirdBridgeEventResponse,
+    ThirdBridgeEventItem,
+    ThirdBridgeEventDetails,
 )
 
 
@@ -28,19 +34,19 @@ class TestThirdBridgeIntegration:
         real_api_key,
         sample_date_ranges,
         api_rate_limiter,
-        mock_get_http_client
+        mock_get_http_client,
     ):
         """Test find_third_bridge_events with real API."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch("aiera_mcp.tools.base.get_http_client", mock_get_http_client):
 
             # Test with a date range that might have Third Bridge events
             date_range = sample_date_ranges[1]  # Q1 2024
             args = FindThirdBridgeEventsArgs(
                 start_date=date_range["start_date"],
                 end_date=date_range["end_date"],
-                page_size=10
+                page_size=10,
             )
 
             result = await find_third_bridge_events(args)
@@ -69,19 +75,19 @@ class TestThirdBridgeIntegration:
         real_api_key,
         sample_tickers,
         api_rate_limiter,
-        mock_get_http_client
+        mock_get_http_client,
     ):
         """Test find_third_bridge_events with ticker filter."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch("aiera_mcp.tools.base.get_http_client", mock_get_http_client):
 
             # Test with Apple ticker - might have Third Bridge events
             args = FindThirdBridgeEventsArgs(
                 start_date="2023-01-01",
                 end_date="2023-12-31",
                 bloomberg_ticker=sample_tickers[0],  # AAPL:US
-                page_size=5
+                page_size=5,
             )
 
             result = await find_third_bridge_events(args)
@@ -102,18 +108,16 @@ class TestThirdBridgeIntegration:
         real_http_client,
         real_api_key,
         api_rate_limiter,
-        mock_get_http_client
+        mock_get_http_client,
     ):
         """Test find_third_bridge_events with extended date range to increase chance of finding events."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch("aiera_mcp.tools.base.get_http_client", mock_get_http_client):
 
             # Test with a longer date range to increase chance of finding Third Bridge events
             args = FindThirdBridgeEventsArgs(
-                start_date="2023-01-01",
-                end_date="2024-06-30",
-                page_size=10
+                start_date="2023-01-01", end_date="2024-06-30", page_size=10
             )
 
             result = await find_third_bridge_events(args)
@@ -138,18 +142,16 @@ class TestThirdBridgeIntegration:
         real_http_client,
         real_api_key,
         api_rate_limiter,
-        mock_get_http_client
+        mock_get_http_client,
     ):
         """Test find_third_bridge_events with search query."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch("aiera_mcp.tools.base.get_http_client", mock_get_http_client):
 
             # Test with technology sector if available
             args = FindThirdBridgeEventsArgs(
-                start_date="2023-01-01",
-                end_date="2024-06-30",
-                page_size=5
+                start_date="2023-01-01", end_date="2024-06-30", page_size=5
             )
 
             result = await find_third_bridge_events(args)
@@ -169,18 +171,16 @@ class TestThirdBridgeIntegration:
         real_http_client,
         real_api_key,
         api_rate_limiter,
-        mock_get_http_client
+        mock_get_http_client,
     ):
         """Test get_third_bridge_event with real API (requires finding an event first)."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch("aiera_mcp.tools.base.get_http_client", mock_get_http_client):
 
             # First find a Third Bridge event with extended date range
             find_args = FindThirdBridgeEventsArgs(
-                start_date="2023-01-01",
-                end_date="2024-06-30",
-                page_size=1
+                start_date="2023-01-01", end_date="2024-06-30", page_size=1
             )
 
             find_result = await find_third_bridge_events(find_args)
@@ -206,9 +206,9 @@ class TestThirdBridgeIntegration:
             assert result.event.event_date
 
             # ThirdBridgeEventDetails should have additional fields
-            assert hasattr(result.event, 'description')
-            assert hasattr(result.event, 'expert_name')
-            assert hasattr(result.event, 'expert_bio')
+            assert hasattr(result.event, "description")
+            assert hasattr(result.event, "expert_name")
+            assert hasattr(result.event, "expert_bio")
 
     @pytest.mark.asyncio
     async def test_third_bridge_events_pagination_integration(
@@ -217,19 +217,16 @@ class TestThirdBridgeIntegration:
         real_http_client,
         real_api_key,
         api_rate_limiter,
-        mock_get_http_client
+        mock_get_http_client,
     ):
         """Test third bridge events pagination with real API."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch("aiera_mcp.tools.base.get_http_client", mock_get_http_client):
 
             # Test first page with extended date range to increase chance of results
             args_page1 = FindThirdBridgeEventsArgs(
-                start_date="2023-01-01",
-                end_date="2024-06-30",
-                page=1,
-                page_size=5
+                start_date="2023-01-01", end_date="2024-06-30", page=1, page_size=5
             )
 
             result_page1 = await find_third_bridge_events(args_page1)
@@ -241,10 +238,7 @@ class TestThirdBridgeIntegration:
                 await api_rate_limiter.wait()
 
                 args_page2 = FindThirdBridgeEventsArgs(
-                    start_date="2023-01-01",
-                    end_date="2024-06-30",
-                    page=2,
-                    page_size=5
+                    start_date="2023-01-01", end_date="2024-06-30", page=2, page_size=5
                 )
 
                 result_page2 = await find_third_bridge_events(args_page2)
@@ -267,28 +261,32 @@ class TestThirdBridgeIntegration:
         integration_mcp_server,
         real_http_client,
         api_rate_limiter,
-        mock_get_http_client
+        mock_get_http_client,
     ):
         """Test third bridge events API error handling with invalid API key."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.tools.base.get_api_key_from_context', return_value="invalid-api-key"):
+        with patch(
+            "aiera_mcp.tools.base.get_api_key_from_context",
+            return_value="invalid-api-key",
+        ):
 
             args = FindThirdBridgeEventsArgs(
-                start_date="2023-10-01",
-                end_date="2023-10-31"
+                start_date="2023-10-01", end_date="2023-10-31"
             )
 
             # This should raise an exception or return an error response
             try:
                 result = await find_third_bridge_events(args)
                 # If it doesn't raise an exception, check for error indicators
-                if hasattr(result, 'error') or len(result.events) == 0:
+                if hasattr(result, "error") or len(result.events) == 0:
                     # API handled the error gracefully
                     pass
             except Exception as e:
                 # Expected - invalid API key should cause an error
-                assert "401" in str(e) or "Unauthorized" in str(e) or "Invalid" in str(e)
+                assert (
+                    "401" in str(e) or "Unauthorized" in str(e) or "Invalid" in str(e)
+                )
 
     @pytest.mark.asyncio
     async def test_get_third_bridge_event_invalid_id(
@@ -297,12 +295,12 @@ class TestThirdBridgeIntegration:
         real_http_client,
         real_api_key,
         api_rate_limiter,
-        mock_get_http_client
+        mock_get_http_client,
     ):
         """Test get_third_bridge_event with invalid event ID."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch("aiera_mcp.tools.base.get_http_client", mock_get_http_client):
 
             # Test with invalid event ID
             get_args = GetThirdBridgeEventArgs(event_id="invalid-event-id-12345")
@@ -311,7 +309,7 @@ class TestThirdBridgeIntegration:
             try:
                 result = await get_third_bridge_event(get_args)
                 # If no exception, the result should indicate an error
-                assert not hasattr(result, 'event') or result.event is None
+                assert not hasattr(result, "event") or result.event is None
             except (ValueError, Exception) as e:
                 # Expected - invalid event ID should cause an error
                 assert "not found" in str(e).lower() or "invalid" in str(e).lower()
@@ -324,7 +322,7 @@ class TestThirdBridgeIntegration:
         real_api_key,
         sample_tickers,
         api_rate_limiter,
-        mock_get_http_client
+        mock_get_http_client,
     ):
         """Test third bridge events with multiple filter combinations."""
 
@@ -332,27 +330,18 @@ class TestThirdBridgeIntegration:
             {
                 "start_date": "2023-01-01",
                 "end_date": "2024-06-30",
-                "bloomberg_ticker": sample_tickers[0]
+                "bloomberg_ticker": sample_tickers[0],
             },
-            {
-                "start_date": "2023-01-01",
-                "end_date": "2024-06-30"
-            },
-            {
-                "start_date": "2023-06-01",
-                "end_date": "2024-06-30"
-            }
+            {"start_date": "2023-01-01", "end_date": "2024-06-30"},
+            {"start_date": "2023-06-01", "end_date": "2024-06-30"},
         ]
 
-        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch("aiera_mcp.tools.base.get_http_client", mock_get_http_client):
 
             for filter_combo in filter_combinations:
                 await api_rate_limiter.wait()
 
-                args = FindThirdBridgeEventsArgs(
-                    page_size=5,
-                    **filter_combo
-                )
+                args = FindThirdBridgeEventsArgs(page_size=5, **filter_combo)
 
                 result = await find_third_bridge_events(args)
 
@@ -373,23 +362,21 @@ class TestThirdBridgeIntegration:
         real_http_client,
         real_api_key,
         api_rate_limiter,
-        mock_get_http_client
+        mock_get_http_client,
     ):
         """Test that third bridge events responses include citation information."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch("aiera_mcp.tools.base.get_http_client", mock_get_http_client):
 
             args = FindThirdBridgeEventsArgs(
-                start_date="2023-01-01",
-                end_date="2024-06-30",
-                page_size=5
+                start_date="2023-01-01", end_date="2024-06-30", page_size=5
             )
 
             result = await find_third_bridge_events(args)
 
             # Verify citations are handled appropriately
-            assert hasattr(result, 'citation_information')
+            assert hasattr(result, "citation_information")
             assert isinstance(result.citation_information, list)
 
             # Third Bridge events might not always have URLs, but citations should still be structured properly
@@ -404,18 +391,16 @@ class TestThirdBridgeIntegration:
         real_http_client,
         real_api_key,
         api_rate_limiter,
-        mock_get_http_client
+        mock_get_http_client,
     ):
         """Test that third bridge events return proper response structures even when no events exist."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch("aiera_mcp.tools.base.get_http_client", mock_get_http_client):
 
             # Test with a narrow date range that probably won't have Third Bridge events
             args = FindThirdBridgeEventsArgs(
-                start_date="2024-01-01",
-                end_date="2024-01-01",
-                page_size=5
+                start_date="2024-01-01", end_date="2024-01-01", page_size=5
             )
 
             result = await find_third_bridge_events(args)
@@ -426,6 +411,6 @@ class TestThirdBridgeIntegration:
             assert result.total >= 0
             assert result.page == 1
             assert result.page_size == 5
-            assert hasattr(result, 'instructions')
-            assert hasattr(result, 'citation_information')
+            assert hasattr(result, "instructions")
+            assert hasattr(result, "citation_information")
             assert isinstance(result.citation_information, list)

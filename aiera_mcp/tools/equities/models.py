@@ -4,7 +4,7 @@
 
 from pydantic import BaseModel, Field, field_validator, field_serializer
 from typing import Optional, List, Any, Dict
-from datetime import datetime, date
+from datetime import datetime
 
 from ..common.models import BaseAieraResponse, PaginatedResponse, CitationInfo
 
@@ -13,7 +13,16 @@ from ..common.models import BaseAieraResponse, PaginatedResponse, CitationInfo
 class BaseToolArgs(BaseModel):
     """Base class for all Aiera MCP tool arguments with common serializers."""
 
-    @field_serializer('watchlist_id', 'index_id', 'sector_id', 'subsector_id', 'page', 'page_size', when_used='always', check_fields=False)
+    @field_serializer(
+        "watchlist_id",
+        "index_id",
+        "sector_id",
+        "subsector_id",
+        "page",
+        "page_size",
+        when_used="always",
+        check_fields=False,
+    )
     def serialize_numeric_fields(self, value: Any) -> str:
         """Convert numeric fields to strings for API requests."""
         if value is None:
@@ -24,58 +33,53 @@ class BaseToolArgs(BaseModel):
 class BloombergTickerMixin(BaseModel):
     """Mixin for models with bloomberg_ticker field."""
 
-    @field_validator('bloomberg_ticker', mode='before', check_fields=False)
+    @field_validator("bloomberg_ticker", mode="before", check_fields=False)
     @classmethod
     def validate_bloomberg_ticker(cls, v):
         """Automatically correct Bloomberg ticker format."""
         if v is None:
             return v
         from ..utils import correct_bloomberg_ticker
+
         return correct_bloomberg_ticker(v)
 
 
 # Parameter models (extracted from params.py)
 class FindEquitiesArgs(BaseToolArgs, BloombergTickerMixin):
     """Find companies and equities using various identifiers or search."""
+
     bloomberg_ticker: Optional[str] = Field(
         default=None,
-        description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces."
+        description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces.",
     )
     isin: Optional[str] = Field(
         default=None,
-        description="International Securities Identification Number (ISIN)."
+        description="International Securities Identification Number (ISIN).",
     )
     ric: Optional[str] = Field(
-        default=None,
-        description="Reuters Instrument Code (RIC)."
+        default=None, description="Reuters Instrument Code (RIC)."
     )
     ticker: Optional[str] = Field(
-        default=None,
-        description="Stock ticker symbol (without country code)."
+        default=None, description="Stock ticker symbol (without country code)."
     )
     permid: Optional[str] = Field(
-        default=None,
-        description="Refinitiv Permanent Identifier (PermID)."
+        default=None, description="Refinitiv Permanent Identifier (PermID)."
     )
     search: Optional[str] = Field(
         default=None,
-        description="Search term to filter results. Searches within company names, tickers, or relevant text fields."
+        description="Search term to filter results. Searches within company names, tickers, or relevant text fields.",
     )
     page: int = Field(
-        default=1,
-        ge=1,
-        description="Page number for pagination (1-based)."
+        default=1, ge=1, description="Page number for pagination (1-based)."
     )
     page_size: int = Field(
-        default=50,
-        ge=1,
-        le=100,
-        description="Number of items per page (1-100)."
+        default=50, ge=1, le=100, description="Number of items per page (1-100)."
     )
 
 
 class GetEquitySummariesArgs(BaseToolArgs, BloombergTickerMixin):
     """Get comprehensive summary information for one or more equities."""
+
     bloomberg_ticker: str = Field(
         description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces."
     )
@@ -83,67 +87,57 @@ class GetEquitySummariesArgs(BaseToolArgs, BloombergTickerMixin):
 
 class GetIndexConstituentsArgs(BaseToolArgs):
     """Get all equities within a specific stock market index."""
+
     index: str = Field(
         description="Index identifier. Use get_available_indexes to find valid values."
     )
     page: int = Field(
-        default=1,
-        ge=1,
-        description="Page number for pagination (1-based)."
+        default=1, ge=1, description="Page number for pagination (1-based)."
     )
     page_size: int = Field(
-        default=50,
-        ge=1,
-        le=100,
-        description="Number of items per page (1-100)."
+        default=50, ge=1, le=100, description="Number of items per page (1-100)."
     )
 
 
 class GetWatchlistConstituentsArgs(BaseToolArgs):
     """Get all equities within a specific watchlist."""
+
     watchlist_id: str = Field(
         description="Watchlist identifier. Use get_available_watchlists to find valid values."
     )
     page: int = Field(
-        default=1,
-        ge=1,
-        description="Page number for pagination (1-based)."
+        default=1, ge=1, description="Page number for pagination (1-based)."
     )
     page_size: int = Field(
-        default=50,
-        ge=1,
-        le=100,
-        description="Number of items per page (1-100)."
+        default=50, ge=1, le=100, description="Number of items per page (1-100)."
     )
 
 
 class EmptyArgs(BaseToolArgs):
     """Parameter model for tools that take no arguments."""
+
     pass
 
 
 class SearchArgs(BaseToolArgs):
     """Parameter model for tools with optional search and pagination."""
+
     search: Optional[str] = Field(
         default=None,
-        description="Search term to filter results. Searches within relevant text fields."
+        description="Search term to filter results. Searches within relevant text fields.",
     )
     page: int = Field(
-        default=1,
-        ge=1,
-        description="Page number for pagination (1-based)."
+        default=1, ge=1, description="Page number for pagination (1-based)."
     )
     page_size: int = Field(
-        default=50,
-        ge=1,
-        le=100,
-        description="Number of items per page (1-100)."
+        default=50, ge=1, le=100, description="Number of items per page (1-100)."
     )
 
 
 # Response models (extracted from responses.py)
 class EquityItem(BaseModel):
     """Individual equity item."""
+
     equity_id: int = Field(description="Unique equity identifier")
     company_id: Optional[int] = Field(None, description="Company ID")
     company_name: Optional[str] = Field(None, description="Company name")
@@ -161,7 +155,7 @@ class EquityItem(BaseModel):
     created: Optional[datetime] = Field(None, description="Creation date")
     modified: Optional[datetime] = Field(None, description="Modification date")
 
-    @field_serializer('created', 'modified')
+    @field_serializer("created", "modified")
     def serialize_datetime_fields(self, value: Optional[datetime]) -> Optional[str]:
         """Serialize datetime fields to ISO format string for JSON compatibility."""
         if value is None:
@@ -171,19 +165,22 @@ class EquityItem(BaseModel):
 
 class LeadershipItem(BaseModel):
     """Leadership information for equity summaries."""
+
     name: str = Field(description="Person name")
     title: str = Field(description="Job title")
     event_count: Optional[int] = Field(None, description="Number of events")
     last_event_date: Optional[datetime] = Field(None, description="Last event date")
 
-    @field_serializer('last_event_date')
+    @field_serializer("last_event_date")
     def serialize_datetime(self, value: Optional[datetime]) -> Optional[str]:
         if value is None:
             return None
         return value.isoformat()
 
+
 class EquitySummaryItem(BaseModel):
     """Individual equity with full summary information."""
+
     equity_id: int = Field(description="Unique equity identifier")
     company_id: Optional[int] = Field(None, description="Company ID")
     company_name: Optional[str] = Field(None, description="Company name")
@@ -201,41 +198,57 @@ class EquitySummaryItem(BaseModel):
     created: Optional[datetime] = Field(None, description="Creation date")
     modified: Optional[datetime] = Field(None, description="Modification date")
     status: Optional[str] = Field(None, description="Status")
-    leadership: Optional[List[LeadershipItem]] = Field(None, description="Leadership information")
+    leadership: Optional[List[LeadershipItem]] = Field(
+        None, description="Leadership information"
+    )
 
-    @field_serializer('created', 'modified')
+    @field_serializer("created", "modified")
     def serialize_datetime_fields(self, value: Optional[datetime]) -> Optional[str]:
         if value is None:
             return None
         return value.isoformat()
 
+
 class EquitySummary(BaseModel):
     """Equity summary information."""
+
     description: Optional[str] = Field(default=None, description="Company description")
     recent_events: List[str] = Field(default=[], description="Recent corporate events")
     key_metrics: Dict[str, Any] = Field(default={}, description="Key financial metrics")
-    analyst_coverage: Dict[str, Any] = Field(default={}, description="Analyst coverage info")
+    analyst_coverage: Dict[str, Any] = Field(
+        default={}, description="Analyst coverage info"
+    )
 
 
 class EquityDetails(EquityItem):
     """Detailed equity information."""
-    summary: Optional[EquitySummary] = Field(default=None, description="Company summary")
-    identifiers: Dict[str, str] = Field(default={}, description="Alternative identifiers")
+
+    summary: Optional[EquitySummary] = Field(
+        default=None, description="Company summary"
+    )
+    identifiers: Dict[str, str] = Field(
+        default={}, description="Alternative identifiers"
+    )
 
 
 class SubsectorInfo(BaseModel):
     """Subsector information."""
+
     subsector_id: int = Field(description="Subsector ID")
     name: str = Field(description="Subsector name")
     gics_code: Optional[str] = Field(None, description="GICS subsector code")
     gics_industry_code: Optional[str] = Field(None, description="GICS industry code")
 
+
 class SectorSubsector(BaseModel):
     """Sector and subsector information."""
+
     sector_id: int = Field(description="Sector ID")
     name: str = Field(description="Sector name")
     gics_code: Optional[str] = Field(None, description="GICS sector code")
-    subsectors: Optional[List[SubsectorInfo]] = Field(None, description="List of subsectors")
+    subsectors: Optional[List[SubsectorInfo]] = Field(
+        None, description="List of subsectors"
+    )
 
     # Backward compatibility properties
     @property
@@ -258,6 +271,7 @@ class SectorSubsector(BaseModel):
 
 class IndexItem(BaseModel):
     """Index information."""
+
     index_id: int = Field(description="Index identifier")
     name: str = Field(description="Index name")
     symbol: Optional[str] = Field(None, description="Index symbol")
@@ -271,6 +285,7 @@ class IndexItem(BaseModel):
 
 class WatchlistItem(BaseModel):
     """Watchlist information."""
+
     watchlist_id: int = Field(description="Watchlist identifier")
     name: str = Field(description="Watchlist name")
     description: Optional[str] = Field(None, description="Watchlist description")
@@ -285,53 +300,72 @@ class WatchlistItem(BaseModel):
 # Response classes
 class ApiPaginationInfo(BaseModel):
     """Pagination information from API response."""
+
     total_count: Optional[int] = Field(None, description="Total number of items")
     current_page: Optional[int] = Field(None, description="Current page number")
     total_pages: Optional[int] = Field(None, description="Total number of pages")
     page_size: Optional[int] = Field(None, description="Items per page")
 
+
 class FindEquitiesApiResponseData(BaseModel):
     """API response structure with data and pagination for find_equities."""
+
     data: List[EquityItem] = Field(..., description="List of equities")
-    pagination: Optional[ApiPaginationInfo] = Field(None, description="Pagination information")
+    pagination: Optional[ApiPaginationInfo] = Field(
+        None, description="Pagination information"
+    )
+
 
 class FindEquitiesResponse(BaseModel):
     """Response for find_equities tool - matches actual API structure."""
+
     instructions: Optional[List[str]] = Field(None, description="API instructions")
     response: FindEquitiesApiResponseData = Field(..., description="Response data")
 
 
 class GetEquitySummariesResponse(BaseModel):
     """Response for get_equity_summaries tool - matches actual API structure."""
+
     instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: List[EquitySummaryItem] = Field(..., description="List of equity summaries")
+    response: List[EquitySummaryItem] = Field(
+        ..., description="List of equity summaries"
+    )
 
 
 class GetSectorsSubsectorsResponse(BaseModel):
     """Response for get_sectors_and_subsectors tool - matches actual API structure."""
+
     instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: List[SectorSubsector] = Field(..., description="List of sectors and subsectors")
+    response: List[SectorSubsector] = Field(
+        ..., description="List of sectors and subsectors"
+    )
 
 
 class GetAvailableIndexesResponse(BaseModel):
     """Response for get_available_indexes tool - matches actual API structure."""
+
     instructions: Optional[List[str]] = Field(None, description="API instructions")
     response: List[IndexItem] = Field(..., description="List of available indexes")
 
 
 class GetIndexConstituentsResponse(PaginatedResponse):
     """Response for get_index_constituents tool."""
+
     index_name: str = Field(description="Index name")
     constituents: List[EquityItem] = Field(description="Index constituents")
 
 
 class GetAvailableWatchlistsResponse(BaseModel):
     """Response for get_available_watchlists tool - matches actual API structure."""
+
     instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: List[WatchlistItem] = Field(..., description="List of available watchlists")
+    response: List[WatchlistItem] = Field(
+        ..., description="List of available watchlists"
+    )
 
 
 class GetWatchlistConstituentsResponse(PaginatedResponse):
     """Response for get_watchlist_constituents tool."""
+
     watchlist_name: str = Field(description="Watchlist name")
     constituents: List[EquityItem] = Field(description="Watchlist constituents")

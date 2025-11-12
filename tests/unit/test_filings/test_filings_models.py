@@ -3,13 +3,17 @@
 """Unit tests for filings models."""
 
 import pytest
-from datetime import datetime, date
+from datetime import datetime
 from pydantic import ValidationError
 
 from aiera_mcp.tools.filings.models import (
-    FindFilingsArgs, GetFilingArgs,
-    FindFilingsResponse, GetFilingResponse,
-    FilingItem, FilingDetails, FilingSummary
+    FindFilingsArgs,
+    GetFilingArgs,
+    FindFilingsResponse,
+    GetFilingResponse,
+    FilingItem,
+    FilingDetails,
+    FilingSummary,
 )
 from aiera_mcp.tools.common.models import CitationInfo
 
@@ -21,17 +25,15 @@ class TestFilingsModels:
     def test_filing_item_creation(self):
         """Test FilingItem model creation."""
         from aiera_mcp.tools.filings.models import EquityInfo
+
         filing_data = {
             "filing_id": 12345,
             "title": "Annual Report",
             "filing_date": datetime(2023, 10, 27),
             "period_end_date": datetime(2023, 9, 30),
             "is_amendment": 0,  # Changed to integer
-            "equity": EquityInfo(
-                company_name="Test Company",
-                ticker="TEST"
-            ),
-            "form_number": "10-K"  # Changed from form_type
+            "equity": EquityInfo(company_name="Test Company", ticker="TEST"),
+            "form_number": "10-K",  # Changed from form_type
         }
 
         filing = FilingItem(**filing_data)
@@ -51,7 +53,7 @@ class TestFilingsModels:
             "filing_id": 12345,
             "title": "Annual Report",
             "filing_date": datetime(2023, 10, 27),
-            "is_amendment": 0
+            "is_amendment": 0,
         }
 
         filing = FilingItem(**minimal_data)
@@ -69,8 +71,8 @@ class TestFilingsModels:
             "financial_highlights": {
                 "revenue": "$100M",
                 "net_income": "$20M",
-                "gross_margin": "45%"
-            }
+                "gross_margin": "45%",
+            },
         }
 
         summary = FilingSummary(**summary_data)
@@ -92,23 +94,21 @@ class TestFilingsModels:
     def test_filing_details_inherits_filing_item(self):
         """Test FilingDetails inherits from FilingItem."""
         from aiera_mcp.tools.filings.models import EquityInfo
+
         details_data = {
             "filing_id": 12345,
             "title": "Annual Report",
             "filing_date": datetime(2023, 10, 27),
             "is_amendment": 0,
-            "equity": EquityInfo(
-                company_name="Test Company",
-                ticker="TEST"
-            ),
+            "equity": EquityInfo(company_name="Test Company", ticker="TEST"),
             "form_number": "10-K",
             "summary": FilingSummary(
                 summary="Test summary",
                 key_points=["Point 1"],
-                financial_highlights={"revenue": "$100M"}
+                financial_highlights={"revenue": "$100M"},
             ),
             "content_preview": "This annual report contains...",
-            "document_count": 3
+            "document_count": 3,
         }
 
         details = FilingDetails(**details_data)
@@ -136,7 +136,7 @@ class TestFindFilingsArgs:
             bloomberg_ticker="AAPL:US",
             form_number="10-K",
             page=1,
-            page_size=50
+            page_size=50,
         )
 
         assert args.start_date == "2023-10-01"
@@ -148,10 +148,7 @@ class TestFindFilingsArgs:
 
     def test_find_filings_args_defaults(self):
         """Test FindFilingsArgs with default values."""
-        args = FindFilingsArgs(
-            start_date="2023-10-01",
-            end_date="2023-10-31"
-        )
+        args = FindFilingsArgs(start_date="2023-10-01", end_date="2023-10-31")
 
         assert args.page == 1  # Default value
         assert args.page_size == 50  # Default value
@@ -180,49 +177,41 @@ class TestFindFilingsArgs:
         """Test pagination parameter validation."""
         # Valid pagination
         args = FindFilingsArgs(
-            start_date="2023-10-01",
-            end_date="2023-10-31",
-            page=5,
-            page_size=25
+            start_date="2023-10-01", end_date="2023-10-31", page=5, page_size=25
         )
         assert args.page == 5
         assert args.page_size == 25
 
         # Page must be >= 1
         with pytest.raises(ValidationError):
-            FindFilingsArgs(
-                start_date="2023-10-01",
-                end_date="2023-10-31",
-                page=0
-            )
+            FindFilingsArgs(start_date="2023-10-01", end_date="2023-10-31", page=0)
 
         # Page size must be between 1 and 100
         with pytest.raises(ValidationError):
-            FindFilingsArgs(
-                start_date="2023-10-01",
-                end_date="2023-10-31",
-                page_size=0
-            )
+            FindFilingsArgs(start_date="2023-10-01", end_date="2023-10-31", page_size=0)
 
         with pytest.raises(ValidationError):
             FindFilingsArgs(
-                start_date="2023-10-01",
-                end_date="2023-10-31",
-                page_size=101
+                start_date="2023-10-01", end_date="2023-10-31", page_size=101
             )
 
-    @pytest.mark.parametrize("field_name,field_value", [
-        ("watchlist_id", 123),
-        ("index_id", 456),
-        ("sector_id", 789),
-        ("subsector_id", 101)
-    ])
-    def test_find_filings_args_numeric_field_serialization(self, field_name, field_value):
+    @pytest.mark.parametrize(
+        "field_name,field_value",
+        [
+            ("watchlist_id", 123),
+            ("index_id", 456),
+            ("sector_id", 789),
+            ("subsector_id", 101),
+        ],
+    )
+    def test_find_filings_args_numeric_field_serialization(
+        self, field_name, field_value
+    ):
         """Test that numeric fields are serialized as strings."""
         args_data = {
             "start_date": "2023-10-01",
             "end_date": "2023-10-31",
-            field_name: field_value
+            field_name: field_value,
         }
         args = FindFilingsArgs(**args_data)
 
@@ -236,9 +225,7 @@ class TestFindFilingsArgs:
 
         for form_number in form_numbers:
             args = FindFilingsArgs(
-                start_date="2023-10-01",
-                end_date="2023-10-31",
-                form_number=form_number
+                start_date="2023-10-01", end_date="2023-10-31", form_number=form_number
             )
             assert args.form_number == form_number
 
@@ -246,9 +233,7 @@ class TestFindFilingsArgs:
         """Test Bloomberg ticker validation and correction."""
         # Test with properly formatted ticker
         args = FindFilingsArgs(
-            start_date="2023-10-01",
-            end_date="2023-10-31",
-            bloomberg_ticker="AAPL:US"
+            start_date="2023-10-01", end_date="2023-10-31", bloomberg_ticker="AAPL:US"
         )
         assert args.bloomberg_ticker == "AAPL:US"
 
@@ -256,7 +241,7 @@ class TestFindFilingsArgs:
         args = FindFilingsArgs(
             start_date="2023-10-01",
             end_date="2023-10-31",
-            bloomberg_ticker="AAPL:US,MSFT:US,GOOGL:US"
+            bloomberg_ticker="AAPL:US,MSFT:US,GOOGL:US",
         )
         assert args.bloomberg_ticker == "AAPL:US,MSFT:US,GOOGL:US"
 
@@ -286,25 +271,20 @@ class TestFilingsResponses:
     def test_find_filings_response(self):
         """Test FindFilingsResponse model."""
         from aiera_mcp.tools.filings.models import EquityInfo, ApiResponseData
+
         filings = [
             FilingItem(
                 filing_id=12345,
                 title="Annual Report",
                 filing_date=datetime(2023, 10, 27),
                 is_amendment=0,
-                equity=EquityInfo(
-                    company_name="Test Company",
-                    ticker="TEST"
-                ),
-                form_number="10-K"
+                equity=EquityInfo(company_name="Test Company", ticker="TEST"),
+                form_number="10-K",
             )
         ]
 
         response = FindFilingsResponse(
-            instructions=["Test instruction"],
-            response=ApiResponseData(
-                data=filings
-            )
+            instructions=["Test instruction"], response=ApiResponseData(data=filings)
         )
 
         assert len(response.response.data) == 1
@@ -314,28 +294,24 @@ class TestFilingsResponses:
     def test_get_filing_response(self):
         """Test GetFilingResponse model."""
         from aiera_mcp.tools.filings.models import EquityInfo
+
         filing_details = FilingDetails(
             filing_id=12345,
             title="Annual Report",
             filing_date=datetime(2023, 10, 27),
             is_amendment=0,
-            equity=EquityInfo(
-                company_name="Test Company",
-                ticker="TEST"
-            ),
+            equity=EquityInfo(company_name="Test Company", ticker="TEST"),
             form_number="10-K",
             summary=FilingSummary(
                 summary="Test summary",
                 key_points=["Point 1"],
-                financial_highlights={"revenue": "$100M"}
+                financial_highlights={"revenue": "$100M"},
             ),
             content_preview="Content preview",
-            document_count=1
+            document_count=1,
         )
 
-        response = GetFilingResponse(
-            filing=filing_details
-        )
+        response = GetFilingResponse(filing=filing_details)
 
         assert isinstance(response.filing, FilingDetails)
         assert response.filing.filing_id == 12345
@@ -354,7 +330,7 @@ class TestFilingsModelValidation:
             bloomberg_ticker="AAPL:US",
             form_number="10-K",
             page=2,
-            page_size=25
+            page_size=25,
         )
 
         # Serialize to dict
@@ -391,16 +367,14 @@ class TestFilingsModelValidation:
             filing_id=123,
             title="Test",
             filing_date=datetime(2023, 10, 27),  # FilingItem uses datetime, not date
-            is_amendment=0
+            is_amendment=0,
         )
         assert filing.filing_date == datetime(2023, 10, 27)
 
     def test_filing_summary_empty_collections(self):
         """Test filing summary handles empty collections properly."""
         summary = FilingSummary(
-            summary="Test summary",
-            key_points=[],
-            financial_highlights={}
+            summary="Test summary", key_points=[], financial_highlights={}
         )
 
         assert summary.summary == "Test summary"
@@ -421,7 +395,7 @@ class TestFilingsModelValidation:
             is_amendment=0,
             summary=None,
             content_preview="Preview",
-            document_count=1
+            document_count=1,
         )
 
         assert details.summary is None
@@ -435,13 +409,10 @@ class TestFilingsModelValidation:
             "gross_margin": 44.1,  # Float
             "growth_rate": "16%",  # String
             "is_profitable": True,  # Boolean
-            "segments": ["iPhone", "Services", "Mac"]  # List
+            "segments": ["iPhone", "Services", "Mac"],  # List
         }
 
-        summary = FilingSummary(
-            summary="Test",
-            financial_highlights=highlights
-        )
+        summary = FilingSummary(summary="Test", financial_highlights=highlights)
 
         assert summary.financial_highlights["revenue"] == "$394.3B"
         assert summary.financial_highlights["net_income"] == 97000000000

@@ -52,15 +52,20 @@ dependencies = [
 ```bash
 git clone https://github.com/aiera-inc/aiera-mcp.git
 cd aiera-mcp
-uv sync  # or pip install -e .
+uv sync --group dev  # Install with dev dependencies
 ```
 
-2. **Set up environment variables**:
+2. **Set up pre-commit hooks** (recommended for development):
+```bash
+uv run pre-commit install
+```
+
+3. **Set up environment variables**:
 ```bash
 export AIERA_API_KEY="your-aiera-api-key"
 ```
 
-3. **Run standalone server**:
+4. **Run standalone server**:
 ```bash
 uv run entrypoint.py
 ```
@@ -365,7 +370,7 @@ For detailed testing instructions, see [INTEGRATION_TESTING.md](INTEGRATION_TEST
 
 ## Privacy Policy
 
-This MCP server interacts with Aiera's API to fetch relevant financial data. 
+This MCP server interacts with Aiera's API to fetch relevant financial data.
 All data requests are subject to Aiera's privacy policy and terms of service, and require an active account.
 
 - **Aiera Privacy Policy**: https://aiera.com/privacy-policy/

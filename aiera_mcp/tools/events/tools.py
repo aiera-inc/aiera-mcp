@@ -6,9 +6,15 @@ import logging
 from datetime import datetime
 
 from .models import (
-    FindEventsArgs, GetEventArgs, GetUpcomingEventsArgs,
-    FindEventsResponse, GetEventResponse, GetUpcomingEventsResponse,
-    EventItem, EventDetails, EventType
+    FindEventsArgs,
+    GetEventArgs,
+    GetUpcomingEventsArgs,
+    FindEventsResponse,
+    GetEventResponse,
+    GetUpcomingEventsResponse,
+    EventItem,
+    EventDetails,
+    EventType,
 )
 from ..common.models import CitationInfo
 from ..base import get_http_client, get_api_key_from_context, make_aiera_request
@@ -45,7 +51,9 @@ async def find_events(args: FindEventsArgs) -> FindEventsResponse:
             event_date = datetime.now()
             if event_data.get("event_date"):
                 try:
-                    event_date = datetime.fromisoformat(event_data["event_date"].replace("Z", "+00:00"))
+                    event_date = datetime.fromisoformat(
+                        event_data["event_date"].replace("Z", "+00:00")
+                    )
                 except:
                     pass
 
@@ -61,7 +69,7 @@ async def find_events(args: FindEventsArgs) -> FindEventsResponse:
                         "bloomberg_ticker": equity_data.get("bloomberg_ticker"),
                         "sector_id": equity_data.get("sector_id"),
                         "subsector_id": equity_data.get("subsector_id"),
-                        "primary_equity": equity_data.get("primary_equity")
+                        "primary_equity": equity_data.get("primary_equity"),
                     }
 
             # Create new event structure matching the actual response
@@ -75,7 +83,7 @@ async def find_events(args: FindEventsArgs) -> FindEventsResponse:
                 "expected_language": event_data.get("expected_language"),
                 "grouping": event_data.get("grouping"),
                 "summary": event_data.get("summary"),
-                "citation_information": event_data.get("citation_information")
+                "citation_information": event_data.get("citation_information"),
             }
             events_data.append(parsed_event)
 
@@ -96,8 +104,8 @@ async def get_event(args: GetEventArgs) -> GetEventResponse:
     params["include_transcripts"] = "true"
 
     # Handle special field mapping: event_id -> event_ids
-    if 'event_id' in params:
-        params['event_ids'] = str(params.pop('event_id'))
+    if "event_id" in params:
+        params["event_ids"] = str(params.pop("event_id"))
 
     raw_response = await make_aiera_request(
         client=client,
@@ -117,7 +125,9 @@ async def get_event(args: GetEventArgs) -> GetEventResponse:
     event_date = datetime.now()
     if event_data.get("event_date"):
         try:
-            event_date = datetime.fromisoformat(event_data["event_date"].replace("Z", "+00:00"))
+            event_date = datetime.fromisoformat(
+                event_data["event_date"].replace("Z", "+00:00")
+            )
         except:
             pass
 
@@ -133,7 +143,7 @@ async def get_event(args: GetEventArgs) -> GetEventResponse:
                 "bloomberg_ticker": equity_data.get("bloomberg_ticker"),
                 "sector_id": equity_data.get("sector_id"),
                 "subsector_id": equity_data.get("subsector_id"),
-                "primary_equity": equity_data.get("primary_equity")
+                "primary_equity": equity_data.get("primary_equity"),
             }
 
     # Create event details structure
@@ -150,14 +160,13 @@ async def get_event(args: GetEventArgs) -> GetEventResponse:
         "citation_information": event_data.get("citation_information"),
         "description": event_data.get("description"),
         "transcript_preview": event_data.get("transcript_preview"),
-        "audio_url": event_data.get("audio_url")
+        "audio_url": event_data.get("audio_url"),
     }
 
     event_details = EventDetails.model_validate(event_details_data)
 
     return GetEventResponse(
-        event=event_details,
-        instructions=raw_response.get("instructions", [])
+        event=event_details, instructions=raw_response.get("instructions", [])
     )
 
 
@@ -188,7 +197,9 @@ async def get_upcoming_events(args: GetUpcomingEventsArgs) -> GetUpcomingEventsR
             event_date = datetime.now()
             if event_data.get("event_date"):
                 try:
-                    event_date = datetime.fromisoformat(event_data["event_date"].replace("Z", "+00:00"))
+                    event_date = datetime.fromisoformat(
+                        event_data["event_date"].replace("Z", "+00:00")
+                    )
                 except:
                     pass
 
@@ -204,7 +215,7 @@ async def get_upcoming_events(args: GetUpcomingEventsArgs) -> GetUpcomingEventsR
                         "bloomberg_ticker": equity_data.get("bloomberg_ticker"),
                         "sector_id": equity_data.get("sector_id"),
                         "subsector_id": equity_data.get("subsector_id"),
-                        "primary_equity": equity_data.get("primary_equity")
+                        "primary_equity": equity_data.get("primary_equity"),
                     }
 
             # Create new event structure matching the actual response
@@ -218,7 +229,7 @@ async def get_upcoming_events(args: GetUpcomingEventsArgs) -> GetUpcomingEventsR
                 "expected_language": event_data.get("expected_language"),
                 "grouping": event_data.get("grouping"),
                 "summary": event_data.get("summary"),
-                "citation_information": event_data.get("citation_information")
+                "citation_information": event_data.get("citation_information"),
             }
             parsed_events.append(parsed_event)
         return parsed_events

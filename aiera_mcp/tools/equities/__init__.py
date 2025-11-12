@@ -9,7 +9,7 @@ from .tools import (
     get_available_indexes,
     get_index_constituents,
     get_available_watchlists,
-    get_watchlist_constituents
+    get_watchlist_constituents,
 )
 from .models import (
     FindEquitiesArgs,
@@ -30,7 +30,7 @@ from .models import (
     EquitySummary,
     SectorSubsector,
     IndexItem,
-    WatchlistItem
+    WatchlistItem,
 )
 
 __all__ = [
@@ -42,7 +42,6 @@ __all__ = [
     "get_index_constituents",
     "get_available_watchlists",
     "get_watchlist_constituents",
-
     # Parameter models
     "FindEquitiesArgs",
     "GetEquitySummariesArgs",
@@ -50,7 +49,6 @@ __all__ = [
     "GetWatchlistConstituentsArgs",
     "EmptyArgs",
     "SearchArgs",
-
     # Response models
     "FindEquitiesResponse",
     "GetEquitySummariesResponse",
@@ -59,7 +57,6 @@ __all__ = [
     "GetIndexConstituentsResponse",
     "GetAvailableWatchlistsResponse",
     "GetWatchlistConstituentsResponse",
-
     # Data models
     "EquityItem",
     "EquityDetails",

@@ -14,7 +14,7 @@ from aiera_mcp.tools.base import make_aiera_request
 @pytest_asyncio.fixture
 async def mock_make_aiera_request():
     """Mock the make_aiera_request function for unit tests."""
-    with patch('aiera_mcp.tools.base.make_aiera_request') as mock:
+    with patch("aiera_mcp.tools.base.make_aiera_request") as mock:
         yield mock
 
 
@@ -26,10 +26,13 @@ async def mock_server_import():
     mock_context.meta = {"api_key": "test-api-key"}
     mock_mcp.get_context.return_value = mock_context
 
-    with patch.dict('sys.modules', {
-        'aiera_mcp.server': MagicMock(mcp=mock_mcp),
-        'aiera_mcp.tools.server': MagicMock(mcp=mock_mcp)
-    }):
+    with patch.dict(
+        "sys.modules",
+        {
+            "aiera_mcp.server": MagicMock(mcp=mock_mcp),
+            "aiera_mcp.tools.server": MagicMock(mcp=mock_mcp),
+        },
+    ):
         yield mock_mcp
 
 
@@ -47,31 +50,86 @@ async def mock_http_dependencies(mock_server_import, mock_make_aiera_request):
     async def get_api_key_patch(ctx):
         return "test-api-key"
 
-    with patch('aiera_mcp.tools.base.get_http_client', side_effect=get_client_patch), \
-         patch('aiera_mcp.tools.base.get_api_key_from_context', side_effect=get_api_key_patch), \
-         patch('aiera_mcp.tools.transcrippets.tools.get_api_key_from_context', side_effect=get_api_key_patch), \
-         patch('aiera_mcp.tools.transcrippets.tools.get_http_client', side_effect=get_client_patch), \
-         patch('aiera_mcp.tools.transcrippets.tools.make_aiera_request', mock_make_aiera_request), \
-         patch('aiera_mcp.tools.third_bridge.tools.get_api_key_from_context', side_effect=get_api_key_patch), \
-         patch('aiera_mcp.tools.third_bridge.tools.get_http_client', side_effect=get_client_patch), \
-         patch('aiera_mcp.tools.third_bridge.tools.make_aiera_request', mock_make_aiera_request), \
-         patch('aiera_mcp.tools.filings.tools.get_api_key_from_context', side_effect=get_api_key_patch), \
-         patch('aiera_mcp.tools.filings.tools.get_http_client', side_effect=get_client_patch), \
-         patch('aiera_mcp.tools.filings.tools.make_aiera_request', mock_make_aiera_request), \
-         patch('aiera_mcp.tools.equities.tools.get_api_key_from_context', side_effect=get_api_key_patch), \
-         patch('aiera_mcp.tools.equities.tools.get_http_client', side_effect=get_client_patch), \
-         patch('aiera_mcp.tools.equities.tools.make_aiera_request', mock_make_aiera_request), \
-         patch('aiera_mcp.tools.events.tools.get_api_key_from_context', side_effect=get_api_key_patch), \
-         patch('aiera_mcp.tools.events.tools.get_http_client', side_effect=get_client_patch), \
-         patch('aiera_mcp.tools.events.tools.make_aiera_request', mock_make_aiera_request), \
-         patch('aiera_mcp.tools.company_docs.tools.get_api_key_from_context', side_effect=get_api_key_patch), \
-         patch('aiera_mcp.tools.company_docs.tools.get_http_client', side_effect=get_client_patch), \
-         patch('aiera_mcp.tools.company_docs.tools.make_aiera_request', mock_make_aiera_request):
+    with (
+        patch("aiera_mcp.tools.base.get_http_client", side_effect=get_client_patch),
+        patch(
+            "aiera_mcp.tools.base.get_api_key_from_context",
+            side_effect=get_api_key_patch,
+        ),
+        patch(
+            "aiera_mcp.tools.transcrippets.tools.get_api_key_from_context",
+            side_effect=get_api_key_patch,
+        ),
+        patch(
+            "aiera_mcp.tools.transcrippets.tools.get_http_client",
+            side_effect=get_client_patch,
+        ),
+        patch(
+            "aiera_mcp.tools.transcrippets.tools.make_aiera_request",
+            mock_make_aiera_request,
+        ),
+        patch(
+            "aiera_mcp.tools.third_bridge.tools.get_api_key_from_context",
+            side_effect=get_api_key_patch,
+        ),
+        patch(
+            "aiera_mcp.tools.third_bridge.tools.get_http_client",
+            side_effect=get_client_patch,
+        ),
+        patch(
+            "aiera_mcp.tools.third_bridge.tools.make_aiera_request",
+            mock_make_aiera_request,
+        ),
+        patch(
+            "aiera_mcp.tools.filings.tools.get_api_key_from_context",
+            side_effect=get_api_key_patch,
+        ),
+        patch(
+            "aiera_mcp.tools.filings.tools.get_http_client",
+            side_effect=get_client_patch,
+        ),
+        patch(
+            "aiera_mcp.tools.filings.tools.make_aiera_request", mock_make_aiera_request
+        ),
+        patch(
+            "aiera_mcp.tools.equities.tools.get_api_key_from_context",
+            side_effect=get_api_key_patch,
+        ),
+        patch(
+            "aiera_mcp.tools.equities.tools.get_http_client",
+            side_effect=get_client_patch,
+        ),
+        patch(
+            "aiera_mcp.tools.equities.tools.make_aiera_request", mock_make_aiera_request
+        ),
+        patch(
+            "aiera_mcp.tools.events.tools.get_api_key_from_context",
+            side_effect=get_api_key_patch,
+        ),
+        patch(
+            "aiera_mcp.tools.events.tools.get_http_client", side_effect=get_client_patch
+        ),
+        patch(
+            "aiera_mcp.tools.events.tools.make_aiera_request", mock_make_aiera_request
+        ),
+        patch(
+            "aiera_mcp.tools.company_docs.tools.get_api_key_from_context",
+            side_effect=get_api_key_patch,
+        ),
+        patch(
+            "aiera_mcp.tools.company_docs.tools.get_http_client",
+            side_effect=get_client_patch,
+        ),
+        patch(
+            "aiera_mcp.tools.company_docs.tools.make_aiera_request",
+            mock_make_aiera_request,
+        ),
+    ):
 
         yield {
-            'mock_client': mock_client,
-            'mock_make_request': mock_make_aiera_request,
-            'mock_server': mock_server_import
+            "mock_client": mock_client,
+            "mock_make_request": mock_make_aiera_request,
+            "mock_server": mock_server_import,
         }
 
 

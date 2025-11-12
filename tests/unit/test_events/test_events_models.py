@@ -8,9 +8,15 @@ from datetime import datetime
 from pydantic import ValidationError
 
 from aiera_mcp.tools.events.models import (
-    FindEventsArgs, GetEventArgs, GetUpcomingEventsArgs,
-    FindEventsResponse, GetEventResponse, GetUpcomingEventsResponse,
-    EventItem, EventDetails, EventType
+    FindEventsArgs,
+    GetEventArgs,
+    GetUpcomingEventsArgs,
+    FindEventsResponse,
+    GetEventResponse,
+    GetUpcomingEventsResponse,
+    EventItem,
+    EventDetails,
+    EventType,
 )
 from aiera_mcp.tools.common.models import CitationInfo
 
@@ -42,8 +48,6 @@ class TestEventsModels:
         assert event.title == "Test Event"
         assert event.event_type == EventType.EARNINGS
 
-
-
     def test_event_details_inherits_event_item(self):
         """Test EventDetails inherits from EventItem."""
         details_data = {
@@ -54,7 +58,7 @@ class TestEventsModels:
             "company_name": "Test Company",
             "description": "Test event description",
             "transcript_preview": "Welcome to the test event...",
-            "audio_url": "https://example.com/audio.mp3"
+            "audio_url": "https://example.com/audio.mp3",
         }
 
         details = EventDetails(**details_data)
@@ -81,7 +85,7 @@ class TestFindEventsArgs:
             bloomberg_ticker="AAPL:US",
             event_type="earnings",
             page=1,
-            page_size=50
+            page_size=50,
         )
 
         assert args.start_date == "2023-10-01"
@@ -93,10 +97,7 @@ class TestFindEventsArgs:
 
     def test_find_events_args_defaults(self):
         """Test FindEventsArgs with default values."""
-        args = FindEventsArgs(
-            start_date="2023-10-01",
-            end_date="2023-10-31"
-        )
+        args = FindEventsArgs(start_date="2023-10-01", end_date="2023-10-31")
 
         assert args.event_type == "earnings"  # Default value
         assert args.page == 1  # Default value
@@ -124,19 +125,21 @@ class TestFindEventsArgs:
     def test_find_events_args_event_type_validation(self):
         """Test event_type validation."""
         # Valid event types
-        for event_type in ['earnings', 'presentation', 'shareholder_meeting', 'investor_meeting', 'special_situation']:
+        for event_type in [
+            "earnings",
+            "presentation",
+            "shareholder_meeting",
+            "investor_meeting",
+            "special_situation",
+        ]:
             args = FindEventsArgs(
-                start_date="2023-10-01",
-                end_date="2023-10-31",
-                event_type=event_type
+                start_date="2023-10-01", end_date="2023-10-31", event_type=event_type
             )
             assert args.event_type == event_type
 
         # Invalid event type gets corrected to default (earnings) by correction logic
         args = FindEventsArgs(
-            start_date="2023-10-01",
-            end_date="2023-10-31",
-            event_type="invalid_type"
+            start_date="2023-10-01", end_date="2023-10-31", event_type="invalid_type"
         )
         assert args.event_type == "earnings"  # Corrected to default
 
@@ -144,49 +147,41 @@ class TestFindEventsArgs:
         """Test pagination parameter validation."""
         # Valid pagination
         args = FindEventsArgs(
-            start_date="2023-10-01",
-            end_date="2023-10-31",
-            page=5,
-            page_size=25
+            start_date="2023-10-01", end_date="2023-10-31", page=5, page_size=25
         )
         assert args.page == 5
         assert args.page_size == 25
 
         # Page must be >= 1
         with pytest.raises(ValidationError):
-            FindEventsArgs(
-                start_date="2023-10-01",
-                end_date="2023-10-31",
-                page=0
-            )
+            FindEventsArgs(start_date="2023-10-01", end_date="2023-10-31", page=0)
 
         # Page size must be between 1 and 100
         with pytest.raises(ValidationError):
-            FindEventsArgs(
-                start_date="2023-10-01",
-                end_date="2023-10-31",
-                page_size=0
-            )
+            FindEventsArgs(start_date="2023-10-01", end_date="2023-10-31", page_size=0)
 
         with pytest.raises(ValidationError):
             FindEventsArgs(
-                start_date="2023-10-01",
-                end_date="2023-10-31",
-                page_size=101
+                start_date="2023-10-01", end_date="2023-10-31", page_size=101
             )
 
-    @pytest.mark.parametrize("field_name,field_value", [
-        ("watchlist_id", 123),
-        ("index_id", 456),
-        ("sector_id", 789),
-        ("subsector_id", 101)
-    ])
-    def test_find_events_args_numeric_field_serialization(self, field_name, field_value):
+    @pytest.mark.parametrize(
+        "field_name,field_value",
+        [
+            ("watchlist_id", 123),
+            ("index_id", 456),
+            ("sector_id", 789),
+            ("subsector_id", 101),
+        ],
+    )
+    def test_find_events_args_numeric_field_serialization(
+        self, field_name, field_value
+    ):
         """Test that numeric fields are serialized as strings."""
         args_data = {
             "start_date": "2023-10-01",
             "end_date": "2023-10-31",
-            field_name: field_value
+            field_name: field_value,
         }
         args = FindEventsArgs(**args_data)
 
@@ -225,7 +220,9 @@ class TestGetEventArgs:
         with pytest.raises(ValidationError) as exc_info:
             GetEventArgs(event_id="12345", transcript_section="invalid_section")
 
-        assert "transcript_section must be either 'presentation' or 'q_and_a'" in str(exc_info.value)
+        assert "transcript_section must be either 'presentation' or 'q_and_a'" in str(
+            exc_info.value
+        )
 
 
 @pytest.mark.unit
@@ -235,9 +232,7 @@ class TestGetUpcomingEventsArgs:
     def test_valid_upcoming_events_args(self):
         """Test valid GetUpcomingEventsArgs creation."""
         args = GetUpcomingEventsArgs(
-            start_date="2023-11-01",
-            end_date="2023-11-30",
-            bloomberg_ticker="AAPL:US"
+            start_date="2023-11-01", end_date="2023-11-30", bloomberg_ticker="AAPL:US"
         )
 
         assert args.start_date == "2023-11-01"
@@ -246,10 +241,7 @@ class TestGetUpcomingEventsArgs:
 
     def test_upcoming_events_args_optional_fields(self):
         """Test GetUpcomingEventsArgs with only required fields."""
-        args = GetUpcomingEventsArgs(
-            start_date="2023-11-01",
-            end_date="2023-11-30"
-        )
+        args = GetUpcomingEventsArgs(start_date="2023-11-01", end_date="2023-11-30")
 
         assert args.start_date == "2023-11-01"
         assert args.end_date == "2023-11-30"
@@ -268,7 +260,7 @@ class TestEventsResponses:
                 event_id=12345,
                 title="Test Event",
                 event_type=EventType.EARNINGS,
-                event_date=datetime(2023, 10, 26, 21, 0, 0)
+                event_date=datetime(2023, 10, 26, 21, 0, 0),
             )
         ]
 
@@ -280,9 +272,9 @@ class TestEventsResponses:
                     "total_count": 1,
                     "current_page": 1,
                     "total_pages": 1,
-                    "page_size": 50
-                }
-            }
+                    "page_size": 50,
+                },
+            },
         )
 
         assert len(response.response.data) == 1
@@ -299,13 +291,13 @@ class TestEventsResponses:
             event_type=EventType.EARNINGS,
             event_date=datetime(2023, 10, 26, 21, 0, 0),
             description="Test description",
-            transcript_preview="Test preview"
+            transcript_preview="Test preview",
         )
 
         response = GetEventResponse(
             event=event_details,
             instructions=["Test instruction"],
-            citation_information=[]
+            citation_information=[],
         )
 
         assert isinstance(response.event, EventDetails)
@@ -320,16 +312,13 @@ class TestEventsResponses:
                 event_id=12345,
                 title="Upcoming Event",
                 event_type=EventType.EARNINGS,
-                event_date=datetime(2023, 11, 15, 21, 0, 0)
+                event_date=datetime(2023, 11, 15, 21, 0, 0),
             )
         ]
 
         response = GetUpcomingEventsResponse(
             instructions=["Upcoming events found"],
-            response={
-                "estimates": events,
-                "actuals": []
-            }
+            response={"estimates": events, "actuals": []},
         )
 
         assert len(response.response.estimates) == 1
@@ -348,7 +337,7 @@ class TestEventsModelValidation:
         args = FindEventsArgs(
             start_date="2023-10-01",
             end_date="2023-10-31",
-            bloomberg_ticker="AAPL"  # Missing :US
+            bloomberg_ticker="AAPL",  # Missing :US
         )
 
         # Check if ticker correction is applied
@@ -361,7 +350,7 @@ class TestEventsModelValidation:
         args = FindEventsArgs(
             start_date="2023-10-01",
             end_date="2023-10-31",
-            event_type="Earnings"  # Different case
+            event_type="Earnings",  # Different case
         )
 
         # Check if type correction is applied
@@ -376,7 +365,7 @@ class TestEventsModelValidation:
             bloomberg_ticker="AAPL:US",
             event_type="earnings",
             page=2,
-            page_size=25
+            page_size=25,
         )
 
         # Serialize to dict
@@ -419,7 +408,7 @@ class TestEventItemDateTimeSerialization:
             event_id=123,
             title="Test Event",
             event_type=EventType.EARNINGS,
-            event_date=test_datetime
+            event_date=test_datetime,
         )
 
         # Test model_dump serialization
@@ -439,7 +428,7 @@ class TestEventItemDateTimeSerialization:
             event_type=EventType.EARNINGS,
             event_date=test_datetime,
             description="Test description",
-            transcript_preview="Test preview"
+            transcript_preview="Test preview",
         )
 
         # Test model_dump serialization
@@ -457,7 +446,7 @@ class TestEventItemDateTimeSerialization:
             title="Test Citation",
             url="https://example.com",
             timestamp=test_datetime,
-            source="Test Source"
+            source="Test Source",
         )
 
         # Test model_dump serialization
@@ -473,7 +462,7 @@ class TestEventItemDateTimeSerialization:
             title="Test Citation",
             url="https://example.com",
             timestamp=None,
-            source="Test Source"
+            source="Test Source",
         )
 
         # Test model_dump serialization
@@ -491,7 +480,7 @@ class TestEventItemDateTimeSerialization:
             event_id=123,
             title="Test Event",
             event_type=EventType.EARNINGS,
-            event_date=test_datetime
+            event_date=test_datetime,
         )
 
         # Create response with event
@@ -503,9 +492,9 @@ class TestEventItemDateTimeSerialization:
                     "total_count": 1,
                     "current_page": 1,
                     "total_pages": 1,
-                    "page_size": 50
-                }
-            }
+                    "page_size": 50,
+                },
+            },
         )
 
         # Test that entire response can be JSON serialized

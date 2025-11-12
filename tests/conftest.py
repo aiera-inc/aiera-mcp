@@ -2,10 +2,9 @@
 
 """Global test configuration and fixtures for Aiera MCP tests."""
 
-import asyncio
 import os
 import json
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from pathlib import Path
 
 import pytest
@@ -40,7 +39,7 @@ async def mock_http_client():
 async def sample_api_responses():
     """Load sample API responses from fixtures."""
     if SAMPLE_API_RESPONSES_FILE.exists():
-        with open(SAMPLE_API_RESPONSES_FILE, 'r') as f:
+        with open(SAMPLE_API_RESPONSES_FILE, "r") as f:
             return json.load(f)
     return {}
 
@@ -63,7 +62,9 @@ def integration_api_key():
     """API key for integration tests - skip test if not provided."""
     api_key = os.getenv("AIERA_API_KEY")
     if not api_key:
-        pytest.skip("AIERA_API_KEY environment variable not set - skipping integration test")
+        pytest.skip(
+            "AIERA_API_KEY environment variable not set - skipping integration test"
+        )
     return api_key
 
 
@@ -86,20 +87,19 @@ class APIResponseBuilder:
                 "description": "Q4 2023 earnings call for Apple Inc",
                 "transcript_preview": "Welcome to the Apple Q4 2023 earnings call...",
                 "audio_url": "https://example.com/audio/12345.mp3",
-                "url": "https://aiera.com/event/12345"
+                "url": "https://aiera.com/event/12345",
             }
         ]
 
         return {
-            "response": {
-                "data": events,
-                "total": total or len(events)
-            },
-            "instructions": ["Sample instructions from API"]
+            "response": {"data": events, "total": total or len(events)},
+            "instructions": ["Sample instructions from API"],
         }
 
     @staticmethod
-    def build_filings_response(filings: list = None, total: int = None) -> Dict[str, Any]:
+    def build_filings_response(
+        filings: list = None, total: int = None
+    ) -> Dict[str, Any]:
         """Build filings API response."""
         filings = filings or [
             {
@@ -116,20 +116,19 @@ class APIResponseBuilder:
                 "key_points": ["Revenue increased", "Strong margins"],
                 "financial_highlights": {"revenue": "$394.3B", "net_income": "$97.0B"},
                 "content_preview": "This annual report contains...",
-                "document_count": 1
+                "document_count": 1,
             }
         ]
 
         return {
-            "response": {
-                "data": filings,
-                "total": total or len(filings)
-            },
-            "instructions": ["Sample filing instructions"]
+            "response": {"data": filings, "total": total or len(filings)},
+            "instructions": ["Sample filing instructions"],
         }
 
     @staticmethod
-    def build_equities_response(equities: list = None, total: int = None) -> Dict[str, Any]:
+    def build_equities_response(
+        equities: list = None, total: int = None
+    ) -> Dict[str, Any]:
         """Build equities API response."""
         equities = equities or [
             {
@@ -142,16 +141,13 @@ class APIResponseBuilder:
                 "subsector": "Consumer Electronics",
                 "country": "United States",
                 "market_cap": 3000000000000,
-                "identifiers": {"isin": "US0378331005", "cusip": "037833100"}
+                "identifiers": {"isin": "US0378331005", "cusip": "037833100"},
             }
         ]
 
         return {
-            "response": {
-                "data": equities,
-                "total": total or len(equities)
-            },
-            "instructions": ["Sample equity instructions"]
+            "response": {"data": equities, "total": total or len(equities)},
+            "instructions": ["Sample equity instructions"],
         }
 
 
@@ -173,21 +169,34 @@ def mock_server_mcp(mock_mcp_context):
 @pytest_asyncio.fixture
 async def patch_get_http_client(mock_http_client):
     """Patch get_http_client function."""
+
     async def _get_http_client(ctx):
         return mock_http_client
+
     return _get_http_client
 
 
 @pytest_asyncio.fixture
 async def patch_get_api_key(api_key):
     """Patch get_api_key_from_context function."""
+
     async def _get_api_key(ctx):
         return api_key
+
     return _get_api_key
 
 
 # Parametrized fixtures for comprehensive testing
-@pytest.fixture(params=["events", "filings", "equities", "company_docs", "third_bridge", "transcrippets"])
+@pytest.fixture(
+    params=[
+        "events",
+        "filings",
+        "equities",
+        "company_docs",
+        "third_bridge",
+        "transcrippets",
+    ]
+)
 def domain_name(request):
     """Parametrized fixture for testing all domains."""
     return request.param

@@ -7,12 +7,18 @@ import pytest_asyncio
 from unittest.mock import patch
 
 from aiera_mcp.tools.transcrippets.tools import (
-    find_transcrippets, create_transcrippet, delete_transcrippet
+    find_transcrippets,
+    create_transcrippet,
+    delete_transcrippet,
 )
 from aiera_mcp.tools.transcrippets.models import (
-    FindTranscrippetsArgs, CreateTranscrippetArgs, DeleteTranscrippetArgs,
-    FindTranscrippetsResponse, CreateTranscrippetResponse, DeleteTranscrippetResponse,
-    TranscrippetItem
+    FindTranscrippetsArgs,
+    CreateTranscrippetArgs,
+    DeleteTranscrippetArgs,
+    FindTranscrippetsResponse,
+    CreateTranscrippetResponse,
+    DeleteTranscrippetResponse,
+    TranscrippetItem,
 )
 
 
@@ -30,18 +36,17 @@ class TestTranscrippetsIntegration:
         real_api_key,
         sample_date_ranges,
         api_rate_limiter,
-        mock_get_http_client
+        mock_get_http_client,
     ):
         """Test find_transcrippets with real API."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch("aiera_mcp.tools.base.get_http_client", mock_get_http_client):
 
             # Test with a date range that might have transcrippets
             date_range = sample_date_ranges[1]  # Q1 2024
             args = FindTranscrippetsArgs(
-                start_date=date_range["start_date"],
-                end_date=date_range["end_date"]
+                start_date=date_range["start_date"], end_date=date_range["end_date"]
             )
 
             result = await find_transcrippets(args)
@@ -60,7 +65,9 @@ class TestTranscrippetsIntegration:
                 assert first_transcrippet.title or first_transcrippet.event_title
                 assert first_transcrippet.company_name
                 # Verify public URL format
-                assert first_transcrippet.public_url.startswith("https://public.aiera.com/shared/transcrippet.html?id=")
+                assert first_transcrippet.public_url.startswith(
+                    "https://public.aiera.com/shared/transcrippet.html?id="
+                )
 
     @pytest.mark.asyncio
     async def test_find_transcrippets_with_ticker_filter(
@@ -70,18 +77,18 @@ class TestTranscrippetsIntegration:
         real_api_key,
         sample_tickers,
         api_rate_limiter,
-        mock_get_http_client
+        mock_get_http_client,
     ):
         """Test find_transcrippets with ticker filter."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch("aiera_mcp.tools.base.get_http_client", mock_get_http_client):
 
             # Test with Apple ticker
             args = FindTranscrippetsArgs(
                 start_date="2023-01-01",
                 end_date="2023-12-31",
-                bloomberg_ticker=sample_tickers[0]  # AAPL:US
+                bloomberg_ticker=sample_tickers[0],  # AAPL:US
             )
 
             result = await find_transcrippets(args)
@@ -103,18 +110,15 @@ class TestTranscrippetsIntegration:
         real_http_client,
         real_api_key,
         api_rate_limiter,
-        mock_get_http_client
+        mock_get_http_client,
     ):
         """Test find_transcrippets with extended date range to increase chance of finding results."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch("aiera_mcp.tools.base.get_http_client", mock_get_http_client):
 
             # Test with a longer date range to increase chance of finding transcrippets
-            args = FindTranscrippetsArgs(
-                start_date="2023-01-01",
-                end_date="2024-06-30"
-            )
+            args = FindTranscrippetsArgs(start_date="2023-01-01", end_date="2024-06-30")
 
             result = await find_transcrippets(args)
 
@@ -137,18 +141,16 @@ class TestTranscrippetsIntegration:
         real_http_client,
         real_api_key,
         api_rate_limiter,
-        mock_get_http_client
+        mock_get_http_client,
     ):
         """Test find_transcrippets with search query."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch("aiera_mcp.tools.base.get_http_client", mock_get_http_client):
 
             # Test search for earnings-related transcrippets
             args = FindTranscrippetsArgs(
-                start_date="2023-01-01",
-                end_date="2024-06-30",
-                search="earnings"
+                start_date="2023-01-01", end_date="2024-06-30", search="earnings"
             )
 
             result = await find_transcrippets(args)
@@ -168,16 +170,18 @@ class TestTranscrippetsIntegration:
         real_http_client,
         real_api_key,
         api_rate_limiter,
-        mock_get_http_client
+        mock_get_http_client,
     ):
         """Test create_transcrippet with real API - requires complex transcript data."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch("aiera_mcp.tools.base.get_http_client", mock_get_http_client):
 
             # Creating transcrippets requires detailed transcript item data
             # that's not available in simple integration tests
-            pytest.skip("CreateTranscrippet requires detailed transcript item IDs and offsets not available in basic integration testing")
+            pytest.skip(
+                "CreateTranscrippet requires detailed transcript item IDs and offsets not available in basic integration testing"
+            )
 
             try:
                 # This would require actual transcript item data:
@@ -193,29 +197,31 @@ class TestTranscrippetsIntegration:
                 pass
 
                 # Verify response structure if creation succeeds
-                assert isinstance(result, CreateTranscrippetResponse)
-                assert isinstance(result.transcrippet, TranscrippetItem)
-                assert result.transcrippet.transcrippet_id
-                assert result.transcrippet.public_url
-                assert result.transcrippet.title == "Test Integration Transcrippet"
+                # assert isinstance(result, CreateTranscrippetResponse)
+                # assert isinstance(result.transcrippet, TranscrippetItem)
+                # assert result.transcrippet.transcrippet_id
+                # assert result.transcrippet.public_url
+                # assert result.transcrippet.title == "Test Integration Transcrippet"
 
                 # Clean up - try to delete the created transcrippet
-                if hasattr(result.transcrippet, 'transcrippet_id'):
-                    await api_rate_limiter.wait()
-                    delete_args = DeleteTranscrippetArgs(
-                        transcrippet_id=result.transcrippet.transcrippet_id
-                    )
-                    try:
-                        await delete_transcrippet(delete_args)
-                    except Exception:
-                        # If deletion fails, that's okay for testing purposes
-                        pass
+                # if hasattr(result.transcrippet, "transcrippet_id"):
+                #     await api_rate_limiter.wait()
+                #     delete_args = DeleteTranscrippetArgs(
+                #         transcrippet_id=result.transcrippet.transcrippet_id
+                #     )
+                #     try:
+                #         await delete_transcrippet(delete_args)
+                #     except Exception:
+                #         # If deletion fails, that's okay for testing purposes
+                #         pass
 
             except Exception as e:
                 # Creation might fail if the event doesn't exist or other validation issues
                 # This is acceptable for integration tests as we're using test data
                 if "not found" in str(e).lower() or "invalid" in str(e).lower():
-                    pytest.skip(f"Cannot create transcrippet with test event ID: {str(e)}")
+                    pytest.skip(
+                        f"Cannot create transcrippet with test event ID: {str(e)}"
+                    )
                 else:
                     raise
 
@@ -226,15 +232,17 @@ class TestTranscrippetsIntegration:
         real_http_client,
         real_api_key,
         api_rate_limiter,
-        mock_get_http_client
+        mock_get_http_client,
     ):
         """Test delete_transcrippet with invalid transcrippet ID."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch("aiera_mcp.tools.base.get_http_client", mock_get_http_client):
 
             # Test with invalid transcrippet ID
-            delete_args = DeleteTranscrippetArgs(transcrippet_id="invalid-transcrippet-id-12345")
+            delete_args = DeleteTranscrippetArgs(
+                transcrippet_id="invalid-transcrippet-id-12345"
+            )
 
             # This should raise an exception or return an error
             try:
@@ -251,28 +259,30 @@ class TestTranscrippetsIntegration:
         integration_mcp_server,
         real_http_client,
         api_rate_limiter,
-        mock_get_http_client
+        mock_get_http_client,
     ):
         """Test transcrippets API error handling with invalid API key."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.tools.base.get_api_key_from_context', return_value="invalid-api-key"):
+        with patch(
+            "aiera_mcp.tools.base.get_api_key_from_context",
+            return_value="invalid-api-key",
+        ):
 
-            args = FindTranscrippetsArgs(
-                start_date="2023-10-01",
-                end_date="2023-10-31"
-            )
+            args = FindTranscrippetsArgs(start_date="2023-10-01", end_date="2023-10-31")
 
             # This should raise an exception or return an error response
             try:
                 result = await find_transcrippets(args)
                 # If it doesn't raise an exception, check for error indicators
-                if hasattr(result, 'error') or len(result.transcrippets) == 0:
+                if hasattr(result, "error") or len(result.transcrippets) == 0:
                     # API handled the error gracefully
                     pass
             except Exception as e:
                 # Expected - invalid API key should cause an error
-                assert "401" in str(e) or "Unauthorized" in str(e) or "Invalid" in str(e)
+                assert (
+                    "401" in str(e) or "Unauthorized" in str(e) or "Invalid" in str(e)
+                )
 
     @pytest.mark.asyncio
     async def test_transcrippets_response_structure_no_data(
@@ -281,26 +291,23 @@ class TestTranscrippetsIntegration:
         real_http_client,
         real_api_key,
         api_rate_limiter,
-        mock_get_http_client
+        mock_get_http_client,
     ):
         """Test that transcrippets return proper response structures even when no data exists."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch("aiera_mcp.tools.base.get_http_client", mock_get_http_client):
 
             # Test with a narrow date range that probably won't have transcrippets
-            args = FindTranscrippetsArgs(
-                start_date="2024-01-01",
-                end_date="2024-01-01"
-            )
+            args = FindTranscrippetsArgs(start_date="2024-01-01", end_date="2024-01-01")
 
             result = await find_transcrippets(args)
 
             # Even with no transcrippets, response should have proper structure
             assert isinstance(result, FindTranscrippetsResponse)
             assert isinstance(result.transcrippets, list)
-            assert hasattr(result, 'instructions')
-            assert hasattr(result, 'citation_information')
+            assert hasattr(result, "instructions")
+            assert hasattr(result, "citation_information")
             assert isinstance(result.citation_information, list)
 
     @pytest.mark.asyncio
@@ -310,22 +317,19 @@ class TestTranscrippetsIntegration:
         real_http_client,
         real_api_key,
         api_rate_limiter,
-        mock_get_http_client
+        mock_get_http_client,
     ):
         """Test that transcrippets responses include citation information with public URLs."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch("aiera_mcp.tools.base.get_http_client", mock_get_http_client):
 
-            args = FindTranscrippetsArgs(
-                start_date="2023-01-01",
-                end_date="2024-06-30"
-            )
+            args = FindTranscrippetsArgs(start_date="2023-01-01", end_date="2024-06-30")
 
             result = await find_transcrippets(args)
 
             # Verify citations are generated with public URLs
-            assert hasattr(result, 'citation_information')
+            assert hasattr(result, "citation_information")
             assert isinstance(result.citation_information, list)
 
             # If we found transcrippets, citations should be created
@@ -335,7 +339,9 @@ class TestTranscrippetsIntegration:
                 for i, citation in enumerate(result.citation_information):
                     assert citation.title
                     assert citation.url
-                    assert citation.url.startswith("https://public.aiera.com/shared/transcrippet.html?id=")
+                    assert citation.url.startswith(
+                        "https://public.aiera.com/shared/transcrippet.html?id="
+                    )
 
     @pytest.mark.asyncio
     async def test_transcrippets_with_multiple_filters(
@@ -345,7 +351,7 @@ class TestTranscrippetsIntegration:
         real_api_key,
         sample_tickers,
         api_rate_limiter,
-        mock_get_http_client
+        mock_get_http_client,
     ):
         """Test transcrippets with multiple filter combinations."""
 
@@ -353,21 +359,21 @@ class TestTranscrippetsIntegration:
             {
                 "start_date": "2023-01-01",
                 "end_date": "2024-06-30",
-                "bloomberg_ticker": sample_tickers[0]
+                "bloomberg_ticker": sample_tickers[0],
             },
             {
                 "start_date": "2023-01-01",
                 "end_date": "2024-06-30",
-                "search": "earnings"
+                "search": "earnings",
             },
             {
                 "start_date": "2023-06-01",
                 "end_date": "2024-06-30",
-                "event_type": "earnings"
-            }
+                "event_type": "earnings",
+            },
         ]
 
-        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch("aiera_mcp.tools.base.get_http_client", mock_get_http_client):
 
             for filter_combo in filter_combinations:
                 await api_rate_limiter.wait()
@@ -393,17 +399,14 @@ class TestTranscrippetsIntegration:
         real_http_client,
         real_api_key,
         api_rate_limiter,
-        mock_get_http_client
+        mock_get_http_client,
     ):
         """Test that transcrippets generate properly formatted public URLs."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch("aiera_mcp.tools.base.get_http_client", mock_get_http_client):
 
-            args = FindTranscrippetsArgs(
-                start_date="2023-01-01",
-                end_date="2024-06-30"
-            )
+            args = FindTranscrippetsArgs(start_date="2023-01-01", end_date="2024-06-30")
 
             result = await find_transcrippets(args)
 
@@ -412,7 +415,9 @@ class TestTranscrippetsIntegration:
                 public_url = transcrippet.public_url
 
                 # Verify URL format
-                assert public_url.startswith("https://public.aiera.com/shared/transcrippet.html?id=")
+                assert public_url.startswith(
+                    "https://public.aiera.com/shared/transcrippet.html?id="
+                )
 
                 # Extract the ID part and verify it's not empty
                 url_parts = public_url.split("?id=")
@@ -427,17 +432,14 @@ class TestTranscrippetsIntegration:
         real_http_client,
         real_api_key,
         api_rate_limiter,
-        mock_get_http_client
+        mock_get_http_client,
     ):
         """Test that transcrippets properly handle array response format (different from other APIs)."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch("aiera_mcp.tools.base.get_http_client", mock_get_http_client):
 
-            args = FindTranscrippetsArgs(
-                start_date="2023-01-01",
-                end_date="2024-06-30"
-            )
+            args = FindTranscrippetsArgs(start_date="2023-01-01", end_date="2024-06-30")
 
             result = await find_transcrippets(args)
 
@@ -447,5 +449,5 @@ class TestTranscrippetsIntegration:
 
             # Even if no transcrippets found, the structure should be correct
             # (transcrippets API returns array vs other APIs that return response.data)
-            assert hasattr(result, 'instructions')
-            assert hasattr(result, 'citation_information')
+            assert hasattr(result, "instructions")
+            assert hasattr(result, "citation_information")

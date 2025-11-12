@@ -6,7 +6,7 @@ from .tools import (
     find_company_docs,
     get_company_doc,
     get_company_doc_categories,
-    get_company_doc_keywords
+    get_company_doc_keywords,
 )
 from .models import (
     FindCompanyDocsArgs,
@@ -18,7 +18,7 @@ from .models import (
     GetCompanyDocKeywordsResponse,
     CompanyDocItem,
     CompanyDocDetails,
-    CategoryKeyword
+    CategoryKeyword,
 )
 
 __all__ = [
@@ -27,18 +27,15 @@ __all__ = [
     "get_company_doc",
     "get_company_doc_categories",
     "get_company_doc_keywords",
-
     # Parameter models
     "FindCompanyDocsArgs",
     "GetCompanyDocArgs",
     "SearchArgs",
-
     # Response models
     "FindCompanyDocsResponse",
     "GetCompanyDocResponse",
     "GetCompanyDocCategoriesResponse",
     "GetCompanyDocKeywordsResponse",
-
     # Data models
     "CompanyDocItem",
     "CompanyDocDetails",

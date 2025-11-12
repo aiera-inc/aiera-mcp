@@ -17,11 +17,9 @@ __all__ = [
     # Tools
     "search_transcripts",
     "search_filings",
-
     # Parameter models
     "SearchTranscriptsArgs",
     "SearchFilingsArgs",
-
     # Response models
     "SearchTranscriptsResponse",
     "SearchFilingsResponse",

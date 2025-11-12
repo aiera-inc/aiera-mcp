@@ -8,9 +8,14 @@ from unittest.mock import patch
 
 from aiera_mcp.tools.events.tools import find_events, get_event, get_upcoming_events
 from aiera_mcp.tools.events.models import (
-    FindEventsArgs, GetEventArgs, GetUpcomingEventsArgs,
-    FindEventsResponse, GetEventResponse, GetUpcomingEventsResponse,
-    EventItem, EventDetails
+    FindEventsArgs,
+    GetEventArgs,
+    GetUpcomingEventsArgs,
+    FindEventsResponse,
+    GetEventResponse,
+    GetUpcomingEventsResponse,
+    EventItem,
+    EventDetails,
 )
 
 
@@ -28,19 +33,19 @@ class TestEventsIntegration:
         real_api_key,
         sample_date_ranges,
         api_rate_limiter,
-        mock_get_http_client
+        mock_get_http_client,
     ):
         """Test find_events with real API."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch("aiera_mcp.tools.base.get_http_client", mock_get_http_client):
             # Test with a date range that should have events
             date_range = sample_date_ranges[0]  # Q4 2023 earnings season
             args = FindEventsArgs(
                 start_date=date_range["start_date"],
                 end_date=date_range["end_date"],
                 event_type="earnings",
-                page_size=10
+                page_size=10,
             )
 
             # Make real API call
@@ -70,19 +75,19 @@ class TestEventsIntegration:
         real_api_key,
         sample_tickers,
         api_rate_limiter,
-        mock_get_http_client
+        mock_get_http_client,
     ):
         """Test find_events with ticker filter."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch("aiera_mcp.tools.base.get_http_client", mock_get_http_client):
 
             # Test with Apple ticker
             args = FindEventsArgs(
                 start_date="2023-10-01",
                 end_date="2023-10-31",
                 bloomberg_ticker=sample_tickers[0],  # AAPL:US
-                event_type="earnings"
+                event_type="earnings",
             )
 
             result = await find_events(args)
@@ -102,19 +107,19 @@ class TestEventsIntegration:
         real_http_client,
         real_api_key,
         api_rate_limiter,
-        mock_get_http_client
+        mock_get_http_client,
     ):
         """Test get_event with real API (requires finding an event first)."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch("aiera_mcp.tools.base.get_http_client", mock_get_http_client):
 
             # First find an event
             find_args = FindEventsArgs(
                 start_date="2023-10-01",
                 end_date="2023-10-31",
                 event_type="earnings",
-                page_size=1
+                page_size=1,
             )
 
             find_result = await find_events(find_args)
@@ -139,9 +144,9 @@ class TestEventsIntegration:
             assert result.event.event_date
 
             # EventDetails should have additional fields
-            assert hasattr(result.event, 'description')
-            assert hasattr(result.event, 'transcript_preview')
-            assert hasattr(result.event, 'audio_url')
+            assert hasattr(result.event, "description")
+            assert hasattr(result.event, "transcript_preview")
+            assert hasattr(result.event, "audio_url")
 
     @pytest.mark.asyncio
     async def test_get_upcoming_events_real_api(
@@ -150,18 +155,15 @@ class TestEventsIntegration:
         real_http_client,
         real_api_key,
         api_rate_limiter,
-        mock_get_http_client
+        mock_get_http_client,
     ):
         """Test get_upcoming_events with real API."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch("aiera_mcp.tools.base.get_http_client", mock_get_http_client):
 
             # Test with future date range
-            args = GetUpcomingEventsArgs(
-                start_date="2024-06-01",
-                end_date="2024-06-30"
-            )
+            args = GetUpcomingEventsArgs(start_date="2024-06-01", end_date="2024-06-30")
 
             result = await get_upcoming_events(args)
 
@@ -181,29 +183,31 @@ class TestEventsIntegration:
         integration_mcp_server,
         real_http_client,
         api_rate_limiter,
-        mock_get_http_client
+        mock_get_http_client,
     ):
         """Test events API error handling with invalid API key."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.tools.base.get_api_key_from_context', return_value="invalid-api-key"):
+        with patch(
+            "aiera_mcp.tools.base.get_api_key_from_context",
+            return_value="invalid-api-key",
+        ):
 
-            args = FindEventsArgs(
-                start_date="2023-10-01",
-                end_date="2023-10-31"
-            )
+            args = FindEventsArgs(start_date="2023-10-01", end_date="2023-10-31")
 
             # This should raise an exception or return an error response
             # The exact behavior depends on how the API handles invalid keys
             try:
                 result = await find_events(args)
                 # If it doesn't raise an exception, check for error indicators
-                if hasattr(result, 'error') or len(result.events) == 0:
+                if hasattr(result, "error") or len(result.events) == 0:
                     # API handled the error gracefully
                     pass
             except Exception as e:
                 # Expected - invalid API key should cause an error
-                assert "401" in str(e) or "Unauthorized" in str(e) or "Invalid" in str(e)
+                assert (
+                    "401" in str(e) or "Unauthorized" in str(e) or "Invalid" in str(e)
+                )
 
     @pytest.mark.asyncio
     async def test_events_pagination_integration(
@@ -212,19 +216,16 @@ class TestEventsIntegration:
         real_http_client,
         real_api_key,
         api_rate_limiter,
-        mock_get_http_client
+        mock_get_http_client,
     ):
         """Test events pagination with real API."""
         await api_rate_limiter.wait()
 
-        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch("aiera_mcp.tools.base.get_http_client", mock_get_http_client):
 
             # Test first page
             args_page1 = FindEventsArgs(
-                start_date="2023-10-01",
-                end_date="2023-10-31",
-                page=1,
-                page_size=5
+                start_date="2023-10-01", end_date="2023-10-31", page=1, page_size=5
             )
 
             result_page1 = await find_events(args_page1)
@@ -236,10 +237,7 @@ class TestEventsIntegration:
                 await api_rate_limiter.wait()
 
                 args_page2 = FindEventsArgs(
-                    start_date="2023-10-01",
-                    end_date="2023-10-31",
-                    page=2,
-                    page_size=5
+                    start_date="2023-10-01", end_date="2023-10-31", page=2, page_size=5
                 )
 
                 result_page2 = await find_events(args_page2)
@@ -259,13 +257,13 @@ class TestEventsIntegration:
         real_http_client,
         real_api_key,
         api_rate_limiter,
-        mock_get_http_client
+        mock_get_http_client,
     ):
         """Test different event types with real API."""
 
         event_types = ["earnings", "presentation", "investor_meeting"]
 
-        with patch('aiera_mcp.tools.base.get_http_client', mock_get_http_client):
+        with patch("aiera_mcp.tools.base.get_http_client", mock_get_http_client):
 
             for event_type in event_types:
                 await api_rate_limiter.wait()
@@ -274,7 +272,7 @@ class TestEventsIntegration:
                     start_date="2023-10-01",
                     end_date="2023-10-31",
                     event_type=event_type,
-                    page_size=5
+                    page_size=5,
                 )
 
                 result = await find_events(args)

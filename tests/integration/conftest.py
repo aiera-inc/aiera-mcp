@@ -16,7 +16,9 @@ def real_api_key():
     """Get real API key for integration tests."""
     api_key = os.getenv("AIERA_API_KEY")
     if not api_key:
-        pytest.skip("AIERA_API_KEY environment variable not set - skipping integration test")
+        pytest.skip(
+            "AIERA_API_KEY environment variable not set - skipping integration test"
+        )
     return api_key
 
 
@@ -25,7 +27,7 @@ async def real_http_client():
     """Real HTTP client for integration tests with extended timeout."""
     client = httpx.AsyncClient(
         timeout=httpx.Timeout(60.0, connect=10.0, read=60.0),
-        limits=httpx.Limits(max_connections=10, max_keepalive_connections=5)
+        limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
     )
     try:
         yield client
@@ -65,8 +67,10 @@ def mock_get_http_client(real_http_client):
     integration tests in the same session may cause event loop closure errors.
     Tests work fine when run individually.
     """
+
     async def _get_http_client(ctx):
         return real_http_client
+
     return _get_http_client
 
 
@@ -81,9 +85,18 @@ def sample_tickers():
 def sample_date_ranges():
     """Sample date ranges for testing."""
     return [
-        {"start_date": "2023-10-01", "end_date": "2023-10-31"},  # Q4 2023 earnings season
-        {"start_date": "2023-07-01", "end_date": "2023-07-31"},  # Q3 2023 earnings season
-        {"start_date": "2024-01-01", "end_date": "2024-01-31"},  # Q4 2023 earnings season
+        {
+            "start_date": "2023-10-01",
+            "end_date": "2023-10-31",
+        },  # Q4 2023 earnings season
+        {
+            "start_date": "2023-07-01",
+            "end_date": "2023-07-31",
+        },  # Q3 2023 earnings season
+        {
+            "start_date": "2024-01-01",
+            "end_date": "2024-01-31",
+        },  # Q4 2023 earnings season
     ]
 
 
@@ -109,7 +122,9 @@ def skip_if_no_api_key():
 def skip_expensive_tests():
     """Skip expensive tests unless explicitly enabled."""
     if not os.getenv("RUN_EXPENSIVE_TESTS", "").lower() in ("1", "true", "yes"):
-        pytest.skip("Expensive tests require RUN_EXPENSIVE_TESTS=1 environment variable")
+        pytest.skip(
+            "Expensive tests require RUN_EXPENSIVE_TESTS=1 environment variable"
+        )
 
 
 # Rate limiting helpers

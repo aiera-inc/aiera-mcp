@@ -4,14 +4,18 @@
 
 import pytest
 import pytest_asyncio
-from datetime import datetime, date
+from datetime import date
 from unittest.mock import AsyncMock
 
 from aiera_mcp.tools.filings.tools import find_filings, get_filing
 from aiera_mcp.tools.filings.models import (
-    FindFilingsArgs, GetFilingArgs,
-    FindFilingsResponse, GetFilingResponse,
-    FilingItem, FilingDetails, FilingSummary
+    FindFilingsArgs,
+    GetFilingArgs,
+    FindFilingsResponse,
+    GetFilingResponse,
+    FilingItem,
+    FilingDetails,
+    FilingSummary,
 )
 
 
@@ -20,16 +24,20 @@ class TestFindFilings:
     """Test the find_filings tool."""
 
     @pytest.mark.asyncio
-    async def test_find_filings_success(self, mock_http_dependencies, filings_api_responses):
+    async def test_find_filings_success(
+        self, mock_http_dependencies, filings_api_responses
+    ):
         """Test successful filings search."""
         # Setup
-        mock_http_dependencies['mock_make_request'].return_value = filings_api_responses["find_filings_success"]
+        mock_http_dependencies["mock_make_request"].return_value = (
+            filings_api_responses["find_filings_success"]
+        )
 
         args = FindFilingsArgs(
             start_date="2023-10-01",
             end_date="2023-10-31",
             bloomberg_ticker="AAPL:US",
-            form_number="10-K"
+            form_number="10-K",
         )
 
         # Execute
@@ -53,27 +61,24 @@ class TestFindFilings:
         assert first_filing.is_amendment == 0
 
         # Check API call was made correctly
-        mock_http_dependencies['mock_make_request'].assert_called_once()
-        call_args = mock_http_dependencies['mock_make_request'].call_args
-        assert call_args[1]['method'] == "GET"
-        assert call_args[1]['endpoint'] == "/chat-support/find-filings"
+        mock_http_dependencies["mock_make_request"].assert_called_once()
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        assert call_args[1]["method"] == "GET"
+        assert call_args[1]["endpoint"] == "/chat-support/find-filings"
 
         # Check parameters were passed correctly
-        params = call_args[1]['params']
-        assert params['start_date'] == "2023-10-01"
-        assert params['end_date'] == "2023-10-31"
-        assert params['bloomberg_ticker'] == "AAPL:US"
-        assert params['form_number'] == "10-K"
+        params = call_args[1]["params"]
+        assert params["start_date"] == "2023-10-01"
+        assert params["end_date"] == "2023-10-31"
+        assert params["bloomberg_ticker"] == "AAPL:US"
+        assert params["form_number"] == "10-K"
 
     @pytest.mark.asyncio
     async def test_find_filings_empty_results(self, mock_http_dependencies):
         """Test find_filings with empty results."""
         # Setup
-        empty_response = {
-            "response": {"data": [], "total": 0},
-            "instructions": []
-        }
-        mock_http_dependencies['mock_make_request'].return_value = empty_response
+        empty_response = {"response": {"data": [], "total": 0}, "instructions": []}
+        mock_http_dependencies["mock_make_request"].return_value = empty_response
 
         args = FindFilingsArgs(start_date="2023-10-01", end_date="2023-10-31")
 
@@ -87,15 +92,17 @@ class TestFindFilings:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("form_number", ["10-K", "10-Q", "8-K", "DEF 14A"])
-    async def test_find_filings_different_form_types(self, mock_http_dependencies, filings_api_responses, form_number):
+    async def test_find_filings_different_form_types(
+        self, mock_http_dependencies, filings_api_responses, form_number
+    ):
         """Test find_filings with different form types."""
         # Setup
-        mock_http_dependencies['mock_make_request'].return_value = filings_api_responses["find_filings_success"]
+        mock_http_dependencies["mock_make_request"].return_value = (
+            filings_api_responses["find_filings_success"]
+        )
 
         args = FindFilingsArgs(
-            start_date="2023-10-01",
-            end_date="2023-10-31",
-            form_number=form_number
+            start_date="2023-10-01", end_date="2023-10-31", form_number=form_number
         )
 
         # Execute
@@ -103,20 +110,21 @@ class TestFindFilings:
 
         # Verify
         assert isinstance(result, FindFilingsResponse)
-        call_args = mock_http_dependencies['mock_make_request'].call_args
-        assert call_args[1]['params']['form_number'] == form_number
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        assert call_args[1]["params"]["form_number"] == form_number
 
     @pytest.mark.asyncio
-    async def test_find_filings_pagination(self, mock_http_dependencies, filings_api_responses):
+    async def test_find_filings_pagination(
+        self, mock_http_dependencies, filings_api_responses
+    ):
         """Test find_filings with pagination parameters."""
         # Setup
-        mock_http_dependencies['mock_make_request'].return_value = filings_api_responses["find_filings_success"]
+        mock_http_dependencies["mock_make_request"].return_value = (
+            filings_api_responses["find_filings_success"]
+        )
 
         args = FindFilingsArgs(
-            start_date="2023-10-01",
-            end_date="2023-10-31",
-            page=2,
-            page_size=25
+            start_date="2023-10-01", end_date="2023-10-31", page=2, page_size=25
         )
 
         # Execute
@@ -125,16 +133,20 @@ class TestFindFilings:
         # Verify - checking that pagination args were passed correctly
         assert isinstance(result, FindFilingsResponse)
 
-        call_args = mock_http_dependencies['mock_make_request'].call_args
-        params = call_args[1]['params']
-        assert params['page'] == "2"  # Should be serialized as string
-        assert params['page_size'] == "25"
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        params = call_args[1]["params"]
+        assert params["page"] == "2"  # Should be serialized as string
+        assert params["page_size"] == "25"
 
     @pytest.mark.asyncio
-    async def test_find_filings_with_filters(self, mock_http_dependencies, filings_api_responses):
+    async def test_find_filings_with_filters(
+        self, mock_http_dependencies, filings_api_responses
+    ):
         """Test find_filings with various filters."""
         # Setup
-        mock_http_dependencies['mock_make_request'].return_value = filings_api_responses["find_filings_success"]
+        mock_http_dependencies["mock_make_request"].return_value = (
+            filings_api_responses["find_filings_success"]
+        )
 
         args = FindFilingsArgs(
             start_date="2023-10-01",
@@ -142,25 +154,29 @@ class TestFindFilings:
             bloomberg_ticker="AAPL:US,MSFT:US",
             watchlist_id=123,
             sector_id=456,
-            subsector_id=789
+            subsector_id=789,
         )
 
         # Execute
         result = await find_filings(args)
 
         # Verify
-        call_args = mock_http_dependencies['mock_make_request'].call_args
-        params = call_args[1]['params']
-        assert params['bloomberg_ticker'] == "AAPL:US,MSFT:US"
-        assert params['watchlist_id'] == "123"
-        assert params['sector_id'] == "456"
-        assert params['subsector_id'] == "789"
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        params = call_args[1]["params"]
+        assert params["bloomberg_ticker"] == "AAPL:US,MSFT:US"
+        assert params["watchlist_id"] == "123"
+        assert params["sector_id"] == "456"
+        assert params["subsector_id"] == "789"
 
     @pytest.mark.asyncio
-    async def test_find_filings_citations_generated(self, mock_http_dependencies, filings_api_responses):
+    async def test_find_filings_citations_generated(
+        self, mock_http_dependencies, filings_api_responses
+    ):
         """Test that find_filings generates proper citations."""
         # Setup
-        mock_http_dependencies['mock_make_request'].return_value = filings_api_responses["find_filings_success"]
+        mock_http_dependencies["mock_make_request"].return_value = (
+            filings_api_responses["find_filings_success"]
+        )
 
         args = FindFilingsArgs(start_date="2023-10-01", end_date="2023-10-31")
 
@@ -179,10 +195,14 @@ class TestGetFiling:
     """Test the get_filing tool."""
 
     @pytest.mark.asyncio
-    async def test_get_filing_success(self, mock_http_dependencies, filings_api_responses):
+    async def test_get_filing_success(
+        self, mock_http_dependencies, filings_api_responses
+    ):
         """Test successful filing retrieval."""
         # Setup
-        mock_http_dependencies['mock_make_request'].return_value = filings_api_responses["get_filing_success"]
+        mock_http_dependencies["mock_make_request"].return_value = (
+            filings_api_responses["get_filing_success"]
+        )
 
         args = GetFilingArgs(filing_id="filing789")
 
@@ -202,24 +222,24 @@ class TestGetFiling:
         assert result.filing.summary is not None
 
         # Check API call parameters
-        call_args = mock_http_dependencies['mock_make_request'].call_args
-        assert call_args[1]['method'] == "GET"
-        assert call_args[1]['endpoint'] == "/chat-support/find-filings"
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        assert call_args[1]["method"] == "GET"
+        assert call_args[1]["endpoint"] == "/chat-support/find-filings"
 
         # Check field mapping (filing_id -> filing_ids)
-        params = call_args[1]['params']
-        assert 'filing_ids' in params
-        assert params['filing_ids'] == "filing789"
-        assert 'filing_id' not in params
-        assert params['include_content'] == "true"
+        params = call_args[1]["params"]
+        assert "filing_ids" in params
+        assert params["filing_ids"] == "filing789"
+        assert "filing_id" not in params
+        assert params["include_content"] == "true"
 
     @pytest.mark.asyncio
     async def test_get_filing_not_found(self, mock_http_dependencies):
         """Test get_filing when filing is not found."""
         # Setup - empty response
-        mock_http_dependencies['mock_make_request'].return_value = {
+        mock_http_dependencies["mock_make_request"].return_value = {
             "response": {"data": []},
-            "instructions": []
+            "instructions": [],
         }
 
         args = GetFilingArgs(filing_id="nonexistent")
@@ -237,21 +257,18 @@ class TestGetFiling:
                 "data": [
                     {
                         "filing_id": 123,
-                        "equity": {
-                            "company_name": "Test Company",
-                            "ticker": "TEST"
-                        },
+                        "equity": {"company_name": "Test Company", "ticker": "TEST"},
                         "form_number": "10-K",
                         "title": "Test Filing",
                         "filing_date": "2023-10-27T00:00:00Z",  # ISO format with Z
                         "period_end_date": "2023-09-30T00:00:00Z",
-                        "is_amendment": 0
+                        "is_amendment": 0,
                     }
                 ]
             },
-            "instructions": []
+            "instructions": [],
         }
-        mock_http_dependencies['mock_make_request'].return_value = response_with_dates
+        mock_http_dependencies["mock_make_request"].return_value = response_with_dates
 
         args = GetFilingArgs(filing_id="filing123")
 
@@ -278,10 +295,7 @@ class TestGetFiling:
                 "data": [
                     {
                         "filing_id": 123,
-                        "equity": {
-                            "company_name": "Test Company",
-                            "ticker": "TEST"
-                        },
+                        "equity": {"company_name": "Test Company", "ticker": "TEST"},
                         "form_number": "10-K",
                         "title": "Test Filing",
                         "filing_date": "2023-10-27T00:00:00Z",
@@ -290,9 +304,9 @@ class TestGetFiling:
                     }
                 ]
             },
-            "instructions": []
+            "instructions": [],
         }
-        mock_http_dependencies['mock_make_request'].return_value = minimal_response
+        mock_http_dependencies["mock_make_request"].return_value = minimal_response
 
         args = GetFilingArgs(filing_id="filing123")
 
@@ -311,7 +325,9 @@ class TestFilingsToolsErrorHandling:
     async def test_handle_malformed_response(self, mock_http_dependencies):
         """Test handling of malformed API responses."""
         # Setup - malformed response
-        mock_http_dependencies['mock_make_request'].return_value = {"invalid": "response"}
+        mock_http_dependencies["mock_make_request"].return_value = {
+            "invalid": "response"
+        }
 
         args = FindFilingsArgs(start_date="2023-10-01", end_date="2023-10-31")
 
@@ -331,32 +347,28 @@ class TestFilingsToolsErrorHandling:
                 "data": [
                     {
                         "filing_id": 123,
-                        "equity": {
-                            "company_name": "Test Company",
-                            "ticker": "TEST"
-                        },
+                        "equity": {"company_name": "Test Company", "ticker": "TEST"},
                         "form_number": "10-K",
                         "title": "Test Filing",
                         "filing_date": "invalid-date",  # Invalid date
-                        "is_amendment": 0
+                        "is_amendment": 0,
                     },
                     {
                         "filing_id": 456,
-                        "equity": {
-                            "company_name": "Test Company 2",
-                            "ticker": "TEST2"
-                        },
+                        "equity": {"company_name": "Test Company 2", "ticker": "TEST2"},
                         "form_number": "10-Q",
                         "title": "Test Filing 2",
                         # Missing filing_date
-                        "is_amendment": 0
-                    }
+                        "is_amendment": 0,
+                    },
                 ],
-                "total": 2
+                "total": 2,
             },
-            "instructions": []
+            "instructions": [],
         }
-        mock_http_dependencies['mock_make_request'].return_value = response_with_bad_dates
+        mock_http_dependencies["mock_make_request"].return_value = (
+            response_with_bad_dates
+        )
 
         args = FindFilingsArgs(start_date="2023-10-01", end_date="2023-10-31")
 
@@ -370,11 +382,17 @@ class TestFilingsToolsErrorHandling:
             assert filing.filing_id is not None
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("exception_type", [ConnectionError, TimeoutError, ValueError])
-    async def test_network_errors_propagate(self, mock_http_dependencies, exception_type):
+    @pytest.mark.parametrize(
+        "exception_type", [ConnectionError, TimeoutError, ValueError]
+    )
+    async def test_network_errors_propagate(
+        self, mock_http_dependencies, exception_type
+    ):
         """Test that network errors are properly propagated."""
         # Setup - make_aiera_request raises exception
-        mock_http_dependencies['mock_make_request'].side_effect = exception_type("Test error")
+        mock_http_dependencies["mock_make_request"].side_effect = exception_type(
+            "Test error"
+        )
 
         args = FindFilingsArgs(start_date="2023-10-01", end_date="2023-10-31")
 
@@ -391,22 +409,19 @@ class TestFilingsToolsErrorHandling:
                 "data": [
                     {
                         "filing_id": 999,
-                        "equity": {
-                            "company_name": "Test Company",
-                            "ticker": "TEST"
-                        },
+                        "equity": {"company_name": "Test Company", "ticker": "TEST"},
                         "form_number": "10-K/A",
                         "title": "Annual Report Amendment",
                         "filing_date": "2023-10-27T00:00:00Z",
                         "is_amendment": 1,
-                        "official_url": "https://sec.gov/filing/filing_amend"
+                        "official_url": "https://sec.gov/filing/filing_amend",
                     }
                 ],
-                "total": 1
+                "total": 1,
             },
-            "instructions": []
+            "instructions": [],
         }
-        mock_http_dependencies['mock_make_request'].return_value = amendment_response
+        mock_http_dependencies["mock_make_request"].return_value = amendment_response
 
         args = FindFilingsArgs(start_date="2023-10-01", end_date="2023-10-31")
 
