@@ -338,30 +338,32 @@ The package automatically handles API key resolution with fallback from OAuth pr
 
 ## Testing
 
-### Integration Tests
+### Manual Integration Testing
 
-This project includes comprehensive integration tests that validate the MCP tools against the real Aiera API.
+Since integration tests have been removed, use the manual testing script to validate the MCP tools against the real Aiera API.
 
-**Quick Start:**
+**Setup:**
 ```bash
 # Set up API key
-echo "export AIERA_API_KEY=your_api_key_here" > .env
-
-# Run core integration tests
-./scripts/run_integration_tests.sh
-
-# Run extended test suite
-./scripts/run_integration_tests.sh --extended
+export AIERA_API_KEY="your_api_key_here"
 ```
 
-**Manual Testing:**
+**Manual Testing Script:**
 ```bash
-# Individual test examples
-source .env && uv run pytest tests/integration/test_events_integration.py::TestEventsIntegration::test_find_events_real_api -v
-source .env && uv run pytest tests/integration/test_filings_integration.py::TestFilingsIntegration::test_find_filings_real_api -v
+# Test all available tools
+AIERA_API_KEY=your_api_key_here uv run python scripts/manual_test.py
+
+# Test specific tool categories
+AIERA_API_KEY=your_api_key_here uv run python scripts/manual_test.py find_events
+AIERA_API_KEY=your_api_key_here uv run python scripts/manual_test.py find_filings
+AIERA_API_KEY=your_api_key_here uv run python scripts/manual_test.py create_transcrippet
 ```
 
-For detailed testing instructions, see [INTEGRATION_TESTING.md](INTEGRATION_TESTING.md).
+The manual test script:
+- Makes direct API calls and compares them with tool outputs
+- Tests each tool function individually
+- Logs discrepancies and issues to help with debugging
+- Provides comprehensive validation of tool behavior
 
 ## Links
 - [Aiera REST Documentation](https://rest.aiera.com)
