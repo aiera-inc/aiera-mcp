@@ -198,8 +198,8 @@ class TranscriptSearchItem(BaseModel):
         description="Transcript item identifier (aliased from content_id)",
     )
     transcript_event_id: int = Field(description="Event identifier for the transcript")
-    transcript_section: str = Field(
-        description="Section of transcript (e.g., 'q_and_a', 'presentation')"
+    transcript_section: Optional[str] = Field(
+        description="Section of transcript (e.g., 'q_and_a', 'presentation'). Can be null for some transcripts."
     )
     text: str = Field(description="The matching text content from the transcript")
     primary_equity_id: int = Field(description="Primary equity identifier")

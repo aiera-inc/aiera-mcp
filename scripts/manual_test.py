@@ -443,6 +443,38 @@ async def test_tool_with_comparison(
             parsed_response = response_model.model_validate(raw_response)
             result.parsed_response = parsed_response
 
+            # Log result count for search tools
+            if tool_name in ["search_transcripts", "search_filing_chunks"]:
+                try:
+                    if hasattr(parsed_response, "response") and hasattr(
+                        parsed_response.response, "result"
+                    ):
+                        result = parsed_response.response.result
+                        if result is not None:
+                            result_count = len(result)
+                            logger.info(
+                                f"📊 {tool_name} returned {result_count} results"
+                            )
+                        else:
+                            logger.info(
+                                f"📊 {tool_name} returned 0 results (result is null)"
+                            )
+                    elif hasattr(parsed_response, "data"):
+                        result_count = (
+                            len(parsed_response.data)
+                            if isinstance(parsed_response.data, list)
+                            else 1
+                        )
+                        logger.info(f"📊 {tool_name} returned {result_count} results")
+                    else:
+                        logger.info(
+                            f"📊 {tool_name}: Could not determine result count structure - response type: {type(parsed_response)}"
+                        )
+                except Exception as count_error:
+                    logger.info(
+                        f"📊 {tool_name}: Could not extract result count: {count_error}"
+                    )
+
             # Analyze parsing quality
             if analyzer:
                 parsing_errors = analyzer.analyze_parsing(
@@ -729,10 +761,21 @@ async def run_comprehensive_tests():
             "response_model": SearchTranscriptsResponse,
             "endpoint": "/chat-support/search/transcripts",
             "method": "POST",
+            "params": {"search_pipeline": "hybrid_search_pipeline"},
             "data": {
                 "query": {
                     "bool": {
-                        "must": [
+                        "should": [
+                            {"match": {"text": {"query": "revenue", "boost": 2.0}}},
+                            {
+                                "multi_match": {
+                                    "query": "revenue",
+                                    "fields": ["title^1.5", "speaker_name"],
+                                    "boost": 1.5,
+                                }
+                            },
+                        ],
+                        "filter": [
                             {
                                 "terms": {
                                     "transcript_event_id": [
@@ -743,13 +786,23 @@ async def run_comprehensive_tests():
                                     ]
                                 }
                             }
-                        ]
+                        ],
+                        "minimum_should_match": 1,
                     }
                 },
-                "from": 0,
                 "size": 15,
-                "search_pipeline": "embedding_script_pipeline",
-                "ext": {"ml_inference": {"query_text": "revenue"}},
+                "_source": [
+                    "content_id",
+                    "text",
+                    "transcript_event_id",
+                    "title",
+                    "speaker_name",
+                    "speaker_title",
+                    "date",
+                    "section",
+                    "transcript_section",
+                ],
+                "sort": [{"_score": {"order": "desc"}}],
             },
         },
         {
@@ -762,22 +815,80 @@ async def run_comprehensive_tests():
             "data": {
                 "query": {
                     "bool": {
-                        "must": [
+                        "should": [
                             {
-                                "multi_match": {
-                                    "query": "Apple Inc",
-                                    "fields": ["company_name", "company_legal_name"],
-                                    "type": "best_fields",
-                                    "fuzziness": "AUTO",
+                                "match_phrase": {
+                                    "title": {"query": "Apple Inc", "boost": 15.0}
                                 }
-                            }
-                        ]
+                            },
+                            {
+                                "wildcard": {
+                                    "title": {
+                                        "value": "*Apple Inc*",
+                                        "case_insensitive": True,
+                                        "boost": 8.0,
+                                    }
+                                }
+                            },
+                            {
+                                "wildcard": {
+                                    "title": {
+                                        "value": "*Apple*",
+                                        "case_insensitive": True,
+                                        "boost": 6.0,
+                                    }
+                                }
+                            },
+                            {"term": {"company_name.keyword": "Apple Inc"}},
+                            {"term": {"issuer_name.keyword": "Apple Inc"}},
+                            {"term": {"entity_name.keyword": "Apple Inc"}},
+                            {"term": {"filer_name.keyword": "Apple Inc"}},
+                        ],
+                        "filter": [
+                            {
+                                "range": {
+                                    "date": {"gte": "2024-01-01", "lte": "2024-12-31"}
+                                }
+                            },
+                            {
+                                "bool": {
+                                    "should": [
+                                        {
+                                            "match_phrase": {
+                                                "title": {
+                                                    "query": "10-K",
+                                                    "boost": 10.0,
+                                                }
+                                            }
+                                        },
+                                        {"term": {"document_type.keyword": "10-K"}},
+                                        {"term": {"form_type.keyword": "10-K"}},
+                                        {"term": {"filing_type.keyword": "10-K"}},
+                                    ],
+                                    "minimum_should_match": 1,
+                                }
+                            },
+                        ],
+                        "minimum_should_match": 1,
                     }
                 },
-                "from": 0,
                 "size": 5,
-                "sort": [{"date": {"order": "desc"}}],
-                "search_pipeline": "embedding_script_pipeline",
+                "_source": [
+                    "content_id",
+                    "title",
+                    "company_name",
+                    "issuer_name",
+                    "entity_name",
+                    "document_type",
+                    "form_type",
+                    "filing_type",
+                    "date",
+                    "filing_date",
+                    "filing_id",
+                ],
+                "sort": [{"date": {"order": "desc"}}, {"_score": {"order": "desc"}}],
+                "timeout": "15s",
+                "search_pipeline": "hybrid_search_pipeline",
             },
         },
         {
@@ -787,25 +898,237 @@ async def run_comprehensive_tests():
             "response_model": SearchFilingChunksResponse,
             "endpoint": "/chat-support/search/filing-chunks",
             "method": "POST",
+            "params": {"search_pipeline": "hybrid_search_pipeline"},
             "data": {
                 "query": {
                     "bool": {
-                        "must": [
+                        "should": [
+                            {
+                                "match": {
+                                    "text": {"query": "revenue guidance", "boost": 2.0}
+                                }
+                            },
                             {
                                 "multi_match": {
-                                    "query": "Apple Inc",
-                                    "fields": ["company_name", "company_legal_name"],
-                                    "type": "best_fields",
-                                    "fuzziness": "AUTO",
+                                    "query": "revenue guidance",
+                                    "fields": ["title^1.5", "summary"],
+                                    "boost": 1.5,
+                                }
+                            },
+                        ],
+                        "filter": [
+                            {
+                                "bool": {
+                                    "should": [
+                                        # Tier 1: Exact matches (boost 10.0)
+                                        {
+                                            "term": {
+                                                "company_common_name.keyword": {
+                                                    "value": "Apple Inc",
+                                                    "boost": 10.0,
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "term": {
+                                                "company_legal_name.keyword": {
+                                                    "value": "Apple Inc",
+                                                    "boost": 10.0,
+                                                }
+                                            }
+                                        },
+                                        # Tier 2: Fuzzy matching with AUTO fuzziness (boost 8.0-7.5)
+                                        {
+                                            "fuzzy": {
+                                                "company_common_name": {
+                                                    "value": "Apple Inc",
+                                                    "fuzziness": "AUTO",
+                                                    "boost": 8.0,
+                                                    "max_expansions": 50,
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "fuzzy": {
+                                                "company_legal_name": {
+                                                    "value": "Apple Inc",
+                                                    "fuzziness": "AUTO",
+                                                    "boost": 8.0,
+                                                    "max_expansions": 50,
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "fuzzy": {
+                                                "company_common_name": {
+                                                    "value": "Apple",
+                                                    "fuzziness": "AUTO",
+                                                    "boost": 7.5,
+                                                    "max_expansions": 50,
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "fuzzy": {
+                                                "company_legal_name": {
+                                                    "value": "Apple",
+                                                    "fuzziness": "AUTO",
+                                                    "boost": 7.5,
+                                                    "max_expansions": 50,
+                                                }
+                                            }
+                                        },
+                                        # Tier 3: Phrase matching with slop (boost 6.0-5.5)
+                                        {
+                                            "match_phrase": {
+                                                "company_common_name": {
+                                                    "query": "Apple Inc",
+                                                    "boost": 6.0,
+                                                    "slop": 1,
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "match_phrase": {
+                                                "company_legal_name": {
+                                                    "query": "Apple Inc",
+                                                    "boost": 6.0,
+                                                    "slop": 1,
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "match_phrase": {
+                                                "company_common_name": {
+                                                    "query": "Apple",
+                                                    "boost": 5.5,
+                                                    "slop": 1,
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "match_phrase": {
+                                                "company_legal_name": {
+                                                    "query": "Apple",
+                                                    "boost": 5.5,
+                                                    "slop": 1,
+                                                }
+                                            }
+                                        },
+                                        # Tier 4: Word-based matching with fuzzy operator (boost 5.0-4.5)
+                                        {
+                                            "match": {
+                                                "company_common_name": {
+                                                    "query": "Apple Inc",
+                                                    "boost": 5.0,
+                                                    "operator": "and",
+                                                    "fuzziness": "AUTO",
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "match": {
+                                                "company_legal_name": {
+                                                    "query": "Apple Inc",
+                                                    "boost": 5.0,
+                                                    "operator": "and",
+                                                    "fuzziness": "AUTO",
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "match": {
+                                                "company_common_name": {
+                                                    "query": "Apple",
+                                                    "boost": 4.5,
+                                                    "operator": "and",
+                                                    "fuzziness": "AUTO",
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "match": {
+                                                "company_legal_name": {
+                                                    "query": "Apple",
+                                                    "boost": 4.5,
+                                                    "operator": "and",
+                                                    "fuzziness": "AUTO",
+                                                }
+                                            }
+                                        },
+                                        # Tier 5: Title fuzzy matching (boost 3.0-2.5)
+                                        {
+                                            "fuzzy": {
+                                                "title": {
+                                                    "value": "Apple Inc",
+                                                    "fuzziness": "AUTO",
+                                                    "boost": 3.0,
+                                                    "max_expansions": 25,
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "fuzzy": {
+                                                "title": {
+                                                    "value": "Apple",
+                                                    "fuzziness": "AUTO",
+                                                    "boost": 2.5,
+                                                    "max_expansions": 25,
+                                                }
+                                            }
+                                        },
+                                        # Tier 6: Selective wildcards for longer names (boost 2.0-1.8)
+                                        {
+                                            "wildcard": {
+                                                "company_common_name.keyword": {
+                                                    "value": "*Apple Inc*",
+                                                    "boost": 2.0,
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "wildcard": {
+                                                "company_legal_name.keyword": {
+                                                    "value": "*Apple Inc*",
+                                                    "boost": 2.0,
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "wildcard": {
+                                                "company_common_name.keyword": {
+                                                    "value": "*Apple*",
+                                                    "boost": 1.8,
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "wildcard": {
+                                                "company_legal_name.keyword": {
+                                                    "value": "*Apple*",
+                                                    "boost": 1.8,
+                                                }
+                                            }
+                                        },
+                                    ],
+                                    "minimum_should_match": 1,
                                 }
                             }
-                        ]
+                        ],
+                        "minimum_should_match": 1,
                     }
                 },
-                "from": 0,
                 "size": 10,
-                "search_pipeline": "embedding_script_pipeline",
-                "ext": {"ml_inference": {"query_text": "revenue guidance"}},
+                "_source": [
+                    "content_id",
+                    "text",
+                    "title",
+                    "company_common_name",
+                    "filing_id",
+                    "filing_form_id",
+                    "date",
+                    "chunk_id",
+                ],
             },
         },
     ]
@@ -815,9 +1138,20 @@ async def run_comprehensive_tests():
     for test_config in tests:
         try:
             result = await test_tool_with_comparison(analyzer=analyzer, **test_config)
-            results.append(result)
-            analyzer.results.append(result)
-            analyzer.log_discrepancies(result)
+            if result is not None:
+                # Debug: Check what type result actually is
+                if not isinstance(result, TestResult):
+                    logger.error(
+                        f"Test returned unexpected type for {test_config['tool_name']}: {type(result)} - {result}"
+                    )
+                    continue
+                results.append(result)
+                analyzer.results.append(result)
+                analyzer.log_discrepancies(result)
+            else:
+                logger.error(
+                    f"Test returned None result for {test_config['tool_name']}"
+                )
 
         except Exception as e:
             logger.error(f"Test setup failed for {test_config['tool_name']}: {e}")

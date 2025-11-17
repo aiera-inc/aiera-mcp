@@ -108,7 +108,8 @@ COMPANY_DOC_TOOLS = [
     "get_company_doc_keywords",
 ]
 THIRD_BRIDGE_TOOLS = ["find_third_bridge_events", "get_third_bridge_event"]
-
+EMBEDDING_SEARCH_PIPELINE = "embedding_pipeline"
+HYBRID_SEARCH_PIPELINE = "hybrid_search_pipeline"
 
 from .tools.company_docs import (
     find_company_docs,
