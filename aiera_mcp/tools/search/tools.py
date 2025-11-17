@@ -64,37 +64,39 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
         }
         filter_clauses.append(section_filter)
 
-    # Determine k parameter based on filtering - higher k when filters are applied
-    # Per guide: No filters: k = size * 2, With filters: k = size * 10-50
-    k_value = args.max_results * 2
-    if filter_clauses:
-        k_value = args.max_results * 20  # Increased for filters
+    # No longer need k_value since we're using match queries instead of neural queries
 
-    # Use modern neural search query following the guide
-    neural_query = {
-        "neural": {"embedding_384": {"query_text": args.query_text, "k": k_value}}
-    }
+    # Build text-based search queries following opensearch-mcp pattern
+    should_clauses = []
 
-    # Build hybrid search query following the guide
-    hybrid_query = {
-        "hybrid": {
-            "queries": [
-                neural_query,
+    # Add text search clauses if query_text is provided
+    if args.query_text and args.query_text.strip():
+        should_clauses.extend(
+            [
+                # Primary text search
+                {"match": {"text": {"query": args.query_text, "boost": 2.0}}},
+                # Title/multi-field search
                 {
                     "multi_match": {
                         "query": args.query_text,
-                        "fields": ["text^2", "title", "speaker_name"],
-                        "type": "best_fields",
+                        "fields": ["title^1.5", "speaker_name"],
                         "boost": 1.5,
                     }
                 },
             ]
-        }
-    }
+        )
 
-    # Base query structure (common elements)
-    base_query_structure = {
+    # Build main search query using bool structure with should clauses
+    base_query = {
+        "query": {
+            "bool": {
+                "should": should_clauses,
+                "filter": filter_clauses,
+                "minimum_should_match": 1 if should_clauses else 0,
+            }
+        },
         "size": args.max_results,
+        "min_score": args.min_score,
         "_source": [
             "content_id",
             "text",
@@ -109,141 +111,138 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
         "sort": [{"_score": {"order": "desc"}}],
     }
 
-    # Use post_filter approach to avoid "hybrid query must be a top level query" error
-    # This applies filters after the hybrid search without wrapping the hybrid query
+    # ML query for embedding search using match_all + ext.ml_inference pattern (like filing tools)
+    ml_query = {
+        "query": {"match_all": {}},
+        "size": args.max_results,
+        "min_score": args.min_score,
+        "_source": [
+            "content_id",
+            "text",
+            "transcript_event_id",
+            "title",
+            "speaker_name",
+            "speaker_title",
+            "date",
+            "section",
+            "transcript_section",
+        ],
+        "sort": [{"_score": {"order": "desc"}}],
+    }
 
-    # Always use hybrid search as the main query (never wrap it in bool.must)
-    hybrid_search_query = base_query_structure.copy()
-    hybrid_search_query["query"] = hybrid_query
-    hybrid_search_query["min_score"] = args.min_score
-
-    # Apply filters using post_filter to avoid wrapping the hybrid query
+    # Add filters to ML query using post_filter to avoid hybrid query wrapping issues
     if filter_clauses:
         if len(filter_clauses) == 1:
-            # Single filter - use directly
-            hybrid_search_query["post_filter"] = filter_clauses[0]
+            ml_query["post_filter"] = filter_clauses[0]
         else:
-            # Multiple filters - combine with bool.must
-            hybrid_search_query["post_filter"] = {"bool": {"must": filter_clauses}}
-        logger.info(
-            f"Using hybrid search WITH post_filter ({len(filter_clauses)} filters applied after search)"
-        )
+            ml_query["post_filter"] = {"bool": {"must": filter_clauses}}
+        logger.info(f"Using ML search with {len(filter_clauses)} post-filters")
     else:
-        logger.info("Using hybrid search without filters")
+        logger.info("Using ML search without filters")
 
-    # Neural search query (works with bool.filter)
-    neural_search_query = base_query_structure.copy()
-    if filter_clauses:
-        neural_search_query["query"] = {
-            "bool": {"must": [neural_query], "filter": filter_clauses}
-        }
-    else:
-        neural_search_query["query"] = neural_query
-    neural_search_query["min_score"] = args.min_score
+    # Try searches in order: ML inference with pipeline -> standard search with pipeline -> direct search
+    if args.query_text and args.query_text.strip():
+        # Add ML inference extension for embedding search (like filing tools)
+        ml_query["ext"] = {"ml_inference": {"query_text": args.query_text.strip()}}
 
-    # Try searches in order: hybrid with pipeline -> neural with pipeline -> neural without pipeline
-    try:
-        # Try hybrid search with post_filter approach (supports filters without wrapping)
-        logger.info(
-            f"TranscriptSearch: Attempting hybrid search with pipeline='{HYBRID_SEARCH_PIPELINE}' (15s timeout)"
-        )
-        logger.info(
-            f"TranscriptSearch: Using {len(filter_clauses)} post-filters, k_value={k_value}"
-        )
-
-        # Set a 15-second timeout for hybrid search
         try:
-            # Use the hybrid pipeline for ML inference
-            hybrid_query_with_pipeline = hybrid_search_query.copy()
-            hybrid_query_with_pipeline["search_pipeline"] = HYBRID_SEARCH_PIPELINE
-
-            # Wrap in async timeout
-            raw_response = await asyncio.wait_for(
-                make_aiera_request(
-                    client=client,
-                    method="POST",
-                    endpoint="/chat-support/search/transcripts",
-                    api_key=api_key,
-                    params={},
-                    data=hybrid_query_with_pipeline,
-                ),
-                timeout=15.0,
+            # Try ML inference search with hybrid pipeline
+            logger.info(
+                f"TranscriptSearch: Attempting ML inference search with pipeline='{HYBRID_SEARCH_PIPELINE}' (15s timeout)"
             )
-        except asyncio.TimeoutError:
-            logger.warning(
-                "TranscriptSearch: Hybrid search timed out after 15s, falling back to neural search"
+            logger.info(
+                f"TranscriptSearch: Using {len(filter_clauses)} filters for query='{args.query_text}'"
             )
-            raise Exception("Hybrid search timeout")
 
-        if (
-            raw_response
-            and "response" in raw_response
-            and raw_response["response"].get("result")
-        ):
-            logger.info("TranscriptSearch hybrid search successful")
+            # Set a 15-second timeout for ML inference
+            try:
+                raw_response = await asyncio.wait_for(
+                    make_aiera_request(
+                        client=client,
+                        method="POST",
+                        endpoint="/chat-support/search/transcripts",
+                        api_key=api_key,
+                        params={"search_pipeline": HYBRID_SEARCH_PIPELINE},
+                        data=ml_query,
+                    ),
+                    timeout=15.0,
+                )
+            except asyncio.TimeoutError:
+                logger.warning(
+                    "TranscriptSearch: ML inference timed out after 15s, falling back to standard search"
+                )
+                raise Exception("ML inference timeout")
+
+            if (
+                raw_response
+                and "response" in raw_response
+                and raw_response["response"].get("result")
+            ):
+                logger.info("TranscriptSearch ML inference successful")
+                return SearchTranscriptsResponse.model_validate(raw_response)
+            else:
+                logger.info(
+                    "TranscriptSearch: ML inference returned no results, trying standard search"
+                )
+                raise Exception("ML inference returned no results")
+
+        except Exception as ml_error:
+            logger.info(
+                f"TranscriptSearch: ML inference failed ({str(ml_error)}), falling back to standard search"
+            )
+    else:
+        logger.info(
+            "TranscriptSearch: No query text provided, using standard filtered search"
+        )
+
+    # Fall back to standard text-based search with pipeline
+    try:
+        raw_response = await make_aiera_request(
+            client=client,
+            method="POST",
+            endpoint="/chat-support/search/transcripts",
+            api_key=api_key,
+            params={"search_pipeline": EMBEDDING_SEARCH_PIPELINE},
+            data=base_query,
+        )
+
+        if raw_response and "response" in raw_response:
+            logger.info("TranscriptSearch standard pipeline search successful")
             return SearchTranscriptsResponse.model_validate(raw_response)
         else:
-            logger.info(
-                "TranscriptSearch: Hybrid search returned no results, falling back to neural search"
+            logger.warning(
+                "TranscriptSearch: Standard pipeline returned no results, trying direct search"
             )
-            raise Exception("Hybrid search returned no results")
+            raise Exception("Standard pipeline returned no results")
 
-    except Exception as hybrid_error:
+    except Exception as pipeline_error:
         logger.info(
-            f"TranscriptSearch: Hybrid search failed ({str(hybrid_error)}), falling back to neural search"
+            f"TranscriptSearch: Standard pipeline search failed: {str(pipeline_error)}, trying direct search"
         )
 
         try:
-            # Fall back to neural search with embedding pipeline
-            neural_query_with_pipeline = neural_search_query.copy()
-            neural_query_with_pipeline["search_pipeline"] = EMBEDDING_SEARCH_PIPELINE
-
+            # Final fallback: direct search without pipeline
             raw_response = await make_aiera_request(
                 client=client,
                 method="POST",
                 endpoint="/chat-support/search/transcripts",
                 api_key=api_key,
                 params={},
-                data=neural_query_with_pipeline,
+                data=base_query,
             )
 
             if raw_response and "response" in raw_response:
-                logger.info("TranscriptSearch neural pipeline search successful")
+                logger.info("TranscriptSearch direct search successful")
                 return SearchTranscriptsResponse.model_validate(raw_response)
             else:
-                logger.warning(
-                    "TranscriptSearch: Neural pipeline returned no results, trying direct search"
-                )
-                raise Exception("Neural pipeline returned no results")
-
-        except Exception as neural_pipeline_error:
-            logger.info(
-                f"TranscriptSearch: Neural pipeline search failed: {str(neural_pipeline_error)}, trying direct neural search"
-            )
-
-            try:
-                # Try direct neural search without pipeline as final fallback
-                raw_response = await make_aiera_request(
-                    client=client,
-                    method="POST",
-                    endpoint="/chat-support/search/transcripts",
-                    api_key=api_key,
-                    params={},
-                    data=neural_search_query,
-                )
-
-                if raw_response and "response" in raw_response:
-                    logger.info("TranscriptSearch direct neural search successful")
-                    return SearchTranscriptsResponse.model_validate(raw_response)
-                else:
-                    logger.error("TranscriptSearch: All search methods failed")
-                    return _get_empty_transcripts_response(args.max_results)
-
-            except Exception as direct_error:
-                logger.error(
-                    f"TranscriptSearch: Direct neural search also failed: {str(direct_error)}"
-                )
+                logger.error("TranscriptSearch: All search methods failed")
                 return _get_empty_transcripts_response(args.max_results)
+
+        except Exception as direct_error:
+            logger.error(
+                f"TranscriptSearch: Direct search also failed: {str(direct_error)}"
+            )
+            return _get_empty_transcripts_response(args.max_results)
 
 
 async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
@@ -438,7 +437,7 @@ async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
         ],
         "sort": sort_clause,
         "timeout": "15s",
-        "search_pipeline": "embedding_script_pipeline",
+        "search_pipeline": HYBRID_SEARCH_PIPELINE,
     }
 
     raw_response = await make_aiera_request(
@@ -649,20 +648,18 @@ async def search_filing_chunks(
         if valid_content_ids:
             ml_filters.append({"terms": {"content_id": valid_content_ids}})
 
-    # Use post_filter approach for ML query to avoid hybrid query wrapping issues
-    if args.query_text and args.query_text.strip():
-        # For ML inference, use a simple match_all as base query and apply filters via post_filter
-        ml_query["query"] = {"match_all": {}}
-    else:
-        # No ML inference, use basic query structure
-        ml_query["query"] = {"match_all": {}}
+    # Use match_all + ext.ml_inference approach for proper ML inference (like opensearch-mcp filing tools)
+    ml_query["query"] = {"match_all": {}}
 
-    # Apply ML filters using post_filter to avoid wrapping hybrid queries
+    # Apply ML filters using post_filter to avoid hybrid query wrapping issues
     if ml_filters:
         if len(ml_filters) == 1:
             ml_query["post_filter"] = ml_filters[0]
         else:
             ml_query["post_filter"] = {"bool": {"must": ml_filters}}
+
+    # Filters are now integrated using post_filter approach
+    if ml_filters:
         logger.info(f"ML query using post_filter with {len(ml_filters)} filters")
     else:
         logger.info("ML query without filters")
@@ -673,7 +670,7 @@ async def search_filing_chunks(
     # 2. embedding_pipeline - for standard search fallback
     # 3. No pipeline - direct search as final fallback
     if args.query_text and args.query_text.strip():
-        # Add ML inference extension for embedding search
+        # Add ML inference extension for embedding search (like opensearch-mcp filing tools)
         ml_query["ext"] = {"ml_inference": {"query_text": args.query_text.strip()}}
 
         try:
@@ -687,10 +684,6 @@ async def search_filing_chunks(
 
             # Set a 15-second timeout for ML inference
             try:
-                # Use the hybrid pipeline for ML inference
-                ml_query_with_pipeline = ml_query.copy()
-                ml_query_with_pipeline["search_pipeline"] = HYBRID_SEARCH_PIPELINE
-
                 # Wrap in async timeout
                 raw_response = await asyncio.wait_for(
                     make_aiera_request(
@@ -698,8 +691,8 @@ async def search_filing_chunks(
                         method="POST",
                         endpoint="/chat-support/search/filing-chunks",
                         api_key=api_key,
-                        params={},
-                        data=ml_query_with_pipeline,
+                        params={"search_pipeline": HYBRID_SEARCH_PIPELINE},
+                        data=ml_query,
                     ),
                     timeout=15.0,
                 )
@@ -735,13 +728,12 @@ async def search_filing_chunks(
     # If we don't have results from ML inference, try standard search with pipeline fallback
     try:
         # First fallback: Try with standard embedding pipeline
-        base_query["search_pipeline"] = EMBEDDING_SEARCH_PIPELINE
         raw_response = await make_aiera_request(
             client=client,
             method="POST",
             endpoint="/chat-support/search/filing-chunks",
             api_key=api_key,
-            params={},
+            params={"search_pipeline": EMBEDDING_SEARCH_PIPELINE},
             data=base_query,
         )
 
@@ -761,7 +753,6 @@ async def search_filing_chunks(
 
         try:
             # Final fallback: Use direct search without pipeline
-            base_query.pop("search_pipeline", None)
             raw_response = await make_aiera_request(
                 client=client,
                 method="POST",
@@ -786,10 +777,12 @@ async def search_filing_chunks(
 
 
 def _build_filing_chunks_company_filter(company_name: str) -> dict:
-    """Build a precise company search filter for filing chunks index.
+    """Build a comprehensive fuzzy company search filter for filing chunks index.
 
-    Prioritizes exact matches and avoids overly broad wildcards that cause cross-contamination.
-    For example, prevents "Yum China" from matching when searching for "Yum Brands".
+    Uses fuzzy matching against both company_common_name and company_legal_name fields
+    to handle variations, typos, and different name formats effectively.
+
+    Based on the opensearch-mcp-server-py implementation for optimal matching.
     """
     import re
 
@@ -810,68 +803,27 @@ def _build_filing_chunks_company_filter(company_name: str) -> dict:
     # Create variations with special characters handled
     company_clean = _remove_special_characters(company_name)
 
-    # Build precise filter prioritizing exact matches
+    # Build comprehensive filter with fuzzy matching as the primary approach
     should_clauses = [
-        # High priority: exact matches and close variations
+        # Highest priority: exact matches for perfect accuracy
         {
             "term": {
-                "company_common_name.keyword": {"value": company_name, "boost": 5.0}
-            }
-        },
-        {"term": {"company_legal_name.keyword": {"value": company_name, "boost": 5.0}}},
-        {
-            "match_phrase": {
-                "company_common_name": {"query": company_name, "boost": 4.0}
-            }
-        },
-        {"match_phrase": {"company_legal_name": {"query": company_name, "boost": 4.0}}},
-        # Medium priority: word-based matching (more precise than wildcards)
-        {
-            "match": {
-                "company_common_name": {
-                    "query": company_name,
-                    "boost": 3.0,
-                    "operator": "and",
-                }
-            }
-        },
-        {
-            "match": {
-                "company_legal_name": {
-                    "query": company_name,
-                    "boost": 3.0,
-                    "operator": "and",
-                }
-            }
-        },
-        # Handle special character variations (e.g., "Yum! Brands" -> "Yum Brands")
-        {
-            "term": {
-                "company_common_name.keyword": {"value": company_clean, "boost": 3.5}
+                "company_common_name.keyword": {"value": company_name, "boost": 10.0}
             }
         },
         {
             "term": {
-                "company_legal_name.keyword": {"value": company_clean, "boost": 3.5}
+                "company_legal_name.keyword": {"value": company_name, "boost": 10.0}
             }
         },
-        {
-            "match_phrase": {
-                "company_common_name": {"query": company_clean, "boost": 3.0}
-            }
-        },
-        {
-            "match_phrase": {
-                "company_legal_name": {"query": company_clean, "boost": 3.0}
-            }
-        },
-        # Lower priority: fuzzy matching for typos (limited fuzziness)
+        # High priority: fuzzy matching on both company name fields with different fuzziness levels
         {
             "fuzzy": {
                 "company_common_name": {
                     "value": company_name,
-                    "fuzziness": 1,
-                    "boost": 2.0,
+                    "fuzziness": "AUTO",
+                    "boost": 8.0,
+                    "max_expansions": 50,
                 }
             }
         },
@@ -879,35 +831,150 @@ def _build_filing_chunks_company_filter(company_name: str) -> dict:
             "fuzzy": {
                 "company_legal_name": {
                     "value": company_name,
-                    "fuzziness": 1,
-                    "boost": 2.0,
+                    "fuzziness": "AUTO",
+                    "boost": 8.0,
+                    "max_expansions": 50,
                 }
             }
         },
-        # Title matching with phrase search (more precise than wildcards)
-        {"match_phrase": {"title": {"query": company_name, "boost": 2.5}}},
-        {"match_phrase": {"title": {"query": company_clean, "boost": 2.0}}},
+        {
+            "fuzzy": {
+                "company_common_name": {
+                    "value": company_clean,
+                    "fuzziness": "AUTO",
+                    "boost": 7.5,
+                    "max_expansions": 50,
+                }
+            }
+        },
+        {
+            "fuzzy": {
+                "company_legal_name": {
+                    "value": company_clean,
+                    "fuzziness": "AUTO",
+                    "boost": 7.5,
+                    "max_expansions": 50,
+                }
+            }
+        },
+        # Medium-high priority: phrase matching for multi-word company names
+        {
+            "match_phrase": {
+                "company_common_name": {"query": company_name, "boost": 6.0, "slop": 1}
+            }
+        },
+        {
+            "match_phrase": {
+                "company_legal_name": {"query": company_name, "boost": 6.0, "slop": 1}
+            }
+        },
+        {
+            "match_phrase": {
+                "company_common_name": {"query": company_clean, "boost": 5.5, "slop": 1}
+            }
+        },
+        {
+            "match_phrase": {
+                "company_legal_name": {"query": company_clean, "boost": 5.5, "slop": 1}
+            }
+        },
+        # Medium priority: word-based matching with fuzzy operator
+        {
+            "match": {
+                "company_common_name": {
+                    "query": company_name,
+                    "boost": 5.0,
+                    "operator": "and",
+                    "fuzziness": "AUTO",
+                }
+            }
+        },
+        {
+            "match": {
+                "company_legal_name": {
+                    "query": company_name,
+                    "boost": 5.0,
+                    "operator": "and",
+                    "fuzziness": "AUTO",
+                }
+            }
+        },
+        {
+            "match": {
+                "company_common_name": {
+                    "query": company_clean,
+                    "boost": 4.5,
+                    "operator": "and",
+                    "fuzziness": "AUTO",
+                }
+            }
+        },
+        {
+            "match": {
+                "company_legal_name": {
+                    "query": company_clean,
+                    "boost": 4.5,
+                    "operator": "and",
+                    "fuzziness": "AUTO",
+                }
+            }
+        },
+        # Lower priority: title fuzzy matching for additional coverage
+        {
+            "fuzzy": {
+                "title": {
+                    "value": company_name,
+                    "fuzziness": "AUTO",
+                    "boost": 3.0,
+                    "max_expansions": 25,
+                }
+            }
+        },
+        {
+            "fuzzy": {
+                "title": {
+                    "value": company_clean,
+                    "fuzziness": "AUTO",
+                    "boost": 2.5,
+                    "max_expansions": 25,
+                }
+            }
+        },
     ]
 
-    # Only add selective wildcards for longer names, avoiding broad patterns
-    # Removed "*{company}*" patterns that cause cross-contamination
-    if len(company_name) > 4:  # Only for longer names to avoid false matches
-        # Only prefix wildcards, more restrictive than full wildcards
+    # Add selective wildcards for longer names to catch format variations
+    if len(company_name) > 4:
         should_clauses.extend(
             [
                 {
                     "wildcard": {
                         "company_common_name.keyword": {
-                            "value": f"{_escape_wildcard_special_chars(company_name)}*",
-                            "boost": 1.5,
+                            "value": f"*{_escape_wildcard_special_chars(company_name)}*",
+                            "boost": 2.0,
                         }
                     }
                 },
                 {
                     "wildcard": {
                         "company_legal_name.keyword": {
-                            "value": f"{_escape_wildcard_special_chars(company_name)}*",
-                            "boost": 1.5,
+                            "value": f"*{_escape_wildcard_special_chars(company_name)}*",
+                            "boost": 2.0,
+                        }
+                    }
+                },
+                {
+                    "wildcard": {
+                        "company_common_name.keyword": {
+                            "value": f"*{_escape_wildcard_special_chars(company_clean)}*",
+                            "boost": 1.8,
+                        }
+                    }
+                },
+                {
+                    "wildcard": {
+                        "company_legal_name.keyword": {
+                            "value": f"*{_escape_wildcard_special_chars(company_clean)}*",
+                            "boost": 1.8,
                         }
                     }
                 },
