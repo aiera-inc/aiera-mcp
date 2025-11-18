@@ -2,10 +2,8 @@
 
 """Base functionality for Aiera MCP tools."""
 
-import os
 import httpx
 import logging
-import contextvars
 from typing import Any, Dict, Optional
 
 # Setup logging
@@ -74,72 +72,30 @@ async def get_http_client(ctx) -> httpx.AsyncClient:
 
 
 async def get_api_key_from_context(ctx) -> str:
-    """Extract API key from authenticated context with enhanced OAuth integration."""
-    # Log context ID to verify isolation between concurrent requests
-    context_id = id(contextvars.copy_context())
-    logger.debug(f"Context ID: {context_id}")
+    """Extract API key using configured provider.
 
-    # Check if API key is already stored in context variable
-    try:
-        from .. import get_api_key
+    This function is now a simple wrapper around get_api_key() for backward compatibility.
+    The actual authentication logic is handled by the configured provider (e.g., OAuth).
 
-        api_key = get_api_key()
-    except ImportError:
-        # Fallback for standalone usage
-        def get_api_key() -> Optional[str]:
-            return os.getenv("AIERA_API_KEY")
+    Args:
+        ctx: Context parameter (kept for backward compatibility but not used)
 
-        api_key = get_api_key()
+    Returns:
+        API key string
 
-    # If API key already set (e.g., from query parameter or OAuth), use it
-    if api_key:
-        logger.info(f"API key already set, using {api_key[:8]}...")
-        return api_key
+    Raises:
+        ValueError: If no API key is available
+    """
+    from .. import get_api_key
 
-    # If no API key yet, try OAuth authentication
-    try:
-        # Try to import and use OAuth authentication
-        try:
-            from ..auth import validate_auth_context, get_current_api_key
-
-            await validate_auth_context(ctx)
-            api_key = get_current_api_key()
-
-            if not api_key:
-                # This is the critical issue - if OAuth succeeds but no API key found,
-                # we should NOT fall back to environment variables
-                logger.error(
-                    "OAuth authentication succeeded but no API key found in user claims"
-                )
-                raise ValueError("No API key found in authenticated user claims")
-
-        except ImportError:
-            # OAuth not available, fall back to environment variable
-            logger.debug(
-                "OAuth authentication not available, using environment variable"
-            )
-            api_key = os.getenv("AIERA_API_KEY")
-
-    except Exception as e:
-        logger.error(f"Auth validation failed: {str(e)}")
-
-        # Special handling for Lambda environment with direct API key
-        # This should only be used as absolute last resort
-        if os.getenv("AWS_LAMBDA_FUNCTION_NAME") and os.getenv("AIERA_API_KEY"):
-            logger.warning("Using Lambda environment API key as emergency fallback")
-            logger.warning(
-                "This should only happen during Lambda cold starts or system issues"
-            )
-
-            api_key = os.getenv("AIERA_API_KEY")
-
-        else:
-            # Re-raise the original error
-            raise
+    api_key = get_api_key()
 
     if not api_key:
-        raise ValueError("Failed to retrieve API key after all authentication attempts")
+        raise ValueError(
+            "No API key available. Please configure an API key provider or set AIERA_API_KEY environment variable."
+        )
 
+    logger.debug(f"Retrieved API key (length: {len(api_key)})")
     return api_key
 
 

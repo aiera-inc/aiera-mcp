@@ -238,7 +238,7 @@ class TestToolNameIntegration:
 
         with patch('tool.module.mcp', integration_mcp_server), \
              patch('tool.module.get_http_client', return_value=real_http_client), \
-             patch('tool.module.get_api_key_from_context', return_value=real_api_key):
+             patch('tool.module.get_api_key', return_value=real_api_key):
 
             result = await tool_function(args)
             assert isinstance(result, ExpectedType)

@@ -12,7 +12,7 @@ import pytest_asyncio
 import httpx
 from unittest.mock import AsyncMock, MagicMock
 
-from aiera_mcp.tools.base import get_http_client, get_api_key_from_context
+from aiera_mcp.tools.base import get_http_client, get_api_key
 
 
 # Test configuration
@@ -178,9 +178,9 @@ async def patch_get_http_client(mock_http_client):
 
 @pytest_asyncio.fixture
 async def patch_get_api_key(api_key):
-    """Patch get_api_key_from_context function."""
+    """Patch get_api_key function."""
 
-    async def _get_api_key(ctx):
+    def _get_api_key():
         return api_key
 
     return _get_api_key

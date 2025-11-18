@@ -13,7 +13,8 @@ from .models import (
     DeleteTranscrippetResponse,
     TranscrippetItem,
 )
-from ..base import get_http_client, get_api_key_from_context, make_aiera_request
+from ..base import get_http_client, make_aiera_request
+from ... import get_api_key
 from ..common.models import CitationInfo
 
 # Setup logging
@@ -26,7 +27,7 @@ async def find_transcrippets(args: FindTranscrippetsArgs) -> FindTranscrippetsRe
 
     # Get client and API key (no context needed for standard MCP)
     client = await get_http_client(None)
-    api_key = await get_api_key_from_context(None)
+    api_key = get_api_key()
 
     params = args.model_dump(exclude_none=True)
 
@@ -59,7 +60,7 @@ async def create_transcrippet(
 
     # Get client and API key (no context needed for standard MCP)
     client = await get_http_client(None)
-    api_key = await get_api_key_from_context(None)
+    api_key = get_api_key()
 
     data = args.model_dump(exclude_none=True)
 
@@ -92,7 +93,7 @@ async def delete_transcrippet(
 
     # Get client and API key (no context needed for standard MCP)
     client = await get_http_client(None)
-    api_key = await get_api_key_from_context(None)
+    api_key = get_api_key()
 
     params = args.model_dump(exclude_none=True)
 
