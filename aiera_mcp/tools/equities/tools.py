@@ -26,7 +26,8 @@ from .models import (
     IndexItem,
     WatchlistItem,
 )
-from ..base import get_http_client, get_api_key_from_context, make_aiera_request
+from ..base import get_http_client, make_aiera_request
+from ... import get_api_key
 from ..common.models import CitationInfo
 
 # Setup logging
@@ -39,7 +40,7 @@ async def find_equities(args: FindEquitiesArgs) -> FindEquitiesResponse:
 
     # Get client and API key (no context needed for standard MCP)
     client = await get_http_client(None)
-    api_key = await get_api_key_from_context(None)
+    api_key = get_api_key()
 
     params = args.model_dump(exclude_none=True)
     params["include_company_metadata"] = "true"
@@ -119,7 +120,7 @@ async def get_sectors_and_subsectors(args: SearchArgs) -> GetSectorsSubsectorsRe
 
     # Get client and API key (no context needed for standard MCP)
     client = await get_http_client(None)
-    api_key = await get_api_key_from_context(None)
+    api_key = get_api_key()
 
     params = args.model_dump(exclude_none=True)
 
@@ -144,7 +145,7 @@ async def get_equity_summaries(
 
     # Get client and API key (no context needed for standard MCP)
     client = await get_http_client(None)
-    api_key = await get_api_key_from_context(None)
+    api_key = get_api_key()
 
     params = args.model_dump(exclude_none=True)
     params["lookback"] = "90"
@@ -168,7 +169,7 @@ async def get_available_indexes(args: EmptyArgs) -> GetAvailableIndexesResponse:
 
     # Get client and API key (no context needed for standard MCP)
     client = await get_http_client(None)
-    api_key = await get_api_key_from_context(None)
+    api_key = get_api_key()
 
     params = args.model_dump(exclude_none=True)
 
@@ -191,7 +192,7 @@ async def get_index_constituents(
 
     # Get client and API key (no context needed for standard MCP)
     client = await get_http_client(None)
-    api_key = await get_api_key_from_context(None)
+    api_key = get_api_key()
 
     params = args.model_dump(exclude_none=True)
 
@@ -264,7 +265,7 @@ async def get_available_watchlists(args: EmptyArgs) -> GetAvailableWatchlistsRes
 
     # Get client and API key (no context needed for standard MCP)
     client = await get_http_client(None)
-    api_key = await get_api_key_from_context(None)
+    api_key = get_api_key()
 
     params = args.model_dump(exclude_none=True)
 
@@ -287,7 +288,7 @@ async def get_watchlist_constituents(
 
     # Get client and API key (no context needed for standard MCP)
     client = await get_http_client(None)
-    api_key = await get_api_key_from_context(None)
+    api_key = get_api_key()
 
     params = args.model_dump(exclude_none=True)
 

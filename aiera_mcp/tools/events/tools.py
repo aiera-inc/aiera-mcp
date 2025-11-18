@@ -17,7 +17,8 @@ from .models import (
     EventType,
 )
 from ..common.models import CitationInfo
-from ..base import get_http_client, get_api_key_from_context, make_aiera_request
+from ..base import get_http_client, make_aiera_request
+from ... import get_api_key
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -29,7 +30,7 @@ async def find_events(args: FindEventsArgs) -> FindEventsResponse:
 
     # Get client and API key (no context needed for standard MCP)
     client = await get_http_client(None)
-    api_key = await get_api_key_from_context(None)
+    api_key = get_api_key()
 
     params = args.model_dump(exclude_none=True)
     params["include_transcripts"] = "false"
@@ -98,7 +99,7 @@ async def get_event(args: GetEventArgs) -> GetEventResponse:
 
     # Get client and API key (no context needed for standard MCP)
     client = await get_http_client(None)
-    api_key = await get_api_key_from_context(None)
+    api_key = get_api_key()
 
     params = args.model_dump(exclude_none=True)
     params["include_transcripts"] = "true"
@@ -176,7 +177,7 @@ async def get_upcoming_events(args: GetUpcomingEventsArgs) -> GetUpcomingEventsR
 
     # Get client and API key (no context needed for standard MCP)
     client = await get_http_client(None)
-    api_key = await get_api_key_from_context(None)
+    api_key = get_api_key()
 
     params = args.model_dump(exclude_none=True)
 

@@ -5,7 +5,8 @@
 import logging
 import asyncio
 
-from ..base import get_http_client, get_api_key_from_context, make_aiera_request
+from ..base import get_http_client, make_aiera_request
+from ... import get_api_key
 from aiera_mcp import EMBEDDING_SEARCH_PIPELINE, HYBRID_SEARCH_PIPELINE
 from .models import (
     SearchTranscriptsArgs,
@@ -40,7 +41,7 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
 
     # Get client and API key (no context needed for standard MCP)
     client = await get_http_client(None)
-    api_key = await get_api_key_from_context(None)
+    api_key = get_api_key()
 
     # Build filter clauses for post_filter approach
     filter_clauses = []
@@ -256,7 +257,7 @@ async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
 
     # Get client and API key (no context needed for standard MCP)
     client = await get_http_client(None)
-    api_key = await get_api_key_from_context(None)
+    api_key = get_api_key()
 
     company_name = args.company_name.strip()
     logger.info(
@@ -466,7 +467,7 @@ async def search_filing_chunks(
 
     # Get client and API key (no context needed for standard MCP)
     client = await get_http_client(None)
-    api_key = await get_api_key_from_context(None)
+    api_key = get_api_key()
 
     # Use post_filter approach to avoid "hybrid query must be a top level query" error
     # This applies filters after search without wrapping queries that might be hybrid internally

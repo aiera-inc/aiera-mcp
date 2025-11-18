@@ -40,21 +40,35 @@ def get_api_key() -> Optional[str]:
     Priority order:
         1. Custom API key provider (if configured)
         2. AIERA_API_KEY environment variable
+
+    Raises:
+        ValueError: If provider is configured but fails to return an API key
     """
     # Try custom provider first
     if _api_key_provider:
         try:
-            if key := _api_key_provider():
+            key = _api_key_provider()
+            if key:
+                logger.debug(f"Got API key from provider (length: {len(key)})")
                 return key
-        except Exception:
-            logger.info(
-                "Failed to get API key from provider, falling back to environment variable."
-            )
-            # Fallback to environment variable if provider fails
-            pass
+            else:
+                # Provider returned None - this is a configuration error
+                logger.error(
+                    "API key provider returned None. This indicates a configuration issue. "
+                    "Falling back to environment variable."
+                )
+        except Exception as e:
+            logger.error(f"API key provider failed with exception: {e}", exc_info=True)
+            # Re-raise to surface the actual error instead of silently falling back
+            raise ValueError(f"Failed to get API key from configured provider: {e}")
 
-    # Fallback to environment variable
-    return os.getenv("AIERA_API_KEY")
+    # Fallback to environment variable only if no provider is configured
+    env_key = os.getenv("AIERA_API_KEY")
+    if env_key:
+        logger.debug("Using API key from AIERA_API_KEY environment variable")
+    else:
+        logger.warning("No API key available from provider or environment variable")
+    return env_key
 
 
 def clear_api_key_provider() -> None:
