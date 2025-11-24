@@ -9,13 +9,27 @@ from typing import Any, Dict, Optional
 # Setup logging
 logger = logging.getLogger(__name__)
 
-# Base configuration
-AIERA_BASE_URL = "https://premium.aiera.com/api"
+# Import settings
+from ..config import get_settings
+
+# Default headers configuration
 DEFAULT_HEADERS = {
     "Content-Type": "application/json",
     "User-Agent": "Aiera-MCP/1.0.0",
     "X-MCP-Origin": "local_mcp",
 }
+
+
+# Backward compatibility - expose AIERA_BASE_URL as a module-level variable
+# This will be dynamically resolved from settings
+def _get_base_url() -> str:
+    """Get the base URL from settings."""
+    return get_settings().aiera_base_url
+
+
+# For backward compatibility, keep AIERA_BASE_URL as a module constant
+# but it will be resolved at import time
+AIERA_BASE_URL = get_settings().aiera_base_url
 
 # Citation prompt for UI clients
 CITATION_PROMPT = """IMPORTANT: when referencing this data in your response, ALWAYS include inline citations by using the information found in the `citation_information` block, along with an incrementing counter. Render these citations as markdown (padded with a leading space for readability), like this: [[1]](url "title")
@@ -42,12 +56,16 @@ def get_lambda_http_client() -> httpx.AsyncClient:
     """Get or create a shared HTTP client for Lambda environment."""
     global _lambda_http_client
     if _lambda_http_client is None:
+        # Get settings for HTTP client configuration
+        settings = get_settings()
         # Configure client with connection pooling and timeouts
         _lambda_http_client = httpx.AsyncClient(
             limits=httpx.Limits(
-                max_keepalive_connections=10, max_connections=20, keepalive_expiry=30.0
+                max_keepalive_connections=settings.http_max_keepalive_connections,
+                max_connections=settings.http_max_connections,
+                keepalive_expiry=settings.http_keepalive_expiry,
             ),
-            timeout=httpx.Timeout(30.0),
+            timeout=httpx.Timeout(settings.http_timeout),
             follow_redirects=True,
         )
 
@@ -127,14 +145,14 @@ async def make_aiera_request(
     headers = DEFAULT_HEADERS.copy()
     headers["X-API-Key"] = api_key
 
-    # Log API key info for debugging (without exposing the full key)
+    # Log API request info for debugging
     logger.info(
-        f"API request: {endpoint}\n"
-        f"API key preview: {api_key[:8]}...{api_key[-4:] if len(api_key) > 12 else '***'}\n"
-        f"Params: {params}\n"
+        f"API request: {endpoint}\n" f"API key: Present\n" f"Params: {params}\n"
     )
 
-    url = f"{AIERA_BASE_URL}{endpoint}"
+    # Get base URL from settings dynamically
+    settings = get_settings()
+    url = f"{settings.aiera_base_url}{endpoint}"
 
     try:
         response = await client.request(

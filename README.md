@@ -65,9 +65,74 @@ uv run pre-commit install
 export AIERA_API_KEY="your-aiera-api-key"
 ```
 
+Alternatively, create a `.env` file in the project root (see [Configuration](#configuration) section below).
+
 4. **Run standalone server**:
 ```bash
 uv run entrypoint.py
+```
+
+## Configuration
+
+The package uses Pydantic BaseSettings for configuration management. All settings can be configured via environment variables or a `.env` file.
+
+### Available Settings
+
+| Setting | Environment Variable | Default | Description |
+|---------|---------------------|---------|-------------|
+| Base URL | `AIERA_BASE_URL` | `https://premium.aiera.com/api` | Aiera API base URL |
+| API Key | `AIERA_API_KEY` | None | Your Aiera API key (required) |
+| Page Size | `DEFAULT_PAGE_SIZE` | `50` | Default number of items per page |
+| Max Page Size | `DEFAULT_MAX_PAGE_SIZE` | `100` | Maximum allowed page size |
+| HTTP Timeout | `HTTP_TIMEOUT` | `30.0` | Request timeout in seconds |
+| Max Keepalive Connections | `HTTP_MAX_KEEPALIVE_CONNECTIONS` | `10` | Maximum keepalive connections |
+| Max Connections | `HTTP_MAX_CONNECTIONS` | `20` | Maximum total connections |
+| Keepalive Expiry | `HTTP_KEEPALIVE_EXPIRY` | `30.0` | Keepalive expiry time in seconds |
+| Log Level | `LOG_LEVEL` | `INFO` | Logging level |
+
+### Using a .env File
+
+Create a `.env` file in your project root (use `.env.example` as a template):
+
+```bash
+# Copy the example file
+cp .env.example .env
+
+# Edit with your values
+AIERA_API_KEY=your-api-key-here
+AIERA_BASE_URL=https://premium.aiera.com/api  # Optional: override default
+DEFAULT_PAGE_SIZE=100  # Optional: override default
+```
+
+### Programmatic Configuration
+
+Access and modify settings programmatically:
+
+```python
+from aiera_mcp import get_settings, reload_settings
+
+# Get current settings
+settings = get_settings()
+print(f"Base URL: {settings.aiera_base_url}")
+print(f"Page Size: {settings.default_page_size}")
+
+# Reload settings from environment (useful for testing)
+reload_settings()
+```
+
+### Custom Settings Instance
+
+For advanced use cases, you can create a custom settings instance:
+
+```python
+from aiera_mcp.config import AieraSettings
+
+# Create settings with custom values
+custom_settings = AieraSettings(
+    aiera_base_url="https://custom.aiera.com/api",
+    default_page_size=100,
+    http_timeout=60.0
+)
 ```
 
 ## Usage
@@ -131,8 +196,10 @@ from aiera_mcp import find_events, make_aiera_request, correct_bloomberg_ticker
   - `get_destructive_tools` - Get all potentially destructive tools
 - **Authentication**: `set_api_key_provider`, `get_api_key`, `clear_api_key_provider` - OAuth compatibility functions
 
-### Constants
-- `DEFAULT_PAGE_SIZE`, `DEFAULT_MAX_PAGE_SIZE`, `AIERA_BASE_URL`, `CITATION_PROMPT`
+### Configuration
+- `get_settings`, `reload_settings`, `AieraSettings` - Configuration management functions (see [Configuration](#configuration))
+- `DEFAULT_PAGE_SIZE`, `DEFAULT_MAX_PAGE_SIZE`, `AIERA_BASE_URL` - Constants (loaded from settings, can be overridden via environment variables)
+- `CITATION_PROMPT` - Citation formatting prompt
 - `AVAILABLE_TOOLS` - List of all 24 available tool names
 
 ## Selective Tool Registration

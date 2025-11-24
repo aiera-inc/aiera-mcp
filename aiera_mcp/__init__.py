@@ -138,6 +138,9 @@ from .tools.transcrippets import (
     delete_transcrippet,
 )
 
+# Import configuration
+from .config import get_settings, reload_settings, AieraSettings
+
 # Import utilities
 from .tools.base import make_aiera_request, AIERA_BASE_URL, CITATION_PROMPT
 from .tools.utils import (
@@ -191,6 +194,10 @@ __all__ = [
     "set_api_key_provider",
     "get_api_key",
     "clear_api_key_provider",
+    # Configuration
+    "get_settings",
+    "reload_settings",
+    "AieraSettings",
     # Constants
     "DEFAULT_PAGE_SIZE",
     "DEFAULT_MAX_PAGE_SIZE",
