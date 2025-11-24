@@ -14,7 +14,9 @@ from mcp.types import Tool, TextContent
 # Setup logging
 logger = logging.getLogger(__name__)
 
-# Import API key provider functions from package
+# Import settings and API key provider functions from package
+from .config import get_settings
+
 try:
     pass
 except ImportError:
@@ -39,12 +41,16 @@ def get_lambda_http_client() -> httpx.AsyncClient:
     """Get or create a shared HTTP client for Lambda environment."""
     global _lambda_http_client
     if _lambda_http_client is None:
+        # Get settings for HTTP client configuration
+        settings = get_settings()
         # Configure client with connection pooling and timeouts
         _lambda_http_client = httpx.AsyncClient(
             limits=httpx.Limits(
-                max_keepalive_connections=10, max_connections=20, keepalive_expiry=30.0
+                max_keepalive_connections=settings.http_max_keepalive_connections,
+                max_connections=settings.http_max_connections,
+                keepalive_expiry=settings.http_keepalive_expiry,
             ),
-            timeout=httpx.Timeout(30.0),
+            timeout=httpx.Timeout(settings.http_timeout),
             follow_redirects=True,
         )
 
@@ -58,9 +64,11 @@ def get_lambda_http_client() -> httpx.AsyncClient:
 # Initialize standard MCP server
 server = Server("Aiera")
 
-# Base configuration
-DEFAULT_PAGE_SIZE = 50
-DEFAULT_MAX_PAGE_SIZE = 100
+# Base configuration - these are now loaded from settings
+# but kept as module-level constants for backward compatibility
+_settings = get_settings()
+DEFAULT_PAGE_SIZE = _settings.default_page_size
+DEFAULT_MAX_PAGE_SIZE = _settings.default_max_page_size
 
 
 def get_api_documentation() -> str:
