@@ -7,7 +7,8 @@ import logging
 from .models import (
     FindCompanyDocsArgs,
     GetCompanyDocArgs,
-    SearchArgs,
+    GetCompanyDocCategoriesArgs,
+    GetCompanyDocKeywordsArgs,
     FindCompanyDocsResponse,
     GetCompanyDocResponse,
     GetCompanyDocCategoriesResponse,
@@ -59,8 +60,8 @@ async def get_company_doc(args: GetCompanyDocArgs) -> GetCompanyDocResponse:
     params["include_content"] = "true"
 
     # Handle special field mapping: company_doc_id -> company_doc_ids
-    if "company_doc_id" in params:
-        params["company_doc_ids"] = str(params.pop("company_doc_id"))
+    # if "company_doc_id" in params:
+    #    params["company_doc_ids"] = str(params.pop("company_doc_id"))
 
     raw_response = await make_aiera_request(
         client=client,
@@ -71,10 +72,19 @@ async def get_company_doc(args: GetCompanyDocArgs) -> GetCompanyDocResponse:
     )
 
     # Extract document from the nested response structure
-    if "response" in raw_response and "document" in raw_response["response"]:
-        doc_data = raw_response["response"]["document"]
+    # API returns documents in a data array, just like find_company_docs
+    if "response" in raw_response and "data" in raw_response["response"]:
+        data_array = raw_response["response"]["data"]
+        if data_array and len(data_array) > 0:
+            doc_data = data_array[0]  # Get the first document from the array
+        else:
+            # No documents found - return None for the document field
+            doc_data = None
     else:
-        raise ValueError(f"Document not found: {args.company_doc_id}")
+        # Unexpected response structure
+        raise ValueError(
+            f"Unexpected API response structure for company_doc_ids: {args.company_doc_ids}"
+        )
 
     # Create the response structure expected by GetCompanyDocResponse
     response_data = {
@@ -86,7 +96,7 @@ async def get_company_doc(args: GetCompanyDocArgs) -> GetCompanyDocResponse:
 
 
 async def get_company_doc_categories(
-    args: SearchArgs,
+    args: GetCompanyDocCategoriesArgs,
 ) -> GetCompanyDocCategoriesResponse:
     """Retrieve a list of all categories associated with company documents."""
     logger.info("tool called: get_company_doc_categories")
@@ -110,7 +120,9 @@ async def get_company_doc_categories(
     return GetCompanyDocCategoriesResponse.model_validate(raw_response)
 
 
-async def get_company_doc_keywords(args: SearchArgs) -> GetCompanyDocKeywordsResponse:
+async def get_company_doc_keywords(
+    args: GetCompanyDocKeywordsArgs,
+) -> GetCompanyDocKeywordsResponse:
     """Retrieve a list of all keywords associated with company documents."""
     logger.info("tool called: get_company_doc_keywords")
 

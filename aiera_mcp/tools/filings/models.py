@@ -46,7 +46,7 @@ class BloombergTickerMixin(BaseModel):
 
 # Parameter models (extracted from params.py)
 class FindFilingsArgs(BaseToolArgs, BloombergTickerMixin):
-    """Find SEC filings filtered by date range and optional filters."""
+    """Find SEC filings filtered by date range and optional filters. To find filings for multiple companies, provide a comma-separated list of bloomberg_tickers. You do not need to make multiple calls."""
 
     start_date: str = Field(
         description="Start date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET).",
@@ -187,7 +187,9 @@ class FindFilingsResponse(BaseModel):
 class GetFilingResponse(BaseAieraResponse):
     """Response for get_filing tool."""
 
-    filing: FilingDetails = Field(description="Detailed filing information")
+    filing: Optional[FilingDetails] = Field(
+        default=None, description="Detailed filing information (None if not found)"
+    )
 
 
 # Import CitationInfo for backwards compatibility with existing tools.py

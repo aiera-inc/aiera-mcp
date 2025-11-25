@@ -206,7 +206,15 @@ async def make_aiera_request(
         f"""This data is provided for institutional finance professionals. Responses should be composed of accurate, concise,
 and well-structured financial insights.
 The current date is **{datetime.now().strftime("%Y-%m-%d")}**, and the current time is **{datetime.now().strftime("%I:%M %p")}**.
-Relative dates and times (e.g., "last 3 months" or "next 3 months" or "later today") should be calculated based on this date.""",
+Relative dates and times (e.g., "last 3 months" or "next 3 months" or "later today") should be calculated based on this date.
+All dates and times are in eastern time (ET) unless specifically stated otherwise.
+
+## Usage Hints:
+- Questions about guidance will always require the transcript from at least one earnings event, and often will require multiple earnings transcripts from the last year in order to provide sufficient context.
+- Answers to guidance questions should focus on management commentary, and avoid analyst commentary unless specifically asked for.
+
+Some endpoints may require specific permissions based on a subscription plan. If access is denied, the user should talk to their Aiera representative about gaining access.
+""",
         CITATION_PROMPT,
     ]
 

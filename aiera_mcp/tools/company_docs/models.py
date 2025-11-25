@@ -69,7 +69,7 @@ class CategoriesKeywordsMixin(BaseModel):
 
 # Parameter models (extracted from params.py)
 class FindCompanyDocsArgs(BaseToolArgs, BloombergTickerMixin, CategoriesKeywordsMixin):
-    """Find company-published documents filtered by date range and optional filters."""
+    """Find company-published documents filtered by date range and optional filters. To find documents for multiple companies, provide a comma-separated list of bloomberg_tickers. You do not need to make multiple calls."""
 
     start_date: str = Field(
         description="Start date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET).",
@@ -101,11 +101,11 @@ class FindCompanyDocsArgs(BaseToolArgs, BloombergTickerMixin, CategoriesKeywords
     )
     categories: Optional[str] = Field(
         default=None,
-        description="Document categories to filter by (e.g., 'annual_report,earnings_release'). Use get_company_doc_categories to find valid values. Multiple categories should be comma-separated without spaces.",
+        description="Document categories to filter by (e.g., 'annual_report,earnings_release,compliance,disclosure,slide_presentation,press_release'). Use get_company_doc_categories to find valid values. Multiple categories should be comma-separated without spaces.",
     )
     keywords: Optional[str] = Field(
         default=None,
-        description="Keywords to filter by (e.g., 'ESG,diversity'). Use get_company_doc_keywords to find valid values. Multiple keywords should be comma-separated without spaces.",
+        description="Keywords to filter by (e.g., 'ESG,diversity,risk management'). Use get_company_doc_keywords to find valid values. Multiple keywords should be comma-separated without spaces.",
     )
     page: int = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
@@ -116,15 +116,30 @@ class FindCompanyDocsArgs(BaseToolArgs, BloombergTickerMixin, CategoriesKeywords
 
 
 class GetCompanyDocArgs(BaseToolArgs):
-    """Get detailed information about a specific company document."""
+    """Get detailed information about a specific company document including a summary and other metadata."""
 
-    company_doc_id: str = Field(
-        description="Unique identifier for the company document. Obtained from find_company_docs results."
+    company_doc_ids: str = Field(
+        description="Comma separated unique identifiers for the company documents. Obtained from find_company_docs results."
     )
 
 
-class SearchArgs(BaseToolArgs):
-    """Parameter model for tools with optional search and pagination."""
+class GetCompanyDocCategoriesArgs(BaseToolArgs):
+    """Retrieve all available document categories for filtering company documents. Used to find valid category values for find_company_docs."""
+
+    search: Optional[str] = Field(
+        default=None,
+        description="Search term to filter results. Searches within relevant text fields.",
+    )
+    page: int = Field(
+        default=1, ge=1, description="Page number for pagination (1-based)."
+    )
+    page_size: int = Field(
+        default=50, ge=1, le=100, description="Number of items per page (1-100)."
+    )
+
+
+class GetCompanyDocKeywordsArgs(BaseToolArgs):
+    """Retrieve all available keywords for filtering company documents. Used to find valid keyword values for find_company_docs."""
 
     search: Optional[str] = Field(
         default=None,
@@ -175,10 +190,11 @@ class CompanyDocItem(BaseModel):
 class CompanyDocDetails(CompanyDocItem):
     """Detailed company document information."""
 
-    summary: Optional[str] = Field(description="Document summary")
-    content_preview: Optional[str] = Field(description="Content preview")
-    attachments: List[Dict[str, Any]] = Field(
-        default=[], description="Document attachments"
+    # Don't override summary - inherit List[str] from CompanyDocItem
+    # The API returns summary as a list for both find and get endpoints
+    content_raw: Optional[str] = Field(default=None, description="Raw document content")
+    attachments: Optional[List[Dict[str, Any]]] = Field(
+        default=None, description="Document attachments"
     )
 
 
@@ -216,7 +232,9 @@ class FindCompanyDocsResponse(BaseAieraResponse):
 class GetCompanyDocResponse(BaseAieraResponse):
     """Response for get_company_doc tool."""
 
-    document: CompanyDocDetails = Field(description="Detailed document information")
+    document: Optional[CompanyDocDetails] = Field(
+        default=None, description="Detailed document information (None if not found)"
+    )
 
 
 # Categories and Keywords response structures

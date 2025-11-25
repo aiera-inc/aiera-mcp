@@ -6,8 +6,6 @@ from pydantic import BaseModel, Field, field_validator, field_serializer
 from typing import Optional, List, Any, Dict
 from datetime import datetime
 
-from ..common.models import BaseAieraResponse, PaginatedResponse, CitationInfo
-
 
 # Mixins for validation (extracted from original params.py)
 class BaseToolArgs(BaseModel):
@@ -46,7 +44,7 @@ class BloombergTickerMixin(BaseModel):
 
 # Parameter models (extracted from params.py)
 class FindEquitiesArgs(BaseToolArgs, BloombergTickerMixin):
-    """Find companies and equities using various identifiers or search."""
+    """Find companies and equities using various identifiers or search. To find equities for multiple companies, provide a comma-separated list of bloomberg_tickers, isins, rics, or a search term. You do not need to make multiple calls."""
 
     bloomberg_ticker: Optional[str] = Field(
         default=None,
@@ -67,7 +65,7 @@ class FindEquitiesArgs(BaseToolArgs, BloombergTickerMixin):
     )
     search: Optional[str] = Field(
         default=None,
-        description="Search term to filter results. Searches within company names, tickers, or relevant text fields.",
+        description="Search term to filter results. Searches within company names or tickers.",
     )
     page: int = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
@@ -78,7 +76,10 @@ class FindEquitiesArgs(BaseToolArgs, BloombergTickerMixin):
 
 
 class GetEquitySummariesArgs(BaseToolArgs, BloombergTickerMixin):
-    """Get comprehensive summary information for one or more equities."""
+    """Retrieve detailed summary(s) about one or more equities, filtered by bloomberg_tickers (a comma-separated list).
+    Summaries will include past and upcoming events, information about company leadership, recent financials, and within which indices the equity is included.
+    To find summaries for multiple companies, provide a comma-separated list of bloomberg_tickers. You do not need to make multiple calls.
+    """
 
     bloomberg_ticker: str = Field(
         description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces."
@@ -113,14 +114,20 @@ class GetWatchlistConstituentsArgs(BaseToolArgs):
     )
 
 
-class EmptyArgs(BaseToolArgs):
-    """Parameter model for tools that take no arguments."""
+class GetAvailableWatchlistsArgs(BaseToolArgs):
+    """Retrieve all available watchlists with their IDs, names, and descriptions. Used to find valid watchlist IDs for filtering other tools."""
 
     pass
 
 
-class SearchArgs(BaseToolArgs):
-    """Parameter model for tools with optional search and pagination."""
+class GetAvailableIndexesArgs(BaseToolArgs):
+    """Retrieve all available stock market indices with their IDs, names, and descriptions. Used to find valid index IDs for filtering other tools."""
+
+    pass
+
+
+class GetSectorsAndSubsectorsArgs(BaseToolArgs):
+    """Retrieve all available sectors and subsectors with their IDs, names, and hierarchical relationships. Used to find valid sector/subsector IDs for filtering other tools."""
 
     search: Optional[str] = Field(
         default=None,
@@ -317,14 +324,14 @@ class FindEquitiesApiResponseData(BaseModel):
 
 
 class FindEquitiesResponse(BaseModel):
-    """Response for find_equities tool - matches actual API structure."""
+    """Response for find_equities tool"""
 
     instructions: Optional[List[str]] = Field(None, description="API instructions")
     response: FindEquitiesApiResponseData = Field(..., description="Response data")
 
 
 class GetEquitySummariesResponse(BaseModel):
-    """Response for get_equity_summaries tool - matches actual API structure."""
+    """Response for get_equity_summaries tool"""
 
     instructions: Optional[List[str]] = Field(None, description="API instructions")
     response: List[EquitySummaryItem] = Field(
@@ -333,7 +340,7 @@ class GetEquitySummariesResponse(BaseModel):
 
 
 class GetSectorsSubsectorsResponse(BaseModel):
-    """Response for get_sectors_and_subsectors tool - matches actual API structure."""
+    """Response for get_sectors_and_subsectors tool"""
 
     instructions: Optional[List[str]] = Field(None, description="API instructions")
     response: List[SectorSubsector] = Field(
@@ -342,17 +349,17 @@ class GetSectorsSubsectorsResponse(BaseModel):
 
 
 class GetAvailableIndexesResponse(BaseModel):
-    """Response for get_available_indexes tool - matches actual API structure."""
+    """Response for get_available_indexes tool"""
 
     instructions: Optional[List[str]] = Field(None, description="API instructions")
     response: List[IndexItem] = Field(..., description="List of available indexes")
 
 
-class GetIndexConstituentsResponse(PaginatedResponse):
-    """Response for get_index_constituents tool."""
+class GetIndexConstituentsResponse(BaseModel):
+    """Response for get_index_constituents tool - matches actual API structure."""
 
-    index_name: str = Field(description="Index name")
-    constituents: List[EquityItem] = Field(description="Index constituents")
+    instructions: Optional[List[str]] = Field(None, description="API instructions")
+    response: FindEquitiesApiResponseData = Field(..., description="Response data")
 
 
 class GetAvailableWatchlistsResponse(BaseModel):
@@ -364,8 +371,8 @@ class GetAvailableWatchlistsResponse(BaseModel):
     )
 
 
-class GetWatchlistConstituentsResponse(PaginatedResponse):
-    """Response for get_watchlist_constituents tool."""
+class GetWatchlistConstituentsResponse(BaseModel):
+    """Response for get_watchlist_constituents tool - matches actual API structure."""
 
-    watchlist_name: str = Field(description="Watchlist name")
-    constituents: List[EquityItem] = Field(description="Watchlist constituents")
+    instructions: Optional[List[str]] = Field(None, description="API instructions")
+    response: FindEquitiesApiResponseData = Field(..., description="Response data")

@@ -13,7 +13,6 @@ from .models import (
     GetEventResponse,
     GetUpcomingEventsResponse,
     EventItem,
-    EventDetails,
     EventType,
 )
 from ..common.models import CitationInfo
@@ -116,59 +115,9 @@ async def get_event(args: GetEventArgs) -> GetEventResponse:
         params=params,
     )
 
-    # Extract event data from the nested response structure
-    if "response" in raw_response and "event" in raw_response["response"]:
-        event_data = raw_response["response"]["event"]
-    else:
-        raise ValueError(f"Event not found: {args.event_id}")
-
-    # Parse event date
-    event_date = datetime.now()
-    if event_data.get("event_date"):
-        try:
-            event_date = datetime.fromisoformat(
-                event_data["event_date"].replace("Z", "+00:00")
-            )
-        except:
-            pass
-
-    # Extract equity info in the format expected by EquityInfo model
-    equity_info = None
-    if "equity" in event_data:
-        equity_data = event_data["equity"]
-        if isinstance(equity_data, dict):
-            equity_info = {
-                "equity_id": equity_data.get("equity_id"),
-                "company_id": equity_data.get("company_id"),
-                "name": equity_data.get("name"),
-                "bloomberg_ticker": equity_data.get("bloomberg_ticker"),
-                "sector_id": equity_data.get("sector_id"),
-                "subsector_id": equity_data.get("subsector_id"),
-                "primary_equity": equity_data.get("primary_equity"),
-            }
-
-    # Create event details structure
-    event_details_data = {
-        "event_id": event_data.get("event_id"),
-        "title": event_data.get("title", ""),
-        "event_type": event_data.get("event_type", ""),
-        "event_date": event_date,
-        "equity": equity_info,
-        "event_category": event_data.get("event_category"),
-        "expected_language": event_data.get("expected_language"),
-        "grouping": event_data.get("grouping"),
-        "summary": event_data.get("summary"),
-        "citation_information": event_data.get("citation_information"),
-        "description": event_data.get("description"),
-        "transcript_preview": event_data.get("transcript_preview"),
-        "audio_url": event_data.get("audio_url"),
-    }
-
-    event_details = EventDetails.model_validate(event_details_data)
-
-    return GetEventResponse(
-        event=event_details, instructions=raw_response.get("instructions", [])
-    )
+    # Validate and return the response directly since it matches FindEventsResponse structure
+    # The API returns a paginated list with the single event as the first item
+    return GetEventResponse.model_validate(raw_response)
 
 
 async def get_upcoming_events(args: GetUpcomingEventsArgs) -> GetUpcomingEventsResponse:

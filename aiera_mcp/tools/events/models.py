@@ -72,7 +72,7 @@ class EventType(str, Enum):
 
 # Parameter models (extracted from params.py)
 class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
-    """Find events filtered by date range and optional company/entity filters."""
+    """Find events filtered by date range and optional company/entity filters. To find events for multiple companies, provide a comma-separated list of bloomberg_tickers. You do not need to make multiple calls."""
 
     start_date: str = Field(
         description="Start date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET).",
@@ -130,10 +130,10 @@ class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
 
 
 class GetEventArgs(BaseToolArgs):
-    """Get detailed information about a specific event including transcripts."""
+    """Get detailed information about a specific event including transcripts. If you need to retrieve more than one event, make multiple sequential calls."""
 
     event_id: str = Field(
-        description="Unique identifier for the event. Obtained from find_events results."
+        description="Unique identifier for the event. Obtained from find_events tool."
     )
     transcript_section: Optional[str] = Field(
         default=None,
@@ -151,7 +151,10 @@ class GetEventArgs(BaseToolArgs):
 
 
 class GetUpcomingEventsArgs(BaseToolArgs, BloombergTickerMixin):
-    """Get confirmed and estimated upcoming events within a date range."""
+    """Get confirmed and estimated upcoming events within a date range. Requires one of the following: bloomberg_tickers (a comma-separated list of tickers),
+    a watchlist_id, an index_id, a sector_id, or a subsector_id.
+    To find upcoming events for multiple companies, provide a comma-separated list of bloomberg_tickers. You do not need to make multiple calls.
+    """
 
     start_date: str = Field(
         description="Start date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET).",
@@ -278,10 +281,11 @@ class FindEventsResponse(BaseModel):
     response: ApiResponseData = Field(..., description="Response data")
 
 
-class GetEventResponse(BaseAieraResponse):
-    """Response from getting a specific event."""
+class GetEventResponse(BaseModel):
+    """Response from getting a specific event - matches actual API structure."""
 
-    event: EventDetails = Field(..., description="Detailed event information")
+    instructions: Optional[List[str]] = Field(None, description="API instructions")
+    response: ApiResponseData = Field(..., description="Response data")
 
 
 class UpcomingEventsData(BaseModel):

@@ -45,7 +45,7 @@ class BloombergTickerMixin(BaseModel):
 
 # Parameter models (extracted from params.py)
 class FindThirdBridgeEventsArgs(BaseToolArgs, BloombergTickerMixin):
-    """Find expert insight events from Third Bridge filtered by date range and optional filters."""
+    """Find expert insight events from Third Bridge filtered by date range and optional filters. To find events for multiple companies, provide a comma-separated list of bloomberg_tickers. You do not need to make multiple calls."""
 
     start_date: str = Field(
         description="Start date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET).",
@@ -84,10 +84,11 @@ class FindThirdBridgeEventsArgs(BaseToolArgs, BloombergTickerMixin):
 
 
 class GetThirdBridgeEventArgs(BaseToolArgs):
-    """Get detailed information about a specific Third Bridge expert insight event."""
+    """Get detailed information about a specific Third Bridge expert insight event. If you need to retrieve more than one event, make multiple sequential calls."""
 
-    event_id: str = Field(
-        description="Unique identifier for the Third Bridge event. Obtained from find_third_bridge_events results."
+    thirdbridge_event_id: str = Field(
+        serialization_alias="event_id",  # Serialize to API as "event_id"
+        description="Unique identifier for the Third Bridge event. Obtained from find_third_bridge_events results.",
     )
 
 
@@ -105,7 +106,9 @@ class ThirdBridgeCitationBlock(BaseModel):
 class ThirdBridgeEventItem(BaseModel):
     """Third Bridge event item."""
 
-    event_id: str = Field(description="Event identifier")
+    thirdbridge_event_id: str = Field(
+        validation_alias="event_id", description="Event identifier"
+    )
     content_type: str = Field(description="Content type (e.g., FORUM, COMMUNITY)")
     call_date: str = Field(description="Event date and time as string")
     title: str = Field(description="Event title")
@@ -119,19 +122,57 @@ class ThirdBridgeEventItem(BaseModel):
     )
 
 
+class ThirdBridgeSpecialist(BaseModel):
+    """Third Bridge specialist/expert information."""
+
+    title: str = Field(description="Expert's job title")
+    initials: str = Field(description="Expert's initials")
+
+
+class ThirdBridgeModerator(BaseModel):
+    """Third Bridge moderator information."""
+
+    id: str = Field(description="Moderator identifier")
+    initials: str = Field(description="Moderator's initials")
+
+
+class ThirdBridgeTranscriptItem(BaseModel):
+    """Third Bridge transcript item."""
+
+    timestamp: str = Field(description="Timestamp of the transcript segment")
+    discussionItem: List[Any] = Field(
+        default=[], description="Discussion items in this segment"
+    )
+    # Allow additional fields that may be present
+    model_config = {"extra": "allow"}
+
+
 class ThirdBridgeEventDetails(BaseModel):
     """Detailed Third Bridge event information."""
 
-    event_id: str = Field(description="Event identifier")
+    thirdbridge_event_id: str = Field(
+        validation_alias="event_id",  # Parse from API as "event_id"
+        description="Event identifier",
+    )
     content_type: str = Field(description="Content type (e.g., FORUM, COMMUNITY)")
     call_date: str = Field(description="Event date and time as string")
     title: str = Field(description="Event title")
     language: str = Field(description="Event language")
-    agenda: Optional[str] = Field(None, description="Event agenda as string")
-    insights: Optional[str] = Field(None, description="Key insights as string")
-    transcript: Optional[str] = Field(None, description="Event transcript")
+    agenda: Optional[List[str]] = Field(None, description="Event agenda items")
+    insights: Optional[List[str]] = Field(
+        None, description="Key insights from the event"
+    )
     citation_block: Optional[ThirdBridgeCitationBlock] = Field(
         None, description="Citation information"
+    )
+    specialists: Optional[List[ThirdBridgeSpecialist]] = Field(
+        None, description="Expert specialists participating in the event"
+    )
+    moderators: Optional[List[ThirdBridgeModerator]] = Field(
+        None, description="Moderators of the event"
+    )
+    transcript: Optional[List[ThirdBridgeTranscriptItem]] = Field(
+        None, description="Full event transcript"
     )
 
 
@@ -161,4 +202,6 @@ class FindThirdBridgeEventsResponse(BaseAieraResponse):
 class GetThirdBridgeEventResponse(BaseAieraResponse):
     """Response for get_third_bridge_event tool."""
 
-    event: ThirdBridgeEventDetails = Field(description="Detailed Third Bridge event")
+    event: Optional[ThirdBridgeEventDetails] = Field(
+        default=None, description="Detailed Third Bridge event (None if not found)"
+    )

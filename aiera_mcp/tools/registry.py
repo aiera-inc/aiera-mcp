@@ -23,7 +23,7 @@ from .company_docs import (
 )
 from .third_bridge import find_third_bridge_events, get_third_bridge_event
 from .transcrippets import find_transcrippets, create_transcrippet, delete_transcrippet
-from .search import search_transcripts, search_filings
+from .search import search_transcripts, search_filings, search_filing_chunks
 
 # Import all parameter model classes from domain modules
 from .events import FindEventsArgs, GetEventArgs, GetUpcomingEventsArgs
@@ -33,16 +33,23 @@ from .equities import (
     GetEquitySummariesArgs,
     GetIndexConstituentsArgs,
     GetWatchlistConstituentsArgs,
+    GetAvailableWatchlistsArgs,
+    GetAvailableIndexesArgs,
+    GetSectorsAndSubsectorsArgs,
 )
-from .company_docs import FindCompanyDocsArgs, GetCompanyDocArgs
+from .company_docs import (
+    FindCompanyDocsArgs,
+    GetCompanyDocArgs,
+    GetCompanyDocCategoriesArgs,
+    GetCompanyDocKeywordsArgs,
+)
 from .third_bridge import FindThirdBridgeEventsArgs, GetThirdBridgeEventArgs
 from .transcrippets import (
     FindTranscrippetsArgs,
     CreateTranscrippetArgs,
     DeleteTranscrippetArgs,
 )
-from .search import SearchTranscriptsArgs, SearchFilingsArgs
-from .common import EmptyArgs, SearchArgs
+from .search import SearchTranscriptsArgs, SearchFilingsArgs, SearchFilingChunksArgs
 
 TOOL_REGISTRY = {
     "find_events": {
@@ -55,16 +62,16 @@ TOOL_REGISTRY = {
         "read_only": True,
         "destructive": False,
     },
-    # 'get_event': {
-    #     'display_name': 'Event Retriever',
-    #     'description': 'Retrieve detailed information about a specific event including summary, transcript, and metadata. Optionally filter transcripts by section for earnings events.',
-    #     'input_schema': GetEventArgs.model_json_schema(),
-    #     'function': get_event,
-    #     'args_model': GetEventArgs,
-    #     'category': 'events',
-    #     'read_only': True,
-    #     'destructive': False,
-    # },
+    "get_event": {
+        "display_name": "Event Retriever",
+        "description": "Retrieve detailed information about a specific event including summary, transcript, and metadata. Optionally filter transcripts by section for earnings events.",
+        "input_schema": GetEventArgs.model_json_schema(),
+        "function": get_event,
+        "args_model": GetEventArgs,
+        "category": "events",
+        "read_only": True,
+        "destructive": False,
+    },
     "get_upcoming_events": {
         "display_name": "Upcoming Events Finder",
         "description": "Retrieve confirmed and estimated upcoming events within a date range, filtered by company identifiers, watchlists, indices, or sectors.",
@@ -118,9 +125,9 @@ TOOL_REGISTRY = {
     "get_available_watchlists": {
         "display_name": "Watchlist Explorer",
         "description": "Retrieve all available watchlists with their IDs, names, and descriptions. Used to find valid watchlist IDs for filtering other tools.",
-        "input_schema": EmptyArgs.model_json_schema(),
+        "input_schema": GetAvailableWatchlistsArgs.model_json_schema(),
         "function": get_available_watchlists,
-        "args_model": EmptyArgs,
+        "args_model": GetAvailableWatchlistsArgs,
         "category": "equities",
         "read_only": True,
         "destructive": False,
@@ -128,9 +135,9 @@ TOOL_REGISTRY = {
     "get_available_indexes": {
         "display_name": "Index Explorer",
         "description": "Retrieve all available stock market indices with their IDs, names, and descriptions. Used to find valid index IDs for filtering other tools.",
-        "input_schema": EmptyArgs.model_json_schema(),
+        "input_schema": GetAvailableIndexesArgs.model_json_schema(),
         "function": get_available_indexes,
-        "args_model": EmptyArgs,
+        "args_model": GetAvailableIndexesArgs,
         "category": "equities",
         "read_only": True,
         "destructive": False,
@@ -138,9 +145,9 @@ TOOL_REGISTRY = {
     "get_sectors_and_subsectors": {
         "display_name": "Sector Explorer",
         "description": "Retrieve all available sectors and subsectors with their IDs, names, and hierarchical relationships. Used to find valid sector/subsector IDs for filtering other tools.",
-        "input_schema": SearchArgs.model_json_schema(),
+        "input_schema": GetSectorsAndSubsectorsArgs.model_json_schema(),
         "function": get_sectors_and_subsectors,
-        "args_model": SearchArgs,
+        "args_model": GetSectorsAndSubsectorsArgs,
         "category": "equities",
         "read_only": True,
         "destructive": False,
@@ -188,9 +195,9 @@ TOOL_REGISTRY = {
     "get_company_doc_categories": {
         "display_name": "Document Category Explorer",
         "description": "Retrieve all available document categories for filtering company documents. Used to find valid category values for find_company_docs.",
-        "input_schema": SearchArgs.model_json_schema(),
+        "input_schema": GetCompanyDocCategoriesArgs.model_json_schema(),
         "function": get_company_doc_categories,
-        "args_model": SearchArgs,
+        "args_model": GetCompanyDocCategoriesArgs,
         "category": "company_docs",
         "read_only": True,
         "destructive": False,
@@ -198,9 +205,9 @@ TOOL_REGISTRY = {
     "get_company_doc_keywords": {
         "display_name": "Document Keyword Explorer",
         "description": "Retrieve all available keywords for filtering company documents. Used to find valid keyword values for find_company_docs.",
-        "input_schema": SearchArgs.model_json_schema(),
+        "input_schema": GetCompanyDocKeywordsArgs.model_json_schema(),
         "function": get_company_doc_keywords,
-        "args_model": SearchArgs,
+        "args_model": GetCompanyDocKeywordsArgs,
         "category": "company_docs",
         "read_only": True,
         "destructive": False,
@@ -275,7 +282,26 @@ TOOL_REGISTRY = {
         "read_only": True,
         "destructive": False,
     },
+    "search_filing_chunks": {
+        "display_name": "Filing Chunk Searcher",
+        "description": "Perform a semantic search within SEC filing document chunks using embedding-based matching. Searches specific sections and passages within filings, filtered by company, filing types, or date range.",
+        "input_schema": SearchFilingChunksArgs.model_json_schema(),
+        "function": search_filing_chunks,
+        "args_model": SearchFilingChunksArgs,
+        "category": "search",
+        "read_only": True,
+        "destructive": False,
+    },
 }
+
+
+# Automatically populate descriptions from Args model docstrings
+for tool_name, tool_config in TOOL_REGISTRY.items():
+    args_model = tool_config.get("args_model")
+    if args_model and args_model.__doc__:
+        # Extract and clean the docstring
+        description = args_model.__doc__.strip()
+        tool_config["description"] = description
 
 
 # Helper function to get tools by category

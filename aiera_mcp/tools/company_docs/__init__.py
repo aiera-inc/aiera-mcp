@@ -11,7 +11,8 @@ from .tools import (
 from .models import (
     FindCompanyDocsArgs,
     GetCompanyDocArgs,
-    SearchArgs,
+    GetCompanyDocCategoriesArgs,
+    GetCompanyDocKeywordsArgs,
     FindCompanyDocsResponse,
     GetCompanyDocResponse,
     GetCompanyDocCategoriesResponse,
@@ -30,7 +31,8 @@ __all__ = [
     # Parameter models
     "FindCompanyDocsArgs",
     "GetCompanyDocArgs",
-    "SearchArgs",
+    "GetCompanyDocCategoriesArgs",
+    "GetCompanyDocKeywordsArgs",
     # Response models
     "FindCompanyDocsResponse",
     "GetCompanyDocResponse",
