@@ -22,7 +22,7 @@ from dataclasses import dataclass
 from aiera_mcp.tools.base import make_aiera_request
 
 # Import all the tool functions to compare against
-from aiera_mcp.tools.events.tools import find_events, get_upcoming_events
+from aiera_mcp.tools.events.tools import find_events, get_event, get_upcoming_events
 from aiera_mcp.tools.filings.tools import find_filings
 from aiera_mcp.tools.equities.tools import (
     find_equities,
@@ -30,14 +30,24 @@ from aiera_mcp.tools.equities.tools import (
     get_available_watchlists,
     get_available_indexes,
     get_sectors_and_subsectors,
+    get_index_constituents,
+    get_watchlist_constituents,
 )
 from aiera_mcp.tools.company_docs.tools import (
     find_company_docs,
+    get_company_doc,
     get_company_doc_categories,
     get_company_doc_keywords,
 )
-from aiera_mcp.tools.third_bridge.tools import find_third_bridge_events
-from aiera_mcp.tools.transcrippets.tools import find_transcrippets, create_transcrippet
+from aiera_mcp.tools.third_bridge.tools import (
+    find_third_bridge_events,
+    get_third_bridge_event,
+)
+from aiera_mcp.tools.transcrippets.tools import (
+    find_transcrippets,
+    create_transcrippet,
+    delete_transcrippet,
+)
 from aiera_mcp.tools.search.tools import (
     search_transcripts,
     search_filings,
@@ -47,35 +57,52 @@ from aiera_mcp.tools.search.tools import (
 # Import parameter and response models
 from aiera_mcp.tools.events.models import (
     FindEventsArgs,
+    GetEventArgs,
     GetUpcomingEventsArgs,
     FindEventsResponse,
+    GetEventResponse,
     GetUpcomingEventsResponse,
 )
 from aiera_mcp.tools.filings.models import FindFilingsArgs, FindFilingsResponse
 from aiera_mcp.tools.equities.models import (
     FindEquitiesArgs,
     GetEquitySummariesArgs,
+    GetIndexConstituentsArgs,
+    GetWatchlistConstituentsArgs,
+    GetAvailableWatchlistsArgs,
+    GetAvailableIndexesArgs,
+    GetSectorsAndSubsectorsArgs,
     FindEquitiesResponse,
     GetEquitySummariesResponse,
     GetAvailableWatchlistsResponse,
     GetAvailableIndexesResponse,
     GetSectorsSubsectorsResponse,
+    GetIndexConstituentsResponse,
+    GetWatchlistConstituentsResponse,
 )
 from aiera_mcp.tools.company_docs.models import (
     FindCompanyDocsArgs,
+    GetCompanyDocArgs,
+    GetCompanyDocCategoriesArgs,
+    GetCompanyDocKeywordsArgs,
     FindCompanyDocsResponse,
+    GetCompanyDocResponse,
     GetCompanyDocCategoriesResponse,
     GetCompanyDocKeywordsResponse,
 )
 from aiera_mcp.tools.third_bridge.models import (
     FindThirdBridgeEventsArgs,
+    GetThirdBridgeEventArgs,
     FindThirdBridgeEventsResponse,
+    GetThirdBridgeEventResponse,
 )
 from aiera_mcp.tools.transcrippets.models import (
     FindTranscrippetsArgs,
     FindTranscrippetsResponse,
     CreateTranscrippetArgs,
     CreateTranscrippetResponse,
+    DeleteTranscrippetArgs,
+    DeleteTranscrippetResponse,
 )
 from aiera_mcp.tools.search.models import (
     SearchTranscriptsArgs,
@@ -85,7 +112,6 @@ from aiera_mcp.tools.search.models import (
     SearchFilingsResponse,
     SearchFilingChunksResponse,
 )
-from aiera_mcp.tools.common.models import EmptyArgs, SearchArgs
 
 # Configure logging
 logging.basicConfig(
@@ -526,10 +552,14 @@ async def test_tool_with_comparison(
                     args_instance = args_model(**valid_args)
             else:
                 # For empty args, create appropriate args
-                if args_model == EmptyArgs:
-                    args_instance = EmptyArgs()
-                elif args_model == SearchArgs:
-                    args_instance = SearchArgs(search="", page=1, page_size=50)
+                if args_model in [GetAvailableWatchlistsArgs, GetAvailableIndexesArgs]:
+                    args_instance = args_model()
+                elif args_model in [
+                    GetSectorsAndSubsectorsArgs,
+                    GetCompanyDocCategoriesArgs,
+                    GetCompanyDocKeywordsArgs,
+                ]:
+                    args_instance = args_model(search="", page=1, page_size=50)
                 else:
                     # This is a complex case - we'll need to handle it per tool
                     args_instance = args_model()
@@ -607,6 +637,17 @@ async def run_comprehensive_tests():
             },
         },
         {
+            "tool_name": "get_event",
+            "tool_function": get_event,
+            "args_model": GetEventArgs,
+            "response_model": GetEventResponse,
+            "endpoint": "/chat-support/find-events",
+            "params": {
+                "event_id": "2662190",
+                "include_transcripts": "true",
+            },
+        },
+        {
             "tool_name": "get_upcoming_events",
             "tool_function": get_upcoming_events,
             "args_model": GetUpcomingEventsArgs,
@@ -659,7 +700,7 @@ async def run_comprehensive_tests():
         {
             "tool_name": "get_available_watchlists",
             "tool_function": get_available_watchlists,
-            "args_model": EmptyArgs,
+            "args_model": GetAvailableWatchlistsArgs,
             "response_model": GetAvailableWatchlistsResponse,
             "endpoint": "/chat-support/available-watchlists",
             "params": {},
@@ -667,7 +708,7 @@ async def run_comprehensive_tests():
         {
             "tool_name": "get_available_indexes",
             "tool_function": get_available_indexes,
-            "args_model": EmptyArgs,
+            "args_model": GetAvailableIndexesArgs,
             "response_model": GetAvailableIndexesResponse,
             "endpoint": "/chat-support/available-indexes",
             "params": {},
@@ -675,10 +716,26 @@ async def run_comprehensive_tests():
         {
             "tool_name": "get_sectors_and_subsectors",
             "tool_function": get_sectors_and_subsectors,
-            "args_model": SearchArgs,
+            "args_model": GetSectorsAndSubsectorsArgs,
             "response_model": GetSectorsSubsectorsResponse,
             "endpoint": "/chat-support/get-sectors-and-subsectors",
             "params": {},
+        },
+        {
+            "tool_name": "get_index_constituents",
+            "tool_function": get_index_constituents,
+            "args_model": GetIndexConstituentsArgs,
+            "response_model": GetIndexConstituentsResponse,
+            "endpoint": "/chat-support/index-constituents/1",
+            "params": {"index": "1", "page": 1, "page_size": 10},
+        },
+        {
+            "tool_name": "get_watchlist_constituents",
+            "tool_function": get_watchlist_constituents,
+            "args_model": GetWatchlistConstituentsArgs,
+            "response_model": GetWatchlistConstituentsResponse,
+            "endpoint": "/chat-support/watchlist-constituents/44201720",
+            "params": {"watchlist_id": "44201720", "page": 1, "page_size": 10},
         },
         # Company Docs
         {
@@ -696,9 +753,20 @@ async def run_comprehensive_tests():
             },
         },
         {
+            "tool_name": "get_company_doc",
+            "tool_function": get_company_doc,
+            "args_model": GetCompanyDocArgs,
+            "response_model": GetCompanyDocResponse,
+            "endpoint": "/chat-support/find-company-docs",
+            "params": {
+                "company_doc_ids": "4291375",
+                "include_content": "true",
+            },
+        },
+        {
             "tool_name": "get_company_doc_categories",
             "tool_function": get_company_doc_categories,
-            "args_model": SearchArgs,
+            "args_model": GetCompanyDocCategoriesArgs,
             "response_model": GetCompanyDocCategoriesResponse,
             "endpoint": "/chat-support/get-company-doc-categories",
             "params": {},
@@ -706,7 +774,7 @@ async def run_comprehensive_tests():
         {
             "tool_name": "get_company_doc_keywords",
             "tool_function": get_company_doc_keywords,
-            "args_model": SearchArgs,
+            "args_model": GetCompanyDocKeywordsArgs,
             "response_model": GetCompanyDocKeywordsResponse,
             "endpoint": "/chat-support/get-company-doc-keywords",
             "params": {},
@@ -723,6 +791,17 @@ async def run_comprehensive_tests():
                 "end_date": date_ranges["last_quarter"]["end_date"],
                 "page": 1,
                 "page_size": 5,
+            },
+        },
+        {
+            "tool_name": "get_third_bridge_event",
+            "tool_function": get_third_bridge_event,
+            "args_model": GetThirdBridgeEventArgs,
+            "response_model": GetThirdBridgeEventResponse,
+            "endpoint": "/chat-support/find-third-bridge",
+            "params": {
+                "thirdbridge_event_id": "6182f8d11138178578faa91850e2c8d2",
+                "include_transcripts": "true",
             },
         },
         # Transcrippets
@@ -753,6 +832,17 @@ async def run_comprehensive_tests():
                 "transcript_end_item_offset": 536,
             },
         },
+        # NOTE: delete_transcrippet is DESTRUCTIVE and should be used with caution
+        # Uncomment the following test to include it in the test suite
+        # {
+        #     "tool_name": "delete_transcrippet",
+        #     "tool_function": delete_transcrippet,
+        #     "args_model": DeleteTranscrippetArgs,
+        #     "response_model": DeleteTranscrippetResponse,
+        #     "endpoint": "/transcrippets/999999/delete",
+        #     "method": "DELETE",
+        #     "params": {},
+        # },
         # Search Tools
         {
             "tool_name": "search_transcripts",
