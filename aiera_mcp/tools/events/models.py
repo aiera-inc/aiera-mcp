@@ -130,7 +130,7 @@ class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
 
 
 class GetEventArgs(BaseToolArgs):
-    """Get detailed information about a specific event including transcripts. If you need to retrieve more than one event, make multiple sequential calls."""
+    """Get detailed information about a specific event including transcripts. If you need to retrieve more than one event, make multiple sequential calls. Transcripts are not availble for future events."""
 
     event_id: str = Field(
         description="Unique identifier for the event. Obtained from find_events tool."

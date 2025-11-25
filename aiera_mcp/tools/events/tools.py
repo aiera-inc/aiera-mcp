@@ -115,6 +115,8 @@ async def get_event(args: GetEventArgs) -> GetEventResponse:
         params=params,
     )
 
+    print(raw_response)
+
     # Validate and return the response directly since it matches FindEventsResponse structure
     # The API returns a paginated list with the single event as the first item
     return GetEventResponse.model_validate(raw_response)

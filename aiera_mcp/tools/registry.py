@@ -54,7 +54,6 @@ from .search import SearchTranscriptsArgs, SearchFilingsArgs, SearchFilingChunks
 TOOL_REGISTRY = {
     "find_events": {
         "display_name": "Event Finder",
-        "description": "Find corporate events (earnings calls, conferences, meetings) filtered by date range and optionally by company identifiers, watchlists, indices, sectors, or event types. Returns events with metadata but no transcripts.",
         "input_schema": FindEventsArgs.model_json_schema(),
         "function": find_events,
         "args_model": FindEventsArgs,
@@ -64,7 +63,6 @@ TOOL_REGISTRY = {
     },
     "get_event": {
         "display_name": "Event Retriever",
-        "description": "Retrieve detailed information about a specific event including summary, transcript, and metadata. Optionally filter transcripts by section for earnings events.",
         "input_schema": GetEventArgs.model_json_schema(),
         "function": get_event,
         "args_model": GetEventArgs,
@@ -74,7 +72,6 @@ TOOL_REGISTRY = {
     },
     "get_upcoming_events": {
         "display_name": "Upcoming Events Finder",
-        "description": "Retrieve confirmed and estimated upcoming events within a date range, filtered by company identifiers, watchlists, indices, or sectors.",
         "input_schema": GetUpcomingEventsArgs.model_json_schema(),
         "function": get_upcoming_events,
         "args_model": GetUpcomingEventsArgs,
@@ -84,7 +81,6 @@ TOOL_REGISTRY = {
     },
     "find_filings": {
         "display_name": "Filing Finder",
-        "description": "Find SEC filings (10-K, 10-Q, 8-K, etc.) filtered by date range and optionally by company identifiers, watchlists, indices, sectors, or form types. Returns filing metadata and summaries.",
         "input_schema": FindFilingsArgs.model_json_schema(),
         "function": find_filings,
         "args_model": FindFilingsArgs,
@@ -94,7 +90,6 @@ TOOL_REGISTRY = {
     },
     # 'get_filing': {
     #     'display_name': 'Filing Retriever',
-    #     'description': 'Retrieve detailed information about a specific SEC filing including content, metadata, and summaries.',
     #     'input_schema': GetFilingArgs.model_json_schema(),
     #     'function': get_filing,
     #     'args_model': GetFilingArgs,
@@ -104,7 +99,6 @@ TOOL_REGISTRY = {
     # },
     "find_equities": {
         "display_name": "Equity Finder",
-        "description": "Find companies and equities using various identifiers (Bloomberg tickers, ISIN, RIC, PermID) or search terms. Returns company and equity information.",
         "input_schema": FindEquitiesArgs.model_json_schema(),
         "function": find_equities,
         "args_model": FindEquitiesArgs,
@@ -114,7 +108,6 @@ TOOL_REGISTRY = {
     },
     "get_equity_summaries": {
         "display_name": "Equity Summary Retriever",
-        "description": "Get comprehensive summary information for one or more equities including financial data, sector classification, and key metrics.",
         "input_schema": GetEquitySummariesArgs.model_json_schema(),
         "function": get_equity_summaries,
         "args_model": GetEquitySummariesArgs,
@@ -124,7 +117,6 @@ TOOL_REGISTRY = {
     },
     "get_available_watchlists": {
         "display_name": "Watchlist Explorer",
-        "description": "Retrieve all available watchlists with their IDs, names, and descriptions. Used to find valid watchlist IDs for filtering other tools.",
         "input_schema": GetAvailableWatchlistsArgs.model_json_schema(),
         "function": get_available_watchlists,
         "args_model": GetAvailableWatchlistsArgs,
@@ -134,7 +126,6 @@ TOOL_REGISTRY = {
     },
     "get_available_indexes": {
         "display_name": "Index Explorer",
-        "description": "Retrieve all available stock market indices with their IDs, names, and descriptions. Used to find valid index IDs for filtering other tools.",
         "input_schema": GetAvailableIndexesArgs.model_json_schema(),
         "function": get_available_indexes,
         "args_model": GetAvailableIndexesArgs,
@@ -144,7 +135,6 @@ TOOL_REGISTRY = {
     },
     "get_sectors_and_subsectors": {
         "display_name": "Sector Explorer",
-        "description": "Retrieve all available sectors and subsectors with their IDs, names, and hierarchical relationships. Used to find valid sector/subsector IDs for filtering other tools.",
         "input_schema": GetSectorsAndSubsectorsArgs.model_json_schema(),
         "function": get_sectors_and_subsectors,
         "args_model": GetSectorsAndSubsectorsArgs,
@@ -154,7 +144,6 @@ TOOL_REGISTRY = {
     },
     "get_index_constituents": {
         "display_name": "Index Constituent Finder",
-        "description": "Get all equities within a specific stock market index. Returns company information for index members.",
         "input_schema": GetIndexConstituentsArgs.model_json_schema(),
         "function": get_index_constituents,
         "args_model": GetIndexConstituentsArgs,
@@ -164,7 +153,6 @@ TOOL_REGISTRY = {
     },
     "get_watchlist_constituents": {
         "display_name": "Watchlist Constituent Finder",
-        "description": "Get all equities within a specific watchlist. Returns company information for watchlist members.",
         "input_schema": GetWatchlistConstituentsArgs.model_json_schema(),
         "function": get_watchlist_constituents,
         "args_model": GetWatchlistConstituentsArgs,
@@ -174,7 +162,6 @@ TOOL_REGISTRY = {
     },
     "find_company_docs": {
         "display_name": "Company Document Finder",
-        "description": "Find company-published documents (press releases, investor presentations, regulatory filings) filtered by date range and optionally by company identifiers, categories, or keywords.",
         "input_schema": FindCompanyDocsArgs.model_json_schema(),
         "function": find_company_docs,
         "args_model": FindCompanyDocsArgs,
@@ -184,7 +171,6 @@ TOOL_REGISTRY = {
     },
     "get_company_doc": {
         "display_name": "Company Document Retriever",
-        "description": "Retrieve detailed information about a specific company document including content, metadata, and summaries.",
         "input_schema": GetCompanyDocArgs.model_json_schema(),
         "function": get_company_doc,
         "args_model": GetCompanyDocArgs,
@@ -194,7 +180,6 @@ TOOL_REGISTRY = {
     },
     "get_company_doc_categories": {
         "display_name": "Document Category Explorer",
-        "description": "Retrieve all available document categories for filtering company documents. Used to find valid category values for find_company_docs.",
         "input_schema": GetCompanyDocCategoriesArgs.model_json_schema(),
         "function": get_company_doc_categories,
         "args_model": GetCompanyDocCategoriesArgs,
@@ -204,7 +189,6 @@ TOOL_REGISTRY = {
     },
     "get_company_doc_keywords": {
         "display_name": "Document Keyword Explorer",
-        "description": "Retrieve all available keywords for filtering company documents. Used to find valid keyword values for find_company_docs.",
         "input_schema": GetCompanyDocKeywordsArgs.model_json_schema(),
         "function": get_company_doc_keywords,
         "args_model": GetCompanyDocKeywordsArgs,
@@ -214,7 +198,6 @@ TOOL_REGISTRY = {
     },
     "find_third_bridge_events": {
         "display_name": "Third Bridge Event Finder",
-        "description": "Find expert insight events from Third Bridge filtered by date range and optionally by company identifiers, watchlists, indices, or sectors. Provides access to expert interviews and insights.",
         "input_schema": FindThirdBridgeEventsArgs.model_json_schema(),
         "function": find_third_bridge_events,
         "args_model": FindThirdBridgeEventsArgs,
@@ -224,7 +207,6 @@ TOOL_REGISTRY = {
     },
     "get_third_bridge_event": {
         "display_name": "Third Bridge Event Retriever",
-        "description": "Retrieve detailed information about a specific Third Bridge expert insight event including agenda, insights, transcript, and other metadata.",
         "input_schema": GetThirdBridgeEventArgs.model_json_schema(),
         "function": get_third_bridge_event,
         "args_model": GetThirdBridgeEventArgs,
@@ -234,7 +216,6 @@ TOOL_REGISTRY = {
     },
     "find_transcrippets": {
         "display_name": "Transcrippet Finder",
-        "description": "Find and retrieve Transcrippets™ (curated transcript segments) filtered by various identifiers and date ranges. Returns public URLs for sharing key insights.",
         "input_schema": FindTranscrippetsArgs.model_json_schema(),
         "function": find_transcrippets,
         "args_model": FindTranscrippetsArgs,
@@ -244,7 +225,6 @@ TOOL_REGISTRY = {
     },
     "create_transcrippet": {
         "display_name": "Transcrippet Creator",
-        "description": "Create a new Transcrippet™ from a specific segment of an event transcript. Requires precise positioning information to capture the exact text segment.",
         "input_schema": CreateTranscrippetArgs.model_json_schema(),
         "function": create_transcrippet,
         "args_model": CreateTranscrippetArgs,
@@ -254,7 +234,6 @@ TOOL_REGISTRY = {
     },
     "delete_transcrippet": {
         "display_name": "Transcrippet Deleter",
-        "description": "Delete a Transcrippet™ permanently by its ID. This operation cannot be undone.",
         "input_schema": DeleteTranscrippetArgs.model_json_schema(),
         "function": delete_transcrippet,
         "args_model": DeleteTranscrippetArgs,
@@ -264,7 +243,6 @@ TOOL_REGISTRY = {
     },
     "search_transcripts": {
         "display_name": "Transcript Searcher",
-        "description": "Perform a semantic search against all event transcripts, filtered by event IDs, equity IDs, transcript section, event type, or date range. Supports ML-based semantic search with fallback to traditional text search.",
         "input_schema": SearchTranscriptsArgs.model_json_schema(),
         "function": search_transcripts,
         "args_model": SearchTranscriptsArgs,
@@ -274,7 +252,6 @@ TOOL_REGISTRY = {
     },
     "search_filings": {
         "display_name": "Filing Searcher",
-        "description": "Perform a semantic search against all SEC filings, filtered by filing IDs, equity IDs, filing types, or date range. Searches through filing content and metadata.",
         "input_schema": SearchFilingsArgs.model_json_schema(),
         "function": search_filings,
         "args_model": SearchFilingsArgs,
@@ -284,7 +261,6 @@ TOOL_REGISTRY = {
     },
     "search_filing_chunks": {
         "display_name": "Filing Chunk Searcher",
-        "description": "Perform a semantic search within SEC filing document chunks using embedding-based matching. Searches specific sections and passages within filings, filtered by company, filing types, or date range.",
         "input_schema": SearchFilingChunksArgs.model_json_schema(),
         "function": search_filing_chunks,
         "args_model": SearchFilingChunksArgs,
