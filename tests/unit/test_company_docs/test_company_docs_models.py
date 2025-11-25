@@ -8,7 +8,6 @@ from pydantic import ValidationError
 from aiera_mcp.tools.company_docs.models import (
     FindCompanyDocsArgs,
     GetCompanyDocArgs,
-    SearchArgs,
     FindCompanyDocsResponse,
     GetCompanyDocResponse,
     GetCompanyDocCategoriesResponse,
@@ -78,8 +77,10 @@ class TestCompanyDocsModels:
             "category": "Sustainability",
             "publish_date": "2023-09-15T00:00:00Z",
             "source_url": "https://example.com/test-doc.pdf",
-            "summary": "Test document summary",  # CompanyDocDetails uses string, not list
-            "content_preview": "Test content preview...",
+            "summary": [
+                "Test document summary"
+            ],  # Inherits List[str] from CompanyDocItem
+            "content_raw": "Test content preview...",
             "attachments": [
                 {"name": "file.pdf", "url": "https://example.com/file.pdf"}
             ],
@@ -93,8 +94,8 @@ class TestCompanyDocsModels:
         assert details.title == "Test Document"
 
         # Test new fields
-        assert details.summary == "Test document summary"
-        assert details.content_preview == "Test content preview..."
+        assert details.summary == ["Test document summary"]
+        assert details.content_raw == "Test content preview..."
         assert len(details.attachments) == 1
 
     def test_category_keyword_model(self):
@@ -245,52 +246,13 @@ class TestGetCompanyDocArgs:
 
     def test_valid_get_company_doc_args(self):
         """Test valid GetCompanyDocArgs creation."""
-        args = GetCompanyDocArgs(company_doc_id="doc123")
-        assert args.company_doc_id == "doc123"
+        args = GetCompanyDocArgs(company_doc_ids="doc123")
+        assert args.company_doc_ids == "doc123"
 
     def test_get_company_doc_args_required_field(self):
         """Test that company_doc_id is required."""
         with pytest.raises(ValidationError):
             GetCompanyDocArgs()  # Missing required field
-
-
-@pytest.mark.unit
-class TestSearchArgs:
-    """Test SearchArgs model."""
-
-    def test_valid_search_args(self):
-        """Test valid SearchArgs creation."""
-        args = SearchArgs(search="sustainability", page=2, page_size=25)
-
-        assert args.search == "sustainability"
-        assert args.page == 2
-        assert args.page_size == 25
-
-    def test_search_args_defaults(self):
-        """Test SearchArgs with default values."""
-        args = SearchArgs()
-
-        assert args.search is None  # Optional field
-        assert args.page == 1  # Default value
-        assert args.page_size == 50  # Default value
-
-    def test_search_args_pagination_validation(self):
-        """Test pagination parameter validation in SearchArgs."""
-        # Valid pagination
-        args = SearchArgs(page=3, page_size=75)
-        assert args.page == 3
-        assert args.page_size == 75
-
-        # Page must be >= 1
-        with pytest.raises(ValidationError):
-            SearchArgs(page=0)
-
-        # Page size must be between 1 and 100
-        with pytest.raises(ValidationError):
-            SearchArgs(page_size=0)
-
-        with pytest.raises(ValidationError):
-            SearchArgs(page_size=101)
 
 
 @pytest.mark.unit
@@ -347,8 +309,8 @@ class TestCompanyDocsResponses:
                 "category": "Sustainability",
                 "publish_date": "2023-09-15T00:00:00Z",
                 "source_url": "https://example.com/test.pdf",
-                "summary": "Test summary",
-                "content_preview": "Test preview",
+                "summary": ["Test summary"],  # List[str] inherited from CompanyDocItem
+                "content_raw": "Test preview",
                 "keywords": ["test"],
                 "attachments": [],
                 "citation_information": {
@@ -363,8 +325,20 @@ class TestCompanyDocsResponses:
 
         assert isinstance(response.document, CompanyDocDetails)
         assert response.document.doc_id == 123
-        assert response.document.summary == "Test summary"
+        assert response.document.summary == ["Test summary"]
         assert response.instructions == ["Test instruction"]
+
+    def test_get_company_doc_response_no_document(self):
+        """Test GetCompanyDocResponse with no document (robustness to empty response)."""
+        response_data = {
+            "document": None,
+            "instructions": ["Document not found"],
+        }
+
+        response = GetCompanyDocResponse.model_validate(response_data)
+
+        assert response.document is None
+        assert response.instructions == ["Document not found"]
 
     def test_get_company_doc_categories_response(self):
         """Test GetCompanyDocCategoriesResponse model."""
@@ -517,7 +491,7 @@ class TestCompanyDocsModelValidation:
 
     def test_attachments_handling(self):
         """Test attachments list handling in CompanyDocDetails."""
-        # Empty attachments
+        # No attachments provided - should be None
         doc = CompanyDocDetails(
             doc_id=123,
             company={"company_id": 456, "name": "Test Company"},
@@ -525,10 +499,10 @@ class TestCompanyDocsModelValidation:
             category="Test",
             publish_date="2023-09-15T00:00:00Z",
             source_url="https://example.com/test.pdf",
-            summary="Test summary",
-            content_preview="Test preview",
+            summary=["Test summary"],  # List[str] inherited from CompanyDocItem
+            content_raw="Test preview",
         )
-        assert doc.attachments == []
+        assert doc.attachments is None
 
         # With attachments
         doc_with_attachments = CompanyDocDetails(
@@ -538,8 +512,8 @@ class TestCompanyDocsModelValidation:
             category="Test",
             publish_date="2023-09-15T00:00:00Z",
             source_url="https://example.com/test.pdf",
-            summary="Test summary",
-            content_preview="Test preview",
+            summary=["Test summary"],
+            content_raw="Test preview",
             attachments=[
                 {"name": "report.pdf", "url": "https://example.com/report.pdf"},
                 {"name": "summary.pdf", "url": "https://example.com/summary.pdf"},

@@ -175,6 +175,12 @@ class TestToolSerializationComprehensive:
                         "start_time": "00:00:00",
                         "end_time": "00:01:00",
                     }
+                elif (
+                    "GetEvent" in model_class.__name__
+                    and "Upcoming" not in model_class.__name__
+                ):
+                    # GetEventResponse expects {"data": []}
+                    sample_data["response"] = {"data": []}
                 elif "FindTranscrippets" in model_class.__name__:
                     sample_data["response"] = []
                 elif "Search" in model_class.__name__:
@@ -197,6 +203,15 @@ class TestToolSerializationComprehensive:
                 ):
                     # These expect a list directly
                     sample_data["response"] = []
+                elif (
+                    "GetIndex" in model_class.__name__
+                    and "Constituents" in model_class.__name__
+                ) or (
+                    "GetWatchlist" in model_class.__name__
+                    and "Constituents" in model_class.__name__
+                ):
+                    # GetIndexConstituentsResponse and GetWatchlistConstituentsResponse
+                    sample_data["response"] = {"data": [], "total": 0}
                 else:
                     # Generic response structure
                     sample_data["response"] = {"data": []}
@@ -209,24 +224,19 @@ class TestToolSerializationComprehensive:
                     "publish_date": "2024-01-15",
                     "category": "press_release",
                     "source_url": "https://example.com",
-                    "summary": "Test summary",
-                    "content_preview": "Test preview",
+                    "summary": ["Test summary"],
+                    "content_raw": "Test preview",
                     "citation_information": {
                         "title": "Test",
                         "url": "https://example.com",
                     },
                 }
             if (
-                "event" in required_fields
-            ):  # GetThirdBridgeEventResponse, GetEventResponse
+                "event" in required_fields and "GetEvent" not in model_class.__name__
+            ):  # GetThirdBridgeEventResponse only (not GetEventResponse)
                 sample_data["event"] = {
-                    "event_id": "123",
+                    "thirdbridge_event_id": "123",
                     "title": "Test Event",
-                    "event_type": "earnings",
-                    "event_date": "2024-01-15T16:30:00",
-                    "company_name": "Test Corp",
-                    "expert_name": "Test Expert",
-                    "expert_title": "Test Title",
                     "content_type": "call",
                     "call_date": "2024-01-15T16:30:00",
                     "language": "English",
@@ -639,22 +649,19 @@ class TestToolSerializationComprehensive:
                             },
                         }
                     else:
+                        # get_event returns GetEventResponse with response.data structure
                         test_data = {
-                            "event": {
-                                "event_id": "12345",
-                                "title": "Test Event",
-                                "event_type": "earnings",
-                                "event_date": datetime(2024, 1, 15, 16, 30, 0),
-                                "description": "Test description",
-                                "content_type": "call",
-                                "call_date": datetime(2024, 1, 15, 16, 30, 0),
-                                "language": "English",
-                                "company_name": "Test Corp",
-                                "expert_name": "Test Expert",
-                                "expert_title": "Test Title",
+                            "response": {
+                                "data": [
+                                    {
+                                        "event_id": 12345,
+                                        "title": "Test Event",
+                                        "event_type": "earnings",
+                                        "event_date": datetime(2024, 1, 15, 16, 30, 0),
+                                    }
+                                ]
                             },
                             "instructions": ["Test instruction"],
-                            "citation_information": [],
                         }
                 elif (
                     "Filing" in response_model.__name__

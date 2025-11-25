@@ -10,8 +10,6 @@ from aiera_mcp.tools.equities.models import (
     GetEquitySummariesArgs,
     GetIndexConstituentsArgs,
     GetWatchlistConstituentsArgs,
-    EmptyArgs,
-    SearchArgs,
     FindEquitiesResponse,
     GetEquitySummariesResponse,
     GetSectorsSubsectorsResponse,
@@ -395,35 +393,6 @@ class TestGetWatchlistConstituentsArgs:
 
 
 @pytest.mark.unit
-class TestEmptyAndSearchArgs:
-    """Test EmptyArgs and SearchArgs models."""
-
-    def test_empty_args(self):
-        """Test EmptyArgs model."""
-        args = EmptyArgs()
-        # Should create successfully with no fields
-        dumped = args.model_dump()
-        # Should have no fields or only serializer fields
-        assert len([k for k in dumped.keys() if not k.startswith("_")]) == 0
-
-    def test_search_args_defaults(self):
-        """Test SearchArgs with defaults."""
-        args = SearchArgs()
-
-        assert args.search is None
-        assert args.page == 1
-        assert args.page_size == 50
-
-    def test_search_args_with_search(self):
-        """Test SearchArgs with search term."""
-        args = SearchArgs(search="technology", page=2, page_size=25)
-
-        assert args.search == "technology"
-        assert args.page == 2
-        assert args.page_size == 25
-
-
-@pytest.mark.unit
 class TestEquitiesResponses:
     """Test equities response models."""
 
@@ -515,6 +484,8 @@ class TestEquitiesResponses:
 
     def test_get_index_constituents_response(self):
         """Test GetIndexConstituentsResponse model."""
+        from aiera_mcp.tools.equities.models import FindEquitiesApiResponseData
+
         constituents = [
             EquityItem(
                 equity_id=12345,
@@ -525,18 +496,11 @@ class TestEquitiesResponses:
         ]
 
         response = GetIndexConstituentsResponse(
-            index_name="S&P 500",
-            constituents=constituents,
-            total=1,
-            page=1,
-            page_size=50,
             instructions=["Constituents retrieved"],
-            citation_information=[],
+            response=FindEquitiesApiResponseData(data=constituents),
         )
 
-        assert response.index_name == "S&P 500"
-        assert len(response.constituents) == 1
-        assert response.total == 1
+        assert len(response.response.data) == 1
         assert response.instructions == ["Constituents retrieved"]
 
     def test_get_available_watchlists_response(self):
@@ -557,6 +521,8 @@ class TestEquitiesResponses:
 
     def test_get_watchlist_constituents_response(self):
         """Test GetWatchlistConstituentsResponse model."""
+        from aiera_mcp.tools.equities.models import FindEquitiesApiResponseData
+
         constituents = [
             EquityItem(
                 equity_id=12345,
@@ -567,18 +533,11 @@ class TestEquitiesResponses:
         ]
 
         response = GetWatchlistConstituentsResponse(
-            watchlist_name="Tech Giants",
-            constituents=constituents,
-            total=1,
-            page=1,
-            page_size=50,
             instructions=["Constituents retrieved"],
-            citation_information=[],
+            response=FindEquitiesApiResponseData(data=constituents),
         )
 
-        assert response.watchlist_name == "Tech Giants"
-        assert len(response.constituents) == 1
-        assert response.total == 1
+        assert len(response.response.data) == 1
         assert response.instructions == ["Constituents retrieved"]
 
 

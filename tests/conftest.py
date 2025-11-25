@@ -12,7 +12,8 @@ import pytest_asyncio
 import httpx
 from unittest.mock import AsyncMock, MagicMock
 
-from aiera_mcp.tools.base import get_http_client, get_api_key
+from aiera_mcp.tools.base import get_http_client
+from aiera_mcp import get_api_key
 
 
 # Test configuration

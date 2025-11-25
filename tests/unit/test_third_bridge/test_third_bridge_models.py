@@ -15,6 +15,9 @@ from aiera_mcp.tools.third_bridge.models import (
     ThirdBridgeEventItem,
     ThirdBridgeEventDetails,
     ThirdBridgeCitationBlock,
+    ThirdBridgeSpecialist,
+    ThirdBridgeModerator,
+    ThirdBridgeTranscriptItem,
 )
 from aiera_mcp.tools.common.models import CitationInfo
 
@@ -24,9 +27,9 @@ class TestThirdBridgeModels:
     """Test third_bridge Pydantic models."""
 
     def test_third_bridge_event_item_creation(self):
-        """Test ThirdBridgeEventItem model creation."""
+        """Test ThirdBridgeEventItem model creation with event_id alias."""
         event_data = {
-            "event_id": "tb123",
+            "event_id": "tb123",  # API uses event_id
             "content_type": "FORUM",
             "call_date": "2023-10-20T14:00:00Z",
             "title": "Apple Supply Chain Analysis",
@@ -43,7 +46,8 @@ class TestThirdBridgeModels:
 
         event = ThirdBridgeEventItem(**event_data)
 
-        assert event.event_id == "tb123"
+        # Access via thirdbridge_event_id (internal name)
+        assert event.thirdbridge_event_id == "tb123"
         assert event.content_type == "FORUM"
         assert event.call_date == "2023-10-20T14:00:00Z"
         assert event.title == "Apple Supply Chain Analysis"
@@ -61,50 +65,70 @@ class TestThirdBridgeModels:
             "title": "Test Event",
             "language": "EN",
             "agenda": ["Basic agenda item"],
-            "insights": ["Basic insight"],
         }
 
         event = ThirdBridgeEventItem(**minimal_data)
 
-        assert event.event_id == "tb123"
+        assert event.thirdbridge_event_id == "tb123"
         assert event.content_type == "FORUM"
         assert event.call_date == "2023-10-20T14:00:00Z"
         assert event.title == "Test Event"
         assert event.language == "EN"
+        assert event.insights is None  # Optional field
         assert event.citation_block is None
 
-    def test_third_bridge_event_details_inherits_event_item(self):
-        """Test ThirdBridgeEventDetails inherits from ThirdBridgeEventItem."""
+    def test_third_bridge_event_details_with_lists(self):
+        """Test ThirdBridgeEventDetails with List types for agenda, insights, transcript."""
         details_data = {
             "event_id": "tb123",
             "content_type": "FORUM",
             "call_date": "2023-10-20T14:00:00Z",
             "title": "Apple Supply Chain Analysis",
             "language": "EN",
-            "agenda": "Discussion of supply chain challenges",  # Optional[str] in EventDetails
-            "insights": "Key insights on supply chain management",  # Optional[str] in EventDetails
+            "agenda": ["Supply chain challenges", "Cost optimization"],  # List[str]
+            "insights": ["Key insight 1", "Key insight 2"],  # List[str]
             "citation_block": {
                 "title": "Apple Supply Chain Analysis",
                 "url": "https://thirdbridge.com/event/tb123",
                 "expert_name": "Jane Smith",
                 "expert_title": "Former Apple Supply Chain Director",
             },
-            "transcript": "Full transcript of the discussion...",
+            "specialists": [
+                {"title": "Former Supply Chain Director", "initials": "JS"}
+            ],
+            "moderators": [{"id": "mod123", "initials": "AB"}],
+            "transcript": [
+                {"timestamp": "[00:00:01]", "discussionItem": ["Opening remarks"]}
+            ],
         }
 
         details = ThirdBridgeEventDetails(**details_data)
 
         # Test inherited fields
-        assert details.event_id == "tb123"
+        assert details.thirdbridge_event_id == "tb123"
         assert details.content_type == "FORUM"
         assert details.call_date == "2023-10-20T14:00:00Z"
         assert details.title == "Apple Supply Chain Analysis"
         assert details.language == "EN"
 
-        # Test new fields (these override the List[str] from parent with Optional[str])
-        assert details.agenda == "Discussion of supply chain challenges"
-        assert details.insights == "Key insights on supply chain management"
-        assert details.transcript == "Full transcript of the discussion..."
+        # Test List[str] fields (changed from Optional[str])
+        assert isinstance(details.agenda, list)
+        assert len(details.agenda) == 2
+        assert details.agenda[0] == "Supply chain challenges"
+
+        assert isinstance(details.insights, list)
+        assert len(details.insights) == 2
+        assert details.insights[0] == "Key insight 1"
+
+        # Test new fields
+        assert len(details.specialists) == 1
+        assert details.specialists[0].initials == "JS"
+
+        assert len(details.moderators) == 1
+        assert details.moderators[0].id == "mod123"
+
+        assert len(details.transcript) == 1
+        assert details.transcript[0].timestamp == "[00:00:01]"
 
 
 @pytest.mark.unit
@@ -219,17 +243,59 @@ class TestFindThirdBridgeEventsArgs:
 
 @pytest.mark.unit
 class TestGetThirdBridgeEventArgs:
-    """Test GetThirdBridgeEventArgs model."""
+    """Test GetThirdBridgeEventArgs model with aliasing."""
 
-    def test_valid_get_third_bridge_event_args(self):
-        """Test valid GetThirdBridgeEventArgs creation."""
-        args = GetThirdBridgeEventArgs(event_id="tb123")
-        assert args.event_id == "tb123"
+    def test_valid_get_third_bridge_event_args_with_internal_name(self):
+        """Test GetThirdBridgeEventArgs creation with thirdbridge_event_id (internal name)."""
+        args = GetThirdBridgeEventArgs(thirdbridge_event_id="tb123")
+        assert args.thirdbridge_event_id == "tb123"
+
+    def test_get_third_bridge_event_args_serialization(self):
+        """Test that thirdbridge_event_id serializes to event_id for API."""
+        args = GetThirdBridgeEventArgs(thirdbridge_event_id="tb123")
+
+        # When dumping for API, should use event_id (serialization_alias)
+        dumped = args.model_dump(by_alias=True)
+        assert "event_id" in dumped
+        assert dumped["event_id"] == "tb123"
+
+        # Without by_alias, should use internal name
+        dumped_internal = args.model_dump(by_alias=False)
+        assert "thirdbridge_event_id" in dumped_internal
+        assert dumped_internal["thirdbridge_event_id"] == "tb123"
 
     def test_get_third_bridge_event_args_required_field(self):
-        """Test that event_id is required."""
+        """Test that thirdbridge_event_id is required."""
         with pytest.raises(ValidationError):
             GetThirdBridgeEventArgs()  # Missing required field
+
+
+@pytest.mark.unit
+class TestThirdBridgeNewModels:
+    """Test new Third Bridge models."""
+
+    def test_third_bridge_specialist(self):
+        """Test ThirdBridgeSpecialist model."""
+        specialist = ThirdBridgeSpecialist(
+            title="Former Supply Chain Director", initials="JS"
+        )
+        assert specialist.title == "Former Supply Chain Director"
+        assert specialist.initials == "JS"
+
+    def test_third_bridge_moderator(self):
+        """Test ThirdBridgeModerator model."""
+        moderator = ThirdBridgeModerator(id="mod123", initials="AB")
+        assert moderator.id == "mod123"
+        assert moderator.initials == "AB"
+
+    def test_third_bridge_transcript_item(self):
+        """Test ThirdBridgeTranscriptItem model."""
+        transcript_item = ThirdBridgeTranscriptItem(
+            timestamp="[00:00:01]", discussionItem=["Opening remarks", "Introduction"]
+        )
+        assert transcript_item.timestamp == "[00:00:01]"
+        assert len(transcript_item.discussionItem) == 2
+        assert transcript_item.discussionItem[0] == "Opening remarks"
 
 
 @pytest.mark.unit
@@ -245,7 +311,7 @@ class TestThirdBridgeResponses:
 
         events = [
             ThirdBridgeEventItem(
-                event_id="tb123",
+                event_id="tb123",  # API format
                 content_type="FORUM",
                 call_date="2023-10-20T14:00:00Z",
                 title="Test Event",
@@ -276,6 +342,7 @@ class TestThirdBridgeResponses:
         )
 
         assert len(response.response.data) == 1
+        assert response.response.data[0].thirdbridge_event_id == "tb123"
         assert response.response.pagination.total_count == 1
         assert response.response.pagination.current_page == 1
         assert response.response.pagination.page_size == 50
@@ -285,14 +352,14 @@ class TestThirdBridgeResponses:
     def test_get_third_bridge_event_response(self):
         """Test GetThirdBridgeEventResponse model."""
         event_details = ThirdBridgeEventDetails(
-            event_id="tb123",
+            event_id="tb123",  # API format
             content_type="FORUM",
             call_date="2023-10-20T14:00:00Z",
             title="Test Event",
             language="EN",
-            agenda="Test agenda",  # Optional[str] in ThirdBridgeEventDetails
-            insights="Test insights",  # Optional[str] in ThirdBridgeEventDetails
-            transcript="Test transcript",
+            agenda=["Test agenda item"],  # List[str]
+            insights=["Test insight"],  # List[str]
+            transcript=[{"timestamp": "[00:00:01]", "discussionItem": ["Test"]}],
         )
 
         response = GetThirdBridgeEventResponse(
@@ -302,9 +369,21 @@ class TestThirdBridgeResponses:
         )
 
         assert isinstance(response.event, ThirdBridgeEventDetails)
-        assert response.event.event_id == "tb123"
-        assert response.event.agenda == "Test agenda"
+        assert response.event.thirdbridge_event_id == "tb123"
+        assert isinstance(response.event.agenda, list)
+        assert response.event.agenda[0] == "Test agenda item"
         assert response.instructions == ["Test instruction"]
+
+    def test_get_third_bridge_event_response_optional_event(self):
+        """Test GetThirdBridgeEventResponse with None event (robustness)."""
+        response = GetThirdBridgeEventResponse(
+            event=None,  # No event found
+            instructions=["No event found"],
+            citation_information=[],
+        )
+
+        assert response.event is None
+        assert response.instructions == ["No event found"]
 
 
 @pytest.mark.unit
@@ -408,20 +487,19 @@ class TestThirdBridgeModelValidation:
 
     def test_event_details_optional_fields(self):
         """Test optional fields in ThirdBridgeEventDetails."""
-        # Minimal event details - ThirdBridgeEventDetails still needs agenda/insights from parent
+        # Minimal event details
         details = ThirdBridgeEventDetails(
             event_id="tb123",
             content_type="FORUM",
             call_date="2023-10-20T14:00:00Z",
             title="Test Event",
             language="EN",
-            agenda=None,  # This overrides the List[str] from parent with Optional[str]
-            insights=None,  # This overrides the List[str] from parent with Optional[str]
-            transcript=None,
         )
         assert details.agenda is None
         assert details.insights is None
         assert details.transcript is None
+        assert details.specialists is None
+        assert details.moderators is None
 
         # Event details with all optional fields
         details_full = ThirdBridgeEventDetails(
@@ -430,52 +508,17 @@ class TestThirdBridgeModelValidation:
             call_date="2023-10-20T14:00:00Z",
             title="Test Event",
             language="EN",
-            agenda="Test agenda",
-            insights="Test insights",
-            transcript="Test transcript",
+            agenda=["Test agenda"],
+            insights=["Test insights"],
+            transcript=[{"timestamp": "[00:00:01]", "discussionItem": []}],
+            specialists=[{"title": "Expert", "initials": "EX"}],
+            moderators=[{"id": "mod1", "initials": "MO"}],
         )
-        assert details_full.agenda == "Test agenda"
-        assert details_full.insights == "Test insights"
-        assert details_full.transcript == "Test transcript"
-
-    def test_string_field_handling(self):
-        """Test string field handling for various lengths."""
-        # Short strings
-        event = ThirdBridgeEventItem(
-            event_id="tb1",
-            content_type="FORUM",
-            call_date="2023-10-20T14:00:00Z",
-            title="Short",
-            language="EN",
-            agenda=["Test"],
-            insights=["Test"],
-        )
-        assert event.title == "Short"
-
-        # Long strings
-        long_title = "A very long title for a Third Bridge event that contains multiple words and detailed information about the discussion topic"
-        event_long = ThirdBridgeEventItem(
-            event_id="tb2",
-            content_type="FORUM",
-            call_date="2023-10-20T14:00:00Z",
-            title=long_title,
-            language="EN",
-            agenda=["Test"],
-            insights=["Test"],
-        )
-        assert event_long.title == long_title
-
-        # Empty strings (if allowed)
-        event_empty = ThirdBridgeEventItem(
-            event_id="tb3",
-            content_type="FORUM",
-            call_date="2023-10-20T14:00:00Z",
-            title="",
-            language="EN",
-            agenda=["Test"],
-            insights=["Test"],
-        )
-        assert event_empty.title == ""
+        assert isinstance(details_full.agenda, list)
+        assert isinstance(details_full.insights, list)
+        assert isinstance(details_full.transcript, list)
+        assert isinstance(details_full.specialists, list)
+        assert isinstance(details_full.moderators, list)
 
     def test_agenda_and_insights_handling(self):
         """Test agenda and insights field handling."""
@@ -502,10 +545,9 @@ class TestThirdBridgeModelValidation:
             title="Test Event",
             language="EN",
             agenda=[],
-            insights=[],
         )
         assert len(event_empty.agenda) == 0
-        assert len(event_empty.insights) == 0
+        assert event_empty.insights is None  # Optional
 
 
 @pytest.mark.unit
@@ -547,9 +589,9 @@ class TestThirdBridgeEventItemDateTimeSerialization:
             call_date="2024-01-15T14:30:00Z",
             title="Test Third Bridge Event",
             language="EN",
-            agenda="Test agenda",  # Optional[str] in EventDetails
-            insights="Test insights",  # Optional[str] in EventDetails
-            transcript="Test transcript",
+            agenda=["Test agenda"],  # List[str]
+            insights=["Test insights"],  # List[str]
+            transcript=[{"timestamp": "[00:00:01]", "discussionItem": []}],
         )
 
         # Test model_dump serialization
@@ -558,7 +600,8 @@ class TestThirdBridgeEventItemDateTimeSerialization:
         # call_date should remain as string
         assert isinstance(serialized["call_date"], str)
         assert serialized["call_date"] == "2024-01-15T14:30:00Z"
-        assert serialized["agenda"] == "Test agenda"
+        assert isinstance(serialized["agenda"], list)
+        assert serialized["agenda"][0] == "Test agenda"
 
     def test_third_bridge_response_json_serialization(self):
         """Test that complete Third Bridge response models can be serialized to JSON."""
@@ -624,7 +667,6 @@ class TestThirdBridgeEventItemDateTimeSerialization:
             title="Minimal Event",
             language="EN",
             agenda=["Minimal agenda"],
-            insights=["Minimal insight"],
         )
 
         # Test JSON serialization with minimal fields
