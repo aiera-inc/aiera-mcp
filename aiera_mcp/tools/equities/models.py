@@ -162,6 +162,21 @@ class EquityItem(BaseModel):
     created: Optional[datetime] = Field(None, description="Creation date")
     modified: Optional[datetime] = Field(None, description="Modification date")
 
+    @field_validator("created", "modified", mode="before")
+    @classmethod
+    def parse_datetime_fields(cls, v):
+        """Parse ISO format datetime strings to datetime objects."""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                # Replace 'Z' with '+00:00' for ISO format compatibility
+                return datetime.fromisoformat(v.replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                return None
+        # If it's already a datetime object, return as is
+        return v
+
     @field_serializer("created", "modified")
     def serialize_datetime_fields(self, value: Optional[datetime]) -> Optional[str]:
         """Serialize datetime fields to ISO format string for JSON compatibility."""
@@ -177,6 +192,21 @@ class LeadershipItem(BaseModel):
     title: str = Field(description="Job title")
     event_count: Optional[int] = Field(None, description="Number of events")
     last_event_date: Optional[datetime] = Field(None, description="Last event date")
+
+    @field_validator("last_event_date", mode="before")
+    @classmethod
+    def parse_last_event_date(cls, v):
+        """Parse ISO format datetime strings to datetime objects."""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                # Replace 'Z' with '+00:00' for ISO format compatibility
+                return datetime.fromisoformat(v.replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                return None
+        # If it's already a datetime object, return as is
+        return v
 
     @field_serializer("last_event_date")
     def serialize_datetime(self, value: Optional[datetime]) -> Optional[str]:
@@ -208,6 +238,21 @@ class EquitySummaryItem(BaseModel):
     leadership: Optional[List[LeadershipItem]] = Field(
         None, description="Leadership information"
     )
+
+    @field_validator("created", "modified", mode="before")
+    @classmethod
+    def parse_datetime_fields(cls, v):
+        """Parse ISO format datetime strings to datetime objects."""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                # Replace 'Z' with '+00:00' for ISO format compatibility
+                return datetime.fromisoformat(v.replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                return None
+        # If it's already a datetime object, return as is
+        return v
 
     @field_serializer("created", "modified")
     def serialize_datetime_fields(self, value: Optional[datetime]) -> Optional[str]:

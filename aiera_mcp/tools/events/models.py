@@ -220,6 +220,57 @@ class CitationInfo(BaseModel):
     url: Optional[str] = Field(None, description="Citation URL")
 
 
+class TranscriptItem(BaseModel):
+    """Individual transcript item from an event."""
+
+    transcript_item_id: int = Field(
+        ..., description="Unique transcript item identifier"
+    )
+    transcript: str = Field(..., description="Transcript text content")
+    timestamp: Optional[datetime] = Field(
+        None, description="Timestamp of the transcript item"
+    )
+    start_ms: Optional[int] = Field(None, description="Start time in milliseconds")
+    duration_ms: Optional[int] = Field(None, description="Duration in milliseconds")
+    speaker: Optional[str] = Field(None, description="Speaker name")
+    speaker_type: Optional[str] = Field(
+        None, description="Speaker type (e.g., 'final', 'estimate')"
+    )
+    created: Optional[datetime] = Field(None, description="Creation timestamp")
+    modified: Optional[datetime] = Field(None, description="Modification timestamp")
+    transcript_section: Optional[str] = Field(
+        None, description="Section of transcript (e.g., 'presentation', 'q_and_a')"
+    )
+    transcript_version: Optional[int] = Field(
+        None, description="Version of the transcript"
+    )
+    citation_information: Optional[CitationInfo] = Field(
+        None, description="Citation information for this transcript item"
+    )
+
+    @field_validator("timestamp", "created", "modified", mode="before")
+    @classmethod
+    def parse_datetime_fields(cls, v):
+        """Parse ISO format datetime strings to datetime objects."""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                # Replace 'Z' with '+00:00' for ISO format compatibility
+                return datetime.fromisoformat(v.replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                return None
+        # If it's already a datetime object, return as is
+        return v
+
+    @field_serializer("timestamp", "created", "modified")
+    def serialize_datetime_fields(self, value: Optional[datetime]) -> Optional[str]:
+        """Serialize datetime fields to ISO format string for JSON compatibility."""
+        if value is None:
+            return None
+        return value.isoformat()
+
+
 class EventItem(BaseModel):
     """Basic event information."""
 
@@ -239,6 +290,24 @@ class EventItem(BaseModel):
     citation_information: Optional[CitationInfo] = Field(
         None, description="Citation information"
     )
+    transcripts: Optional[List[TranscriptItem]] = Field(
+        None,
+        description="List of transcript items (only populated when include_transcripts=true)",
+    )
+
+    @field_validator("event_date", mode="before")
+    @classmethod
+    def parse_event_date(cls, v):
+        """Parse ISO format datetime strings to datetime objects."""
+        if isinstance(v, str):
+            try:
+                # Replace 'Z' with '+00:00' for ISO format compatibility
+                return datetime.fromisoformat(v.replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                # If parsing fails, return current time as fallback
+                return datetime.now()
+        # If it's already a datetime object, return as is
+        return v
 
     @field_serializer("event_date")
     def serialize_event_date(self, value: datetime) -> str:

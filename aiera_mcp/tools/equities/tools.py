@@ -3,7 +3,6 @@
 """Equity and company metadata tools for Aiera MCP."""
 
 import logging
-from datetime import datetime
 
 from .models import (
     FindEquitiesArgs,
@@ -47,56 +46,7 @@ async def find_equities(args: FindEquitiesArgs) -> FindEquitiesResponse:
         params=params,
     )
 
-    # Return the structured response that matches the actual API format
-    # Parse individual equities to match new model structure
-    if "response" in raw_response and "data" in raw_response["response"]:
-        equities_data = []
-        for equity_data in raw_response["response"]["data"]:
-            # Parse datetime fields
-            created = None
-            modified = None
-            if equity_data.get("created"):
-                try:
-                    created = datetime.fromisoformat(
-                        equity_data["created"].replace("Z", "+00:00")
-                    )
-                except:
-                    pass
-            if equity_data.get("modified"):
-                try:
-                    modified = datetime.fromisoformat(
-                        equity_data["modified"].replace("Z", "+00:00")
-                    )
-                except:
-                    pass
-
-            # Create new equity structure matching the actual response and new model
-            parsed_equity = {
-                "equity_id": equity_data.get("equity_id"),
-                "company_id": equity_data.get("company_id"),
-                "company_name": equity_data.get("name"),
-                "name": equity_data.get("name"),
-                "ticker": (
-                    equity_data.get("bloomberg_ticker", "").split(":")[0]
-                    if equity_data.get("bloomberg_ticker")
-                    else None
-                ),
-                "bloomberg_ticker": equity_data.get("bloomberg_ticker", ""),
-                "exchange": equity_data.get("exchange"),
-                "sector": equity_data.get("sector"),
-                "subsector": equity_data.get("subsector"),
-                "sector_id": equity_data.get("sector_id"),
-                "subsector_id": equity_data.get("subsector_id"),
-                "country": equity_data.get("country"),
-                "market_cap": equity_data.get("market_cap"),
-                "primary_equity": equity_data.get("primary_equity"),
-                "created": created,
-                "modified": modified,
-            }
-            equities_data.append(parsed_equity)
-
-        raw_response["response"]["data"] = equities_data
-
+    # Pydantic validators will automatically parse datetime strings and nested objects
     # Handle malformed responses gracefully
     try:
         return FindEquitiesResponse.model_validate(raw_response)

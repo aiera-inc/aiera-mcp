@@ -210,6 +210,19 @@ class TranscriptSearchItem(BaseModel):
         description="Citation details for this result"
     )
 
+    @field_validator("date", mode="before")
+    @classmethod
+    def parse_date(cls, v):
+        """Parse ISO format datetime strings to datetime objects."""
+        if isinstance(v, str):
+            try:
+                # Replace 'Z' with '+00:00' for ISO format compatibility
+                return datetime.fromisoformat(v.replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                return datetime.now()
+        # If it's already a datetime object, return as is
+        return v
+
     @field_serializer("date")
     def serialize_date(self, value: datetime) -> str:
         """Serialize datetime to ISO format string for JSON compatibility."""
@@ -309,6 +322,19 @@ class FilingSearchItem(BaseModel):
         description="Citation details for this result"
     )
 
+    @field_validator("date", mode="before")
+    @classmethod
+    def parse_date(cls, v):
+        """Parse ISO format datetime strings to datetime objects."""
+        if isinstance(v, str):
+            try:
+                # Replace 'Z' with '+00:00' for ISO format compatibility
+                return datetime.fromisoformat(v.replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                return datetime.now()
+        # If it's already a datetime object, return as is
+        return v
+
     @field_serializer("date")
     def serialize_date(self, value: datetime) -> str:
         """Serialize datetime to ISO format string for JSON compatibility."""
@@ -343,6 +369,19 @@ class FilingChunkSearchItem(BaseModel):
     citation_information: FilingSearchCitation = Field(
         description="Citation details for this result"
     )
+
+    @field_validator("date", mode="before")
+    @classmethod
+    def parse_date(cls, v):
+        """Parse ISO format datetime strings to datetime objects."""
+        if isinstance(v, str):
+            try:
+                # Replace 'Z' with '+00:00' for ISO format compatibility
+                return datetime.fromisoformat(v.replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                return datetime.now()
+        # If it's already a datetime object, return as is
+        return v
 
     @field_serializer("date")
     def serialize_date(self, value: datetime) -> str:
