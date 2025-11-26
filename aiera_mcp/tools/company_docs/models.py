@@ -3,7 +3,7 @@
 """Company docs domain models for Aiera MCP."""
 
 from pydantic import BaseModel, Field, field_validator, field_serializer
-from typing import Optional, List, Any, Dict
+from typing import Optional, List, Any, Dict, Union
 
 from ..common.models import BaseAieraResponse, PaginatedResponse
 
@@ -11,6 +11,28 @@ from ..common.models import BaseAieraResponse, PaginatedResponse
 # Mixins for validation (extracted from original params.py)
 class BaseToolArgs(BaseModel):
     """Base class for all Aiera MCP tool arguments with common serializers."""
+
+    @field_validator(
+        "watchlist_id",
+        "index_id",
+        "sector_id",
+        "subsector_id",
+        "page",
+        "page_size",
+        mode="before",
+        check_fields=False,
+    )
+    @classmethod
+    def validate_numeric_fields(cls, v):
+        """Accept both integers and string representations of integers."""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                return int(v)
+            except ValueError:
+                raise ValueError(f"Cannot convert '{v}' to integer")
+        return v
 
     @field_serializer(
         "watchlist_id",
@@ -69,48 +91,65 @@ class CategoriesKeywordsMixin(BaseModel):
 
 # Parameter models (extracted from params.py)
 class FindCompanyDocsArgs(BaseToolArgs, BloombergTickerMixin, CategoriesKeywordsMixin):
-    """Find company-published documents filtered by date range and optional filters. To find documents for multiple companies, provide a comma-separated list of bloomberg_tickers. You do not need to make multiple calls."""
+    """Find company-published documents (press releases, annual reports, earnings releases, etc.) filtered by date range and optional filters.
+
+    DOCUMENT TYPE MAPPING - CRITICAL:
+    When users request specific document types, ALWAYS use the 'categories' parameter:
+    - "press releases" → use categories='press_release'
+    - "annual reports" → use categories='annual_report'
+    - "earnings releases" → use categories='earnings_release'
+    - "slide presentations" or "investor decks" → use categories='slide_presentation'
+    - "compliance documents" → use categories='compliance'
+    - "disclosure documents" → use categories='disclosure'
+    - "press releases and annual reports" → use categories='press_release,annual_report'
+
+    MULTIPLE DOCUMENT TYPES: For multiple document types, provide comma-separated categories without spaces (e.g., 'press_release,earnings_release').
+
+    MULTIPLE COMPANIES: To find documents for multiple companies, provide a comma-separated list of bloomberg_tickers in a SINGLE call. You do NOT need multiple calls for multiple companies.
+
+    This tool provides access to company-published documents with summaries and metadata.
+    """
 
     start_date: str = Field(
-        description="Start date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET).",
+        description="Start date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET). Required to define the search period.",
         pattern=r"^\d{4}-\d{2}-\d{2}$",
     )
     end_date: str = Field(
-        description="End date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET).",
+        description="End date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET). Required to define the search period.",
         pattern=r"^\d{4}-\d{2}-\d{2}$",
     )
     bloomberg_ticker: Optional[str] = Field(
         default=None,
-        description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces.",
+        description="Optional: Bloomberg ticker(s) to filter by specific companies in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces (e.g., 'AAPL:US,MSFT:US'). Defaults to ':US' if country code omitted. Leave empty to search across all companies.",
     )
-    watchlist_id: Optional[int] = Field(
+    watchlist_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific watchlist. Use get_available_watchlists to find valid IDs.",
     )
-    index_id: Optional[int] = Field(
+    index_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific index. Use get_available_indexes to find valid IDs.",
     )
-    sector_id: Optional[int] = Field(
+    sector_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific sector. Use get_sectors_and_subsectors to find valid IDs.",
     )
-    subsector_id: Optional[int] = Field(
+    subsector_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific subsector. Use get_sectors_and_subsectors to find valid IDs.",
     )
     categories: Optional[str] = Field(
         default=None,
-        description="Document categories to filter by (e.g., 'annual_report,earnings_release,compliance,disclosure,slide_presentation,press_release'). Use get_company_doc_categories to find valid values. Multiple categories should be comma-separated without spaces.",
+        description="CRITICAL: Filter by document type/category. Common categories: 'press_release' (press releases/news), 'annual_report' (annual reports), 'earnings_release' (earnings releases), 'slide_presentation' (investor presentations/decks), 'compliance' (compliance filings), 'disclosure' (disclosure documents). Use get_company_doc_categories to see all valid categories. Multiple categories should be comma-separated without spaces (e.g., 'press_release,earnings_release'). Example: For 'Find all press releases from Apple in Q1 2024', use categories='press_release'.",
     )
     keywords: Optional[str] = Field(
         default=None,
-        description="Keywords to filter by (e.g., 'ESG,diversity,risk management'). Use get_company_doc_keywords to find valid values. Multiple keywords should be comma-separated without spaces.",
+        description="Optional: Filter by keywords/topics (e.g., 'ESG', 'diversity', 'risk management', 'sustainability'). Use get_company_doc_keywords to see all valid keywords. Multiple keywords should be comma-separated without spaces.",
     )
-    page: int = Field(
+    page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )
-    page_size: int = Field(
+    page_size: Union[int, str] = Field(
         default=50, ge=1, le=100, description="Number of items per page (1-100)."
     )
 
@@ -130,10 +169,10 @@ class GetCompanyDocCategoriesArgs(BaseToolArgs):
         default=None,
         description="Search term to filter results. Searches within relevant text fields.",
     )
-    page: int = Field(
+    page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )
-    page_size: int = Field(
+    page_size: Union[int, str] = Field(
         default=50, ge=1, le=100, description="Number of items per page (1-100)."
     )
 
@@ -145,10 +184,10 @@ class GetCompanyDocKeywordsArgs(BaseToolArgs):
         default=None,
         description="Search term to filter results. Searches within relevant text fields.",
     )
-    page: int = Field(
+    page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )
-    page_size: int = Field(
+    page_size: Union[int, str] = Field(
         default=50, ge=1, le=100, description="Number of items per page (1-100)."
     )
 
@@ -164,7 +203,9 @@ class CompanyInfo(BaseModel):
 class DocumentCitationInfo(BaseModel):
     """Citation information for document."""
 
-    title: str = Field(description="Citation title")
+    title: Optional[str] = Field(
+        None, description="Citation title (can be null if document title is null)"
+    )
     url: str = Field(description="Citation URL")
 
 
@@ -173,12 +214,18 @@ class CompanyDocItem(BaseModel):
 
     doc_id: int = Field(description="Document identifier")
     company: CompanyInfo = Field(description="Company information")
-    publish_date: str = Field(description="Publication date as string")
-    category: str = Field(description="Document category")
-    title: str = Field(description="Document title")
+    publish_date: Optional[str] = Field(
+        None, description="Publication date as string (can be null)"
+    )
+    category: Optional[str] = Field(None, description="Document category (can be null)")
+    title: Optional[str] = Field(None, description="Document title (can be null)")
     source_url: str = Field(description="Source URL")
-    summary: List[str] = Field(description="Document summary as list of strings")
-    keywords: List[str] = Field(default=[], description="Document keywords")
+    summary: Optional[List[str]] = Field(
+        None, description="Document summary as list of strings (can be null)"
+    )
+    keywords: Optional[List[str]] = Field(
+        None, description="Document keywords (can be null)"
+    )
     processed: Optional[str] = Field(None, description="Processing date")
     created: Optional[str] = Field(None, description="Creation date")
     modified: Optional[str] = Field(None, description="Modification date")
@@ -226,7 +273,9 @@ class CompanyDocResponseData(BaseModel):
 class FindCompanyDocsResponse(BaseAieraResponse):
     """Response for find_company_docs tool - matches actual API structure."""
 
-    response: CompanyDocResponseData = Field(description="Response data container")
+    response: Optional[CompanyDocResponseData] = Field(
+        None, description="Response data container"
+    )
 
 
 class GetCompanyDocResponse(BaseAieraResponse):
@@ -250,14 +299,14 @@ class CategoriesKeywordsResponseData(BaseModel):
 class GetCompanyDocCategoriesResponse(BaseAieraResponse):
     """Response for get_company_doc_categories tool - matches actual API structure."""
 
-    response: CategoriesKeywordsResponseData = Field(
-        description="Response data container"
+    response: Optional[CategoriesKeywordsResponseData] = Field(
+        None, description="Response data container"
     )
 
 
 class GetCompanyDocKeywordsResponse(BaseAieraResponse):
     """Response for get_company_doc_keywords tool - matches actual API structure."""
 
-    response: CategoriesKeywordsResponseData = Field(
-        description="Response data container"
+    response: Optional[CategoriesKeywordsResponseData] = Field(
+        None, description="Response data container"
     )

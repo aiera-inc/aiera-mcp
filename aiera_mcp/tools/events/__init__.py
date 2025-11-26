@@ -14,6 +14,10 @@ from .models import (
     EventDetails,
     EventType,
     TranscriptItem,
+    EstimatedEventItem,
+    UpcomingActualEventItem,
+    EstimateInfo,
+    ActualInfo,
 )
 
 __all__ = [
@@ -34,4 +38,8 @@ __all__ = [
     "EventDetails",
     "EventType",
     "TranscriptItem",
+    "EstimatedEventItem",
+    "UpcomingActualEventItem",
+    "EstimateInfo",
+    "ActualInfo",
 ]

@@ -26,7 +26,11 @@ logger = logging.getLogger(__name__)
 
 
 async def find_company_docs(args: FindCompanyDocsArgs) -> FindCompanyDocsResponse:
-    """Find documents that have been published by a company, filtered by a date range, and (optionally) by ticker(s), watchlist, index, sector, or subsector; or category(s) or keyword(s)."""
+    """Find company-published documents (press releases, annual reports, earnings releases, etc.) filtered by date range and optional company/document filters.
+
+    IMPORTANT: When users request specific document types (e.g., 'press releases', 'annual reports'), ALWAYS use the 'categories' parameter to filter by document type.
+    Example: 'Find all press releases from Apple in Q1 2024' should use categories='press_release' with bloomberg_ticker='AAPL:US'.
+    """
     logger.info("tool called: find_company_docs")
 
     # Get client and API key (no context needed for standard MCP)

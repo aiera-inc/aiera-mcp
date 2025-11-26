@@ -643,7 +643,7 @@ async def run_comprehensive_tests():
             "response_model": GetEventResponse,
             "endpoint": "/chat-support/find-events",
             "params": {
-                "event_id": "2662190",
+                "event_id": "2677339",
                 "include_transcripts": "true",
             },
         },

@@ -289,8 +289,8 @@ class TranscriptSearchResponseData(BaseModel):
 class SearchTranscriptsResponse(BaseAieraResponse):
     """Response for search_transcripts tool - matches actual API structure."""
 
-    response: TranscriptSearchResponseData = Field(
-        description="Response data container"
+    response: Optional[TranscriptSearchResponseData] = Field(
+        None, description="Response data container"
     )
 
 
@@ -344,7 +344,9 @@ class FilingSearchItem(BaseModel):
 class SearchFilingsResponse(BaseAieraResponse):
     """Response for search_filings tool - matches actual API structure."""
 
-    response: SearchResponseData = Field(description="Response data container")
+    response: Optional[SearchResponseData] = Field(
+        None, description="Response data container"
+    )
 
 
 class FilingChunkSearchItem(BaseModel):
@@ -392,4 +394,6 @@ class FilingChunkSearchItem(BaseModel):
 class SearchFilingChunksResponse(BaseAieraResponse):
     """Response for search_filing_chunks tool - matches actual API structure."""
 
-    response: SearchResponseData = Field(description="Response data container")
+    response: Optional[SearchResponseData] = Field(
+        None, description="Response data container"
+    )

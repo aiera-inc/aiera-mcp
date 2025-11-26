@@ -3,13 +3,35 @@
 """Equities domain models for Aiera MCP."""
 
 from pydantic import BaseModel, Field, field_validator, field_serializer
-from typing import Optional, List, Any, Dict
+from typing import Optional, List, Any, Dict, Union
 from datetime import datetime
 
 
 # Mixins for validation (extracted from original params.py)
 class BaseToolArgs(BaseModel):
     """Base class for all Aiera MCP tool arguments with common serializers."""
+
+    @field_validator(
+        "watchlist_id",
+        "index_id",
+        "sector_id",
+        "subsector_id",
+        "page",
+        "page_size",
+        mode="before",
+        check_fields=False,
+    )
+    @classmethod
+    def validate_numeric_fields(cls, v):
+        """Accept both integers and string representations of integers."""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                return int(v)
+            except ValueError:
+                raise ValueError(f"Cannot convert '{v}' to integer")
+        return v
 
     @field_serializer(
         "watchlist_id",
@@ -67,10 +89,10 @@ class FindEquitiesArgs(BaseToolArgs, BloombergTickerMixin):
         default=None,
         description="Search term to filter results. Searches within company names or tickers.",
     )
-    page: int = Field(
+    page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )
-    page_size: int = Field(
+    page_size: Union[int, str] = Field(
         default=50, ge=1, le=100, description="Number of items per page (1-100)."
     )
 
@@ -89,13 +111,13 @@ class GetEquitySummariesArgs(BaseToolArgs, BloombergTickerMixin):
 class GetIndexConstituentsArgs(BaseToolArgs):
     """Get all equities within a specific stock market index."""
 
-    index: str = Field(
+    index: Union[str, int] = Field(
         description="Index identifier. Use get_available_indexes to find valid values."
     )
-    page: int = Field(
+    page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )
-    page_size: int = Field(
+    page_size: Union[int, str] = Field(
         default=50, ge=1, le=100, description="Number of items per page (1-100)."
     )
 
@@ -103,13 +125,13 @@ class GetIndexConstituentsArgs(BaseToolArgs):
 class GetWatchlistConstituentsArgs(BaseToolArgs):
     """Get all equities within a specific watchlist."""
 
-    watchlist_id: str = Field(
+    watchlist_id: Union[str, int] = Field(
         description="Watchlist identifier. Use get_available_watchlists to find valid values."
     )
-    page: int = Field(
+    page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )
-    page_size: int = Field(
+    page_size: Union[int, str] = Field(
         default=50, ge=1, le=100, description="Number of items per page (1-100)."
     )
 
@@ -133,10 +155,10 @@ class GetSectorsAndSubsectorsArgs(BaseToolArgs):
         default=None,
         description="Search term to filter results. Searches within relevant text fields.",
     )
-    page: int = Field(
+    page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )
-    page_size: int = Field(
+    page_size: Union[int, str] = Field(
         default=50, ge=1, le=100, description="Number of items per page (1-100)."
     )
 
@@ -372,52 +394,67 @@ class FindEquitiesResponse(BaseModel):
     """Response for find_equities tool"""
 
     instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: FindEquitiesApiResponseData = Field(..., description="Response data")
+    response: Optional[FindEquitiesApiResponseData] = Field(
+        None, description="Response data"
+    )
+    error: Optional[str] = Field(None, description="Error message if request failed")
 
 
 class GetEquitySummariesResponse(BaseModel):
     """Response for get_equity_summaries tool"""
 
     instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: List[EquitySummaryItem] = Field(
-        ..., description="List of equity summaries"
+    response: Optional[List[EquitySummaryItem]] = Field(
+        None, description="List of equity summaries"
     )
+    error: Optional[str] = Field(None, description="Error message if request failed")
 
 
 class GetSectorsSubsectorsResponse(BaseModel):
     """Response for get_sectors_and_subsectors tool"""
 
     instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: List[SectorSubsector] = Field(
-        ..., description="List of sectors and subsectors"
+    response: Optional[List[SectorSubsector]] = Field(
+        None, description="List of sectors and subsectors"
     )
+    error: Optional[str] = Field(None, description="Error message if request failed")
 
 
 class GetAvailableIndexesResponse(BaseModel):
     """Response for get_available_indexes tool"""
 
     instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: List[IndexItem] = Field(..., description="List of available indexes")
+    response: Optional[List[IndexItem]] = Field(
+        None, description="List of available indexes"
+    )
+    error: Optional[str] = Field(None, description="Error message if request failed")
 
 
 class GetIndexConstituentsResponse(BaseModel):
     """Response for get_index_constituents tool - matches actual API structure."""
 
     instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: FindEquitiesApiResponseData = Field(..., description="Response data")
+    response: Optional[FindEquitiesApiResponseData] = Field(
+        None, description="Response data"
+    )
+    error: Optional[str] = Field(None, description="Error message if request failed")
 
 
 class GetAvailableWatchlistsResponse(BaseModel):
     """Response for get_available_watchlists tool - matches actual API structure."""
 
     instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: List[WatchlistItem] = Field(
-        ..., description="List of available watchlists"
+    response: Optional[List[WatchlistItem]] = Field(
+        None, description="List of available watchlists"
     )
+    error: Optional[str] = Field(None, description="Error message if request failed")
 
 
 class GetWatchlistConstituentsResponse(BaseModel):
     """Response for get_watchlist_constituents tool - matches actual API structure."""
 
     instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: FindEquitiesApiResponseData = Field(..., description="Response data")
+    response: Optional[FindEquitiesApiResponseData] = Field(
+        None, description="Response data"
+    )
+    error: Optional[str] = Field(None, description="Error message if request failed")
