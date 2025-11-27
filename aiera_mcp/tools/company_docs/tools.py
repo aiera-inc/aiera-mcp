@@ -7,7 +7,8 @@ import logging
 from .models import (
     FindCompanyDocsArgs,
     GetCompanyDocArgs,
-    SearchArgs,
+    GetCompanyDocCategoriesArgs,
+    GetCompanyDocKeywordsArgs,
     FindCompanyDocsResponse,
     GetCompanyDocResponse,
     GetCompanyDocCategoriesResponse,
@@ -25,7 +26,11 @@ logger = logging.getLogger(__name__)
 
 
 async def find_company_docs(args: FindCompanyDocsArgs) -> FindCompanyDocsResponse:
-    """Find documents that have been published by a company, filtered by a date range, and (optionally) by ticker(s), watchlist, index, sector, or subsector; or category(s) or keyword(s)."""
+    """Find company-published documents (press releases, annual reports, earnings releases, etc.) filtered by date range and optional company/document filters.
+
+    IMPORTANT: When users request specific document types (e.g., 'press releases', 'annual reports'), ALWAYS use the 'categories' parameter to filter by document type.
+    Example: 'Find all press releases from Apple in Q1 2024' should use categories='press_release' with bloomberg_ticker='AAPL:US'.
+    """
     logger.info("tool called: find_company_docs")
 
     # Get client and API key (no context needed for standard MCP)
@@ -59,8 +64,8 @@ async def get_company_doc(args: GetCompanyDocArgs) -> GetCompanyDocResponse:
     params["include_content"] = "true"
 
     # Handle special field mapping: company_doc_id -> company_doc_ids
-    if "company_doc_id" in params:
-        params["company_doc_ids"] = str(params.pop("company_doc_id"))
+    # if "company_doc_id" in params:
+    #    params["company_doc_ids"] = str(params.pop("company_doc_id"))
 
     raw_response = await make_aiera_request(
         client=client,
@@ -71,10 +76,19 @@ async def get_company_doc(args: GetCompanyDocArgs) -> GetCompanyDocResponse:
     )
 
     # Extract document from the nested response structure
-    if "response" in raw_response and "document" in raw_response["response"]:
-        doc_data = raw_response["response"]["document"]
+    # API returns documents in a data array, just like find_company_docs
+    if "response" in raw_response and "data" in raw_response["response"]:
+        data_array = raw_response["response"]["data"]
+        if data_array and len(data_array) > 0:
+            doc_data = data_array[0]  # Get the first document from the array
+        else:
+            # No documents found - return None for the document field
+            doc_data = None
     else:
-        raise ValueError(f"Document not found: {args.company_doc_id}")
+        # Unexpected response structure
+        raise ValueError(
+            f"Unexpected API response structure for company_doc_ids: {args.company_doc_ids}"
+        )
 
     # Create the response structure expected by GetCompanyDocResponse
     response_data = {
@@ -86,7 +100,7 @@ async def get_company_doc(args: GetCompanyDocArgs) -> GetCompanyDocResponse:
 
 
 async def get_company_doc_categories(
-    args: SearchArgs,
+    args: GetCompanyDocCategoriesArgs,
 ) -> GetCompanyDocCategoriesResponse:
     """Retrieve a list of all categories associated with company documents."""
     logger.info("tool called: get_company_doc_categories")
@@ -110,7 +124,9 @@ async def get_company_doc_categories(
     return GetCompanyDocCategoriesResponse.model_validate(raw_response)
 
 
-async def get_company_doc_keywords(args: SearchArgs) -> GetCompanyDocKeywordsResponse:
+async def get_company_doc_keywords(
+    args: GetCompanyDocKeywordsArgs,
+) -> GetCompanyDocKeywordsResponse:
     """Retrieve a list of all keywords associated with company documents."""
     logger.info("tool called: get_company_doc_keywords")
 

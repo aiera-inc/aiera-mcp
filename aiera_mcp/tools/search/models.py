@@ -192,9 +192,9 @@ class TranscriptSearchItem(BaseModel):
     """Individual transcript search result item."""
 
     date: datetime = Field(description="Date and time of the transcript")
-    primary_company_id: int = Field(description="Primary company identifier")
+    primary_company_id: int = Field(description="Primary company identifier.")
     transcript_item_id: int = Field(
-        alias="content_id",
+        validation_alias="content_id",
         description="Transcript item identifier (aliased from content_id)",
     )
     transcript_event_id: int = Field(description="Event identifier for the transcript")
@@ -202,11 +202,26 @@ class TranscriptSearchItem(BaseModel):
         description="Section of transcript (e.g., 'q_and_a', 'presentation'). Can be null for some transcripts."
     )
     text: str = Field(description="The matching text content from the transcript")
-    primary_equity_id: int = Field(description="Primary equity identifier")
+    primary_equity_id: int = Field(
+        description="Primary equity identifier. Can be found using the find_equities tool."
+    )
     title: str = Field(description="Title of the event/transcript")
     citation_information: TranscriptSearchCitation = Field(
         description="Citation details for this result"
     )
+
+    @field_validator("date", mode="before")
+    @classmethod
+    def parse_date(cls, v):
+        """Parse ISO format datetime strings to datetime objects."""
+        if isinstance(v, str):
+            try:
+                # Replace 'Z' with '+00:00' for ISO format compatibility
+                return datetime.fromisoformat(v.replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                return datetime.now()
+        # If it's already a datetime object, return as is
+        return v
 
     @field_serializer("date")
     def serialize_date(self, value: datetime) -> str:
@@ -274,8 +289,8 @@ class TranscriptSearchResponseData(BaseModel):
 class SearchTranscriptsResponse(BaseAieraResponse):
     """Response for search_transcripts tool - matches actual API structure."""
 
-    response: TranscriptSearchResponseData = Field(
-        description="Response data container"
+    response: Optional[TranscriptSearchResponseData] = Field(
+        None, description="Response data container"
     )
 
 
@@ -300,11 +315,25 @@ class FilingSearchItem(BaseModel):
         default=None, description="Type of SEC filing (e.g., '10-K', '10-Q', '8-K')"
     )
     score: float = Field(
-        alias="_score", description="Search relevance score (aliased from _score)"
+        validation_alias="_score",
+        description="Search relevance score (aliased from _score)",
     )
     citation_information: FilingSearchCitation = Field(
         description="Citation details for this result"
     )
+
+    @field_validator("date", mode="before")
+    @classmethod
+    def parse_date(cls, v):
+        """Parse ISO format datetime strings to datetime objects."""
+        if isinstance(v, str):
+            try:
+                # Replace 'Z' with '+00:00' for ISO format compatibility
+                return datetime.fromisoformat(v.replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                return datetime.now()
+        # If it's already a datetime object, return as is
+        return v
 
     @field_serializer("date")
     def serialize_date(self, value: datetime) -> str:
@@ -315,7 +344,9 @@ class FilingSearchItem(BaseModel):
 class SearchFilingsResponse(BaseAieraResponse):
     """Response for search_filings tool - matches actual API structure."""
 
-    response: SearchResponseData = Field(description="Response data container")
+    response: Optional[SearchResponseData] = Field(
+        None, description="Response data container"
+    )
 
 
 class FilingChunkSearchItem(BaseModel):
@@ -326,17 +357,33 @@ class FilingChunkSearchItem(BaseModel):
     content_id: str = Field(description="Filing chunk content identifier")
     filing_id: str = Field(description="Filing identifier")
     text: str = Field(description="The matching text content from the filing chunk")
-    primary_equity_id: int = Field(description="Primary equity identifier")
+    primary_equity_id: int = Field(
+        description="Primary equity identifier. Can be found using the find_equities tool."
+    )
     title: str = Field(description="Title of the filing")
     filing_type: Optional[str] = Field(
         default=None, description="Type of SEC filing (e.g., '10-K', '10-Q', '8-K')"
     )
     score: float = Field(
-        alias="_score", description="Search relevance score (aliased from _score)"
+        validation_alias="_score",
+        description="Search relevance score (aliased from _score)",
     )
     citation_information: FilingSearchCitation = Field(
         description="Citation details for this result"
     )
+
+    @field_validator("date", mode="before")
+    @classmethod
+    def parse_date(cls, v):
+        """Parse ISO format datetime strings to datetime objects."""
+        if isinstance(v, str):
+            try:
+                # Replace 'Z' with '+00:00' for ISO format compatibility
+                return datetime.fromisoformat(v.replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                return datetime.now()
+        # If it's already a datetime object, return as is
+        return v
 
     @field_serializer("date")
     def serialize_date(self, value: datetime) -> str:
@@ -347,4 +394,6 @@ class FilingChunkSearchItem(BaseModel):
 class SearchFilingChunksResponse(BaseAieraResponse):
     """Response for search_filing_chunks tool - matches actual API structure."""
 
-    response: SearchResponseData = Field(description="Response data container")
+    response: Optional[SearchResponseData] = Field(
+        None, description="Response data container"
+    )

@@ -3,7 +3,7 @@
 """Filings domain models for Aiera MCP."""
 
 from pydantic import BaseModel, Field, field_validator, field_serializer
-from typing import Optional, List, Any, Dict
+from typing import Optional, List, Any, Dict, Union
 from datetime import datetime
 
 from ..common.models import BaseAieraResponse, PaginatedResponse
@@ -12,6 +12,28 @@ from ..common.models import BaseAieraResponse, PaginatedResponse
 # Mixins for validation (extracted from original params.py)
 class BaseToolArgs(BaseModel):
     """Base class for all Aiera MCP tool arguments with common serializers."""
+
+    @field_validator(
+        "watchlist_id",
+        "index_id",
+        "sector_id",
+        "subsector_id",
+        "page",
+        "page_size",
+        mode="before",
+        check_fields=False,
+    )
+    @classmethod
+    def validate_numeric_fields(cls, v):
+        """Accept both integers and string representations of integers."""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                return int(v)
+            except ValueError:
+                raise ValueError(f"Cannot convert '{v}' to integer")
+        return v
 
     @field_serializer(
         "watchlist_id",
@@ -46,7 +68,7 @@ class BloombergTickerMixin(BaseModel):
 
 # Parameter models (extracted from params.py)
 class FindFilingsArgs(BaseToolArgs, BloombergTickerMixin):
-    """Find SEC filings filtered by date range and optional filters."""
+    """Find SEC filings filtered by date range and optional filters. To find filings for multiple companies, provide a comma-separated list of bloomberg_tickers. You do not need to make multiple calls."""
 
     start_date: str = Field(
         description="Start date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET).",
@@ -60,19 +82,19 @@ class FindFilingsArgs(BaseToolArgs, BloombergTickerMixin):
         default=None,
         description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces.",
     )
-    watchlist_id: Optional[int] = Field(
+    watchlist_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific watchlist. Use get_available_watchlists to find valid IDs.",
     )
-    index_id: Optional[int] = Field(
+    index_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific index. Use get_available_indexes to find valid IDs.",
     )
-    sector_id: Optional[int] = Field(
+    sector_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific sector. Use get_sectors_and_subsectors to find valid IDs.",
     )
-    subsector_id: Optional[int] = Field(
+    subsector_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific subsector. Use get_sectors_and_subsectors to find valid IDs.",
     )
@@ -80,10 +102,10 @@ class FindFilingsArgs(BaseToolArgs, BloombergTickerMixin):
         default=None,
         description="SEC form type to filter by (e.g., '10-K', '10-Q', '8-K').",
     )
-    page: int = Field(
+    page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )
-    page_size: int = Field(
+    page_size: Union[int, str] = Field(
         default=50, ge=1, le=100, description="Number of items per page (1-100)."
     )
 
@@ -181,13 +203,16 @@ class FindFilingsResponse(BaseModel):
     """Response for find_filings tool - matches actual API structure."""
 
     instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: ApiResponseData = Field(..., description="Response data")
+    response: Optional[ApiResponseData] = Field(None, description="Response data")
+    error: Optional[str] = Field(None, description="Error message if request failed")
 
 
 class GetFilingResponse(BaseAieraResponse):
     """Response for get_filing tool."""
 
-    filing: FilingDetails = Field(description="Detailed filing information")
+    filing: Optional[FilingDetails] = Field(
+        default=None, description="Detailed filing information (None if not found)"
+    )
 
 
 # Import CitationInfo for backwards compatibility with existing tools.py

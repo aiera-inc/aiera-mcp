@@ -12,6 +12,28 @@ from ..common.models import BaseAieraResponse
 class BaseToolArgs(BaseModel):
     """Base class for all Aiera MCP tool arguments with common serializers."""
 
+    @field_validator(
+        "watchlist_id",
+        "index_id",
+        "sector_id",
+        "subsector_id",
+        "page",
+        "page_size",
+        mode="before",
+        check_fields=False,
+    )
+    @classmethod
+    def validate_numeric_fields(cls, v):
+        """Accept both integers and string representations of integers."""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                return int(v)
+            except ValueError:
+                raise ValueError(f"Cannot convert '{v}' to integer")
+        return v
+
     @field_serializer(
         "watchlist_id",
         "index_id",
@@ -157,13 +179,17 @@ class TranscrippetItem(BaseModel):
 class FindTranscrippetsResponse(BaseAieraResponse):
     """Response for find_transcrippets tool - matches actual API structure."""
 
-    response: List[TranscrippetItem] = Field(description="List of transcrippets")
+    response: Optional[List[TranscrippetItem]] = Field(
+        None, description="List of transcrippets"
+    )
 
 
 class CreateTranscrippetResponse(BaseAieraResponse):
     """Response for create_transcrippet tool - matches actual API structure."""
 
-    response: TranscrippetItem = Field(description="Created transcrippet")
+    response: Optional[TranscrippetItem] = Field(
+        None, description="Created transcrippet"
+    )
 
 
 class DeleteTranscrippetResponse(BaseAieraResponse):

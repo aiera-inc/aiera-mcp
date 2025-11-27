@@ -17,6 +17,7 @@ from aiera_mcp.tools.events.models import (
     EventItem,
     EventDetails,
     EventType,
+    ApiResponseData,
 )
 from aiera_mcp.tools.common.models import CitationInfo
 
@@ -285,24 +286,20 @@ class TestEventsResponses:
 
     def test_get_event_response(self):
         """Test GetEventResponse model."""
-        event_details = EventDetails(
+        event_item = EventItem(
             event_id=12345,
             title="Test Event",
             event_type=EventType.EARNINGS,
             event_date=datetime(2023, 10, 26, 21, 0, 0),
-            description="Test description",
-            transcript_preview="Test preview",
         )
 
         response = GetEventResponse(
-            event=event_details,
+            response=ApiResponseData(data=[event_item]),
             instructions=["Test instruction"],
-            citation_information=[],
         )
 
-        assert isinstance(response.event, EventDetails)
-        assert response.event.event_id == 12345
-        assert response.event.description == "Test description"
+        assert len(response.response.data) == 1
+        assert response.response.data[0].event_id == 12345
         assert response.instructions == ["Test instruction"]
 
     def test_get_upcoming_events_response(self):

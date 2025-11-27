@@ -317,6 +317,13 @@ class TestFilingsResponses:
         assert response.filing.filing_id == 12345
         assert response.filing.summary.summary == "Test summary"
 
+    def test_get_filing_response_no_filing(self):
+        """Test GetFilingResponse with no filing (robustness to empty response)."""
+        response = GetFilingResponse(filing=None, instructions=["Filing not found"])
+
+        assert response.filing is None
+        assert response.instructions == ["Filing not found"]
+
 
 @pytest.mark.unit
 class TestFilingsModelValidation:

@@ -205,14 +205,13 @@ class TestGetEvent:
 
         # Verify
         assert isinstance(result, GetEventResponse)
-        assert isinstance(result.event, EventDetails)
-        assert result.event.event_id == 12345
-        assert result.event.title == "Apple Inc Q4 2023 Earnings Call"
-        assert (
-            result.event.description == "Apple Inc quarterly earnings call for Q4 2023"
-        )
-        assert result.event.transcript_preview is not None
-        assert result.event.audio_url == "https://example.com/audio/event12345.mp3"
+        assert len(result.response.data) == 1
+        event = result.response.data[0]
+        assert isinstance(event, EventItem)
+        assert event.event_id == 12345
+        assert event.title == "Apple Inc Q4 2023 Earnings Call"
+        # Note: EventItem doesn't have description, transcript_preview, or audio_url
+        # These would be in EventDetails if the model had that distinction
 
         # Check API call parameters
         call_args = mock_http_dependencies["mock_make_request"].call_args
@@ -257,9 +256,12 @@ class TestGetEvent:
 
         args = GetEventArgs(event_id="nonexistent")
 
-        # Execute & Verify
-        with pytest.raises(ValueError, match="Event not found: nonexistent"):
-            await get_event(args)
+        # Execute
+        result = await get_event(args)
+
+        # Verify - data array should be empty
+        assert len(result.response.data) == 0
+        assert isinstance(result, GetEventResponse)
 
     @pytest.mark.asyncio
     async def test_get_event_date_parsing(self, mock_http_dependencies):
@@ -267,13 +269,18 @@ class TestGetEvent:
         # Setup with various date formats
         response_with_dates = {
             "response": {
-                "event": {
-                    "event_id": 12345,
-                    "title": "Test Event",
-                    "event_type": "earnings",
-                    "event_date": "2023-10-26T21:00:00Z",  # ISO format with Z
-                    "equity": {"name": "Test Company", "bloomberg_ticker": "TEST:US"},
-                }
+                "data": [
+                    {
+                        "event_id": 12345,
+                        "title": "Test Event",
+                        "event_type": "earnings",
+                        "event_date": "2023-10-26T21:00:00Z",  # ISO format with Z
+                        "equity": {
+                            "name": "Test Company",
+                            "bloomberg_ticker": "TEST:US",
+                        },
+                    }
+                ]
             },
             "instructions": [],
         }
@@ -285,10 +292,11 @@ class TestGetEvent:
         result = await get_event(args)
 
         # Verify date was parsed correctly
-        assert isinstance(result.event.event_date, datetime)
-        assert result.event.event_date.year == 2023
-        assert result.event.event_date.month == 10
-        assert result.event.event_date.day == 26
+        first_event = result.response.data[0]
+        assert isinstance(first_event.event_date, datetime)
+        assert first_event.event_date.year == 2023
+        assert first_event.event_date.month == 10
+        assert first_event.event_date.day == 26
 
 
 @pytest.mark.unit

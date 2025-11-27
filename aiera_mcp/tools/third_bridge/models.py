@@ -3,7 +3,7 @@
 """Third Bridge domain models for Aiera MCP."""
 
 from pydantic import BaseModel, Field, field_validator, field_serializer
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Union
 
 from ..common.models import BaseAieraResponse, PaginatedResponse
 
@@ -11,6 +11,28 @@ from ..common.models import BaseAieraResponse, PaginatedResponse
 # Mixins for validation (extracted from original params.py)
 class BaseToolArgs(BaseModel):
     """Base class for all Aiera MCP tool arguments with common serializers."""
+
+    @field_validator(
+        "watchlist_id",
+        "index_id",
+        "sector_id",
+        "subsector_id",
+        "page",
+        "page_size",
+        mode="before",
+        check_fields=False,
+    )
+    @classmethod
+    def validate_numeric_fields(cls, v):
+        """Accept both integers and string representations of integers."""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                return int(v)
+            except ValueError:
+                raise ValueError(f"Cannot convert '{v}' to integer")
+        return v
 
     @field_serializer(
         "watchlist_id",
@@ -45,7 +67,7 @@ class BloombergTickerMixin(BaseModel):
 
 # Parameter models (extracted from params.py)
 class FindThirdBridgeEventsArgs(BaseToolArgs, BloombergTickerMixin):
-    """Find expert insight events from Third Bridge filtered by date range and optional filters."""
+    """Find expert insight events from Third Bridge filtered by date range and optional filters. To find events for multiple companies, provide a comma-separated list of bloomberg_tickers. You do not need to make multiple calls."""
 
     start_date: str = Field(
         description="Start date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET).",
@@ -59,35 +81,36 @@ class FindThirdBridgeEventsArgs(BaseToolArgs, BloombergTickerMixin):
         default=None,
         description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces.",
     )
-    watchlist_id: Optional[int] = Field(
+    watchlist_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific watchlist. Use get_available_watchlists to find valid IDs.",
     )
-    index_id: Optional[int] = Field(
+    index_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific index. Use get_available_indexes to find valid IDs.",
     )
-    sector_id: Optional[int] = Field(
+    sector_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific sector. Use get_sectors_and_subsectors to find valid IDs.",
     )
-    subsector_id: Optional[int] = Field(
+    subsector_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific subsector. Use get_sectors_and_subsectors to find valid IDs.",
     )
-    page: int = Field(
+    page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )
-    page_size: int = Field(
+    page_size: Union[int, str] = Field(
         default=50, ge=1, le=100, description="Number of items per page (1-100)."
     )
 
 
 class GetThirdBridgeEventArgs(BaseToolArgs):
-    """Get detailed information about a specific Third Bridge expert insight event."""
+    """Get detailed information about a specific Third Bridge expert insight event. If you need to retrieve more than one event, make multiple sequential calls."""
 
-    event_id: str = Field(
-        description="Unique identifier for the Third Bridge event. Obtained from find_third_bridge_events results."
+    thirdbridge_event_id: str = Field(
+        serialization_alias="event_id",  # Serialize to API as "event_id"
+        description="Unique identifier for the Third Bridge event. Obtained from find_third_bridge_events results.",
     )
 
 
@@ -105,7 +128,9 @@ class ThirdBridgeCitationBlock(BaseModel):
 class ThirdBridgeEventItem(BaseModel):
     """Third Bridge event item."""
 
-    event_id: str = Field(description="Event identifier")
+    thirdbridge_event_id: str = Field(
+        validation_alias="event_id", description="Event identifier"
+    )
     content_type: str = Field(description="Content type (e.g., FORUM, COMMUNITY)")
     call_date: str = Field(description="Event date and time as string")
     title: str = Field(description="Event title")
@@ -119,19 +144,57 @@ class ThirdBridgeEventItem(BaseModel):
     )
 
 
+class ThirdBridgeSpecialist(BaseModel):
+    """Third Bridge specialist/expert information."""
+
+    title: str = Field(description="Expert's job title")
+    initials: str = Field(description="Expert's initials")
+
+
+class ThirdBridgeModerator(BaseModel):
+    """Third Bridge moderator information."""
+
+    id: str = Field(description="Moderator identifier")
+    initials: str = Field(description="Moderator's initials")
+
+
+class ThirdBridgeTranscriptItem(BaseModel):
+    """Third Bridge transcript item."""
+
+    timestamp: str = Field(description="Timestamp of the transcript segment")
+    discussionItem: List[Any] = Field(
+        default=[], description="Discussion items in this segment"
+    )
+    # Allow additional fields that may be present
+    model_config = {"extra": "allow"}
+
+
 class ThirdBridgeEventDetails(BaseModel):
     """Detailed Third Bridge event information."""
 
-    event_id: str = Field(description="Event identifier")
+    thirdbridge_event_id: str = Field(
+        validation_alias="event_id",  # Parse from API as "event_id"
+        description="Event identifier",
+    )
     content_type: str = Field(description="Content type (e.g., FORUM, COMMUNITY)")
     call_date: str = Field(description="Event date and time as string")
     title: str = Field(description="Event title")
     language: str = Field(description="Event language")
-    agenda: Optional[str] = Field(None, description="Event agenda as string")
-    insights: Optional[str] = Field(None, description="Key insights as string")
-    transcript: Optional[str] = Field(None, description="Event transcript")
+    agenda: Optional[List[str]] = Field(None, description="Event agenda items")
+    insights: Optional[List[str]] = Field(
+        None, description="Key insights from the event"
+    )
     citation_block: Optional[ThirdBridgeCitationBlock] = Field(
         None, description="Citation information"
+    )
+    specialists: Optional[List[ThirdBridgeSpecialist]] = Field(
+        None, description="Expert specialists participating in the event"
+    )
+    moderators: Optional[List[ThirdBridgeModerator]] = Field(
+        None, description="Moderators of the event"
+    )
+    transcript: Optional[List[ThirdBridgeTranscriptItem]] = Field(
+        None, description="Full event transcript"
     )
 
 
@@ -155,10 +218,14 @@ class ThirdBridgeResponseData(BaseModel):
 class FindThirdBridgeEventsResponse(BaseAieraResponse):
     """Response for find_third_bridge_events tool - matches actual API structure."""
 
-    response: ThirdBridgeResponseData = Field(description="Response data container")
+    response: Optional[ThirdBridgeResponseData] = Field(
+        None, description="Response data container"
+    )
 
 
 class GetThirdBridgeEventResponse(BaseAieraResponse):
     """Response for get_third_bridge_event tool."""
 
-    event: ThirdBridgeEventDetails = Field(description="Detailed Third Bridge event")
+    event: Optional[ThirdBridgeEventDetails] = Field(
+        default=None, description="Detailed Third Bridge event (None if not found)"
+    )

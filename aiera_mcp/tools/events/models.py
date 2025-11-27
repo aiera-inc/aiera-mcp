@@ -3,7 +3,7 @@
 """Events domain models for Aiera MCP."""
 
 from pydantic import BaseModel, Field, field_validator, field_serializer
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Union
 from datetime import datetime
 from enum import Enum
 
@@ -13,6 +13,28 @@ from ..common.models import BaseAieraArgs, BaseAieraResponse, PaginatedResponse
 # Mixins for validation (extracted from original params.py)
 class BaseToolArgs(BaseModel):
     """Base class for all Aiera MCP tool arguments with common serializers."""
+
+    @field_validator(
+        "watchlist_id",
+        "index_id",
+        "sector_id",
+        "subsector_id",
+        "page",
+        "page_size",
+        mode="before",
+        check_fields=False,
+    )
+    @classmethod
+    def validate_numeric_fields(cls, v):
+        """Accept both integers and string representations of integers."""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                return int(v)
+            except ValueError:
+                raise ValueError(f"Cannot convert '{v}' to integer")
+        return v
 
     @field_serializer(
         "watchlist_id",
@@ -72,44 +94,59 @@ class EventType(str, Enum):
 
 # Parameter models (extracted from params.py)
 class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
-    """Find events filtered by date range and optional company/entity filters."""
+    """Search for corporate events including earnings calls, investor presentations, shareholder meetings, and more. Search across all companies by date range, or filter by specific companies using bloomberg_tickers, watchlists, indexes, sectors, or subsectors.
+
+    EVENT TYPE MAPPING - CRITICAL:
+    - "earnings calls" or "earnings" → use event_type='earnings' (ONE call)
+    - "conference calls" or "presentations" → use event_type='presentation' (ONE call)
+    - "investor meetings" → use event_type='investor_meeting' (ONE call)
+    - "shareholder meetings" → use event_type='shareholder_meeting' (ONE call)
+    - "conference calls AND meetings" → make TWO separate calls: first with event_type='presentation', then with event_type='investor_meeting', and combine the results
+    - "all events" or "any type of event" → make MULTIPLE calls for each event_type you want to include and combine results
+
+    MULTIPLE EVENT TYPES: This tool only accepts ONE event_type per call. To search multiple event types, you MUST make separate calls for each event_type and combine the results yourself.
+
+    MULTIPLE COMPANIES: To find events for multiple companies, provide a comma-separated list of bloomberg_tickers in a SINGLE call. You do NOT need multiple calls for multiple companies.
+
+    This tool provides access to a comprehensive database of corporate events with transcripts and summaries.
+    """
 
     start_date: str = Field(
-        description="Start date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET).",
+        description="Start date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET). Required to define the search period.",
         pattern=r"^\d{4}-\d{2}-\d{2}$",
     )
     end_date: str = Field(
-        description="End date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET).",
+        description="End date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET). Required to define the search period.",
         pattern=r"^\d{4}-\d{2}-\d{2}$",
     )
     bloomberg_ticker: Optional[str] = Field(
         default=None,
-        description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces (e.g., 'AAPL:US,MSFT:US,GOOGL:US'). Defaults to ':US' if country code omitted.",
+        description="Optional: Bloomberg ticker(s) to filter by specific companies in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces (e.g., 'AAPL:US,MSFT:US,GOOGL:US'). Defaults to ':US' if country code omitted. Leave empty to search across all companies.",
     )
-    watchlist_id: Optional[int] = Field(
+    watchlist_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific watchlist. Use get_available_watchlists to find valid IDs.",
     )
-    index_id: Optional[int] = Field(
+    index_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific index. Use get_available_indexes to find valid IDs.",
     )
-    sector_id: Optional[int] = Field(
+    sector_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific sector. Use get_sectors_and_subsectors to find valid IDs.",
     )
-    subsector_id: Optional[int] = Field(
+    subsector_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific subsector. Use get_sectors_and_subsectors to find valid IDs.",
     )
     event_type: str = Field(
         default="earnings",
-        description="Type of event to search for. Options: 'earnings', 'presentation' (conferences), 'shareholder_meeting' (annual meetings), 'investor_meeting', 'special_situation' (M&A/corporate actions).",
+        description="Type of event to search for. ONLY ONE type per call - to search multiple types, make separate calls. Options: 'earnings' (quarterly earnings calls with Q&A), 'presentation' (investor conferences, company presentations at events - use this for 'conference calls'), 'investor_meeting' (investor day events, one-on-one meetings - use this for 'investor meetings'), 'shareholder_meeting' (annual/special shareholder meetings), 'special_situation' (M&A announcements, other corporate actions). Example: for 'conference calls AND meetings', make TWO calls: one with event_type='presentation' and one with event_type='investor_meeting'. Defaults to 'earnings'.",
     )
-    page: int = Field(
+    page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )
-    page_size: int = Field(
+    page_size: Union[int, str] = Field(
         default=50, ge=1, le=100, description="Number of items per page (1-100)."
     )
 
@@ -130,10 +167,10 @@ class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
 
 
 class GetEventArgs(BaseToolArgs):
-    """Get detailed information about a specific event including transcripts."""
+    """Get detailed information about a specific event including transcripts. If you need to retrieve more than one event, make multiple sequential calls. Transcripts are not availble for future events."""
 
     event_id: str = Field(
-        description="Unique identifier for the event. Obtained from find_events results."
+        description="Unique identifier for the event. Obtained from find_events tool."
     )
     transcript_section: Optional[str] = Field(
         default=None,
@@ -151,7 +188,10 @@ class GetEventArgs(BaseToolArgs):
 
 
 class GetUpcomingEventsArgs(BaseToolArgs, BloombergTickerMixin):
-    """Get confirmed and estimated upcoming events within a date range."""
+    """Get confirmed and estimated upcoming events within a date range. Requires one of the following: bloomberg_tickers (a comma-separated list of tickers),
+    a watchlist_id, an index_id, a sector_id, or a subsector_id.
+    To find upcoming events for multiple companies, provide a comma-separated list of bloomberg_tickers. You do not need to make multiple calls.
+    """
 
     start_date: str = Field(
         description="Start date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET).",
@@ -165,19 +205,19 @@ class GetUpcomingEventsArgs(BaseToolArgs, BloombergTickerMixin):
         default=None,
         description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces.",
     )
-    watchlist_id: Optional[int] = Field(
+    watchlist_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific watchlist. Use get_available_watchlists to find valid IDs.",
     )
-    index_id: Optional[int] = Field(
+    index_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific index. Use get_available_indexes to find valid IDs.",
     )
-    sector_id: Optional[int] = Field(
+    sector_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific sector. Use get_sectors_and_subsectors to find valid IDs.",
     )
-    subsector_id: Optional[int] = Field(
+    subsector_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific subsector. Use get_sectors_and_subsectors to find valid IDs.",
     )
@@ -217,6 +257,57 @@ class CitationInfo(BaseModel):
     url: Optional[str] = Field(None, description="Citation URL")
 
 
+class TranscriptItem(BaseModel):
+    """Individual transcript item from an event."""
+
+    transcript_item_id: int = Field(
+        ..., description="Unique transcript item identifier"
+    )
+    transcript: str = Field(..., description="Transcript text content")
+    timestamp: Optional[datetime] = Field(
+        None, description="Timestamp of the transcript item"
+    )
+    start_ms: Optional[int] = Field(None, description="Start time in milliseconds")
+    duration_ms: Optional[int] = Field(None, description="Duration in milliseconds")
+    speaker: Optional[str] = Field(None, description="Speaker name")
+    speaker_type: Optional[str] = Field(
+        None, description="Speaker type (e.g., 'final', 'estimate')"
+    )
+    created: Optional[datetime] = Field(None, description="Creation timestamp")
+    modified: Optional[datetime] = Field(None, description="Modification timestamp")
+    transcript_section: Optional[str] = Field(
+        None, description="Section of transcript (e.g., 'presentation', 'q_and_a')"
+    )
+    transcript_version: Optional[int] = Field(
+        None, description="Version of the transcript"
+    )
+    citation_information: Optional[CitationInfo] = Field(
+        None, description="Citation information for this transcript item"
+    )
+
+    @field_validator("timestamp", "created", "modified", mode="before")
+    @classmethod
+    def parse_datetime_fields(cls, v):
+        """Parse ISO format datetime strings to datetime objects."""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                # Replace 'Z' with '+00:00' for ISO format compatibility
+                return datetime.fromisoformat(v.replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                return None
+        # If it's already a datetime object, return as is
+        return v
+
+    @field_serializer("timestamp", "created", "modified")
+    def serialize_datetime_fields(self, value: Optional[datetime]) -> Optional[str]:
+        """Serialize datetime fields to ISO format string for JSON compatibility."""
+        if value is None:
+            return None
+        return value.isoformat()
+
+
 class EventItem(BaseModel):
     """Basic event information."""
 
@@ -236,6 +327,24 @@ class EventItem(BaseModel):
     citation_information: Optional[CitationInfo] = Field(
         None, description="Citation information"
     )
+    transcripts: Optional[List[TranscriptItem]] = Field(
+        None,
+        description="List of transcript items (only populated when include_transcripts=true)",
+    )
+
+    @field_validator("event_date", mode="before")
+    @classmethod
+    def parse_event_date(cls, v):
+        """Parse ISO format datetime strings to datetime objects."""
+        if isinstance(v, str):
+            try:
+                # Replace 'Z' with '+00:00' for ISO format compatibility
+                return datetime.fromisoformat(v.replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                # If parsing fails, return current time as fallback
+                return datetime.now()
+        # If it's already a datetime object, return as is
+        return v
 
     @field_serializer("event_date")
     def serialize_event_date(self, value: datetime) -> str:
@@ -275,21 +384,71 @@ class FindEventsResponse(BaseModel):
     """Response from finding events - matches actual API structure."""
 
     instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: ApiResponseData = Field(..., description="Response data")
+    response: Optional[ApiResponseData] = Field(None, description="Response data")
+    error: Optional[str] = Field(None, description="Error message if request failed")
 
 
-class GetEventResponse(BaseAieraResponse):
-    """Response from getting a specific event."""
+class GetEventResponse(BaseModel):
+    """Response from getting a specific event - matches actual API structure."""
 
-    event: EventDetails = Field(..., description="Detailed event information")
+    instructions: Optional[List[str]] = Field(None, description="API instructions")
+    response: Optional[ApiResponseData] = Field(None, description="Response data")
+    error: Optional[str] = Field(None, description="Error message if request failed")
+
+
+class EstimateInfo(BaseModel):
+    """Estimate information for future events."""
+
+    call_type: Optional[str] = Field(None, description="Type of call/event")
+    call_date: str = Field(..., description="Estimated date in ISO format")
+    title: str = Field(..., description="Estimate title")
+
+
+class ActualInfo(BaseModel):
+    """Actual event information when available for an estimate."""
+
+    scheduled_audio_call_id: int = Field(..., description="Scheduled audio call ID")
+    call_type: Optional[str] = Field(None, description="Type of call")
+    call_date: str = Field(..., description="Actual date in ISO format")
+    title: str = Field(..., description="Actual event title")
+    url: str = Field(..., description="URL to the event")
+
+
+class EstimatedEventItem(BaseModel):
+    """Individual estimated future event item."""
+
+    estimate_id: int = Field(..., description="Unique identifier for the estimate")
+    equity: Optional[EquityInfo] = Field(None, description="Company equity information")
+    estimate: EstimateInfo = Field(..., description="Estimate information")
+    actual: Optional[ActualInfo] = Field(
+        None, description="Actual event info if confirmed"
+    )
+    citation_information: Optional[CitationInfo] = Field(
+        None, description="Citation information"
+    )
+
+
+class UpcomingActualEventItem(BaseModel):
+    """Individual upcoming confirmed event item."""
+
+    event_id: int = Field(..., description="Unique identifier for the event")
+    equity: Optional[EquityInfo] = Field(None, description="Company equity information")
+    call_type: Optional[str] = Field(None, description="Type of call/event")
+    call_date: str = Field(..., description="Event date in ISO format")
+    title: str = Field(..., description="Event title")
+    citation_information: Optional[CitationInfo] = Field(
+        None, description="Citation information"
+    )
 
 
 class UpcomingEventsData(BaseModel):
     """Upcoming events response structure with estimates and actuals."""
 
-    estimates: Optional[List[EventItem]] = Field(None, description="Estimated events")
-    actuals: Optional[List[EventItem]] = Field(
-        None, description="Actual/confirmed events"
+    estimates: Optional[List[EstimatedEventItem]] = Field(
+        None, description="Estimated future events"
+    )
+    actuals: Optional[List[UpcomingActualEventItem]] = Field(
+        None, description="Confirmed upcoming events"
     )
 
 
@@ -297,4 +456,5 @@ class GetUpcomingEventsResponse(BaseModel):
     """Response from getting upcoming events - matches actual API structure."""
 
     instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: UpcomingEventsData = Field(..., description="Response data")
+    response: Optional[UpcomingEventsData] = Field(None, description="Response data")
+    error: Optional[str] = Field(None, description="Error message if request failed")
