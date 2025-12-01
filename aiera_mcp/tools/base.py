@@ -125,8 +125,9 @@ async def make_aiera_request(
     api_key: str,
     params: Optional[Dict[str, Any]] = None,
     data: Optional[Dict[str, Any]] = None,
-    additional_instructions: Optional[str] = None,
+    additional_instructions: Optional[list] = None,
     return_type: str = "json",
+    request_context: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Make a request to the Aiera API with enhanced error handling and logging.
 
@@ -137,20 +138,45 @@ async def make_aiera_request(
         api_key: API key (required)
         params: Query parameters
         data: Request body data
-        additional_instructions: Additional instructions for response formatting
+        additional_instructions: Additional instructions for response formatting (list of strings)
         return_type: Response format type
+        request_context: Optional context dict with 'headers' and 'log_metadata' keys
 
     Returns:
         JSON response data with instructions
     """
+    # Import context functions (deferred to avoid circular imports)
+    from ..context import get_request_context
+
+    # Build base headers
     headers = DEFAULT_HEADERS.copy()
     headers["X-API-Key"] = api_key
-    # headers["X-MCP-Origin"] = f"remote_mcp_{config.STAGE}"
 
-    # Log API request info for debugging
-    logger.info(
-        f"API request: {endpoint}\n" f"API key: Present\n" f"Params: {params}\n"
-    )
+    # Inject context from provider or explicit parameter
+    context = request_context or get_request_context()
+
+    # Apply custom headers from context
+    if "headers" in context:
+        headers.update(context["headers"])
+        logger.debug(f"Injected {len(context['headers'])} context headers")
+
+    # Enhanced logging with context metadata
+    log_context = context.get("log_metadata", {})
+    log_parts = [f"API request: {endpoint}"]
+
+    if log_context.get("stage"):
+        log_parts.append(f"Stage: {log_context['stage']}")
+    if log_context.get("user_id"):
+        log_parts.append(f"User ID: {log_context['user_id']}")
+    if log_context.get("auth_source"):
+        log_parts.append(f"Auth source: {log_context['auth_source']}")
+    if log_context.get("user_origin"):
+        log_parts.append(f"User origin: {log_context['user_origin']}")
+
+    log_parts.append(f"API key: Present")
+    log_parts.append(f"Params: {params}")
+
+    logger.info("\n".join(log_parts))
 
     # Get base URL from settings dynamically
     settings = get_settings()
@@ -181,20 +207,10 @@ async def make_aiera_request(
         if params:
             logger.error(f"Request params: {params}")
 
-        # Check if this looks like an auth error
-        if response.status_code in [401, 403]:
-            raise Exception(
-                f"Aiera API authentication failed (HTTP {response.status_code}). The API key may be invalid or expired."
-            )
-        # For 504 Gateway Timeout, provide a more informative message
-        elif response.status_code == 504:
-            raise Exception(
-                f"API request timed out (504). The API endpoint may be experiencing heavy load. Please retry in a moment."
-            )
-        else:
-            raise Exception(
-                f"API request failed: {response.status_code} - {response.text}"
-            )
+        # Use custom error handler if configured, otherwise use default
+        from ..context import handle_api_error
+
+        raise handle_api_error(response.status_code, endpoint, response.text)
 
     if return_type == "json":
         response_data = response.json()
@@ -219,7 +235,11 @@ Some endpoints may require specific permissions based on a subscription plan. If
     ]
 
     if additional_instructions:
-        instructions.append(additional_instructions)
+        # Support both List[str] (new) and str (backward compatibility)
+        if isinstance(additional_instructions, list):
+            instructions.extend(additional_instructions)
+        else:
+            instructions.append(additional_instructions)
 
     return {
         "instructions": instructions,
