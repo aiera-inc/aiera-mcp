@@ -42,6 +42,7 @@ class BaseAieraResponse(BaseModel):
     citation_information: List[CitationInfo] = Field(
         default=[], description="Source citations for the returned data"
     )
+    error: Optional[str] = Field(None, description="Error message if request failed")
 
 
 class PaginatedResponse(BaseAieraResponse):

@@ -88,3 +88,15 @@ def correct_transcript_section(section: str) -> str:
         section = "q_and_a"
 
     return section.strip()
+
+
+def correct_provided_types(provided_types: str) -> str:
+    """Ensure provided type lists have comma-separation."""
+    if "," not in provided_types and " " in provided_types:
+        provided_types = ",".join(provided_types.split())
+
+    retype = []
+    for provided_type in provided_types.split(","):
+        retype.append(str(provided_type.strip()))
+
+    return retype

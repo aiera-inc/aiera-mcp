@@ -257,7 +257,7 @@ class TestGetCompanyDoc:
             company_docs_api_responses["get_company_doc_success"]
         )
 
-        args = GetCompanyDocArgs(company_doc_ids="456789")
+        args = GetCompanyDocArgs(company_doc_id="456789")
 
         # Execute
         result = await get_company_doc(args)
@@ -267,18 +267,16 @@ class TestGetCompanyDoc:
         assert isinstance(result.document, CompanyDocDetails)
         assert result.document.doc_id == 456789
         assert result.document.title == "Sustainability Report 2023"
-        assert isinstance(result.document.summary, list)
-        assert len(result.document.summary) == 1
         assert (
-            result.document.summary[0]
+            result.document.summary
             == "Apple's comprehensive sustainability report covering environmental impact, carbon neutrality goals, and renewable energy initiatives."
         )
-        assert result.document.content_raw.startswith(
+        assert result.document.content_preview.startswith(
             "This report outlines Apple's environmental initiatives"
         )
         assert result.document.company.name == "Apple Inc"
         assert result.document.company.company_id == 12345
-        assert result.document.attachments is None
+        assert len(result.document.attachments) == 0
 
         # Check API call parameters
         call_args = mock_http_dependencies["mock_make_request"].call_args
@@ -301,14 +299,11 @@ class TestGetCompanyDoc:
             "instructions": [],
         }
 
-        args = GetCompanyDocArgs(company_doc_ids="nonexistent")
+        args = GetCompanyDocArgs(company_doc_id="nonexistent")
 
-        # Execute
-        result = await get_company_doc(args)
-
-        # Verify - document should be None
-        assert result.document is None
-        assert isinstance(result, GetCompanyDocResponse)
+        # Execute & Verify
+        with pytest.raises(ValueError, match="Document not found: nonexistent"):
+            await get_company_doc(args)
 
     @pytest.mark.asyncio
     async def test_get_company_doc_date_parsing(
@@ -320,7 +315,7 @@ class TestGetCompanyDoc:
             company_docs_api_responses["get_company_doc_success"]
         )
 
-        args = GetCompanyDocArgs(company_doc_ids="456789")
+        args = GetCompanyDocArgs(company_doc_id="456789")
 
         # Execute
         result = await get_company_doc(args)
@@ -447,7 +442,7 @@ class TestGetCompanyDocKeywords:
             company_docs_api_responses["get_company_doc_keywords_success"]
         )
 
-        args = GetCompanyDocKeywordsArgs(search="ESG")
+        args = SearchArgs(search="ESG")
 
         # Execute
         result = await get_company_doc_keywords(args)
@@ -490,7 +485,7 @@ class TestGetCompanyDocKeywords:
         }
         mock_http_dependencies["mock_make_request"].return_value = empty_response
 
-        args = GetCompanyDocKeywordsArgs()
+        args = SearchArgs()
 
         # Execute
         result = await get_company_doc_keywords(args)
@@ -520,7 +515,7 @@ class TestGetCompanyDocKeywords:
         }
         mock_http_dependencies["mock_make_request"].return_value = keywords_response
 
-        args = GetCompanyDocKeywordsArgs()
+        args = SearchArgs()
 
         # Execute
         result = await get_company_doc_keywords(args)

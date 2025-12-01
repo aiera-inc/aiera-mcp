@@ -57,7 +57,7 @@ async def get_third_bridge_event(
     client = await get_http_client(None)
     api_key = get_api_key()
 
-    params = args.model_dump(exclude_none=True)
+    params = args.model_dump(exclude_none=True, by_alias=True)
     params["include_transcripts"] = "true"
 
     # Handle special field mapping: event_id -> event_ids
@@ -85,7 +85,7 @@ async def get_third_bridge_event(
         total_count = pagination.get("total_count", len(events_data))
 
     if not events_data:
-        raise ValueError(f"Third Bridge event not found: {args.event_id}")
+        raise ValueError(f"Third Bridge event not found: {args.thirdbridge_event_id}")
 
     event_data = events_data[0]  # Get the first (and should be only) event
 

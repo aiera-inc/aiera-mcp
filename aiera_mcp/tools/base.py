@@ -5,6 +5,7 @@
 import httpx
 import logging
 from typing import Any, Dict, Optional
+from datetime import datetime
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -144,6 +145,7 @@ async def make_aiera_request(
     """
     headers = DEFAULT_HEADERS.copy()
     headers["X-API-Key"] = api_key
+    # headers["X-MCP-Origin"] = f"remote_mcp_{config.STAGE}"
 
     # Log API request info for debugging
     logger.info(
@@ -201,7 +203,18 @@ async def make_aiera_request(
 
     # Prepare instructions for response formatting
     instructions = [
-        "This data is provided for institutional finance professionals. Responses should be composed of accurate, concise, and well-structured financial insights.",
+        f"""This data is provided for institutional finance professionals. Responses should be composed of accurate, concise,
+and well-structured financial insights.
+The current date is **{datetime.now().strftime("%Y-%m-%d")}**, and the current time is **{datetime.now().strftime("%I:%M %p")}**.
+Relative dates and times (e.g., "last 3 months" or "next 3 months" or "later today") should be calculated based on this date.
+All dates and times are in eastern time (ET) unless specifically stated otherwise.
+
+## Usage Hints:
+- Questions about guidance will always require the transcript from at least one earnings event, and often will require multiple earnings transcripts from the last year in order to provide sufficient context.
+- Answers to guidance questions should focus on management commentary, and avoid analyst commentary unless specifically asked for.
+
+Some endpoints may require specific permissions based on a subscription plan. If access is denied, the user should talk to their Aiera representative about gaining access.
+""",
         CITATION_PROMPT,
     ]
 

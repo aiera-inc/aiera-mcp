@@ -51,7 +51,7 @@ class TestFindThirdBridgeEvents:
         # Check first event
         first_event = result.response.data[0]
         assert isinstance(first_event, ThirdBridgeEventItem)
-        assert first_event.event_id == "11ea4e52843adb71969876b77b0061e1"
+        assert first_event.thirdbridge_event_id == "11ea4e52843adb71969876b77b0061e1"
         assert (
             first_event.title
             == "Booking.com & OTA Platforms - Former Commercial Executive, Partnerships at Booking Holdings Inc"
@@ -258,15 +258,26 @@ class TestGetThirdBridgeEvent:
                         "call_date": "2023-10-20T14:00:00Z",
                         "title": "Apple Supply Chain Analysis",
                         "language": "EN",
-                        "agenda": "Discussion of Apple's supply chain resilience and challenges",
-                        "insights": "Key insights on Apple's supply chain management strategies",
+                        "agenda": [
+                            "Discussion of Apple's supply chain resilience and challenges"
+                        ],
+                        "insights": [
+                            "Key insights on Apple's supply chain management strategies"
+                        ],
                         "citation_block": {
                             "title": "Apple Supply Chain Analysis",
                             "url": "https://thirdbridge.com/event/tb789",
                             "expert_name": "Jane Smith",
                             "expert_title": "Former Apple Supply Chain Director",
                         },
-                        "transcript": "Full transcript of the expert discussion...",
+                        "transcript": [
+                            {
+                                "timestamp": "[00:00:01]",
+                                "discussionItem": [
+                                    "Full transcript of the expert discussion..."
+                                ],
+                            }
+                        ],
                     }
                 ],
                 "pagination": {
@@ -280,7 +291,7 @@ class TestGetThirdBridgeEvent:
         }
         mock_http_dependencies["mock_make_request"].return_value = response_with_details
 
-        args = GetThirdBridgeEventArgs(event_id="tb789")
+        args = GetThirdBridgeEventArgs(thirdbridge_event_id="tb789")
 
         # Execute
         result = await get_third_bridge_event(args)
@@ -288,7 +299,7 @@ class TestGetThirdBridgeEvent:
         # Verify
         assert isinstance(result, GetThirdBridgeEventResponse)
         assert isinstance(result.event, ThirdBridgeEventDetails)
-        assert result.event.event_id == "tb789"
+        assert result.event.thirdbridge_event_id == "tb789"
         assert result.event.title == "Apple Supply Chain Analysis"
         assert result.event.agenda is not None
         assert result.event.insights is not None
@@ -315,7 +326,7 @@ class TestGetThirdBridgeEvent:
             "instructions": [],
         }
 
-        args = GetThirdBridgeEventArgs(event_id="nonexistent")
+        args = GetThirdBridgeEventArgs(thirdbridge_event_id="nonexistent")
 
         # Execute & Verify
         with pytest.raises(
@@ -335,8 +346,8 @@ class TestGetThirdBridgeEvent:
                         "content_type": "FORUM",
                         "title": "Test Event",
                         "language": "EN",
-                        "agenda": "Test agenda",
-                        "insights": "Test insights",
+                        "agenda": ["Test agenda"],
+                        "insights": ["Test insights"],
                         "citation_block": {
                             "title": "Test Event",
                             "url": "https://thirdbridge.com/event/tb789",
@@ -357,7 +368,7 @@ class TestGetThirdBridgeEvent:
         }
         mock_http_dependencies["mock_make_request"].return_value = response_without_date
 
-        args = GetThirdBridgeEventArgs(event_id="tb789")
+        args = GetThirdBridgeEventArgs(thirdbridge_event_id="tb789")
 
         # Execute
         result = await get_third_bridge_event(args)
@@ -378,8 +389,8 @@ class TestGetThirdBridgeEvent:
                         "call_date": "invalid-date",  # Invalid date
                         "title": "Test Event",
                         "language": "EN",
-                        "agenda": "Test agenda",
-                        "insights": "Test insights",
+                        "agenda": ["Test agenda"],
+                        "insights": ["Test insights"],
                         "citation_block": {
                             "title": "Test Event",
                             "url": "https://thirdbridge.com/event/tb789",
@@ -401,7 +412,7 @@ class TestGetThirdBridgeEvent:
             response_with_bad_date
         )
 
-        args = GetThirdBridgeEventArgs(event_id="tb789")
+        args = GetThirdBridgeEventArgs(thirdbridge_event_id="tb789")
 
         # Execute
         result = await get_third_bridge_event(args)
@@ -424,8 +435,8 @@ class TestGetThirdBridgeEvent:
                         "call_date": "2023-10-20T14:00:00Z",
                         "title": "Apple Supply Chain Analysis",
                         "language": "EN",
-                        "agenda": "Test agenda",
-                        "insights": "Test insights",
+                        "agenda": ["Test agenda"],
+                        "insights": ["Test insights"],
                         "citation_block": {
                             "title": "Apple Supply Chain Analysis",
                             "url": "https://thirdbridge.com/event/tb789",
@@ -445,7 +456,7 @@ class TestGetThirdBridgeEvent:
         }
         mock_http_dependencies["mock_make_request"].return_value = response_with_url
 
-        args = GetThirdBridgeEventArgs(event_id="tb789")
+        args = GetThirdBridgeEventArgs(thirdbridge_event_id="tb789")
 
         # Execute
         result = await get_third_bridge_event(args)

@@ -3,15 +3,35 @@
 """Equities domain models for Aiera MCP."""
 
 from pydantic import BaseModel, Field, field_validator, field_serializer
-from typing import Optional, List, Any, Dict
+from typing import Optional, List, Any, Dict, Union
 from datetime import datetime
-
-from ..common.models import BaseAieraResponse, PaginatedResponse, CitationInfo
 
 
 # Mixins for validation (extracted from original params.py)
 class BaseToolArgs(BaseModel):
     """Base class for all Aiera MCP tool arguments with common serializers."""
+
+    @field_validator(
+        "watchlist_id",
+        "index_id",
+        "sector_id",
+        "subsector_id",
+        "page",
+        "page_size",
+        mode="before",
+        check_fields=False,
+    )
+    @classmethod
+    def validate_numeric_fields(cls, v):
+        """Accept both integers and string representations of integers."""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                return int(v)
+            except ValueError:
+                raise ValueError(f"Cannot convert '{v}' to integer")
+        return v
 
     @field_serializer(
         "watchlist_id",
@@ -46,7 +66,7 @@ class BloombergTickerMixin(BaseModel):
 
 # Parameter models (extracted from params.py)
 class FindEquitiesArgs(BaseToolArgs, BloombergTickerMixin):
-    """Find companies and equities using various identifiers or search."""
+    """Find companies and equities using various identifiers or search. To find equities for multiple companies, provide a comma-separated list of bloomberg_tickers, isins, rics, or a search term. You do not need to make multiple calls."""
 
     bloomberg_ticker: Optional[str] = Field(
         default=None,
@@ -67,18 +87,21 @@ class FindEquitiesArgs(BaseToolArgs, BloombergTickerMixin):
     )
     search: Optional[str] = Field(
         default=None,
-        description="Search term to filter results. Searches within company names, tickers, or relevant text fields.",
+        description="Search term to filter results. Searches within company names or tickers.",
     )
-    page: int = Field(
+    page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )
-    page_size: int = Field(
+    page_size: Union[int, str] = Field(
         default=50, ge=1, le=100, description="Number of items per page (1-100)."
     )
 
 
 class GetEquitySummariesArgs(BaseToolArgs, BloombergTickerMixin):
-    """Get comprehensive summary information for one or more equities."""
+    """Retrieve detailed summary(s) about one or more equities, filtered by bloomberg_tickers (a comma-separated list).
+    Summaries will include past and upcoming events, information about company leadership, recent financials, and within which indices the equity is included.
+    To find summaries for multiple companies, provide a comma-separated list of bloomberg_tickers. You do not need to make multiple calls.
+    """
 
     bloomberg_ticker: str = Field(
         description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces."
@@ -88,13 +111,13 @@ class GetEquitySummariesArgs(BaseToolArgs, BloombergTickerMixin):
 class GetIndexConstituentsArgs(BaseToolArgs):
     """Get all equities within a specific stock market index."""
 
-    index: str = Field(
+    index: Union[str, int] = Field(
         description="Index identifier. Use get_available_indexes to find valid values."
     )
-    page: int = Field(
+    page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )
-    page_size: int = Field(
+    page_size: Union[int, str] = Field(
         default=50, ge=1, le=100, description="Number of items per page (1-100)."
     )
 
@@ -102,34 +125,40 @@ class GetIndexConstituentsArgs(BaseToolArgs):
 class GetWatchlistConstituentsArgs(BaseToolArgs):
     """Get all equities within a specific watchlist."""
 
-    watchlist_id: str = Field(
+    watchlist_id: Union[str, int] = Field(
         description="Watchlist identifier. Use get_available_watchlists to find valid values."
     )
-    page: int = Field(
+    page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )
-    page_size: int = Field(
+    page_size: Union[int, str] = Field(
         default=50, ge=1, le=100, description="Number of items per page (1-100)."
     )
 
 
-class EmptyArgs(BaseToolArgs):
-    """Parameter model for tools that take no arguments."""
+class GetAvailableWatchlistsArgs(BaseToolArgs):
+    """Retrieve all available watchlists with their IDs, names, and descriptions. Used to find valid watchlist IDs for filtering other tools."""
 
     pass
 
 
-class SearchArgs(BaseToolArgs):
-    """Parameter model for tools with optional search and pagination."""
+class GetAvailableIndexesArgs(BaseToolArgs):
+    """Retrieve all available stock market indices with their IDs, names, and descriptions. Used to find valid index IDs for filtering other tools."""
+
+    pass
+
+
+class GetSectorsAndSubsectorsArgs(BaseToolArgs):
+    """Retrieve all available sectors and subsectors with their IDs, names, and hierarchical relationships. Used to find valid sector/subsector IDs for filtering other tools."""
 
     search: Optional[str] = Field(
         default=None,
         description="Search term to filter results. Searches within relevant text fields.",
     )
-    page: int = Field(
+    page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )
-    page_size: int = Field(
+    page_size: Union[int, str] = Field(
         default=50, ge=1, le=100, description="Number of items per page (1-100)."
     )
 
@@ -155,6 +184,21 @@ class EquityItem(BaseModel):
     created: Optional[datetime] = Field(None, description="Creation date")
     modified: Optional[datetime] = Field(None, description="Modification date")
 
+    @field_validator("created", "modified", mode="before")
+    @classmethod
+    def parse_datetime_fields(cls, v):
+        """Parse ISO format datetime strings to datetime objects."""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                # Replace 'Z' with '+00:00' for ISO format compatibility
+                return datetime.fromisoformat(v.replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                return None
+        # If it's already a datetime object, return as is
+        return v
+
     @field_serializer("created", "modified")
     def serialize_datetime_fields(self, value: Optional[datetime]) -> Optional[str]:
         """Serialize datetime fields to ISO format string for JSON compatibility."""
@@ -170,6 +214,21 @@ class LeadershipItem(BaseModel):
     title: str = Field(description="Job title")
     event_count: Optional[int] = Field(None, description="Number of events")
     last_event_date: Optional[datetime] = Field(None, description="Last event date")
+
+    @field_validator("last_event_date", mode="before")
+    @classmethod
+    def parse_last_event_date(cls, v):
+        """Parse ISO format datetime strings to datetime objects."""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                # Replace 'Z' with '+00:00' for ISO format compatibility
+                return datetime.fromisoformat(v.replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                return None
+        # If it's already a datetime object, return as is
+        return v
 
     @field_serializer("last_event_date")
     def serialize_datetime(self, value: Optional[datetime]) -> Optional[str]:
@@ -201,6 +260,21 @@ class EquitySummaryItem(BaseModel):
     leadership: Optional[List[LeadershipItem]] = Field(
         None, description="Leadership information"
     )
+
+    @field_validator("created", "modified", mode="before")
+    @classmethod
+    def parse_datetime_fields(cls, v):
+        """Parse ISO format datetime strings to datetime objects."""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                # Replace 'Z' with '+00:00' for ISO format compatibility
+                return datetime.fromisoformat(v.replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                return None
+        # If it's already a datetime object, return as is
+        return v
 
     @field_serializer("created", "modified")
     def serialize_datetime_fields(self, value: Optional[datetime]) -> Optional[str]:
@@ -317,55 +391,70 @@ class FindEquitiesApiResponseData(BaseModel):
 
 
 class FindEquitiesResponse(BaseModel):
-    """Response for find_equities tool - matches actual API structure."""
+    """Response for find_equities tool"""
 
     instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: FindEquitiesApiResponseData = Field(..., description="Response data")
+    response: Optional[FindEquitiesApiResponseData] = Field(
+        None, description="Response data"
+    )
+    error: Optional[str] = Field(None, description="Error message if request failed")
 
 
 class GetEquitySummariesResponse(BaseModel):
-    """Response for get_equity_summaries tool - matches actual API structure."""
+    """Response for get_equity_summaries tool"""
 
     instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: List[EquitySummaryItem] = Field(
-        ..., description="List of equity summaries"
+    response: Optional[List[EquitySummaryItem]] = Field(
+        None, description="List of equity summaries"
     )
+    error: Optional[str] = Field(None, description="Error message if request failed")
 
 
 class GetSectorsSubsectorsResponse(BaseModel):
-    """Response for get_sectors_and_subsectors tool - matches actual API structure."""
+    """Response for get_sectors_and_subsectors tool"""
 
     instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: List[SectorSubsector] = Field(
-        ..., description="List of sectors and subsectors"
+    response: Optional[List[SectorSubsector]] = Field(
+        None, description="List of sectors and subsectors"
     )
+    error: Optional[str] = Field(None, description="Error message if request failed")
 
 
 class GetAvailableIndexesResponse(BaseModel):
-    """Response for get_available_indexes tool - matches actual API structure."""
+    """Response for get_available_indexes tool"""
 
     instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: List[IndexItem] = Field(..., description="List of available indexes")
+    response: Optional[List[IndexItem]] = Field(
+        None, description="List of available indexes"
+    )
+    error: Optional[str] = Field(None, description="Error message if request failed")
 
 
-class GetIndexConstituentsResponse(PaginatedResponse):
-    """Response for get_index_constituents tool."""
+class GetIndexConstituentsResponse(BaseModel):
+    """Response for get_index_constituents tool - matches actual API structure."""
 
-    index_name: str = Field(description="Index name")
-    constituents: List[EquityItem] = Field(description="Index constituents")
+    instructions: Optional[List[str]] = Field(None, description="API instructions")
+    response: Optional[FindEquitiesApiResponseData] = Field(
+        None, description="Response data"
+    )
+    error: Optional[str] = Field(None, description="Error message if request failed")
 
 
 class GetAvailableWatchlistsResponse(BaseModel):
     """Response for get_available_watchlists tool - matches actual API structure."""
 
     instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: List[WatchlistItem] = Field(
-        ..., description="List of available watchlists"
+    response: Optional[List[WatchlistItem]] = Field(
+        None, description="List of available watchlists"
     )
+    error: Optional[str] = Field(None, description="Error message if request failed")
 
 
-class GetWatchlistConstituentsResponse(PaginatedResponse):
-    """Response for get_watchlist_constituents tool."""
+class GetWatchlistConstituentsResponse(BaseModel):
+    """Response for get_watchlist_constituents tool - matches actual API structure."""
 
-    watchlist_name: str = Field(description="Watchlist name")
-    constituents: List[EquityItem] = Field(description="Watchlist constituents")
+    instructions: Optional[List[str]] = Field(None, description="API instructions")
+    response: Optional[FindEquitiesApiResponseData] = Field(
+        None, description="Response data"
+    )
+    error: Optional[str] = Field(None, description="Error message if request failed")
