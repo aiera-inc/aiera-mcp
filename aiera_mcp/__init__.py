@@ -141,6 +141,16 @@ from .tools.transcrippets import (
 # Import configuration
 from .config import get_settings, reload_settings, AieraSettings
 
+# Import context providers
+from .context import (
+    set_request_context_provider,
+    get_request_context,
+    clear_request_context_provider,
+    set_error_handler,
+    handle_api_error,
+    clear_error_handler,
+)
+
 # Import utilities
 from .tools.base import make_aiera_request, AIERA_BASE_URL, CITATION_PROMPT
 from .tools.utils import (
@@ -194,6 +204,13 @@ __all__ = [
     "set_api_key_provider",
     "get_api_key",
     "clear_api_key_provider",
+    # Context Providers
+    "set_request_context_provider",
+    "get_request_context",
+    "clear_request_context_provider",
+    "set_error_handler",
+    "handle_api_error",
+    "clear_error_handler",
     # Configuration
     "get_settings",
     "reload_settings",
