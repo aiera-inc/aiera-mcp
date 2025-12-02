@@ -9,7 +9,16 @@ from collections.abc import AsyncIterator
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
-from mcp.types import Tool, TextContent
+from mcp.types import (
+    Tool,
+    TextContent,
+    EmbeddedResource,
+    TextResourceContents,
+    Resource,
+    ReadResourceResult,
+    CallToolResult,
+)
+from aiera_mcp.tools.transcrippets.tools import get_transcrippet_template
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -162,18 +171,85 @@ async def run_server():
         """Return list of available tools with proper schemas."""
         tools = []
         for tool_name, tool_config in tool_registry.items():
-            tools.append(
-                Tool(
-                    name=tool_name,
-                    description=tool_config["description"],
-                    inputSchema=tool_config["input_schema"],
-                )
-            )
+            tool_kwargs = {
+                "name": tool_name,
+                "description": tool_config["description"],
+                "inputSchema": tool_config["input_schema"],
+            }
+
+            # Add output schema for transcrippet tools
+            if tool_name in [
+                "find_transcrippets",
+                "create_transcrippet",
+                "delete_transcrippet",
+            ]:
+                # Import response models to get their schemas
+                if tool_name == "find_transcrippets":
+                    from .tools.transcrippets.models import FindTranscrippetsResponse
+
+                    tool_kwargs["outputSchema"] = (
+                        FindTranscrippetsResponse.model_json_schema()
+                    )
+                elif tool_name == "create_transcrippet":
+                    from .tools.transcrippets.models import CreateTranscrippetResponse
+
+                    tool_kwargs["outputSchema"] = (
+                        CreateTranscrippetResponse.model_json_schema()
+                    )
+                elif tool_name == "delete_transcrippet":
+                    from .tools.transcrippets.models import DeleteTranscrippetResponse
+
+                    tool_kwargs["outputSchema"] = (
+                        DeleteTranscrippetResponse.model_json_schema()
+                    )
+
+            tool = Tool(**tool_kwargs)
+
+            # Add OpenAI-compatible metadata for transcrippet tools with UI
+            if tool_name in ["find_transcrippets", "create_transcrippet"]:
+                tool.annotations = {
+                    "openai/outputTemplate": "ui://widget/transcrippet.html",
+                    "openai/resultCanProduceWidget": True,
+                    "openai/resultType": "structuredContent",
+                }
+
+            tools.append(tool)
         return tools
 
+    @server.list_resources()
+    async def list_resources() -> List[Resource]:
+        """Register UI templates for OpenAI MCP compatibility."""
+        return [
+            Resource(
+                uri="ui://widget/transcrippet.html",
+                name="Transcrippet Viewer",
+                mimeType="text/html+mcp",
+                description="Interactive transcrippet player widget",
+            )
+        ]
+
+    @server.read_resource()
+    async def read_resource(uri: str) -> ReadResourceResult:
+        """Serve UI templates for OpenAI MCP compatibility."""
+        logger.info(f"Resource requested: {uri}")
+
+        if uri == "ui://widget/transcrippet.html":
+
+            template_html = get_transcrippet_template()
+            return ReadResourceResult(
+                contents=[
+                    TextResourceContents(
+                        uri=uri, mimeType="text/html+mcp", text=template_html
+                    )
+                ]
+            )
+
+        logger.error(f"Unknown resource URI: {uri}")
+        raise ValueError(f"Unknown resource: {uri}")
+
     @server.call_tool()
-    async def call_tool(name: str, arguments: dict) -> List[TextContent]:
-        """Handle tool calls."""
+    async def call_tool(name: str, arguments: dict) -> CallToolResult:
+        """Handle tool calls with support for both Claude MCP and OpenAI MCP formats."""
         logger.info(f"Tool called: {name}")
         logger.debug(f"Arguments: {arguments}")
 
@@ -207,12 +283,69 @@ async def run_server():
                 else result_dict
             )
 
+            # Build the content list starting with the JSON response
+            content_list: List[TextContent | EmbeddedResource] = [
+                TextContent(type="text", text=result_text)
+            ]
+
+            # Add embedded UI resources for transcrippet tools (Claude MCP format)
+            if name in ["find_transcrippets", "create_transcrippet"]:
+                try:
+                    from . import get_api_key
+                    from .tools.transcrippets.tools import generate_transcrippet_ui_html
+
+                    api_key = get_api_key()
+                    if api_key:
+                        # Extract transcrippets from response
+                        transcrippets = []
+                        if name == "find_transcrippets" and result_dict.get("response"):
+                            transcrippets = result_dict["response"]
+                        elif name == "create_transcrippet" and result_dict.get(
+                            "response"
+                        ):
+                            transcrippets = [result_dict["response"]]
+
+                        # Create embedded resources for Claude MCP
+                        for transcrippet in transcrippets:
+                            if transcrippet.get("transcrippet_guid"):
+                                guid = transcrippet["transcrippet_guid"]
+                                html_content = generate_transcrippet_ui_html(
+                                    api_key, guid
+                                )
+
+                                # Create a unique URI for each transcrippet UI
+                                uri = f"ui://transcrippet/{guid}"
+
+                                embedded_resource = EmbeddedResource(
+                                    type="resource",
+                                    resource=TextResourceContents(
+                                        uri=uri,
+                                        mimeType="text/html+mcp",
+                                        text=html_content,
+                                    ),
+                                )
+                                content_list.append(embedded_resource)
+                                logger.debug(
+                                    f"Added embedded UI for transcrippet {guid}"
+                                )
+                except Exception as e:
+                    logger.warning(f"Failed to add UI resources: {str(e)}")
+                    # Continue without UI resources rather than failing
+
             logger.info(f"Tool {name} completed successfully")
-            return [TextContent(type="text", text=result_text)]
+
+            # Return CallToolResult with both content (for humans/Claude) and structuredContent (for OpenAI/machines)
+            # This supports both Claude MCP (uses content with embedded resources) and OpenAI MCP (uses structuredContent)
+            return CallToolResult(
+                content=content_list, structuredContent=result_dict, isError=False
+            )
 
         except Exception as e:
             logger.error(f"Tool {name} failed: {str(e)}")
-            return [TextContent(type="text", text=f"Error: {str(e)}")]
+            return CallToolResult(
+                content=[TextContent(type="text", text=f"Error: {str(e)}")],
+                isError=True,
+            )
 
     # Start stdio-based MCP server
     logger.info("🚀 Aiera MCP Server ready!")

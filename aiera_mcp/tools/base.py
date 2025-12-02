@@ -11,7 +11,7 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 # Import settings
-from ..config import get_settings
+from aiera_mcp.config import get_settings
 
 # Default headers configuration
 DEFAULT_HEADERS = {
@@ -19,13 +19,6 @@ DEFAULT_HEADERS = {
     "User-Agent": "Aiera-MCP/1.0.0",
     "X-MCP-Origin": "local_mcp",
 }
-
-
-# Backward compatibility - expose AIERA_BASE_URL as a module-level variable
-# This will be dynamically resolved from settings
-def _get_base_url() -> str:
-    """Get the base URL from settings."""
-    return get_settings().aiera_base_url
 
 
 # For backward compatibility, keep AIERA_BASE_URL as a module constant
@@ -116,6 +109,35 @@ async def get_api_key_from_context(ctx) -> str:
 
     logger.debug(f"Retrieved API key (length: {len(api_key)})")
     return api_key
+
+
+def validate_response_model(raw_response: Dict[str, Any], model_class, tool_name: str):
+    """Validate API response against a Pydantic model with enhanced error handling.
+
+    Args:
+        raw_response: Raw response dict from the API
+        model_class: Pydantic model class to validate against
+        tool_name: Name of the tool for error logging
+
+    Returns:
+        Validated model instance
+
+    Raises:
+        ValueError: If validation fails, with a clean error message
+    """
+    try:
+        return model_class.model_validate(raw_response)
+    except Exception as e:
+        # Log the validation error for debugging
+        logger.error(f"Validation error in {tool_name}: {str(e)}")
+        logger.error(f"Raw response data: {raw_response}")
+
+        # Return a clean error message to the user
+        error_msg = (
+            f"Internal server error: The API response format was unexpected for {tool_name}. "
+            "This may indicate a temporary issue with the Aiera API. Please try again later or contact support."
+        )
+        raise ValueError(error_msg) from e
 
 
 async def make_aiera_request(

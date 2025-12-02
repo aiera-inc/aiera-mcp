@@ -150,10 +150,12 @@ class TranscrippetItem(BaseModel):
     event_id: int = Field(description="Event identifier")
     transcript_item_id: int = Field(description="Transcript item identifier")
     user_id: int = Field(description="User identifier")
-    audio_url: str = Field(description="Audio URL")
-    company_logo_url: Optional[str] = Field(description="Company logo URL")
-    company_name: str = Field(description="Company name")
-    company_ticker: str = Field(description="Company ticker")
+    audio_url: Optional[str] = Field(default=None, description="Audio URL")
+    company_logo_url: Optional[str] = Field(
+        default=None, description="Company logo URL"
+    )
+    company_name: Optional[str] = Field(default=None, description="Company name")
+    company_ticker: Optional[str] = Field(default=None, description="Company ticker")
     created: str = Field(description="Creation date")
     end_ms: int = Field(description="End time in milliseconds")
     event_date: str = Field(description="Event date")
@@ -166,7 +168,9 @@ class TranscrippetItem(BaseModel):
     transcription_audio_offset_seconds: int = Field(
         description="Audio offset in seconds"
     )
-    trimmed_audio_url: str = Field(description="Trimmed audio URL")
+    trimmed_audio_url: Optional[str] = Field(
+        default=None, description="Trimmed audio URL"
+    )
     word_durations_ms: List[int] = Field(description="Word durations in milliseconds")
     speaker_name: Optional[str] = Field(default=None, description="Speaker name")
     speaker_title: Optional[str] = Field(default=None, description="Speaker title")

@@ -13,12 +13,80 @@ from .models import (
     DeleteTranscrippetResponse,
     TranscrippetItem,
 )
-from ..base import get_http_client, make_aiera_request
+from ..base import get_http_client, make_aiera_request, validate_response_model
 from ... import get_api_key
 from ..common.models import CitationInfo
 
 # Setup logging
 logger = logging.getLogger(__name__)
+
+
+def get_transcrippet_template() -> str:
+    """Get the transcrippet UI template with placeholders for OpenAI MCP.
+
+    Returns:
+        HTML template with {{apiKey}} and {{transcrippetGuid}} placeholders
+    """
+    return """<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transcrippet Viewer</title>
+</head>
+<body style="margin: 0; padding: 0;">
+    <script src="https://public.aiera.com/aiera-sdk/0.0.69/embed.js"></script>
+    <iframe id="aiera-transcrippet" width="100%" style="border:none"></iframe>
+    <script>
+        // Get data from structuredContent (OpenAI) or use defaults
+        const data = window.__STRUCTURED_CONTENT__ || {
+            apiKey: '{{apiKey}}',
+            transcrippetGuid: '{{transcrippetGuid}}'
+        };
+
+        const e = new Aiera.Module(
+            "https://public.aiera.com/aiera-sdk/0.0.69/modules/Transcrippet/index.html",
+            "aiera-transcrippet"
+        );
+
+        e.load().then(() => {
+            e.authenticateApiKey(data.apiKey);
+        });
+
+        e.on("authenticated", () => {
+            e.configure({
+                options: {
+                    transcrippetGuid: data.transcrippetGuid
+                }
+            });
+        });
+
+        e.on("transcrippet-height", t => {
+            const iframe = document.getElementById("aiera-transcrippet");
+            if (iframe && iframe.style) {
+                iframe.style.height = t + 'px';
+            }
+        });
+    </script>
+</body>
+</html>"""
+
+
+def generate_transcrippet_ui_html(api_key: str, transcrippet_guid: str) -> str:
+    """Generate HTML for embedding a transcrippet UI component (Claude MCP format).
+
+    Args:
+        api_key: The Aiera API key for authentication
+        transcrippet_guid: The GUID of the transcrippet to display
+
+    Returns:
+        HTML string for embedding the transcrippet with values substituted
+    """
+    # Get template and substitute placeholders for Claude MCP inline embedding
+    template = get_transcrippet_template()
+    return template.replace("{{apiKey}}", api_key).replace(
+        "{{transcrippetGuid}}", transcrippet_guid
+    )
 
 
 async def find_transcrippets(args: FindTranscrippetsArgs) -> FindTranscrippetsResponse:
@@ -49,7 +117,9 @@ async def find_transcrippets(args: FindTranscrippetsArgs) -> FindTranscrippetsRe
                 )
 
     # Return the structured response with the added public URLs
-    return FindTranscrippetsResponse.model_validate(raw_response)
+    return validate_response_model(
+        raw_response, FindTranscrippetsResponse, "find_transcrippets"
+    )
 
 
 async def create_transcrippet(
@@ -82,7 +152,9 @@ async def create_transcrippet(
         ] = f"https://public.aiera.com/shared/transcrippet.html?id={guid}"
 
     # Return the structured response with the added public URL
-    return CreateTranscrippetResponse.model_validate(raw_response)
+    return validate_response_model(
+        raw_response, CreateTranscrippetResponse, "create_transcrippet"
+    )
 
 
 async def delete_transcrippet(
