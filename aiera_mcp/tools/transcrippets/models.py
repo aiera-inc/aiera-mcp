@@ -75,7 +75,7 @@ class ProvidedIdsMixin(BaseModel):
 
 # Parameter models (extracted from params.py)
 class FindTranscrippetsArgs(BaseToolArgs, ProvidedIdsMixin):
-    """Find Transcrippets™ filtered by various identifiers and date ranges."""
+    """Find Transcrippets™ filtered by various identifiers and date ranges. Always use the returned guid with the ui://transcrippet-viewer resource to render."""
 
     transcrippet_id: Optional[str] = Field(
         default=None,
@@ -181,7 +181,7 @@ class TranscrippetItem(BaseModel):
 
 # Response classes
 class FindTranscrippetsResponse(BaseAieraResponse):
-    """Response for find_transcrippets tool - matches actual API structure."""
+    """Response for find_transcrippets tool - matches actual API structure. Always use the returned guid with the ui://transcrippet-viewer resource to render."""
 
     response: Optional[List[TranscrippetItem]] = Field(
         None, description="List of transcrippets"

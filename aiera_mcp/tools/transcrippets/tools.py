@@ -22,10 +22,15 @@ logger = logging.getLogger(__name__)
 
 
 def get_transcrippet_template() -> str:
-    """Get the transcrippet UI template with placeholders for OpenAI MCP.
+    """Get the transcrippet UI template implementing MCP Apps protocol.
+
+    The template implements the MCP Apps notification protocol:
+    1. Sends ui/initialize request to the host
+    2. Listens for ui/notifications/tool-result with structuredContent
+    3. Renders transcrippets from the result data
 
     Returns:
-        HTML template with {{apiKey}} and {{transcrippetGuid}} placeholders
+        HTML template that communicates with MCP host via JSON-RPC
     """
     return """<!DOCTYPE html>
 <html>
@@ -36,37 +41,123 @@ def get_transcrippet_template() -> str:
 </head>
 <body style="margin: 0; padding: 0;">
     <script src="https://public.aiera.com/aiera-sdk/0.0.69/embed.js"></script>
-    <iframe id="aiera-transcrippet" width="100%" style="border:none"></iframe>
+    <div id="transcrippet-container"></div>
     <script>
-        // Get data from structuredContent (OpenAI) or use defaults
-        const data = window.__STRUCTURED_CONTENT__ || {
-            apiKey: '{{apiKey}}',
-            transcrippetGuid: '{{transcrippetGuid}}'
-        };
+        // MCP Apps UI Protocol Implementation
+        let messageId = 0;
+        let apiKey = null;
+        let toolResult = null;
 
-        const e = new Aiera.Module(
-            "https://public.aiera.com/aiera-sdk/0.0.69/modules/Transcrippet/index.html",
-            "aiera-transcrippet"
-        );
+        // Send JSON-RPC message to host
+        function sendMessage(method, params = {}) {
+            const message = {
+                jsonrpc: "2.0",
+                id: ++messageId,
+                method: method,
+                params: params
+            };
+            window.parent.postMessage(message, "*");
+        }
 
-        e.load().then(() => {
-            e.authenticateApiKey(data.apiKey);
+        // Initialize MCP UI connection
+        sendMessage("ui/initialize", {
+            protocolVersion: "2025-06-18"
         });
 
-        e.on("authenticated", () => {
-            e.configure({
-                options: {
-                    transcrippetGuid: data.transcrippetGuid
+        // Listen for messages from host
+        window.addEventListener("message", async (event) => {
+            const message = event.data;
+
+            if (!message || !message.jsonrpc) return;
+
+            // Handle ui/initialize response
+            if (message.id && message.result) {
+                console.log("MCP UI initialized:", message.result);
+                // Extract API key from context if available
+                if (message.result.context && message.result.context.apiKey) {
+                    apiKey = message.result.context.apiKey;
                 }
-            });
-        });
+            }
 
-        e.on("transcrippet-height", t => {
-            const iframe = document.getElementById("aiera-transcrippet");
-            if (iframe && iframe.style) {
-                iframe.style.height = t + 'px';
+            // Handle tool result notification
+            if (message.method === "ui/notifications/tool-result") {
+                console.log("Received tool result:", message.params);
+                toolResult = message.params;
+
+                // Extract transcrippets from structuredContent
+                const structuredContent = toolResult.structuredContent || toolResult;
+
+                // Extract API key from UI metadata
+                if (structuredContent._ui && structuredContent._ui.apiKey) {
+                    apiKey = structuredContent._ui.apiKey;
+                    console.log("API key extracted from structuredContent");
+                }
+
+                const response = structuredContent.response;
+
+                // Handle both find_transcrippets (array) and create_transcrippet (single object)
+                const transcrippets = Array.isArray(response) ? response : [response];
+
+                // Render each transcrippet
+                const container = document.getElementById("transcrippet-container");
+                container.innerHTML = '';
+
+                for (const transcrippet of transcrippets) {
+                    if (transcrippet && transcrippet.transcrippet_guid) {
+                        await renderTranscrippet(transcrippet.transcrippet_guid, container);
+                    }
+                }
+            }
+
+            // Handle tool input notification (contains API key)
+            if (message.method === "ui/notifications/tool-input") {
+                console.log("Received tool input:", message.params);
+                // API key should be available from the host context
+                // We'll extract it when rendering
             }
         });
+
+        // Render a single transcrippet
+        async function renderTranscrippet(transcrippetGuid, container) {
+            // Create iframe for this transcrippet
+            const iframeId = `aiera-transcrippet-${transcrippetGuid}`;
+            const iframe = document.createElement('iframe');
+            iframe.id = iframeId;
+            iframe.width = '100%';
+            iframe.style.border = 'none';
+            iframe.style.marginBottom = '20px';
+            container.appendChild(iframe);
+
+            // Initialize Aiera SDK module
+            const module = new Aiera.Module(
+                "https://public.aiera.com/aiera-sdk/0.0.69/modules/Transcrippet/index.html",
+                iframeId
+            );
+
+            await module.load();
+
+            // Authenticate with API key from structuredContent
+            if (apiKey) {
+                module.authenticateApiKey(apiKey);
+            } else {
+                console.error("No API key available for authentication");
+                return;
+            }
+
+            // Configure transcrippet when authenticated
+            module.on("authenticated", () => {
+                module.configure({
+                    options: {
+                        transcrippetGuid: transcrippetGuid
+                    }
+                });
+            });
+
+            // Handle dynamic height
+            module.on("transcrippet-height", (height) => {
+                iframe.style.height = height + 'px';
+            });
+        }
     </script>
 </body>
 </html>"""

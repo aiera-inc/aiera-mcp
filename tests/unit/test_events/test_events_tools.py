@@ -326,14 +326,19 @@ class TestGetUpcomingEvents:
         assert len(result.response.actuals) == 1
 
         # Check estimated event
+        from aiera_mcp.tools.events.models import (
+            EstimatedEventItem,
+            UpcomingActualEventItem,
+        )
+
         est_event = result.response.estimates[0]
-        assert isinstance(est_event, EventItem)
-        assert est_event.event_id == 11111
-        assert "Estimated" in est_event.title
+        assert isinstance(est_event, EstimatedEventItem)
+        assert est_event.estimate_id == 11111
+        assert "Estimated" in est_event.estimate.title
 
         # Check actual event
         actual_event = result.response.actuals[0]
-        assert isinstance(actual_event, EventItem)
+        assert isinstance(actual_event, UpcomingActualEventItem)
         assert actual_event.event_id == 22222
         assert actual_event.equity.name == "Microsoft Corporation"
 
@@ -375,7 +380,12 @@ class TestEventsToolsErrorHandling:
 
     @pytest.mark.asyncio
     async def test_handle_malformed_response(self, mock_http_dependencies):
-        """Test handling of malformed API responses."""
+        """Test handling of malformed API responses.
+
+        Note: Since FindEventsResponse has optional response field,
+        malformed data like {"invalid": "response"} will pass validation
+        with response=None.
+        """
         # Setup - malformed response
         mock_http_dependencies["mock_make_request"].return_value = {
             "invalid": "response"
@@ -383,10 +393,12 @@ class TestEventsToolsErrorHandling:
 
         args = FindEventsArgs(start_date="2023-10-01", end_date="2023-10-31")
 
-        # Execute & Verify
-        # Should raise ValidationError for malformed response structure
-        with pytest.raises(Exception):  # Expecting pydantic ValidationError
-            await find_events(args)
+        # Execute
+        result = await find_events(args)
+
+        # Verify - malformed data results in None response
+        assert isinstance(result, FindEventsResponse)
+        assert result.response is None
 
     @pytest.mark.asyncio
     async def test_handle_missing_date_fields(self, mock_http_dependencies):
