@@ -539,17 +539,45 @@ class TestCompanyDocsToolsErrorHandling:
 
     @pytest.mark.asyncio
     async def test_handle_malformed_response(self, mock_http_dependencies):
-        """Test handling of malformed API responses."""
-        # Setup - malformed response that will cause validation error
+        """Test handling of malformed API responses.
+
+        Note: Since FindCompanyDocsResponse has all optional fields,
+        this test verifies that truly malformed nested data raises ValidationError.
+        """
+        # Setup - malformed response with invalid nested structure that will cause validation error
+        # CompanyDocItem requires doc_id, company, and source_url
         mock_http_dependencies["mock_make_request"].return_value = {
-            "invalid": "response"
+            "response": {
+                "pagination": {
+                    "total_count": 1,
+                    "current_page": 1,
+                    "total_pages": 1,
+                    "page_size": 50,
+                },
+                "data": [
+                    {
+                        # Missing required fields: doc_id, company, source_url
+                        "title": "Test Document"
+                    }
+                ],
+            },
+            "instructions": [],
         }
 
         args = FindCompanyDocsArgs(start_date="2023-09-01", end_date="2023-09-30")
 
-        # Execute & Verify - should raise validation error for malformed response
-        with pytest.raises(ValidationError):
+        # Execute & Verify - should raise ValidationError for truly malformed nested data
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError) as exc_info:
             await find_company_docs(args)
+
+        # Verify it's a validation error for missing required fields
+        assert (
+            "doc_id" in str(exc_info.value)
+            or "company" in str(exc_info.value)
+            or "source_url" in str(exc_info.value)
+        )
 
     @pytest.mark.asyncio
     async def test_handle_missing_date_fields(self, mock_http_dependencies):

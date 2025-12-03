@@ -639,13 +639,22 @@ class TestToolSerializationComprehensive:
                             "response": {
                                 "estimates": [
                                     {
-                                        "event_id": 12345,
-                                        "title": "Test Event",
-                                        "event_type": "earnings",
-                                        "event_date": datetime(2024, 1, 15, 16, 30, 0),
+                                        "estimate_id": 12345,
+                                        "estimate": {
+                                            "title": "Test Event",
+                                            "call_type": "earnings",
+                                            "call_date": "2024-01-15T16:30:00Z",
+                                        },
                                     }
                                 ],
-                                "actuals": [],
+                                "actuals": [
+                                    {
+                                        "event_id": 67890,
+                                        "title": "Actual Event",
+                                        "call_type": "earnings",
+                                        "call_date": "2024-01-16T16:30:00Z",
+                                    }
+                                ],
                             },
                         }
                     else:

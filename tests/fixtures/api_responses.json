@@ -75,15 +75,17 @@
       "response": {
         "estimates": [
           {
-            "event_id": 11111,
-            "title": "Apple Inc Q1 2024 Earnings Call (Estimated)",
-            "event_type": "earnings",
-            "event_date": "2024-01-30T22:00:00Z",
+            "estimate_id": 11111,
             "equity": {
               "equity_id": 123,
               "company_id": 456,
               "name": "Apple Inc",
               "bloomberg_ticker": "AAPL:US"
+            },
+            "estimate": {
+              "title": "Apple Inc Q1 2024 Earnings Call (Estimated)",
+              "call_date": "2024-01-30T22:00:00Z",
+              "call_type": "earnings"
             },
             "citation_information": {
               "title": "Apple Inc Q1 2024 Earnings Call (Estimated)",
@@ -95,8 +97,8 @@
           {
             "event_id": 22222,
             "title": "Microsoft Corp Q4 2023 Earnings Call",
-            "event_type": "earnings",
-            "event_date": "2023-11-15T21:00:00Z",
+            "call_type": "earnings",
+            "call_date": "2023-11-15T21:00:00Z",
             "equity": {
               "equity_id": 789,
               "company_id": 101,

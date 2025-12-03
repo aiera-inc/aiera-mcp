@@ -18,6 +18,10 @@ from aiera_mcp.tools.events.models import (
     EventDetails,
     EventType,
     ApiResponseData,
+    EstimatedEventItem,
+    UpcomingActualEventItem,
+    EstimateInfo,
+    ActualInfo,
 )
 from aiera_mcp.tools.common.models import CitationInfo
 
@@ -304,22 +308,35 @@ class TestEventsResponses:
 
     def test_get_upcoming_events_response(self):
         """Test GetUpcomingEventsResponse model."""
-        events = [
-            EventItem(
-                event_id=12345,
-                title="Upcoming Event",
-                event_type=EventType.EARNINGS,
-                event_date=datetime(2023, 11, 15, 21, 0, 0),
+        # Create EstimatedEventItem with required fields
+        estimated_events = [
+            EstimatedEventItem(
+                estimate_id=12345,
+                estimate=EstimateInfo(
+                    title="Upcoming Event", call_date="2023-11-15T21:00:00Z"
+                ),
+            )
+        ]
+
+        # Create UpcomingActualEventItem with required fields
+        actual_events = [
+            UpcomingActualEventItem(
+                event_id=67890,
+                call_date="2023-11-16T21:00:00Z",
+                title="Actual Upcoming Event",
             )
         ]
 
         response = GetUpcomingEventsResponse(
             instructions=["Upcoming events found"],
-            response={"estimates": events, "actuals": []},
+            response={"estimates": estimated_events, "actuals": actual_events},
         )
 
         assert len(response.response.estimates) == 1
-        assert response.response.estimates[0].title == "Upcoming Event"
+        assert response.response.estimates[0].estimate_id == 12345
+        assert response.response.estimates[0].estimate.title == "Upcoming Event"
+        assert len(response.response.actuals) == 1
+        assert response.response.actuals[0].event_id == 67890
         assert response.instructions == ["Upcoming events found"]
 
 

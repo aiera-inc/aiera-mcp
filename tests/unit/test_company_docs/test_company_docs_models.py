@@ -63,7 +63,7 @@ class TestCompanyDocsModels:
         doc = CompanyDocItem(**minimal_data)
 
         assert doc.doc_id == 12345
-        assert doc.keywords == []  # Default value
+        assert doc.keywords is None  # Default value is None, not []
         assert doc.processed is None
         assert doc.created is None
         assert doc.modified is None

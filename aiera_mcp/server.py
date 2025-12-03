@@ -20,7 +20,15 @@ from mcp.types import (
 )
 from aiera_mcp.tools.transcrippets.tools import get_transcrippet_template
 
-# Setup logging
+# Setup logging with file handler
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(name)s] [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("/tmp/aiera-mcp-server.log"),
+        logging.StreamHandler(),  # Also log to stderr for Claude Desktop
+    ],
+)
 logger = logging.getLogger(__name__)
 
 # Import settings and API key provider functions from package
@@ -159,22 +167,101 @@ def register_aiera_tools(
     return TOOL_REGISTRY
 
 
+def normalize_empty_schema(schema: dict) -> dict:
+    """Ensure empty schemas have clear structure for LLMs.
+
+    When a tool has no parameters, the JSON schema shows empty properties: {},
+    which can be ambiguous for LLMs. This function makes the expectations explicit
+    by adding constraints and clarifying the description.
+
+    Args:
+        schema: The original JSON schema dict
+
+    Returns:
+        Normalized schema with explicit constraints for empty parameter sets
+    """
+    if schema.get("properties") == {}:
+        return {
+            **schema,
+            "description": f"{schema.get('description', '')} This tool requires no parameters.",
+            "additionalProperties": False,
+            "minProperties": 0,
+            "maxProperties": 0,
+        }
+    return schema
+
+
+def unwrap_arguments(arguments: dict, tool_name: str) -> dict:
+    """Unwrap arguments if they're wrapped in an 'args' key.
+
+    Some MCP clients (notably ChatGPT) may wrap tool arguments in an 'args' field:
+        {args: {search: "Tesla", page_size: 5}}
+    instead of the expected flat format:
+        {search: "Tesla", page_size: 5}
+
+    Without unwrapping, Pydantic would:
+    - Accept 'args' as an extra field (silently ignored)
+    - Use default values for all actual parameters
+    - Appear to "succeed" but with wrong values
+
+    This function detects and unwraps such cases.
+
+    Args:
+        arguments: The arguments dict received from the MCP client
+        tool_name: Name of the tool being called (for logging)
+
+    Returns:
+        Unwrapped arguments dict
+
+    Example:
+        >>> unwrap_arguments({"args": {"search": "Tesla"}}, "find_equities")
+        {"search": "Tesla"}
+    """
+    if not isinstance(arguments, dict):
+        logger.warning(f"Arguments for {tool_name} is not a dict: {type(arguments)}")
+        return arguments
+
+    # Check for wrapped pattern: {args: {...}}
+    if "args" in arguments and isinstance(arguments.get("args"), dict):
+        # If 'args' is the ONLY key, it's definitely a wrapper
+        if len(arguments) == 1:
+            logger.info(f"🔧 Unwrapping 'args' wrapper for {tool_name}")
+            logger.debug(f"   Before: {arguments}")
+            unwrapped = arguments["args"]
+            logger.debug(f"   After: {unwrapped}")
+            return unwrapped
+
+        # If there are other keys, this is ambiguous - log a warning
+        logger.warning(
+            f"Ambiguous arguments for {tool_name}: has 'args' key plus others: {list(arguments.keys())}"
+        )
+
+    return arguments
+
+
 async def run_server():
     """Run the MCP server using stdio transport."""
+    logger.info("=" * 60)
+    logger.info("🚀 Starting Aiera MCP Server initialization...")
+    logger.info("=" * 60)
+
     # Get the tool registry
     tool_registry = register_aiera_tools()
 
-    logger.info(f"Registered {len(tool_registry)} tools")
+    logger.info(f"✓ Registered {len(tool_registry)} tools")
 
     @server.list_tools()
     async def list_tools() -> List[Tool]:
         """Return list of available tools with proper schemas."""
         tools = []
         for tool_name, tool_config in tool_registry.items():
+            # Normalize empty schemas for better LLM compatibility
+            normalized_schema = normalize_empty_schema(tool_config["input_schema"])
+
             tool_kwargs = {
                 "name": tool_name,
                 "description": tool_config["description"],
-                "inputSchema": tool_config["input_schema"],
+                "inputSchema": normalized_schema,
             }
 
             # Add output schema for transcrippet tools
@@ -203,43 +290,82 @@ async def run_server():
                         DeleteTranscrippetResponse.model_json_schema()
                     )
 
-            tool = Tool(**tool_kwargs)
-
-            # Add OpenAI-compatible metadata for transcrippet tools with UI
+            # Add metadata for transcrippet tools with UI (Claude MCP specification)
             if tool_name in ["find_transcrippets", "create_transcrippet"]:
-                tool.annotations = {
-                    "openai/outputTemplate": "ui://widget/transcrippet.html",
-                    "openai/resultCanProduceWidget": True,
-                    "openai/resultType": "structuredContent",
-                }
+                tool_kwargs["_meta"] = {"ui/resourceUri": "ui://transcrippet-viewer"}
+                logger.info(f"Registered UI tool: {tool_name}")
+                logger.debug(
+                    f"  - inputSchema keys: {list(tool_kwargs['inputSchema'].keys())}"
+                )
+                logger.debug(
+                    f"  - outputSchema present: {'outputSchema' in tool_kwargs}"
+                )
+                logger.debug(f"  - _meta: {tool_kwargs['_meta']}")
+
+            tool = Tool(**tool_kwargs)
 
             tools.append(tool)
         return tools
 
     @server.list_resources()
     async def list_resources() -> List[Resource]:
-        """Register UI templates for OpenAI MCP compatibility."""
-        return [
+        """Register UI templates and test resources."""
+        logger.info("list_resources() called - registering resources")
+
+        resources = [
             Resource(
-                uri="ui://widget/transcrippet.html",
+                uri="ui://transcrippet-viewer",
                 name="Transcrippet Viewer",
                 mimeType="text/html+mcp",
                 description="Interactive transcrippet player widget",
-            )
+            ),
+            Resource(
+                uri="file://aiera-mcp/test-resource",
+                name="Test Resource",
+                mimeType="application/json",
+                description="A simple test resource for verifying MCP resource integration",
+            ),
         ]
+
+        logger.info(f"Registered {len(resources)} resource(s):")
+        for resource in resources:
+            logger.info(
+                f"  - {resource.name}: {resource.uri} (mimeType: {resource.mimeType})"
+            )
+
+        return resources
 
     @server.read_resource()
     async def read_resource(uri: str) -> ReadResourceResult:
-        """Serve UI templates for OpenAI MCP compatibility."""
+        """Serve UI templates and test resources."""
         logger.info(f"Resource requested: {uri}")
 
-        if uri == "ui://widget/transcrippet.html":
+        # Convert AnyUrl to string for comparison (MCP SDK may pass AnyUrl objects)
+        uri_str = str(uri)
 
+        if uri_str == "ui://transcrippet-viewer":
             template_html = get_transcrippet_template()
             return ReadResourceResult(
                 contents=[
                     TextResourceContents(
                         uri=uri, mimeType="text/html+mcp", text=template_html
+                    )
+                ]
+            )
+
+        if uri_str == "file://aiera-mcp/test-resource":
+            # Read the test resource file
+            test_resource_path = os.path.join(
+                os.path.dirname(os.path.dirname(__file__)), "test_resource.json"
+            )
+            with open(test_resource_path, "r") as f:
+                test_content = f.read()
+
+            logger.info(f"Serving test resource ({len(test_content)} bytes)")
+            return ReadResourceResult(
+                contents=[
+                    TextResourceContents(
+                        uri=uri, mimeType="application/json", text=test_content
                     )
                 ]
             )
@@ -251,7 +377,7 @@ async def run_server():
     async def call_tool(name: str, arguments: dict) -> CallToolResult:
         """Handle tool calls with support for both Claude MCP and OpenAI MCP formats."""
         logger.info(f"Tool called: {name}")
-        logger.debug(f"Arguments: {arguments}")
+        logger.debug(f"Raw arguments: {arguments}")
 
         # Find the tool in registry
         if name not in tool_registry:
@@ -261,8 +387,13 @@ async def run_server():
         tool_config = tool_registry[name]
 
         try:
+            # Unwrap arguments if ChatGPT wrapped them in an 'args' key
+            # This handles cases where ChatGPT sends {args: {search: "Tesla"}}
+            # instead of the expected flat format {search: "Tesla"}
+            normalized_arguments = unwrap_arguments(arguments, name)
+
             # Parse arguments using the Pydantic model
-            parsed_args = tool_config["args_model"](**arguments)
+            parsed_args = tool_config["args_model"](**normalized_arguments)
             logger.debug(f"Arguments parsed successfully for {name}")
 
             # Call the tool function
@@ -274,6 +405,11 @@ async def run_server():
             else:
                 result_dict = result
 
+            logger.debug(f"Tool {name} result type: {type(result)}")
+            logger.debug(
+                f"Tool {name} result_dict keys: {list(result_dict.keys()) if isinstance(result_dict, dict) else 'not a dict'}"
+            )
+
             # Return as TextContent
             import json
 
@@ -283,61 +419,80 @@ async def run_server():
                 else result_dict
             )
 
-            # Build the content list starting with the JSON response
+            # Build the content list with text representation for model context
+            # Per MCP Apps spec: UI is fetched separately via resources/read,
+            # not embedded in tool responses
             content_list: List[TextContent | EmbeddedResource] = [
                 TextContent(type="text", text=result_text)
             ]
 
-            # Add embedded UI resources for transcrippet tools (Claude MCP format)
+            # For transcrippet tools with UI, simplify structuredContent for UI rendering
+            # Exclude instructions and citation_information which are meant for text-based responses
+            structured_content = result_dict
             if name in ["find_transcrippets", "create_transcrippet"]:
                 try:
                     from . import get_api_key
-                    from .tools.transcrippets.tools import generate_transcrippet_ui_html
 
                     api_key = get_api_key()
                     if api_key:
-                        # Extract transcrippets from response
-                        transcrippets = []
-                        if name == "find_transcrippets" and result_dict.get("response"):
-                            transcrippets = result_dict["response"]
-                        elif name == "create_transcrippet" and result_dict.get(
-                            "response"
-                        ):
-                            transcrippets = [result_dict["response"]]
-
-                        # Create embedded resources for Claude MCP
-                        for transcrippet in transcrippets:
-                            if transcrippet.get("transcrippet_guid"):
-                                guid = transcrippet["transcrippet_guid"]
-                                html_content = generate_transcrippet_ui_html(
-                                    api_key, guid
-                                )
-
-                                # Create a unique URI for each transcrippet UI
-                                uri = f"ui://transcrippet/{guid}"
-
-                                embedded_resource = EmbeddedResource(
-                                    type="resource",
-                                    resource=TextResourceContents(
-                                        uri=uri,
-                                        mimeType="text/html+mcp",
-                                        text=html_content,
-                                    ),
-                                )
-                                content_list.append(embedded_resource)
+                        response_data = result_dict.get("response")
+                        logger.info(f"Creating UI structuredContent for {name}")
+                        logger.debug(f"  - response type: {type(response_data)}")
+                        if isinstance(response_data, list):
+                            logger.debug(f"  - response length: {len(response_data)}")
+                            if response_data:
                                 logger.debug(
-                                    f"Added embedded UI for transcrippet {guid}"
+                                    f"  - first item keys: {list(response_data[0].keys()) if isinstance(response_data[0], dict) else 'not a dict'}"
                                 )
+                        elif isinstance(response_data, dict):
+                            logger.debug(
+                                f"  - response keys: {list(response_data.keys())}"
+                            )
+
+                        # Create simplified structure with only data needed for UI
+                        structured_content = {
+                            "response": response_data,
+                            "_ui": {
+                                "apiKey": (
+                                    api_key[:10] + "..."
+                                    if len(api_key) > 10
+                                    else api_key
+                                ),  # Truncate for logging
+                                "type": "transcrippet-viewer",
+                            },
+                        }
+                        logger.info(
+                            f"Created simplified structuredContent with {len(str(structured_content))} chars"
+                        )
                 except Exception as e:
-                    logger.warning(f"Failed to add UI resources: {str(e)}")
-                    # Continue without UI resources rather than failing
+                    logger.error(f"Failed to add UI metadata: {str(e)}", exc_info=True)
+                    # Continue without UI metadata
 
             logger.info(f"Tool {name} completed successfully")
 
-            # Return CallToolResult with both content (for humans/Claude) and structuredContent (for OpenAI/machines)
-            # This supports both Claude MCP (uses content with embedded resources) and OpenAI MCP (uses structuredContent)
+            # Log the final return structure
+            logger.debug(f"CallToolResult for {name}:")
+            logger.debug(f"  - content items: {len(content_list)}")
+            logger.debug(
+                f"  - content[0] type: {content_list[0].type if content_list else 'none'}"
+            )
+            logger.debug(
+                f"  - structuredContent keys: {list(structured_content.keys()) if isinstance(structured_content, dict) else 'not a dict'}"
+            )
+            logger.debug(
+                f"  - structuredContent has _ui: {'_ui' in structured_content if isinstance(structured_content, dict) else False}"
+            )
+
+            # Return CallToolResult per MCP Apps specification:
+            # - content: Text representation for model context and text-only hosts
+            # - structuredContent: Structured data optimized for UI rendering
+            #   (passed to UI via ui/notifications/tool-result notification)
+            # The UI template is fetched separately by the host via resources/read
+            # using the URI from tool._meta["ui/resourceUri"]
             return CallToolResult(
-                content=content_list, structuredContent=result_dict, isError=False
+                content=content_list,
+                structuredContent=structured_content,
+                isError=False,
             )
 
         except Exception as e:
@@ -348,13 +503,25 @@ async def run_server():
             )
 
     # Start stdio-based MCP server
-    logger.info("🚀 Aiera MCP Server ready!")
+    logger.info("=" * 60)
+    logger.info("🚀 Aiera MCP Server initialization complete!")
+    logger.info("=" * 60)
     logger.info("📡 Transport: stdio (JSON-RPC over stdin/stdout)")
-    logger.info(f"🔧 Tools enabled: {len(tool_registry)}")
+    logger.info(f"🔧 Tools registered: {len(tool_registry)}")
+
+    # Count UI tools
+    ui_tools = [
+        name
+        for name in tool_registry.keys()
+        if name in ["find_transcrippets", "create_transcrippet"]
+    ]
+    logger.info(f"🎨 UI-enabled tools: {len(ui_tools)} ({', '.join(ui_tools)})")
+    logger.info(f"📦 Resources available: 2 (Transcrippet Viewer UI, Test Resource)")
+    logger.info("=" * 60)
 
     options = server.create_initialization_options()
     async with stdio_server() as (reader, writer):
-        logger.info("✅ stdio server started - ready for MCP client connections")
+        logger.info("✅ stdio server started - awaiting MCP client connections...")
         await server.run(reader, writer, options, raise_exceptions=True)
 
 
