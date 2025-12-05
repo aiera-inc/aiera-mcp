@@ -469,6 +469,48 @@ uv run pre-commit install
 uv run pre-commit run --all-files
 ```
 
+### MCP Inspector
+
+The [MCP Inspector](https://github.com/modelcontextprotocol/inspector) is a developer tool for testing and debugging MCP servers with an interactive web UI.
+
+**Prerequisites:**
+- Node.js 22 or higher: `brew install node@22` or use [nvm](https://github.com/nvm-sh/nvm)
+
+**Quick Start:**
+
+```bash
+# From the aiera-mcp directory
+npx @modelcontextprotocol/inspector /Users/$(whoami)/.local/bin/uv run entrypoint.py
+```
+
+This will:
+1. Start the MCP Inspector UI at http://localhost:6274
+2. Connect to your Aiera MCP server via stdio
+3. Open your browser automatically
+
+**Using the Inspector:**
+
+1. **View Tools** - See all 23 available tools with their schemas
+2. **Test Tools** - Call tools with parameters and view responses
+3. **View Resources** - See registered resources (UI widgets, test data)
+4. **Read Resources** - Fetch and display resource contents
+5. **Export Config** - Generate configuration for Claude Code/Cursor
+
+**With Custom Ports:**
+
+```bash
+CLIENT_PORT=8080 SERVER_PORT=9000 \
+  npx @modelcontextprotocol/inspector /Users/$(whoami)/.local/bin/uv run entrypoint.py
+```
+
+**View Server Logs:**
+
+```bash
+tail -f /tmp/aiera-mcp-server.log
+```
+
+For detailed setup instructions, see [MCP_INSPECTOR_SETUP.md](MCP_INSPECTOR_SETUP.md).
+
 ## Links
 - [Aiera REST Documentation](https://rest.aiera.com)
 - [Model Context Protocol](https://modelcontextprotocol.io)
