@@ -9,26 +9,44 @@ from collections.abc import AsyncIterator
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
+from mcp.server.lowlevel.helper_types import ReadResourceContents
 from mcp.types import (
     Tool,
     TextContent,
     EmbeddedResource,
-    TextResourceContents,
     Resource,
-    ReadResourceResult,
     CallToolResult,
 )
+from mcp_ui_server import create_ui_resource
 from aiera_mcp.tools.transcrippets.tools import get_transcrippet_template
 
-# Setup logging with file handler
+# Setup logging with file handler and reduced stderr verbosity
+# File handler: All INFO+ messages for debugging
+# stderr handler: Only ERROR+ messages (sent as MCP notifications to inspector)
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(name)s] [%(levelname)s] %(message)s",
     handlers=[
         logging.FileHandler("/tmp/aiera-mcp-server.log"),
-        logging.StreamHandler(),  # Also log to stderr for Claude Desktop
     ],
 )
+
+# Add stderr handler with ERROR level only to reduce inspector noise
+stderr_handler = logging.StreamHandler()
+stderr_handler.setLevel(logging.ERROR)
+stderr_handler.setFormatter(
+    logging.Formatter("%(asctime)s [%(name)s] [%(levelname)s] %(message)s")
+)
+logging.getLogger().addHandler(stderr_handler)
+
+# Suppress noisy third-party loggers
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
+# Ensure MCP SDK loggers write to file
+# The "mcp" logger will inherit root logger's file handler
+logging.getLogger("mcp").setLevel(logging.INFO)
+logging.getLogger("mcp.server").setLevel(logging.INFO)
+
 logger = logging.getLogger(__name__)
 
 # Import settings and API key provider functions from package
@@ -290,17 +308,15 @@ async def run_server():
                         DeleteTranscrippetResponse.model_json_schema()
                     )
 
-            # Add metadata for transcrippet tools with UI (Claude MCP specification)
+            # Log UI-enabled tools (using embedded UI resources via MCP UI SDK)
             if tool_name in ["find_transcrippets", "create_transcrippet"]:
-                tool_kwargs["_meta"] = {"ui/resourceUri": "ui://transcrippet-viewer"}
-                logger.info(f"Registered UI tool: {tool_name}")
+                logger.info(f"Registered UI tool: {tool_name} (embedded UI)")
                 logger.debug(
                     f"  - inputSchema keys: {list(tool_kwargs['inputSchema'].keys())}"
                 )
                 logger.debug(
                     f"  - outputSchema present: {'outputSchema' in tool_kwargs}"
                 )
-                logger.debug(f"  - _meta: {tool_kwargs['_meta']}")
 
             tool = Tool(**tool_kwargs)
 
@@ -309,7 +325,7 @@ async def run_server():
 
     @server.list_resources()
     async def list_resources() -> List[Resource]:
-        """Register UI templates and test resources."""
+        """Register UI templates."""
         logger.info("list_resources() called - registering resources")
 
         resources = [
@@ -318,12 +334,6 @@ async def run_server():
                 name="Transcrippet Viewer",
                 mimeType="text/html+mcp",
                 description="Interactive transcrippet player widget",
-            ),
-            Resource(
-                uri="file://aiera-mcp/test-resource",
-                name="Test Resource",
-                mimeType="application/json",
-                description="A simple test resource for verifying MCP resource integration",
             ),
         ]
 
@@ -336,8 +346,8 @@ async def run_server():
         return resources
 
     @server.read_resource()
-    async def read_resource(uri: str) -> ReadResourceResult:
-        """Serve UI templates and test resources."""
+    async def read_resource(uri: str) -> list[ReadResourceContents]:
+        """Serve UI templates."""
         logger.info(f"Resource requested: {uri}")
 
         # Convert AnyUrl to string for comparison (MCP SDK may pass AnyUrl objects)
@@ -345,30 +355,11 @@ async def run_server():
 
         if uri_str == "ui://transcrippet-viewer":
             template_html = get_transcrippet_template()
-            return ReadResourceResult(
-                contents=[
-                    TextResourceContents(
-                        uri=uri, mimeType="text/html+mcp", text=template_html
-                    )
-                ]
-            )
-
-        if uri_str == "file://aiera-mcp/test-resource":
-            # Read the test resource file
-            test_resource_path = os.path.join(
-                os.path.dirname(os.path.dirname(__file__)), "test_resource.json"
-            )
-            with open(test_resource_path, "r") as f:
-                test_content = f.read()
-
-            logger.info(f"Serving test resource ({len(test_content)} bytes)")
-            return ReadResourceResult(
-                contents=[
-                    TextResourceContents(
-                        uri=uri, mimeType="application/json", text=test_content
-                    )
-                ]
-            )
+            # Return ReadResourceContents with content and mime_type
+            # SDK converts to TextResourceContents in the response
+            return [
+                ReadResourceContents(content=template_html, mime_type="text/html+mcp")
+            ]
 
         logger.error(f"Unknown resource URI: {uri}")
         raise ValueError(f"Unknown resource: {uri}")
@@ -420,14 +411,11 @@ async def run_server():
             )
 
             # Build the content list with text representation for model context
-            # Per MCP Apps spec: UI is fetched separately via resources/read,
-            # not embedded in tool responses
-            content_list: List[TextContent | EmbeddedResource] = [
+            content_list: List[TextContent | EmbeddedResource | dict] = [
                 TextContent(type="text", text=result_text)
             ]
 
-            # For transcrippet tools with UI, simplify structuredContent for UI rendering
-            # Exclude instructions and citation_information which are meant for text-based responses
+            # For transcrippet tools with UI, use MCP UI SDK to create structured response
             structured_content = result_dict
             if name in ["find_transcrippets", "create_transcrippet"]:
                 try:
@@ -436,37 +424,41 @@ async def run_server():
                     api_key = get_api_key()
                     if api_key:
                         response_data = result_dict.get("response")
-                        logger.info(f"Creating UI structuredContent for {name}")
+                        logger.info(f"Creating UI content for {name}")
                         logger.debug(f"  - response type: {type(response_data)}")
-                        if isinstance(response_data, list):
-                            logger.debug(f"  - response length: {len(response_data)}")
-                            if response_data:
-                                logger.debug(
-                                    f"  - first item keys: {list(response_data[0].keys()) if isinstance(response_data[0], dict) else 'not a dict'}"
-                                )
-                        elif isinstance(response_data, dict):
-                            logger.debug(
-                                f"  - response keys: {list(response_data.keys())}"
-                            )
+
+                        # Get the transcrippet HTML template
+                        template_html = get_transcrippet_template()
+
+                        # Create UI resource using MCP UI SDK and add to content
+                        ui_resource = create_ui_resource(
+                            {
+                                "uri": "ui://transcrippet-viewer",
+                                "content": {
+                                    "type": "rawHtml",
+                                    "htmlString": template_html,
+                                },
+                                "encoding": "text",
+                            }
+                        )
+
+                        # Add UI resource dict directly to content list
+                        content_list.append(ui_resource.model_dump())
 
                         # Create simplified structure with only data needed for UI
                         structured_content = {
                             "response": response_data,
                             "_ui": {
-                                "apiKey": (
-                                    api_key[:10] + "..."
-                                    if len(api_key) > 10
-                                    else api_key
-                                ),  # Truncate for logging
+                                "apiKey": api_key,
                                 "type": "transcrippet-viewer",
                             },
                         }
                         logger.info(
-                            f"Created simplified structuredContent with {len(str(structured_content))} chars"
+                            f"Created UI resource with {len(template_html)} chars of HTML"
                         )
                 except Exception as e:
-                    logger.error(f"Failed to add UI metadata: {str(e)}", exc_info=True)
-                    # Continue without UI metadata
+                    logger.error(f"Failed to add UI content: {str(e)}", exc_info=True)
+                    # Continue without UI content
 
             logger.info(f"Tool {name} completed successfully")
 
