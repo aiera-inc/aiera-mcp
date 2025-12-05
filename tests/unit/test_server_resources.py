@@ -162,7 +162,7 @@ class TestResourceReadResult:
         template_html = get_transcrippet_template()
         uri = "ui://transcrippet-viewer"
 
-        # Create a ReadResourceResult as the handler would
+        # Create a ReadResourceResult as the SDK would wrap the handler's return value
         result = ReadResourceResult(
             contents=[
                 TextResourceContents(
