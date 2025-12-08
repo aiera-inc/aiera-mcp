@@ -33,9 +33,17 @@ logger = logging.getLogger(__name__)
 async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsResponse:
     """Smart transcript search with dual modes: semantic search or filtered browsing.
 
-    Uses the post_filter approach to avoid "hybrid query must be a top level query" errors,
-    similar to the opensearch-mcp-server-py implementation. This tool uses hybrid search
-    with neural embedding-based semantic search and the ext.ml_inference.query_text pattern.
+    **Two Search Modes:**
+    1. **Semantic Search Mode** (when query_text is provided): Uses neural embedding-based
+       semantic search with hybrid queries and integrated filters within subqueries
+    2. **Regular Filtered Search Mode** (when query_text is empty/not provided): Uses
+       standard filtering without neural search for browsing transcripts by metadata
+
+    This tool automatically selects the appropriate search mode based on whether
+    query_text is provided.
+
+    **Key Improvement**: Filters are now applied WITHIN each hybrid subquery (not post_filter),
+    ensuring filters are applied DURING retrieval for better recall.
     """
     logger.info("tool called: search_transcripts")
 
@@ -43,7 +51,7 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
     client = await get_http_client(None)
     api_key = get_api_key()
 
-    # Build filter clauses for post_filter approach
+    # Build filter clauses - will be integrated into subqueries, not used as post_filter
     filter_clauses = []
 
     # Add event filter as MUST clause - filters to specific events
@@ -65,183 +73,188 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
         }
         filter_clauses.append(section_filter)
 
-    # No longer need k_value since we're using match queries instead of neural queries
+    # Check if query_text is provided for semantic search
+    has_query_text = args.query_text and args.query_text.strip()
 
-    # Build text-based search queries following opensearch-mcp pattern
-    should_clauses = []
-
-    # Add text search clauses if query_text is provided
-    if args.query_text and args.query_text.strip():
-        should_clauses.extend(
-            [
-                # Primary text search
-                {"match": {"text": {"query": args.query_text, "boost": 2.0}}},
-                # Title/multi-field search
-                {
-                    "multi_match": {
-                        "query": args.query_text,
-                        "fields": ["title^1.5", "speaker_name"],
-                        "boost": 1.5,
-                    }
-                },
-            ]
+    if not has_query_text:
+        # No query text provided - use regular filtered search
+        logger.info(
+            "TranscriptSearch: No query text provided, using regular filtered search"
+        )
+        return await _handle_regular_filtered_search_transcripts(
+            args, filter_clauses, client, api_key
         )
 
-    # Build main search query using bool structure with should clauses
-    base_query = {
-        "query": {
-            "bool": {
-                "should": should_clauses,
-                "filter": filter_clauses,
-                "minimum_should_match": 1 if should_clauses else 0,
-            }
-        },
-        "size": args.max_results,
-        "min_score": args.min_score,
-        "_source": [
-            "content_id",
-            "text",
-            "transcript_event_id",
-            "title",
-            "speaker_name",
-            "speaker_title",
-            "date",
-            "section",
-            "transcript_section",
-        ],
-        "sort": [{"_score": {"order": "desc"}}],
-    }
-
-    # ML query for embedding search using match_all + ext.ml_inference pattern (like filing tools)
-    ml_query = {
-        "query": {"match_all": {}},
-        "size": args.max_results,
-        "min_score": args.min_score,
-        "_source": [
-            "content_id",
-            "text",
-            "transcript_event_id",
-            "title",
-            "speaker_name",
-            "speaker_title",
-            "date",
-            "section",
-            "transcript_section",
-        ],
-        "sort": [{"_score": {"order": "desc"}}],
-    }
-
-    # Add filters to ML query using post_filter to avoid hybrid query wrapping issues
+    # Determine k parameter based on filtering
+    # Higher k when filters are used to ensure good coverage after filtering
+    k_value = args.max_results * 2
     if filter_clauses:
-        if len(filter_clauses) == 1:
-            ml_query["post_filter"] = filter_clauses[0]
-        else:
-            ml_query["post_filter"] = {"bool": {"must": filter_clauses}}
-        logger.info(f"Using ML search with {len(filter_clauses)} post-filters")
-    else:
-        logger.info("Using ML search without filters")
-
-    # Try searches in order: ML inference with pipeline -> standard search with pipeline -> direct search
-    if args.query_text and args.query_text.strip():
-        # Add ML inference extension for embedding search (like filing tools)
-        ml_query["ext"] = {"ml_inference": {"query_text": args.query_text.strip()}}
-
-        try:
-            # Try ML inference search with hybrid pipeline
-            logger.info(
-                f"TranscriptSearch: Attempting ML inference search with pipeline='{HYBRID_SEARCH_PIPELINE}' (15s timeout)"
-            )
-            logger.info(
-                f"TranscriptSearch: Using {len(filter_clauses)} filters for query='{args.query_text}'"
-            )
-
-            # Set a 15-second timeout for ML inference
-            try:
-                raw_response = await asyncio.wait_for(
-                    make_aiera_request(
-                        client=client,
-                        method="POST",
-                        endpoint="/chat-support/search/transcripts",
-                        api_key=api_key,
-                        params={"search_pipeline": HYBRID_SEARCH_PIPELINE},
-                        data=ml_query,
-                    ),
-                    timeout=15.0,
-                )
-            except asyncio.TimeoutError:
-                logger.warning(
-                    "TranscriptSearch: ML inference timed out after 15s, falling back to standard search"
-                )
-                raise Exception("ML inference timeout")
-
-            if (
-                raw_response
-                and "response" in raw_response
-                and raw_response["response"].get("result")
-            ):
-                logger.info("TranscriptSearch ML inference successful")
-                return SearchTranscriptsResponse.model_validate(raw_response)
-            else:
-                logger.info(
-                    "TranscriptSearch: ML inference returned no results, trying standard search"
-                )
-                raise Exception("ML inference returned no results")
-
-        except Exception as ml_error:
-            logger.info(
-                f"TranscriptSearch: ML inference failed ({str(ml_error)}), falling back to standard search"
-            )
+        k_value = min(args.max_results * 100, 10000)  # Cap at 10k for performance
+        logger.info(
+            f"TranscriptSearch: Using k={k_value} for filtered semantic search (max_results={args.max_results})"
+        )
     else:
         logger.info(
-            "TranscriptSearch: No query text provided, using standard filtered search"
+            f"TranscriptSearch: Using k={k_value} for unfiltered semantic search (max_results={args.max_results})"
         )
 
-    # Fall back to standard text-based search with pipeline
+    # Use modern neural search query with embedding_384 field
+    neural_query = {
+        "neural": {"embedding_384": {"query_text": args.query_text, "k": k_value}}
+    }
+
+    # Build lexical query for hybrid search
+    lexical_query = {
+        "multi_match": {
+            "query": args.query_text,
+            "fields": ["text^2", "title", "speaker_name"],
+            "type": "best_fields",
+            "boost": 1.5,
+        }
+    }
+
+    # Build hybrid search query with filters INSIDE subqueries
+    if filter_clauses:
+        # Combine filters if multiple
+        combined_filter = (
+            {"bool": {"must": filter_clauses}}
+            if len(filter_clauses) > 1
+            else filter_clauses[0]
+        )
+
+        # Wrap each subquery with filters - key improvement for better recall
+        hybrid_query = {
+            "hybrid": {
+                "queries": [
+                    {
+                        "bool": {
+                            "must": [neural_query],
+                            "filter": [combined_filter],
+                        }
+                    },
+                    {
+                        "bool": {
+                            "must": [lexical_query],
+                            "filter": [combined_filter],
+                        }
+                    },
+                ]
+            }
+        }
+        logger.info(
+            f"TranscriptSearch: Using integrated filter approach with {len(filter_clauses)} filters inside subqueries"
+        )
+    else:
+        # No filters - use simple hybrid query
+        hybrid_query = {"hybrid": {"queries": [neural_query, lexical_query]}}
+        logger.info("TranscriptSearch: Using hybrid search without filters")
+
+    # Build the search request
+    search_query = {
+        "query": hybrid_query,
+        "size": args.max_results,
+        "min_score": args.min_score,
+        "_source": [
+            "content_id",
+            "text",
+            "transcript_event_id",
+            "title",
+            "speaker_name",
+            "speaker_title",
+            "date",
+            "section",
+            "transcript_section",
+        ],
+    }
+
+    # Try hybrid search with pipeline
     try:
-        raw_response = await make_aiera_request(
-            client=client,
-            method="POST",
-            endpoint="/chat-support/search/transcripts",
-            api_key=api_key,
-            params={"search_pipeline": EMBEDDING_SEARCH_PIPELINE},
-            data=base_query,
+        logger.info(
+            f"TranscriptSearch: Attempting hybrid search with pipeline='{HYBRID_SEARCH_PIPELINE}' for query='{args.query_text}'"
+        )
+
+        raw_response = await asyncio.wait_for(
+            make_aiera_request(
+                client=client,
+                method="POST",
+                endpoint="/chat-support/search/transcripts",
+                api_key=api_key,
+                params={"search_pipeline": HYBRID_SEARCH_PIPELINE},
+                data=search_query,
+            ),
+            timeout=15.0,
         )
 
         if raw_response and "response" in raw_response:
-            logger.info("TranscriptSearch standard pipeline search successful")
+            logger.info("TranscriptSearch: Hybrid search successful")
             return SearchTranscriptsResponse.model_validate(raw_response)
         else:
             logger.warning(
-                "TranscriptSearch: Standard pipeline returned no results, trying direct search"
+                "TranscriptSearch: Hybrid search returned no results, trying fallback"
             )
-            raise Exception("Standard pipeline returned no results")
+            raise Exception("Hybrid search returned no results")
 
-    except Exception as pipeline_error:
-        logger.info(
-            f"TranscriptSearch: Standard pipeline search failed: {str(pipeline_error)}, trying direct search"
+    except asyncio.TimeoutError:
+        logger.warning(
+            "TranscriptSearch: Hybrid search timed out after 15s, falling back"
+        )
+        raise Exception("Hybrid search timeout")
+
+    except Exception as hybrid_error:
+        logger.warning(
+            f"TranscriptSearch: Hybrid search failed ({str(hybrid_error)}), falling back to text-based search"
         )
 
+        # Fallback: Use text-based search with filters
+        fallback_query = {
+            "query": {
+                "bool": {
+                    "must": [
+                        {
+                            "multi_match": {
+                                "query": args.query_text,
+                                "fields": ["text^2", "title", "speaker_name"],
+                            }
+                        }
+                    ],
+                    "filter": filter_clauses if filter_clauses else [],
+                }
+            },
+            "size": args.max_results,
+            "min_score": args.min_score,
+            "_source": [
+                "content_id",
+                "text",
+                "transcript_event_id",
+                "title",
+                "speaker_name",
+                "speaker_title",
+                "date",
+                "section",
+                "transcript_section",
+            ],
+        }
+
         try:
-            # Final fallback: direct search without pipeline
             raw_response = await make_aiera_request(
                 client=client,
                 method="POST",
                 endpoint="/chat-support/search/transcripts",
                 api_key=api_key,
                 params={},
-                data=base_query,
+                data=fallback_query,
             )
 
             if raw_response and "response" in raw_response:
-                logger.info("TranscriptSearch direct search successful")
+                logger.info("TranscriptSearch: Fallback text search successful")
                 return SearchTranscriptsResponse.model_validate(raw_response)
             else:
                 logger.error("TranscriptSearch: All search methods failed")
                 return _get_empty_transcripts_response(args.max_results)
 
-        except Exception as direct_error:
+        except Exception as fallback_error:
             logger.error(
-                f"TranscriptSearch: Direct search also failed: {str(direct_error)}"
+                f"TranscriptSearch: Fallback search also failed: {str(fallback_error)}"
             )
             return _get_empty_transcripts_response(args.max_results)
 
@@ -985,6 +998,67 @@ def _build_filing_chunks_company_filter(company_name: str) -> dict:
     company_filter = {"bool": {"should": should_clauses, "minimum_should_match": 1}}
 
     return company_filter
+
+
+async def _handle_regular_filtered_search_transcripts(
+    args: SearchTranscriptsArgs, filter_clauses: list, client, api_key: str
+) -> SearchTranscriptsResponse:
+    """Handle regular filtered search when no query text is provided.
+
+    Uses standard filtering without semantic/neural search for browsing transcripts
+    by metadata (event_ids, transcript_section, etc.).
+    """
+    # Build query with filters but no text search
+    if filter_clauses:
+        # Use filters as the main query
+        if len(filter_clauses) == 1:
+            query = filter_clauses[0]
+        else:
+            query = {"bool": {"must": filter_clauses}}
+    else:
+        # No filters either - return all results
+        query = {"match_all": {}}
+
+    search_query = {
+        "query": query,
+        "size": args.max_results,
+        "min_score": args.min_score,
+        "_source": [
+            "content_id",
+            "text",
+            "transcript_event_id",
+            "title",
+            "speaker_name",
+            "speaker_title",
+            "date",
+            "section",
+            "transcript_section",
+        ],
+        "sort": [{"date": {"order": "desc"}}],  # Sort by date for browsing
+    }
+
+    try:
+        raw_response = await make_aiera_request(
+            client=client,
+            method="POST",
+            endpoint="/chat-support/search/transcripts",
+            api_key=api_key,
+            params={},
+            data=search_query,
+        )
+
+        if raw_response and "response" in raw_response:
+            logger.info(
+                f"TranscriptSearch: Regular filtered search successful ({len(filter_clauses)} filters)"
+            )
+            return SearchTranscriptsResponse.model_validate(raw_response)
+        else:
+            logger.warning("TranscriptSearch: Regular filtered search returned no data")
+            return _get_empty_transcripts_response(args.max_results)
+
+    except Exception as e:
+        logger.error(f"TranscriptSearch: Regular filtered search failed: {str(e)}")
+        return _get_empty_transcripts_response(args.max_results)
 
 
 def _get_empty_filing_chunks_response(max_results: int) -> SearchFilingChunksResponse:
