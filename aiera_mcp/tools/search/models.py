@@ -39,8 +39,8 @@ class SearchTranscriptsArgs(BaseAieraArgs):
         description="Transcript content index with processed segments, embeddings, and speaker attribution",
     )
     min_score: float = Field(
-        default=0.2,
-        description="Minimum relevance score threshold for returned segments (0.0-1.0). Lower values are more permissive and return more results. Default 0.2 balances relevance with coverage.",
+        default=0.1,
+        description="Minimum relevance score threshold for returned segments (0.0-1.0). Lower values are more permissive and return more results. Default 0.1 balances relevance with coverage.",
     )
     transcript_section: str = Field(
         default="",
