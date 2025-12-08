@@ -139,6 +139,10 @@ class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
         default=None,
         description="ID of a specific subsector. Use get_sectors_and_subsectors to find valid IDs.",
     )
+    conference_id: Optional[Union[int, str]] = Field(
+        default=None,
+        description="ID of a specific conference. Use find_conferences to find valid IDs.",
+    )
     event_type: str = Field(
         default="earnings",
         description="Type of event to search for. ONLY ONE type per call - to search multiple types, make separate calls. Options: 'earnings' (quarterly earnings calls with Q&A), 'presentation' (investor conferences, company presentations at events - use this for 'conference calls'), 'investor_meeting' (investor day events, one-on-one meetings - use this for 'investor meetings'), 'shareholder_meeting' (annual/special shareholder meetings), 'special_situation' (M&A announcements, other corporate actions). Example: for 'conference calls AND meetings', make TWO calls: one with event_type='presentation' and one with event_type='investor_meeting'. Defaults to 'earnings'.",
@@ -164,6 +168,29 @@ class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
         if v not in valid_types:
             raise ValueError(f"event_type must be one of: {', '.join(valid_types)}")
         return v
+
+
+# Parameter models (extracted from params.py)
+class FindConferencesArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
+    """Search for conferences. Search across all conferences by date range.
+
+    This tool provides access to a comprehensive database of upcoming and historical conferences.
+    """
+
+    start_date: str = Field(
+        description="Start date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET). Required to define the search period.",
+        pattern=r"^\d{4}-\d{2}-\d{2}$",
+    )
+    end_date: str = Field(
+        description="End date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET). Required to define the search period.",
+        pattern=r"^\d{4}-\d{2}-\d{2}$",
+    )
+    page: Union[int, str] = Field(
+        default=1, ge=1, description="Page number for pagination (1-based)."
+    )
+    page_size: Union[int, str] = Field(
+        default=50, ge=1, le=100, description="Number of items per page (1-100)."
+    )
 
 
 class GetEventArgs(BaseToolArgs):
@@ -382,6 +409,14 @@ class ApiResponseData(BaseModel):
 
 class FindEventsResponse(BaseModel):
     """Response from finding events - matches actual API structure."""
+
+    instructions: Optional[List[str]] = Field(None, description="API instructions")
+    response: Optional[ApiResponseData] = Field(None, description="Response data")
+    error: Optional[str] = Field(None, description="Error message if request failed")
+
+
+class FindConferencesResponse(BaseModel):
+    """Response from finding conferences - matches actual API structure."""
 
     instructions: Optional[List[str]] = Field(None, description="API instructions")
     response: Optional[ApiResponseData] = Field(None, description="Response data")

@@ -81,6 +81,7 @@ def clear_api_key_provider() -> None:
 AVAILABLE_TOOLS = [
     # Event Tools
     "find_events",
+    "find_conferences",
     "get_event",
     "get_upcoming_events",
     # Filing Tools
@@ -106,7 +107,7 @@ AVAILABLE_TOOLS = [
 ]
 
 # Convenience tool groups for common use cases
-EVENT_TOOLS = ["find_events", "get_event", "get_upcoming_events"]
+EVENT_TOOLS = ["find_events", "find_conferences", "get_event", "get_upcoming_events"]
 FILING_TOOLS = ["find_filings", "get_filing"]
 EQUITY_TOOLS = ["find_equities", "get_equity_summaries", "get_sectors_and_subsectors"]
 INDEX_WATCHLIST_TOOLS = [
@@ -170,6 +171,7 @@ __all__ = [
     "__version__",
     # Tools
     "find_events",
+    "find_conferences",
     "get_event",
     "get_upcoming_events",
     "find_filings",

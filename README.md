@@ -157,7 +157,7 @@ from aiera_mcp.tools import register_tools
 register_tools(mcp)
 
 # Selective tool registration - include only specific tools
-register_tools(mcp, include_tools=['find_events', 'get_event'])
+register_tools(mcp, include_tools=['find_events', 'find_conferences', 'get_event'])
 
 # Selective tool registration - exclude specific tools
 register_tools(mcp, exclude_tools=['delete_transcrippet', 'create_transcrippet'])
@@ -173,7 +173,7 @@ from aiera_mcp import find_events, make_aiera_request, correct_bloomberg_ticker
 ## Package Contents
 
 ### Tools
-- **Events**: `find_events`, `get_event`, `get_upcoming_events`
+- **Events**: `find_events`, `find_conferences`, `get_event`, `get_upcoming_events`
 - **Filings**: `find_filings`, `get_filing`
 - **Equities**: `find_equities`, `get_equity_summaries`, `get_sectors_and_subsectors`
 - **Indexes & Watchlists**: `get_available_indexes`, `get_index_constituents`, `get_available_watchlists`, `get_watchlist_constituents`
@@ -230,7 +230,7 @@ register_aiera_tools(mcp, get_current_api_key, include=EVENT_TOOLS)
 
 The package provides predefined tool groups for common use cases:
 
-- **`EVENT_TOOLS`**: `["find_events", "get_event", "get_upcoming_events"]`
+- **`EVENT_TOOLS`**: `["find_events", "find_conferences", "get_event", "get_upcoming_events"]`
 - **`FILING_TOOLS`**: `["find_filings", "get_filing"]`
 - **`EQUITY_TOOLS`**: `["find_equities", "get_equity_summaries", "get_sectors_and_subsectors"]`
 - **`INDEX_WATCHLIST_TOOLS`**: `["get_available_indexes", "get_index_constituents", "get_available_watchlists", "get_watchlist_constituents"]`
@@ -352,7 +352,7 @@ destructive_tools = list(get_destructive_tools().keys())
 register_tools(mcp, exclude_tools=destructive_tools)
 
 # Register only event-related tools
-event_tools = ['find_events', 'get_event', 'get_upcoming_events']
+event_tools = ['find_events', 'find_conferences', 'get_event', 'get_upcoming_events']
 register_tools(mcp, include_tools=event_tools)
 
 # Error handling with suggestions

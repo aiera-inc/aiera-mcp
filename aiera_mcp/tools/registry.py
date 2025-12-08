@@ -4,7 +4,7 @@
 
 
 # Import all tool functions from domain modules
-from .events import find_events, get_event, get_upcoming_events
+from .events import find_events, find_conferences, get_event, get_upcoming_events
 from .filings import find_filings, get_filing
 from .equities import (
     find_equities,
@@ -26,7 +26,7 @@ from .transcrippets import find_transcrippets, create_transcrippet, delete_trans
 from .search import search_transcripts, search_filings, search_filing_chunks
 
 # Import all parameter model classes from domain modules
-from .events import FindEventsArgs, GetEventArgs, GetUpcomingEventsArgs
+from .events import FindEventsArgs, FindConferencesArgs, GetEventArgs, GetUpcomingEventsArgs
 from .filings import FindFilingsArgs, GetFilingArgs
 from .equities import (
     FindEquitiesArgs,
@@ -57,6 +57,15 @@ TOOL_REGISTRY = {
         "input_schema": FindEventsArgs.model_json_schema(),
         "function": find_events,
         "args_model": FindEventsArgs,
+        "category": "events",
+        "read_only": True,
+        "destructive": False,
+    },
+    "find_conferences": {
+        "display_name": "Conference Finder",
+        "input_schema": FindConferencesArgs.model_json_schema(),
+        "function": find_conferences,
+        "args_model": FindConferencesArgs,
         "category": "events",
         "read_only": True,
         "destructive": False,
