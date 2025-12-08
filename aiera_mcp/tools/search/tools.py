@@ -206,18 +206,39 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
         )
 
         # Fallback: Use text-based search with filters
+        # Include both exact phrase matching and flexible text matching
+        # to ensure exact matches are returned even if embedding search fails
         fallback_query = {
             "query": {
                 "bool": {
-                    "must": [
+                    "should": [
+                        # Highest priority: exact phrase matches
+                        {
+                            "match_phrase": {
+                                "text": {"query": args.query_text, "boost": 10.0}
+                            }
+                        },
+                        {
+                            "match_phrase": {
+                                "title": {"query": args.query_text, "boost": 8.0}
+                            }
+                        },
+                        {
+                            "match_phrase": {
+                                "speaker_name": {"query": args.query_text, "boost": 5.0}
+                            }
+                        },
+                        # Lower priority: flexible text matching
                         {
                             "multi_match": {
                                 "query": args.query_text,
                                 "fields": ["text^2", "title", "speaker_name"],
+                                "boost": 1.0,
                             }
-                        }
+                        },
                     ],
                     "filter": filter_clauses if filter_clauses else [],
+                    "minimum_should_match": 1,
                 }
             },
             "size": args.max_results,
