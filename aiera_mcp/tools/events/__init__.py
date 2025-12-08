@@ -23,6 +23,7 @@ from .models import (
 __all__ = [
     # Tools
     "find_events",
+    "find_conferences",
     "get_event",
     "get_upcoming_events",
     # Parameter models

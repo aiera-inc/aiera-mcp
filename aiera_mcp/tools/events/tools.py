@@ -6,9 +6,11 @@ import logging
 
 from .models import (
     FindEventsArgs,
+    FindConferencesArgs,
     GetEventArgs,
     GetUpcomingEventsArgs,
     FindEventsResponse,
+    FindConferencesResponse,
     GetEventResponse,
     GetUpcomingEventsResponse,
     EventItem,
@@ -43,6 +45,28 @@ async def find_events(args: FindEventsArgs) -> FindEventsResponse:
 
     # Pydantic validators will automatically parse datetime strings and nested objects
     return FindEventsResponse.model_validate(raw_response)
+
+
+async def find_conferences(args: FindConferencesArgs) -> FindConferencesResponse:
+    """Find conferences, filtered by a date range."""
+    logger.info("tool called: find_conferences")
+
+    # Get client and API key (no context needed for standard MCP)
+    client = await get_http_client(None)
+    api_key = get_api_key()
+
+    params = args.model_dump(exclude_none=True)
+
+    raw_response = await make_aiera_request(
+        client=client,
+        method="GET",
+        endpoint="/chat-support/find-conferences",
+        api_key=api_key,
+        params=params,
+    )
+
+    # Pydantic validators will automatically parse datetime strings and nested objects
+    return FindConferencesResponse.model_validate(raw_response)
 
 
 async def get_event(args: GetEventArgs) -> GetEventResponse:
