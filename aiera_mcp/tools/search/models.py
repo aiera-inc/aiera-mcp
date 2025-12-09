@@ -254,6 +254,21 @@ class SearchPaginationInfo(BaseModel):
     current_page: int = Field(description="Current page number")
     page_size: int = Field(description="Number of items per page")
 
+    @model_validator(mode="before")
+    @classmethod
+    def convert_opensearch_pagination(cls, data):
+        """Convert OpenSearch pagination (from/size) to page-based pagination (current_page/page_size)."""
+        if isinstance(data, dict):
+            # Handle OpenSearch-style pagination
+            if "from" in data and "size" in data:
+                from_value = data.get("from", 0)
+                size_value = data.get("size", 10)
+                # Calculate current_page (1-based) from OpenSearch 'from' (0-based offset)
+                current_page = (from_value // size_value) + 1 if size_value > 0 else 1
+                data["current_page"] = current_page
+                data["page_size"] = size_value
+        return data
+
     @field_validator("total_count", mode="before")
     @classmethod
     def validate_total_count(cls, v):

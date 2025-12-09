@@ -113,16 +113,29 @@ from aiera_mcp.tools.search.models import (
     SearchFilingChunksResponse,
 )
 
-# Configure logging
+# Configure logging with explicit file handler setup
+file_handler = logging.FileHandler("manual_test_discrepancies.log", mode="w")
+file_handler.setLevel(logging.INFO)
+file_handler.setFormatter(
+    logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+)
+
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logging.INFO)
+stream_handler.setFormatter(
+    logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+)
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.FileHandler("manual_test_discrepancies.log"),
-        logging.StreamHandler(),
-    ],
+    handlers=[file_handler, stream_handler],
+    force=True,  # Override any existing configuration
 )
 logger = logging.getLogger(__name__)
+
+# Ensure file handler doesn't buffer writes
+file_handler.stream.reconfigure(line_buffering=True)
 
 
 @dataclass
@@ -475,9 +488,9 @@ async def test_tool_with_comparison(
                     if hasattr(parsed_response, "response") and hasattr(
                         parsed_response.response, "result"
                     ):
-                        result = parsed_response.response.result
-                        if result is not None:
-                            result_count = len(result)
+                        search_results = parsed_response.response.result
+                        if search_results is not None:
+                            result_count = len(search_results)
                             logger.info(
                                 f"📊 {tool_name} returned {result_count} results"
                             )
@@ -614,7 +627,20 @@ async def test_tool_with_comparison(
 
 async def run_comprehensive_tests():
     """Run comprehensive comparison tests for all tools."""
-    logger.info("Starting comprehensive Aiera MCP tool comparison tests...\n")
+    import datetime
+
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    logger.info(
+        f"Starting comprehensive Aiera MCP tool comparison tests at {timestamp}\n"
+    )
+    logger.info("=" * 80)
+    logger.info(
+        "📝 This file contains only errors and discrepancies found during testing."
+    )
+    logger.info(
+        "   If this file is empty after the header, all tests passed successfully!"
+    )
+    logger.info("=" * 80 + "\n")
 
     analyzer = DiscrepancyAnalyzer()
     date_ranges = get_test_date_ranges()
@@ -1287,6 +1313,9 @@ async def run_comprehensive_tests():
         and tests_with_errors == 0
     ):
         logger.info("\n🎉 All tools passed with no issues!")
+        logger.info(
+            "📝 manual_test_discrepancies.log is empty because no discrepancies were found"
+        )
     elif tests_with_parsing_errors == 0:
         logger.info("\n✅ All Response objects parse correctly!")
 

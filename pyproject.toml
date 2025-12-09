@@ -7,10 +7,9 @@ readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.11"
 dependencies = [
-    "mcp[cli]>=1.22.0",  # Supports MCP protocol specification 2025-11-25
+    "mcp[cli]>=1.14.0",
     "httpx>=0.24.0",
     "pydantic-settings>=2.0.0",
-    "mcp-ui-server>=0.1.0",  # Official MCP UI SDK for resource creation
 ]
 
 [project.optional-dependencies]
