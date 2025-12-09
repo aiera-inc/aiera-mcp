@@ -813,10 +813,11 @@ async def run_comprehensive_tests():
             "response_model": FindThirdBridgeEventsResponse,
             "endpoint": "/chat-support/find-third-bridge",
             "params": {
-                "start_date": date_ranges["last_quarter"]["start_date"],
-                "end_date": date_ranges["last_quarter"]["end_date"],
+                "bloomberg_ticker": "NVDA:US",
+                "start_date": "2024-09-10",
+                "end_date": "2024-12-09",
                 "page": 1,
-                "page_size": 5,
+                "page_size": 50,
             },
         },
         {

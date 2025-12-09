@@ -128,8 +128,8 @@ class ThirdBridgeCitationBlock(BaseModel):
 class ThirdBridgeEventItem(BaseModel):
     """Third Bridge event item."""
 
-    thirdbridge_event_id: str = Field(
-        validation_alias="event_id", description="Event identifier"
+    thirdbridge_event_id: Optional[str] = Field(
+        None, validation_alias="event_id", description="Event identifier"
     )
     content_type: str = Field(description="Content type (e.g., FORUM, COMMUNITY)")
     call_date: str = Field(description="Event date and time as string")
@@ -172,7 +172,8 @@ class ThirdBridgeTranscriptItem(BaseModel):
 class ThirdBridgeEventDetails(BaseModel):
     """Detailed Third Bridge event information."""
 
-    thirdbridge_event_id: str = Field(
+    thirdbridge_event_id: Optional[str] = Field(
+        None,
         validation_alias="event_id",  # Parse from API as "event_id"
         description="Event identifier",
     )
