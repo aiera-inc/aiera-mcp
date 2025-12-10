@@ -401,7 +401,9 @@ class ApiPaginationInfo(BaseModel):
 class ApiResponseData(BaseModel):
     """API response structure with data and pagination."""
 
-    data: List[EventItem] = Field(..., description="List of events")
+    data: Optional[List[EventItem]] = Field(
+        None, description="List of events (None if no results)"
+    )
     pagination: Optional[ApiPaginationInfo] = Field(
         None, description="Pagination information"
     )
