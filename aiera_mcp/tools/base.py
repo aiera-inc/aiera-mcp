@@ -212,15 +212,21 @@ async def make_aiera_request(
 
         raise handle_api_error(response.status_code, endpoint, response.text)
 
+    skip_instructions = False
     if return_type == "json":
         response_data = response.json()
+        if response_data and "instructions" in response_data:
+            skip_instructions = True
+
     else:
         response_data = response.text
 
+    if skip_instructions:
+        return response_data
+
     # Prepare instructions for response formatting
     instructions = [
-        f"""This data is provided for institutional finance professionals. Responses should be composed of accurate, concise,
-and well-structured financial insights.
+        f"""This data is provided for institutional finance professionals. Responses should be composed of accurate, concise, and well-structured financial insights.
 The current date is **{datetime.now().strftime("%Y-%m-%d")}**, and the current time is **{datetime.now().strftime("%I:%M %p")}**.
 Relative dates and times (e.g., "last 3 months" or "next 3 months" or "later today") should be calculated based on this date.
 All dates and times are in eastern time (ET) unless specifically stated otherwise.
