@@ -125,7 +125,6 @@ async def make_aiera_request(
     api_key: str,
     params: Optional[Dict[str, Any]] = None,
     data: Optional[Dict[str, Any]] = None,
-    additional_instructions: Optional[list] = None,
     return_type: str = "json",
     request_context: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
@@ -138,7 +137,6 @@ async def make_aiera_request(
         api_key: API key (required)
         params: Query parameters
         data: Request body data
-        additional_instructions: Additional instructions for response formatting (list of strings)
         return_type: Response format type
         request_context: Optional context dict with 'headers' and 'log_metadata' keys
 
@@ -212,42 +210,8 @@ async def make_aiera_request(
 
         raise handle_api_error(response.status_code, endpoint, response.text)
 
-    skip_instructions = False
     if return_type == "json":
-        response_data = response.json()
-        if response_data and "instructions" in response_data:
-            skip_instructions = True
+        return response.json()
 
     else:
-        response_data = response.text
-
-    if skip_instructions:
-        return response_data
-
-    # Prepare instructions for response formatting
-    instructions = [
-        f"""This data is provided for institutional finance professionals. Responses should be composed of accurate, concise, and well-structured financial insights.
-The current date is **{datetime.now().strftime("%Y-%m-%d")}**, and the current time is **{datetime.now().strftime("%I:%M %p")}**.
-Relative dates and times (e.g., "last 3 months" or "next 3 months" or "later today") should be calculated based on this date.
-All dates and times are in eastern time (ET) unless specifically stated otherwise.
-
-## Usage Hints:
-- Questions about guidance will always require the transcript from at least one earnings event, and often will require multiple earnings transcripts from the last year in order to provide sufficient context.
-- Answers to guidance questions should focus on management commentary, and avoid analyst commentary unless specifically asked for.
-
-Some endpoints may require specific permissions based on a subscription plan. If access is denied, the user should talk to their Aiera representative about gaining access.
-""",
-        CITATION_PROMPT,
-    ]
-
-    if additional_instructions:
-        # Support both List[str] (new) and str (backward compatibility)
-        if isinstance(additional_instructions, list):
-            instructions.extend(additional_instructions)
-        else:
-            instructions.append(additional_instructions)
-
-    return {
-        "instructions": instructions,
-        "response": response_data,
-    }
+        return response.text
