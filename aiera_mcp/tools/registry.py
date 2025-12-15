@@ -24,9 +24,15 @@ from .company_docs import (
 from .third_bridge import find_third_bridge_events, get_third_bridge_event
 from .transcrippets import find_transcrippets, create_transcrippet, delete_transcrippet
 from .search import search_transcripts, search_filings, search_filing_chunks
+from .utilities import get_current_datetime
 
 # Import all parameter model classes from domain modules
-from .events import FindEventsArgs, FindConferencesArgs, GetEventArgs, GetUpcomingEventsArgs
+from .events import (
+    FindEventsArgs,
+    FindConferencesArgs,
+    GetEventArgs,
+    GetUpcomingEventsArgs,
+)
 from .filings import FindFilingsArgs, GetFilingArgs
 from .equities import (
     FindEquitiesArgs,
@@ -50,6 +56,7 @@ from .transcrippets import (
     DeleteTranscrippetArgs,
 )
 from .search import SearchTranscriptsArgs, SearchFilingsArgs, SearchFilingChunksArgs
+from .utilities import GetCurrentDateTimeArgs
 
 TOOL_REGISTRY = {
     "find_events": {
@@ -274,6 +281,15 @@ TOOL_REGISTRY = {
         "function": search_filing_chunks,
         "args_model": SearchFilingChunksArgs,
         "category": "search",
+        "read_only": True,
+        "destructive": False,
+    },
+    "get_current_datetime": {
+        "display_name": "Current Date/Time",
+        "input_schema": GetCurrentDateTimeArgs.model_json_schema(),
+        "function": get_current_datetime,
+        "args_model": GetCurrentDateTimeArgs,
+        "category": "utilities",
         "read_only": True,
         "destructive": False,
     },
