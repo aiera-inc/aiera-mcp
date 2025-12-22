@@ -11,10 +11,8 @@ from aiera_mcp import EMBEDDING_SEARCH_PIPELINE, HYBRID_SEARCH_PIPELINE
 from .models import (
     SearchTranscriptsArgs,
     SearchFilingsArgs,
-    SearchFilingChunksArgs,
     SearchTranscriptsResponse,
     SearchFilingsResponse,
-    SearchFilingChunksResponse,
     SearchResponseData,
     SearchPaginationInfo,
     TranscriptSearchResponseData,
@@ -22,7 +20,6 @@ from .models import (
     TranscriptSearchCitation,
     FilingSearchItem,
     FilingSearchCitation,
-    FilingChunkSearchItem,
 )
 from .utils import correct_provided_ids, correct_provided_types, correct_event_type
 
@@ -246,216 +243,9 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
             return _get_empty_transcripts_response(args.max_results)
 
 
-async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
-    """SEC filing discovery tool for identifying relevant filings before detailed content analysis.
-
-    Returns filing metadata (excluding full text) optimized for filing identification and
-    integration with FilingChunkSearch. Supports 60+ SEC document types with intelligent
-    company name matching and comprehensive filtering capabilities.
-    """
-    logger.info("tool called: search_filings")
-
-    # Get client and API key (no context needed for standard MCP)
-    client = await get_http_client(None)
-    api_key = get_api_key()
-
-    company_name = args.company_name.strip()
-    logger.info(
-        f"SearchFilings: enhanced search for '{company_name}' filings, start_date='{args.start_date}', end_date='{args.end_date}', document_types={args.document_types}"
-    )
-
-    # Build flexible company name search using multiple strategies
-    should_clauses = [
-        # Primary: match_phrase (works well for exact company names)
-        {"match_phrase": {"title": {"query": company_name, "boost": 15.0}}},
-        # Secondary: flexible wildcard matching
-        {
-            "wildcard": {
-                "title": {
-                    "value": f"*{company_name}*",
-                    "case_insensitive": True,
-                    "boost": 8.0,
-                }
-            }
-        },
-        # For compound names, try individual words
-        *[
-            {
-                "wildcard": {
-                    "title": {
-                        "value": f"*{word.strip()}*",
-                        "case_insensitive": True,
-                        "boost": 6.0,
-                    }
-                }
-            }
-            for word in company_name.replace("&", " ").replace("  ", " ").split()
-            if len(word.strip()) > 2
-        ],  # Skip short words like "&"
-        # Structured company field matches (fallback since these are often empty)
-        {"term": {"company_name.keyword": company_name}},
-        {"term": {"issuer_name.keyword": company_name}},
-        {"term": {"entity_name.keyword": company_name}},
-        {"term": {"filer_name.keyword": company_name}},
-    ]
-
-    # Add document type filter using match_phrase since wildcard queries don't work reliably
-    filter_clauses = []
-    if args.document_types:
-        doc_type_filters = []
-        for doc_type in args.document_types:
-            doc_type_upper = doc_type.upper()
-            # Use match_phrase for document type matching
-            doc_type_filters.extend(
-                [
-                    # Primary: exact phrase match for the document type
-                    {
-                        "match_phrase": {
-                            "title": {"query": doc_type_upper, "boost": 10.0}
-                        }
-                    },
-                    {
-                        "match_phrase": {
-                            "title": {"query": doc_type.lower(), "boost": 8.0}
-                        }
-                    },
-                    # Structured field matching as fallback
-                    {"term": {"document_type.keyword": doc_type_upper}},
-                    {"term": {"form_type.keyword": doc_type_upper}},
-                    {"term": {"filing_type.keyword": doc_type_upper}},
-                ]
-            )
-
-        if doc_type_filters:
-            document_type_filter = {
-                "bool": {"should": doc_type_filters, "minimum_should_match": 1}
-            }
-            filter_clauses.append(document_type_filter)
-
-    # Build date filter
-    if args.start_date or args.end_date:
-        date_range = {}
-        if args.start_date:
-            date_range["gte"] = args.start_date
-        if args.end_date:
-            date_range["lte"] = args.end_date
-        if date_range:
-            filter_clauses.append({"range": {"date": date_range}})
-
-    # Add amendments filter
-    if not args.include_amendments:
-        filter_clauses.append(
-            {"bool": {"must_not": {"regexp": {"filing_type": ".*[/]A"}}}}
-        )
-
-    # Add filing type boosting if no specific document types are requested
-    if not args.document_types:
-        logger.info(
-            f"No document types specified for '{company_name}', adding filing type boosting for important SEC forms"
-        )
-        # Define filing type priorities with boost scores
-        priority_filings = {
-            # Core periodic reports (highest priority)
-            "10-K": 15.0,  # Annual report - most comprehensive
-            "10-Q": 12.0,  # Quarterly report - regular updates
-            "8-K": 10.0,  # Current report - material events
-            # International and specialized forms (medium-high priority)
-            "20-F": 8.0,  # Annual report for foreign companies
-            "DEF 14A": 7.0,  # Proxy statement
-            "S-1": 6.0,  # Registration statement for IPOs
-            "S-3": 5.0,  # Registration statement for seasoned companies
-        }
-
-        filing_boosting_clauses = []
-        # Add boosting for each priority filing type
-        for filing_type, boost_score in priority_filings.items():
-            # Boost in title patterns (common SEC filing title formats)
-            filing_boosting_clauses.extend(
-                [
-                    {
-                        "wildcard": {
-                            "title": {
-                                "value": f"*- {filing_type}",
-                                "case_insensitive": True,
-                                "boost": boost_score * 0.8,
-                            }
-                        }
-                    },
-                    {
-                        "wildcard": {
-                            "title": {
-                                "value": f"* - {filing_type}",
-                                "case_insensitive": True,
-                                "boost": boost_score * 0.8,
-                            }
-                        }
-                    },
-                    {
-                        "wildcard": {
-                            "title": {
-                                "value": f"*{filing_type}*",
-                                "case_insensitive": True,
-                                "boost": boost_score * 0.6,
-                            }
-                        }
-                    },
-                ]
-            )
-
-        should_clauses.extend(filing_boosting_clauses)
-
-    # Build sort clause
-    sort_clause = []
-    if args.sort_by == "desc":
-        sort_clause = [{"date": {"order": "desc"}}, {"_score": {"order": "desc"}}]
-    elif args.sort_by == "asc":
-        sort_clause = [{"date": {"order": "asc"}}, {"_score": {"order": "desc"}}]
-    elif args.sort_by == "relevance":
-        sort_clause = [{"_score": {"order": "desc"}}, {"date": {"order": "desc"}}]
-
-    # Build query - ensure filters are strictly enforced in the filter clause
-    query = {
-        "size": args.max_results,
-        "query": {
-            "bool": {
-                "should": should_clauses,
-                "filter": filter_clauses,
-                "minimum_should_match": 1,
-            }
-        },
-        "_source": [
-            "content_id",
-            "title",
-            "company_name",
-            "issuer_name",
-            "entity_name",
-            "document_type",
-            "form_type",
-            "filing_type",
-            "date",
-            "filing_date",
-            "filing_id",
-        ],
-        "sort": sort_clause,
-        "timeout": "15s",
-        "search_pipeline": HYBRID_SEARCH_PIPELINE,
-    }
-
-    raw_response = await make_aiera_request(
-        client=client,
-        method="POST",
-        endpoint="/chat-support/search/filings",
-        api_key=api_key,
-        params={},
-        data=query,
-    )
-
-    return SearchFilingsResponse.model_validate(raw_response)
-
-
-async def search_filing_chunks(
-    args: SearchFilingChunksArgs,
-) -> SearchFilingChunksResponse:
+async def search_filings(
+    args: SearchFilingsArgs,
+) -> SearchFilingsResponse:
     """Semantic search within SEC filing document chunks using embedding-based matching.
 
     Uses the post_filter approach to avoid "hybrid query must be a top level query" errors,
@@ -463,7 +253,7 @@ async def search_filing_chunks(
     ext.ml_inference.query_text pattern to automatically generate embeddings
     from the query text using the configured embedding pipeline.
     """
-    logger.info("tool called: search_filing_chunks")
+    logger.info("tool called: search_filings")
 
     # Get client and API key (no context needed for standard MCP)
     client = await get_http_client(None)
@@ -496,7 +286,7 @@ async def search_filing_chunks(
     # Add company search if company_name is provided
     company_query = None
     if args.company_name and args.company_name.strip():
-        company_query = _build_filing_chunks_company_filter(args.company_name)
+        company_query = _build_filings_company_filter(args.company_name)
 
         # If we have text search, add company as post-filter
         if should_clauses:
@@ -677,10 +467,10 @@ async def search_filing_chunks(
         try:
             # Try with ML inference enhancement with timeout handling
             logger.info(
-                f"FilingChunkSearch: Attempting ML inference search for company='{args.company_name}', query='{args.query_text}', pipeline='{HYBRID_SEARCH_PIPELINE}' (15s timeout)"
+                f"FilingsSearch: Attempting ML inference search for company='{args.company_name}', query='{args.query_text}', pipeline='{HYBRID_SEARCH_PIPELINE}' (15s timeout)"
             )
             logger.info(
-                f"FilingChunkSearch: Using {len(ml_filters)} simplified filters for ML (vs {len(all_filters)} complex filters for standard search)"
+                f"FilingsSearch: Using {len(ml_filters)} simplified filters for ML (vs {len(all_filters)} complex filters for standard search)"
             )
 
             # Set a 15-second timeout for ML inference
@@ -699,7 +489,7 @@ async def search_filing_chunks(
                 )
             except asyncio.TimeoutError:
                 logger.warning(
-                    "FilingChunkSearch: ML inference timed out after 15s, falling back to standard search"
+                    "FilingsSearch: ML inference timed out after 15s, falling back to standard search"
                 )
                 raise Exception("ML inference timeout")
 
@@ -708,22 +498,22 @@ async def search_filing_chunks(
                 and "response" in raw_response
                 and raw_response["response"].get("result")
             ):
-                logger.info("FilingChunkSearch ML inference successful")
-                return SearchFilingChunksResponse.model_validate(raw_response)
+                logger.info("FilingsSearch ML inference successful")
+                return SearchFilingsResponse.model_validate(raw_response)
             else:
                 logger.warning(
-                    "FilingChunkSearch: ML inference returned no results, trying fallback"
+                    "FilingsSearch: ML inference returned no results, trying fallback"
                 )
                 raise Exception("ML inference returned no results")
 
         except Exception as ml_error:
             logger.warning(
-                f"FilingChunkSearch: ML inference failed ({str(ml_error)}), falling back to standard search"
+                f"FilingsSearch: ML inference failed ({str(ml_error)}), falling back to standard search"
             )
     else:
         # No query text provided, skip ML inference and go directly to standard search
         logger.info(
-            f"FilingChunkSearch: No query text provided, using standard filtered search for company='{args.company_name}'"
+            f"FilingsSearch: No query text provided, using standard filtered search for company='{args.company_name}'"
         )
 
     # If we don't have results from ML inference, try standard search with pipeline fallback
@@ -739,17 +529,17 @@ async def search_filing_chunks(
         )
 
         if raw_response and "response" in raw_response:
-            logger.info("FilingChunkSearch standard pipeline fallback successful")
-            return SearchFilingChunksResponse.model_validate(raw_response)
+            logger.info("FilingsSearch standard pipeline fallback successful")
+            return SearchFilingsResponse.model_validate(raw_response)
         else:
             logger.warning(
-                "FilingChunkSearch: Standard pipeline returned no results, trying direct search"
+                "FilingsSearch: Standard pipeline returned no results, trying direct search"
             )
             raise Exception("Standard pipeline returned no results")
 
     except Exception as pipeline_error:
         logger.warning(
-            f"FilingChunkSearch: Standard pipeline search failed: {str(pipeline_error)}, trying direct search"
+            f"FilingsSearch: Standard pipeline search failed: {str(pipeline_error)}, trying direct search"
         )
 
         try:
@@ -764,20 +554,20 @@ async def search_filing_chunks(
             )
 
             if raw_response and "response" in raw_response:
-                logger.info("FilingChunkSearch direct search fallback successful")
-                return SearchFilingChunksResponse.model_validate(raw_response)
+                logger.info("FilingsSearch direct search fallback successful")
+                return SearchFilingsResponse.model_validate(raw_response)
             else:
-                logger.error("FilingChunkSearch: All search methods failed")
-                return _get_empty_filing_chunks_response(args.max_results)
+                logger.error("FilingsSearch: All search methods failed")
+                return _get_empty_filings_response(args.max_results)
 
         except Exception as direct_error:
             logger.error(
-                f"FilingChunkSearch: Direct search also failed: {str(direct_error)}"
+                f"FilingsSearch: Direct search also failed: {str(direct_error)}"
             )
-            return _get_empty_filing_chunks_response(args.max_results)
+            return _get_empty_filings_response(args.max_results)
 
 
-def _build_filing_chunks_company_filter(company_name: str) -> dict:
+def _build_filings_company_filter(company_name: str) -> dict:
     """Build a comprehensive fuzzy company search filter for filing chunks index.
 
     Uses fuzzy matching against both company_common_name and company_legal_name fields
@@ -987,9 +777,9 @@ def _build_filing_chunks_company_filter(company_name: str) -> dict:
     return company_filter
 
 
-def _get_empty_filing_chunks_response(max_results: int) -> SearchFilingChunksResponse:
+def _get_empty_filings_response(max_results: int) -> SearchFilingsResponse:
     """Return empty response structure for filing chunks search."""
-    return SearchFilingChunksResponse(
+    return SearchFilingsResponse(
         instructions=[],
         response=SearchResponseData(
             pagination=SearchPaginationInfo(

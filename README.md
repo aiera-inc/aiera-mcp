@@ -178,7 +178,7 @@ from aiera_mcp import find_events, make_aiera_request, correct_bloomberg_ticker
 - **Equities**: `find_equities`, `get_equity_summaries`, `get_sectors_and_subsectors`
 - **Indexes & Watchlists**: `get_available_indexes`, `get_index_constituents`, `get_available_watchlists`, `get_watchlist_constituents`
 - **Company Documents**: `find_company_docs`, `get_company_doc`, `get_company_doc_categories`, `get_company_doc_keywords`
-- **Search**: `search_transcripts`, `search_filings`, `search_filing_chunks`
+- **Search**: `search_transcripts`, `search_filings`
 - **Transcrippets**: `find_transcrippets`, `create_transcrippet`, `delete_transcrippet`
 - **Third Bridge**: `find_third_bridge_events`, `get_third_bridge_event`
 
@@ -235,7 +235,7 @@ The package provides predefined tool groups for common use cases:
 - **`EQUITY_TOOLS`**: `["find_equities", "get_equity_summaries", "get_sectors_and_subsectors"]`
 - **`INDEX_WATCHLIST_TOOLS`**: `["get_available_indexes", "get_index_constituents", "get_available_watchlists", "get_watchlist_constituents"]`
 - **`COMPANY_DOC_TOOLS`**: `["find_company_docs", "get_company_doc", "get_company_doc_categories", "get_company_doc_keywords"]`
-- **`SEARCH_TOOLS`**: `["search_transcripts", "search_filings", "search_filing_chunks"]`
+- **`SEARCH_TOOLS`**: `["search_transcripts", "search_filings"]`
 - **`TRANSCRIPPET_TOOLS`**: `["find_transcrippets", "create_transcrippet", "delete_transcrippet"]`
 - **`THIRD_BRIDGE_TOOLS`**: `["find_third_bridge_events", "get_third_bridge_event"]`
 - **`AVAILABLE_TOOLS`**: Complete list of all 24 available tools

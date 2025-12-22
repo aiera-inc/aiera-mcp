@@ -49,47 +49,6 @@ class SearchTranscriptsArgs(BaseAieraArgs):
 
 
 class SearchFilingsArgs(BaseAieraArgs):
-    """SEC filing discovery tool for identifying relevant filings before detailed content analysis.
-
-    Returns filing metadata (excluding full text) optimized for filing identification and
-    integration with FilingChunkSearch. Supports 60+ SEC document types with intelligent
-    company name matching and comprehensive filtering capabilities.
-    """
-
-    company_name: str = Field(
-        description="Company name to search filings for. Supports fuzzy matching for variations like 'Microsoft Corp', 'MSFT', 'Microsoft Corporation'. Examples: 'Apple', 'Tesla Inc', 'Amazon.com'"
-    )
-    start_date: str = Field(
-        default="",
-        description="Start date for filing search in YYYY-MM-DD format. Example: '2024-01-01'. If not provided, defaults to 6 months ago.",
-    )
-    end_date: str = Field(
-        default="",
-        description="End date for filing search in YYYY-MM-DD format. Example: '2024-12-31'. If not provided, defaults to today.",
-    )
-    document_types: List[str] = Field(
-        default=[],
-        description="Optional filter for specific SEC document types. Examples: ['10-K'], ['10-Q'], ['8-K'], ['4'], ['3', '4', '5'] (insider trading), ['SC 13D'], ['DEF 14A'], ['S-1'] (IPOs), ['20-F'] (foreign companies). Supports 60+ document types. Leave empty for all filing types.",
-    )
-    max_results: int = Field(
-        default=5,
-        description="Maximum number of filings to return (5-20 recommended for performance). Higher values may cause timeouts on large datasets.",
-    )
-    fuzzy_matching: bool = Field(
-        default=True,
-        description="Enable intelligent company name matching for subsidiaries, abbreviations, and name variations. Recommended for comprehensive results.",
-    )
-    sort_by: str = Field(
-        default="desc",
-        description="Sort order for results: 'desc' (newest first), 'asc' (oldest first), 'relevance' (best matches first)",
-    )
-    include_amendments: bool = Field(
-        default=False,
-        description="Include amended filings (like 10-K/A, 10-Q/A). False returns only original filings for cleaner results.",
-    )
-
-
-class SearchFilingChunksArgs(BaseAieraArgs):
     """Semantic search within SEC filing document chunks using embedding-based matching.
 
     Extracts relevant filing content chunks filtered by company, date, and filing type
@@ -302,54 +261,6 @@ class FilingSearchCitation(BaseModel):
 
 
 class FilingSearchItem(BaseModel):
-    """Individual filing search result item."""
-
-    date: datetime = Field(description="Date and time of the filing")
-    primary_company_id: int = Field(description="Primary company identifier")
-    content_id: int = Field(description="Filing content identifier")
-    filing_id: int = Field(description="Filing identifier")
-    text: str = Field(description="The matching text content from the filing")
-    primary_equity_id: int = Field(description="Primary equity identifier")
-    title: str = Field(description="Title of the filing")
-    filing_type: Optional[str] = Field(
-        default=None, description="Type of SEC filing (e.g., '10-K', '10-Q', '8-K')"
-    )
-    score: float = Field(
-        validation_alias="_score",
-        description="Search relevance score (aliased from _score)",
-    )
-    citation_information: FilingSearchCitation = Field(
-        description="Citation details for this result"
-    )
-
-    @field_validator("date", mode="before")
-    @classmethod
-    def parse_date(cls, v):
-        """Parse ISO format datetime strings to datetime objects."""
-        if isinstance(v, str):
-            try:
-                # Replace 'Z' with '+00:00' for ISO format compatibility
-                return datetime.fromisoformat(v.replace("Z", "+00:00"))
-            except (ValueError, AttributeError):
-                return datetime.now()
-        # If it's already a datetime object, return as is
-        return v
-
-    @field_serializer("date")
-    def serialize_date(self, value: datetime) -> str:
-        """Serialize datetime to ISO format string for JSON compatibility."""
-        return value.isoformat()
-
-
-class SearchFilingsResponse(BaseAieraResponse):
-    """Response for search_filings tool - matches actual API structure."""
-
-    response: Optional[SearchResponseData] = Field(
-        None, description="Response data container"
-    )
-
-
-class FilingChunkSearchItem(BaseModel):
     """Individual filing chunk search result item."""
 
     date: datetime = Field(description="Date and time of the filing")
@@ -391,8 +302,8 @@ class FilingChunkSearchItem(BaseModel):
         return value.isoformat()
 
 
-class SearchFilingChunksResponse(BaseAieraResponse):
-    """Response for search_filing_chunks tool - matches actual API structure."""
+class SearchFilingsResponse(BaseAieraResponse):
+    """Response for search_filings tool - matches actual API structure."""
 
     response: Optional[SearchResponseData] = Field(
         None, description="Response data container"
