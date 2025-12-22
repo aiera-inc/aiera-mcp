@@ -125,15 +125,11 @@ def get_api_documentation() -> str:
 
 def register_aiera_tools(
     api_key_provider: Optional[Callable[[], Optional[str]]] = None,
-    include: Optional[List[str]] = None,
-    exclude: Optional[List[str]] = None,
 ) -> Dict[str, Dict[str, Any]]:
     """Register Aiera tools and return the tool registry.
 
     Args:
         api_key_provider: Optional function that returns API key for OAuth systems
-        include: Optional list of tool names to include (if specified, only these tools will be registered)
-        exclude: Optional list of tool names to exclude (these tools will not be registered)
 
     Returns:
         Dictionary of registered tools

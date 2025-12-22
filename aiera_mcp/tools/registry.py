@@ -26,7 +26,12 @@ from .transcrippets import find_transcrippets, create_transcrippet, delete_trans
 from .search import search_transcripts, search_filings
 
 # Import all parameter model classes from domain modules
-from .events import FindEventsArgs, FindConferencesArgs, GetEventArgs, GetUpcomingEventsArgs
+from .events import (
+    FindEventsArgs,
+    FindConferencesArgs,
+    GetEventArgs,
+    GetUpcomingEventsArgs,
+)
 from .filings import FindFilingsArgs, GetFilingArgs
 from .equities import (
     FindEquitiesArgs,
@@ -97,15 +102,15 @@ TOOL_REGISTRY = {
         "read_only": True,
         "destructive": False,
     },
-    # 'get_filing': {
-    #     'display_name': 'Get Filing',
-    #     'input_schema': GetFilingArgs.model_json_schema(),
-    #     'function': get_filing,
-    #     'args_model': GetFilingArgs,
-    #     'category': 'filings',
-    #     'read_only': True,
-    #     'destructive': False,
-    # },
+    "get_filing": {
+        "display_name": "Get Filing",
+        "input_schema": GetFilingArgs.model_json_schema(),
+        "function": get_filing,
+        "args_model": GetFilingArgs,
+        "category": "filings",
+        "read_only": True,
+        "destructive": False,
+    },
     "find_equities": {
         "display_name": "Find Equities",
         "input_schema": FindEquitiesArgs.model_json_schema(),
