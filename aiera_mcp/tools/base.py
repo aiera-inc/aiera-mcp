@@ -5,7 +5,6 @@
 import httpx
 import logging
 from typing import Any, Dict, Optional
-from datetime import datetime
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -31,15 +30,6 @@ def _get_base_url() -> str:
 # For backward compatibility, keep AIERA_BASE_URL as a module constant
 # but it will be resolved at import time
 AIERA_BASE_URL = get_settings().aiera_base_url
-
-# Citation prompt for UI clients
-CITATION_PROMPT = """IMPORTANT: when referencing this data in your response, ALWAYS include inline citations by using the information found in the `citation_information` block, along with an incrementing counter. Render these citations as markdown (padded with a leading space for readability), like this: [[1]](url "title")
-
-Where possible, include inline citations for every fact, figure, or quote that was sourced, directly or indirectly, from a transcript by using transcript-level citations (as opposed to event-level citations).
-
-If multiple citations are relevant, include them all. You can reference the same citation multiple times if needed.
-
-However, if the user has requested a response as JSON, you do NOT need to include any citations."""
 
 # Global HTTP client for Lambda environment with proper configuration
 _lambda_http_client: Optional[httpx.AsyncClient] = None

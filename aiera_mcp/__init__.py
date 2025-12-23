@@ -173,11 +173,12 @@ from .context import (
 )
 
 # Import utilities
-from .tools.base import make_aiera_request, AIERA_BASE_URL, CITATION_PROMPT
+from .tools.base import make_aiera_request, AIERA_BASE_URL
 from .tools.utils import (
     correct_bloomberg_ticker,
     correct_keywords,
     correct_categories,
+    correct_provided_ids,
     correct_event_type,
     correct_transcript_section,
 )
@@ -218,6 +219,7 @@ __all__ = [
     "correct_bloomberg_ticker",
     "correct_keywords",
     "correct_categories",
+    "correct_provided_ids",
     "correct_event_type",
     "correct_transcript_section",
     # Tool registration
@@ -241,7 +243,6 @@ __all__ = [
     "DEFAULT_PAGE_SIZE",
     "DEFAULT_MAX_PAGE_SIZE",
     "AIERA_BASE_URL",
-    "CITATION_PROMPT",
     "AVAILABLE_TOOLS",
     # Tool Groups
     "EVENT_TOOLS",
