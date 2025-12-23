@@ -148,7 +148,9 @@ class ThirdBridgeEventItem(BaseModel):
         validation_alias="event_id", description="Event identifier"
     )
     content_type: str = Field(description="Content type (e.g., FORUM, COMMUNITY)")
-    call_date: str = Field(description="Event date and time as string")
+    call_date: Optional[str] = Field(
+        default="", description="Event date and time as string"
+    )
     title: str = Field(description="Event title")
     language: str = Field(description="Event language")
     agenda: List[str] = Field(description="Event agenda items")
@@ -156,7 +158,9 @@ class ThirdBridgeEventItem(BaseModel):
         None, description="Key insights from the event (can be null)"
     )
     citation_information: Optional[ThirdBridgeCitationInfo] = Field(
-        None, description="Citation information"
+        None,
+        description="Citation information",
+        validation_alias="citation_block",
     )
 
 
@@ -193,7 +197,9 @@ class ThirdBridgeEventDetails(BaseModel):
         description="Event identifier",
     )
     content_type: str = Field(description="Content type (e.g., FORUM, COMMUNITY)")
-    call_date: str = Field(description="Event date and time as string")
+    call_date: Optional[str] = Field(
+        default="", description="Event date and time as string"
+    )
     title: str = Field(description="Event title")
     language: str = Field(description="Event language")
     agenda: Optional[List[str]] = Field(None, description="Event agenda items")
@@ -201,7 +207,9 @@ class ThirdBridgeEventDetails(BaseModel):
         None, description="Key insights from the event"
     )
     citation_information: Optional[ThirdBridgeCitationInfo] = Field(
-        None, description="Citation information"
+        None,
+        description="Citation information",
+        validation_alias="citation_block",
     )
     specialists: Optional[List[ThirdBridgeSpecialist]] = Field(
         None, description="Expert specialists participating in the event"

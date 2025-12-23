@@ -17,7 +17,7 @@ from aiera_mcp.tools.events.models import (
     EventItem,
     EventDetails,
     EventType,
-    ApiResponseData,
+    EventApiResponseData,
 )
 from aiera_mcp.tools.common.models import CitationInfo
 
@@ -294,7 +294,7 @@ class TestEventsResponses:
         )
 
         response = GetEventResponse(
-            response=ApiResponseData(data=[event_item]),
+            response=EventApiResponseData(data=[event_item]),
             instructions=["Test instruction"],
         )
 

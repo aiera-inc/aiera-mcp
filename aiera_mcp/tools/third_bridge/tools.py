@@ -88,22 +88,8 @@ async def get_third_bridge_event(
 
     event_data = events_data[0]  # Get the first (and should be only) event
 
-    # Build detailed event using new API field names
-    event_details = ThirdBridgeEventDetails(
-        event_id=event_data.get("event_id", ""),
-        content_type=event_data.get("content_type", ""),
-        call_date=event_data.get("call_date", ""),
-        title=event_data.get("title", ""),
-        language=event_data.get("language", ""),
-        agenda=event_data.get(
-            "agenda"
-        ),  # This should be Optional[str] in ThirdBridgeEventDetails
-        insights=event_data.get(
-            "insights"
-        ),  # This should be Optional[str] in ThirdBridgeEventDetails
-        citation_information=event_data.get("citation_information"),
-        transcript=event_data.get("transcript"),
-    )
+    # Build detailed event using model_validate to apply validation_aliases
+    event_details = ThirdBridgeEventDetails.model_validate(event_data)
 
     return GetThirdBridgeEventResponse(
         event=event_details,

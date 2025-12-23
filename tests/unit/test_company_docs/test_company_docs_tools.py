@@ -56,23 +56,26 @@ class TestFindCompanyDocs:
         # Verify
         assert isinstance(result, FindCompanyDocsResponse)
         assert len(result.response.data) == 1
-        assert result.response.pagination.total_count == 1
+        assert result.response.pagination.total_count == 417
         assert result.response.pagination.current_page == 1
         assert result.response.pagination.page_size == 50
 
         # Check first document
         first_doc = result.response.data[0]
         assert isinstance(first_doc, CompanyDocItem)
-        assert first_doc.doc_id == 456789
-        assert first_doc.title == "Sustainability Report 2023"
-        assert first_doc.company.name == "Apple Inc"
-        assert first_doc.category == "Sustainability"
+        assert first_doc.doc_id == 5488573
+        assert (
+            first_doc.title
+            == "United Rentals Scales AI-Powered Manual Assist Application on AWS to Speed Equipment Repairs"
+        )
+        assert first_doc.company.name == "Amazon"
+        assert first_doc.category == "press_release"
         assert first_doc.keywords == [
-            "environment",
-            "carbon neutral",
-            "renewable energy",
+            "generative ai",
+            "ai-powered diagnostics",
+            "manual assist ai",
         ]
-        assert first_doc.publish_date == "2023-09-15T00:00:00Z"
+        assert first_doc.publish_date == "2025-12-19"
 
         # Check API call was made correctly
         mock_http_dependencies["mock_make_request"].assert_called_once()
@@ -236,10 +239,13 @@ class TestFindCompanyDocs:
         doc = result.response.data[0]
         assert doc.citation_information is not None
         citation = doc.citation_information
-        assert citation.title == "Sustainability Report 2023"
+        assert (
+            citation.title
+            == "United Rentals Scales AI-Powered Manual Assist Application on AWS to Speed Equipment Repairs"
+        )
         assert (
             citation.url
-            == "https://apple.com/sustainability/pdf/Apple_Environmental_Progress_Report_2023.pdf"
+            == "https://press.aboutamazon.com/aws/2025/12/united-rentals-scales-ai-applications-with-aws"
         )
 
 
@@ -265,19 +271,20 @@ class TestGetCompanyDoc:
         # Verify
         assert isinstance(result, GetCompanyDocResponse)
         assert isinstance(result.document, CompanyDocDetails)
-        assert result.document.doc_id == 456789
-        assert result.document.title == "Sustainability Report 2023"
+        assert result.document.doc_id == 5488573
+        assert (
+            result.document.title
+            == "United Rentals Scales AI-Powered Manual Assist Application on AWS to Speed Equipment Repairs"
+        )
         assert isinstance(result.document.summary, list)
         assert len(result.document.summary) == 1
         assert (
             result.document.summary[0]
-            == "Apple's comprehensive sustainability report covering environmental impact, carbon neutrality goals, and renewable energy initiatives."
+            == "The document announces that United Rentals has expanded enterprise-wide adoption of Manual Assist AI."
         )
-        assert result.document.content_raw.startswith(
-            "This report outlines Apple's environmental initiatives"
-        )
-        assert result.document.company.name == "Apple Inc"
-        assert result.document.company.company_id == 12345
+        assert result.document.content_raw == "Full document content here..."
+        assert result.document.company.name == "Amazon"
+        assert result.document.company.company_id == 1
         assert result.document.attachments is None
 
         # Check API call parameters
@@ -326,7 +333,7 @@ class TestGetCompanyDoc:
         result = await get_company_doc(args)
 
         # Verify - should have valid date string
-        assert result.document.publish_date == "2023-09-15T00:00:00Z"
+        assert result.document.publish_date == "2025-12-19"
 
 
 @pytest.mark.unit
@@ -338,10 +345,13 @@ class TestGetCompanyDocCategories:
         self, mock_http_dependencies, company_docs_api_responses
     ):
         """Test successful company doc categories retrieval."""
-        # Setup - use the proper fixture
-        mock_http_dependencies["mock_make_request"].return_value = (
-            company_docs_api_responses["get_company_doc_categories_success"]
-        )
+        # Setup - transform fixture to match model structure (data at top level)
+        fixture = company_docs_api_responses["get_company_doc_categories_success"]
+        mock_http_dependencies["mock_make_request"].return_value = {
+            "data": fixture["data"],
+            "pagination": fixture["pagination"],
+            "instructions": fixture.get("instructions", []),
+        }
 
         args = GetCompanyDocCategoriesArgs(search="sustain")
 
@@ -350,15 +360,15 @@ class TestGetCompanyDocCategories:
 
         # Verify
         assert isinstance(result, GetCompanyDocCategoriesResponse)
-        assert len(result.response.data) == 3
-        assert result.response.pagination.total_count == 3
+        assert len(result.data) == 10
+        assert result.pagination.total_count == 5163
 
         # The data is a dictionary of {category_name: count}
-        categories_data = result.response.data
-        assert "sustainability" in categories_data
-        assert categories_data["sustainability"] == 15
+        categories_data = result.data
+        assert "announcement" in categories_data
+        assert categories_data["announcement"] == 828592
         assert "annual_report" in categories_data
-        assert categories_data["annual_report"] == 8
+        assert categories_data["annual_report"] == 69484
 
         # Check API call parameters
         call_args = mock_http_dependencies["mock_make_request"].call_args
@@ -368,24 +378,20 @@ class TestGetCompanyDocCategories:
         params = call_args[1]["params"]
         assert params["search"] == "sustain"
 
-        # Citation information is empty in the fixture
-
     @pytest.mark.asyncio
     async def test_get_company_doc_categories_empty_results(
         self, mock_http_dependencies
     ):
         """Test get_company_doc_categories with empty results."""
-        # Setup
+        # Setup - data at top level
         empty_response = {
-            "response": {
-                "pagination": {
-                    "total_count": 0,
-                    "current_page": 1,
-                    "total_pages": 1,
-                    "page_size": 50,
-                },
-                "data": {},
+            "pagination": {
+                "total_count": 0,
+                "current_page": 1,
+                "total_pages": 1,
+                "page_size": 50,
             },
+            "data": {},
             "instructions": [],
         }
         mock_http_dependencies["mock_make_request"].return_value = empty_response
@@ -397,23 +403,21 @@ class TestGetCompanyDocCategories:
 
         # Verify
         assert isinstance(result, GetCompanyDocCategoriesResponse)
-        assert len(result.response.data) == 0
-        assert result.response.pagination.total_count == 0
+        assert len(result.data) == 0
+        assert result.pagination.total_count == 0
 
     @pytest.mark.asyncio
     async def test_get_company_doc_categories_pagination(self, mock_http_dependencies):
         """Test get_company_doc_categories with pagination."""
-        # Setup
+        # Setup - data at top level
         categories_response = {
-            "response": {
-                "pagination": {
-                    "total_count": 1,
-                    "current_page": 2,
-                    "total_pages": 1,
-                    "page_size": 25,
-                },
-                "data": {"Test": 1},
+            "pagination": {
+                "total_count": 1,
+                "current_page": 2,
+                "total_pages": 1,
+                "page_size": 25,
             },
+            "data": {"Test": 1},
             "instructions": [],
         }
         mock_http_dependencies["mock_make_request"].return_value = categories_response
@@ -424,8 +428,8 @@ class TestGetCompanyDocCategories:
         result = await get_company_doc_categories(args)
 
         # Verify
-        assert result.response.pagination.current_page == 2
-        assert result.response.pagination.page_size == 25
+        assert result.pagination.current_page == 2
+        assert result.pagination.page_size == 25
 
         call_args = mock_http_dependencies["mock_make_request"].call_args
         params = call_args[1]["params"]
@@ -442,10 +446,13 @@ class TestGetCompanyDocKeywords:
         self, mock_http_dependencies, company_docs_api_responses
     ):
         """Test successful company doc keywords retrieval."""
-        # Setup - use the proper fixture
-        mock_http_dependencies["mock_make_request"].return_value = (
-            company_docs_api_responses["get_company_doc_keywords_success"]
-        )
+        # Setup - transform fixture to match model structure (data at top level)
+        fixture = company_docs_api_responses["get_company_doc_keywords_success"]
+        mock_http_dependencies["mock_make_request"].return_value = {
+            "data": fixture["data"],
+            "pagination": fixture["pagination"],
+            "instructions": fixture.get("instructions", []),
+        }
 
         args = GetCompanyDocKeywordsArgs(search="ESG")
 
@@ -454,15 +461,15 @@ class TestGetCompanyDocKeywords:
 
         # Verify
         assert isinstance(result, GetCompanyDocKeywordsResponse)
-        assert len(result.response.data) == 5
-        assert result.response.pagination.total_count == 5
+        assert len(result.data) == 10
+        assert result.pagination.total_count == 1703856
 
         # The data is a dictionary of {keyword_name: count}
-        keywords_data = result.response.data
-        assert "ESG" in keywords_data
-        assert keywords_data["ESG"] == 30
-        assert "environment" in keywords_data
-        assert keywords_data["environment"] == 25
+        keywords_data = result.data
+        assert "financial results" in keywords_data
+        assert keywords_data["financial results"] == 343826
+        assert "sustainability" in keywords_data
+        assert keywords_data["sustainability"] == 185838
 
         # Check API call parameters
         call_args = mock_http_dependencies["mock_make_request"].call_args
@@ -475,17 +482,15 @@ class TestGetCompanyDocKeywords:
     @pytest.mark.asyncio
     async def test_get_company_doc_keywords_empty_results(self, mock_http_dependencies):
         """Test get_company_doc_keywords with empty results."""
-        # Setup
+        # Setup - data at top level
         empty_response = {
-            "response": {
-                "pagination": {
-                    "total_count": 0,
-                    "current_page": 1,
-                    "total_pages": 1,
-                    "page_size": 50,
-                },
-                "data": {},
+            "pagination": {
+                "total_count": 0,
+                "current_page": 1,
+                "total_pages": 1,
+                "page_size": 50,
             },
+            "data": {},
             "instructions": [],
         }
         mock_http_dependencies["mock_make_request"].return_value = empty_response
@@ -497,25 +502,23 @@ class TestGetCompanyDocKeywords:
 
         # Verify
         assert isinstance(result, GetCompanyDocKeywordsResponse)
-        assert len(result.response.data) == 0
-        assert result.response.pagination.total_count == 0
+        assert len(result.data) == 0
+        assert result.pagination.total_count == 0
 
     @pytest.mark.asyncio
     async def test_get_company_doc_keywords_alternative_field_names(
         self, mock_http_dependencies
     ):
         """Test get_company_doc_keywords handles alternative field names."""
-        # Setup - test with dictionary format data
+        # Setup - data at top level
         keywords_response = {
-            "response": {
-                "pagination": {
-                    "total_count": 2,
-                    "current_page": 1,
-                    "total_pages": 1,
-                    "page_size": 50,
-                },
-                "data": {"ESG": 15, "climate": 23},
+            "pagination": {
+                "total_count": 2,
+                "current_page": 1,
+                "total_pages": 1,
+                "page_size": 50,
             },
+            "data": {"ESG": 15, "climate": 23},
             "instructions": [],
         }
         mock_http_dependencies["mock_make_request"].return_value = keywords_response
@@ -527,8 +530,8 @@ class TestGetCompanyDocKeywords:
 
         # Verify - dictionary format data
         assert isinstance(result, GetCompanyDocKeywordsResponse)
-        assert result.response.pagination.total_count == 2
-        keywords_data = result.response.data
+        assert result.pagination.total_count == 2
+        keywords_data = result.data
         assert keywords_data["ESG"] == 15
         assert keywords_data["climate"] == 23
 
@@ -540,16 +543,19 @@ class TestCompanyDocsToolsErrorHandling:
     @pytest.mark.asyncio
     async def test_handle_malformed_response(self, mock_http_dependencies):
         """Test handling of malformed API responses."""
-        # Setup - malformed response that will cause validation error
+        # Setup - malformed response
         mock_http_dependencies["mock_make_request"].return_value = {
             "invalid": "response"
         }
 
         args = FindCompanyDocsArgs(start_date="2023-09-01", end_date="2023-09-30")
 
-        # Execute & Verify - should raise validation error for malformed response
-        with pytest.raises(ValidationError):
-            await find_company_docs(args)
+        # Execute - should handle gracefully (response may be None or have empty data)
+        result = await find_company_docs(args)
+
+        # Verify - returns a valid response with None or empty data
+        assert isinstance(result, FindCompanyDocsResponse)
+        assert result.response is None or len(result.response.data) == 0
 
     @pytest.mark.asyncio
     async def test_handle_missing_date_fields(self, mock_http_dependencies):

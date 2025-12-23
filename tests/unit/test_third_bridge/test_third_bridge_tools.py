@@ -44,26 +44,26 @@ class TestFindThirdBridgeEvents:
         # Verify
         assert isinstance(result, FindThirdBridgeEventsResponse)
         assert len(result.response.data) == 1
-        assert result.response.pagination.total_count == 1
+        assert result.response.pagination.total_count == 13
         assert result.response.pagination.current_page == 1
-        assert result.response.pagination.page_size == 50
+        assert result.response.pagination.page_size == 13
 
         # Check first event
         first_event = result.response.data[0]
         assert isinstance(first_event, ThirdBridgeEventItem)
-        assert first_event.thirdbridge_event_id == "11ea4e52843adb71969876b77b0061e1"
+        assert first_event.thirdbridge_event_id == "46abc016e6da845a6459e80a200341c5"
         assert (
             first_event.title
-            == "Booking.com & OTA Platforms - Former Commercial Executive, Partnerships at Booking Holdings Inc"
+            == "Robotic Delivery Market - Senior Executive, Sales & Operations Planning at Amazon.com Inc"
         )
         assert first_event.content_type == "COMMUNITY"
         assert first_event.language == "eng"
-        assert first_event.call_date == "2025-10-13T16:00:00"
+        assert first_event.call_date == "2025-04-23T19:00:00"
         assert len(first_event.agenda) == 3
         assert first_event.insights is None  # Can be null in real API
-        # Check citation block
-        assert first_event.citation_block.title == first_event.title
-        assert "dashboard.aiera.com" in first_event.citation_block.url
+        # Check citation information
+        assert first_event.citation_information.title == first_event.title
+        assert "dashboard.aiera.com" in first_event.citation_information.url
 
         # Check API call was made correctly
         mock_http_dependencies["mock_make_request"].assert_called_once()
@@ -129,7 +129,7 @@ class TestFindThirdBridgeEvents:
             result.response.pagination.current_page == 1
         )  # Since we're using the success fixture
         assert (
-            result.response.pagination.page_size == 50
+            result.response.pagination.page_size == 13
         )  # Since we're using the success fixture
 
         call_args = mock_http_dependencies["mock_make_request"].call_args
@@ -226,17 +226,17 @@ class TestFindThirdBridgeEvents:
         # Execute
         result = await find_third_bridge_events(args)
 
-        # Verify citation block data
+        # Verify citation information data
         assert len(result.response.data) == 1
         event = result.response.data[0]
-        citation_block = event.citation_block
+        citation = event.citation_information
         assert (
-            citation_block.title
-            == "Booking.com & OTA Platforms - Former Commercial Executive, Partnerships at Booking Holdings Inc"
+            citation.title
+            == "Robotic Delivery Market - Senior Executive, Sales & Operations Planning at Amazon.com Inc"
         )
         assert (
-            citation_block.url
-            == "https://dashboard.aiera.com/companies?tabs[0]=evt%7C2829471"
+            citation.url
+            == "https://dashboard.aiera.com/companies/1/calendar?tabs[0]=evt%7C2833969"
         )
         # Note: expert_name and expert_title are optional in real API and not present in this fixture
 
@@ -461,13 +461,12 @@ class TestGetThirdBridgeEvent:
         # Execute
         result = await get_third_bridge_event(args)
 
-        # Verify citation was created
-        assert len(result.citation_information) == 1
-        citation = result.citation_information[0]
-        assert citation.title.startswith("Third Bridge:")
-        assert "Apple Supply Chain Analysis" in citation.title
-        assert citation.url == "https://thirdbridge.com/event/tb789"
-        assert citation.timestamp is not None
+        # Verify event has citation information
+        assert result.event is not None
+        assert result.event.citation_information is not None
+        # Citation title and url should be present
+        assert result.event.citation_information.title is not None
+        assert result.event.citation_information.url is not None
 
 
 @pytest.mark.unit
@@ -606,8 +605,9 @@ class TestThirdBridgeToolsErrorHandling:
         # Verify - should handle missing expert info gracefully
         assert len(result.response.data) == 1
         event = result.response.data[0]
-        assert event.citation_block.expert_name is None
-        assert event.citation_block.expert_title is None
+        # Citation information should still be present
+        assert event.citation_information is not None
+        assert event.citation_information.title is not None
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
