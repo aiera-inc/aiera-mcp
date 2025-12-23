@@ -161,6 +161,7 @@ async def run_server():
             tools.append(
                 Tool(
                     name=tool_name,
+                    title=tool_config.get("display_name"),
                     description=tool_config["description"],
                     inputSchema=tool_config["input_schema"],
                 )
