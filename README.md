@@ -22,11 +22,11 @@ This package exposes Aiera API endpoints as MCP tools, providing access to compr
 
 - **Events**: Calendar events, transcripts, and metadata
 - **Company Information**: Symbology, summaries, sectors, and watchlists
-- **Company Documents**: Press releases, slide presentations, disclosures
+- **Company Documents**: Press releases, slide presentations, disclosures, etc.
 - **SEC Filings**: Filing data and metadata
-- **Search**: Semantic search within transcripts and SEC filing content
-- **Transcrippets**: Create, manage, and retrieve transcript excerpts
 - **Third Bridge**: Expert insight events
+- **Search**: Semantic search within transcripts, SEC filing content, company documents, etc.
+- **Transcrippets**: Create, manage, and retrieve transcript excerpts
 
 ## Installation
 
@@ -78,17 +78,17 @@ The package uses Pydantic BaseSettings for configuration management. All setting
 
 ### Available Settings
 
-| Setting | Environment Variable | Default | Description |
-|---------|---------------------|---------|-------------|
-| Base URL | `AIERA_BASE_URL` | `https://premium.aiera.com/api` | Aiera API base URL |
-| API Key | `AIERA_API_KEY` | None | Your Aiera API key (required) |
-| Page Size | `DEFAULT_PAGE_SIZE` | `50` | Default number of items per page |
-| Max Page Size | `DEFAULT_MAX_PAGE_SIZE` | `100` | Maximum allowed page size |
-| HTTP Timeout | `HTTP_TIMEOUT` | `30.0` | Request timeout in seconds |
-| Max Keepalive Connections | `HTTP_MAX_KEEPALIVE_CONNECTIONS` | `10` | Maximum keepalive connections |
-| Max Connections | `HTTP_MAX_CONNECTIONS` | `20` | Maximum total connections |
-| Keepalive Expiry | `HTTP_KEEPALIVE_EXPIRY` | `30.0` | Keepalive expiry time in seconds |
-| Log Level | `LOG_LEVEL` | `INFO` | Logging level |
+| Setting                   | Environment Variable             | Default                         | Description                      |
+|---------------------------|----------------------------------|---------------------------------|----------------------------------|
+| Base URL                  | `AIERA_BASE_URL`                 | `https://premium.aiera.com/api` | Aiera API base URL               |
+| API Key                   | `AIERA_API_KEY`                  | None                            | Your Aiera API key (required)    |
+| Page Size                 | `DEFAULT_PAGE_SIZE`              | `50`                            | Default number of items per page |
+| Max Page Size             | `DEFAULT_MAX_PAGE_SIZE`          | `100`                           | Maximum allowed page size        |
+| HTTP Timeout              | `HTTP_TIMEOUT`                   | `30.0`                          | Request timeout in seconds       |
+| Max Keepalive Connections | `HTTP_MAX_KEEPALIVE_CONNECTIONS` | `10`                            | Maximum keepalive connections    |
+| Max Connections           | `HTTP_MAX_CONNECTIONS`           | `20`                            | Maximum total connections        |
+| Keepalive Expiry          | `HTTP_KEEPALIVE_EXPIRY`          | `30.0`                          | Keepalive expiry time in seconds |
+| Log Level                 | `LOG_LEVEL`                      | `INFO`                          | Logging level                    |
 
 ### Using a .env File
 
@@ -113,8 +113,8 @@ from aiera_mcp import get_settings, reload_settings
 
 # Get current settings
 settings = get_settings()
-print(f"Base URL: {settings.aiera_base_url}")
-print(f"Page Size: {settings.default_page_size}")
+logger.debug(f"Base URL: {settings.aiera_base_url}")
+logger.debug(f"Page Size: {settings.default_page_size}")
 
 # Reload settings from environment (useful for testing)
 reload_settings()
@@ -162,12 +162,12 @@ from aiera_mcp import find_events, make_aiera_request, correct_bloomberg_ticker
 ### Tools
 - **Events**: `find_events`, `find_conferences`, `get_event`, `get_upcoming_events`
 - **Filings**: `find_filings`, `get_filing`
+- **Company Documents**: `find_company_docs`, `get_company_doc`, `get_company_doc_categories`, `get_company_doc_keywords`
+- **Third Bridge**: `find_third_bridge_events`, `get_third_bridge_event`
+- **Search**: `search_transcripts`, `search_filings`
 - **Equities**: `find_equities`, `get_equity_summaries`, `get_sectors_and_subsectors`
 - **Indexes & Watchlists**: `get_available_indexes`, `get_index_constituents`, `get_available_watchlists`, `get_watchlist_constituents`
-- **Company Documents**: `find_company_docs`, `get_company_doc`, `get_company_doc_categories`, `get_company_doc_keywords`
-- **Search**: `search_transcripts`, `search_filings`
 - **Transcrippets**: `find_transcrippets`, `create_transcrippet`, `delete_transcrippet`
-- **Third Bridge**: `find_third_bridge_events`, `get_third_bridge_event`
 
 ### Utilities
 - **API Functions**: `make_aiera_request`
@@ -208,11 +208,7 @@ from aiera_mcp import find_events, make_aiera_request, correct_bloomberg_ticker
                "run",
                "--with",
                "git+https://github.com/aiera-inc/aiera-mcp.git",
-               "--with",
-               "mcp[cli]",
-               "mcp",
-               "run",
-               "aiera_mcp/server.py"
+               "aiera-mcp"
             ],
             "env": {
                "AIERA_API_KEY": "<your_api_key_here>"
