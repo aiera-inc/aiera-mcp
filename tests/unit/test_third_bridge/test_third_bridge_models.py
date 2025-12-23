@@ -14,7 +14,7 @@ from aiera_mcp.tools.third_bridge.models import (
     GetThirdBridgeEventResponse,
     ThirdBridgeEventItem,
     ThirdBridgeEventDetails,
-    ThirdBridgeCitationBlock,
+    ThirdBridgeCitationInfo,
     ThirdBridgeSpecialist,
     ThirdBridgeModerator,
     ThirdBridgeTranscriptItem,

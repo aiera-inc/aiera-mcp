@@ -200,6 +200,19 @@ class CompanyInfo(BaseModel):
     name: str = Field(description="Company name")
 
 
+class DocumentCitationMetadata(BaseModel):
+    """Metadata for document citation."""
+
+    type: str = Field(description="Type of citation (e.g., 'company_doc')")
+    url_target: Optional[str] = Field(
+        None, description="Target for URL (e.g., 'aiera', 'external')"
+    )
+    company_id: Optional[int] = Field(None, description="Company identifier")
+    company_doc_id: Optional[int] = Field(
+        None, description="Company document identifier"
+    )
+
+
 class DocumentCitationInfo(BaseModel):
     """Citation information for document."""
 
@@ -207,6 +220,9 @@ class DocumentCitationInfo(BaseModel):
         None, description="Citation title (can be null if document title is null)"
     )
     url: str = Field(description="Citation URL")
+    metadata: Optional[DocumentCitationMetadata] = Field(
+        None, description="Additional metadata about the citation"
+    )
 
 
 class CompanyDocItem(BaseModel):
@@ -286,27 +302,15 @@ class GetCompanyDocResponse(BaseAieraResponse):
     )
 
 
-# Categories and Keywords response structures
-class CategoriesKeywordsResponseData(BaseModel):
-    """Categories/Keywords response data container."""
-
-    pagination: CompanyDocPaginationInfo = Field(description="Pagination information")
-    data: Dict[str, int] = Field(
-        description="Dictionary of categories/keywords with counts"
-    )
-
-
 class GetCompanyDocCategoriesResponse(BaseAieraResponse):
     """Response for get_company_doc_categories tool - matches actual API structure."""
 
-    response: Optional[CategoriesKeywordsResponseData] = Field(
-        None, description="Response data container"
-    )
+    pagination: CompanyDocPaginationInfo = Field(description="Pagination information")
+    data: Dict[str, int] = Field(description="Dictionary of categories with counts")
 
 
 class GetCompanyDocKeywordsResponse(BaseAieraResponse):
     """Response for get_company_doc_keywords tool - matches actual API structure."""
 
-    response: Optional[CategoriesKeywordsResponseData] = Field(
-        None, description="Response data container"
-    )
+    pagination: CompanyDocPaginationInfo = Field(description="Pagination information")
+    data: Dict[str, int] = Field(description="Dictionary of keywords with counts")

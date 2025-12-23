@@ -91,11 +91,28 @@ class SearchFilingsArgs(BaseAieraArgs):
 
 
 # Search result item models
+class TranscriptSearchCitationMetadata(BaseModel):
+    """Metadata for transcript search citation."""
+
+    type: str = Field(description="Type of citation (e.g., 'event')")
+    url_target: Optional[str] = Field(
+        None, description="Target for URL (e.g., 'aiera')"
+    )
+    company_id: Optional[int] = Field(None, description="Company identifier")
+    event_id: Optional[int] = Field(None, description="Event identifier")
+    transcript_item_id: Optional[int] = Field(
+        None, description="Transcript item identifier"
+    )
+
+
 class TranscriptSearchCitation(BaseModel):
     """Citation information for transcript search results."""
 
     title: str = Field(description="Title of the cited transcript")
     url: str = Field(description="URL to the specific transcript segment")
+    metadata: Optional[TranscriptSearchCitationMetadata] = Field(
+        None, description="Additional metadata about the citation"
+    )
 
 
 class TranscriptSearchItem(BaseModel):
@@ -178,11 +195,26 @@ class SearchTranscriptsResponse(BaseAieraResponse):
     )
 
 
+class FilingSearchCitationMetadata(BaseModel):
+    """Metadata for filing search citation."""
+
+    type: str = Field(description="Type of citation (e.g., 'filing')")
+    url_target: Optional[str] = Field(
+        None, description="Target for URL (e.g., 'aiera')"
+    )
+    company_id: Optional[int] = Field(None, description="Company identifier")
+    content_id: Optional[int] = Field(None, description="Content identifier")
+    filing_id: Optional[int] = Field(None, description="Filing identifier")
+
+
 class FilingSearchCitation(BaseModel):
     """Citation information for filing search results."""
 
     title: str = Field(description="Title of the cited filing")
     url: str = Field(description="URL to the specific filing segment")
+    metadata: Optional[FilingSearchCitationMetadata] = Field(
+        None, description="Additional metadata about the citation"
+    )
 
 
 class FilingSearchItem(BaseModel):

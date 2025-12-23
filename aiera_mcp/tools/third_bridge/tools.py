@@ -101,7 +101,7 @@ async def get_third_bridge_event(
         insights=event_data.get(
             "insights"
         ),  # This should be Optional[str] in ThirdBridgeEventDetails
-        citation_block=event_data.get("citation_block"),
+        citation_information=event_data.get("citation_information"),
         transcript=event_data.get("transcript"),
     )
 

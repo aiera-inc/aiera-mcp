@@ -114,14 +114,30 @@ class GetThirdBridgeEventArgs(BaseToolArgs):
     )
 
 
+# Search result item models
+class ThirdBridgeCitationMetadata(BaseModel):
+    """Metadata for third bridge citation."""
+
+    type: str = Field(description="Type of citation (e.g., 'event')")
+    url_target: Optional[str] = Field(
+        None, description="Target for URL (e.g., 'aiera')"
+    )
+    company_id: Optional[int] = Field(None, description="Company identifier")
+    event_id: Optional[int] = Field(None, description="Event identifier")
+    transcript_item_id: Optional[int] = Field(
+        None, description="Transcript item identifier"
+    )
+
+
 # Citation models
-class ThirdBridgeCitationBlock(BaseModel):
+class ThirdBridgeCitationInfo(BaseModel):
     """Citation information for Third Bridge events."""
 
     title: str = Field(description="Event title")
     url: str = Field(description="URL to the event")
-    expert_name: Optional[str] = Field(None, description="Expert name")
-    expert_title: Optional[str] = Field(None, description="Expert job title")
+    metadata: Optional[ThirdBridgeCitationMetadata] = Field(
+        None, description="Additional metadata about the citation"
+    )
 
 
 # Response models (extracted from responses.py)
@@ -139,7 +155,7 @@ class ThirdBridgeEventItem(BaseModel):
     insights: Optional[List[str]] = Field(
         None, description="Key insights from the event (can be null)"
     )
-    citation_block: Optional[ThirdBridgeCitationBlock] = Field(
+    citation_information: Optional[ThirdBridgeCitationInfo] = Field(
         None, description="Citation information"
     )
 
@@ -184,7 +200,7 @@ class ThirdBridgeEventDetails(BaseModel):
     insights: Optional[List[str]] = Field(
         None, description="Key insights from the event"
     )
-    citation_block: Optional[ThirdBridgeCitationBlock] = Field(
+    citation_information: Optional[ThirdBridgeCitationInfo] = Field(
         None, description="Citation information"
     )
     specialists: Optional[List[ThirdBridgeSpecialist]] = Field(

@@ -99,8 +99,7 @@ async def find_filings(args: FindFilingsArgs) -> FindFilingsResponse:
                 equity_data = filing_data["equity"]
                 if isinstance(equity_data, dict):
                     equity_info = {
-                        "company_name": equity_data.get("name")
-                        or equity_data.get("company_name"),
+                        "company_name": equity_data.get("name"),
                         "ticker": equity_data.get("bloomberg_ticker")
                         or equity_data.get("ticker"),
                     }
@@ -123,6 +122,7 @@ async def find_filings(args: FindFilingsArgs) -> FindFilingsResponse:
                 "json_synced": filing_data.get("json_synced"),
                 "datafiles_synced": filing_data.get("datafiles_synced"),
                 "summary": filing_data.get("summary"),
+                "citation_information": filing_data.get("citation_information"),
             }
             filings_data.append(parsed_filing)
 

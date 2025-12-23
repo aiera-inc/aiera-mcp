@@ -1,328 +1,865 @@
 {
   "events": {
     "find_events_success": {
+      "instructions": ["Events found successfully"],
       "response": {
-        "data": [
-          {
-            "event_id": 12345,
-            "title": "Apple Inc Q4 2023 Earnings Call",
-            "event_type": "earnings",
-            "event_date": "2023-10-26T21:00:00Z",
-            "equity": {
-              "equity_id": 123,
-              "company_id": 456,
-              "name": "Apple Inc",
-              "bloomberg_ticker": "AAPL:US"
-            },
-            "citation_information": {
-              "title": "Apple Inc Q4 2023 Earnings Call",
-              "url": "https://aiera.com/event/12345"
-            }
-          },
-          {
-            "event_id": 67890,
-            "title": "Microsoft Corp Investor Meeting",
-            "event_type": "investor_meeting",
-            "event_date": "2023-10-27T17:00:00Z",
-            "equity": {
-              "equity_id": 789,
-              "company_id": 101,
-              "name": "Microsoft Corporation",
-              "bloomberg_ticker": "MSFT:US"
-            },
-            "citation_information": {
-              "title": "Microsoft Corp Investor Meeting",
-              "url": "https://aiera.com/event/67890"
-            }
-          }
-        ],
         "pagination": {
           "total_count": 2,
           "current_page": 1,
           "total_pages": 1,
           "page_size": 50
-        }
-      },
-      "instructions": ["Events found successfully"]
-    },
-    "get_event_success": {
-      "response": {
+        },
         "data": [
           {
-            "event_id": 12345,
-            "title": "Apple Inc Q4 2023 Earnings Call",
-            "event_type": "earnings",
-            "event_date": "2023-10-26T21:00:00Z",
+            "event_id": 2819716,
             "equity": {
-              "equity_id": 123,
-              "company_id": 456,
-              "name": "Apple Inc",
-              "bloomberg_ticker": "AAPL:US"
+              "equity_id": 1,
+              "company_id": 1,
+              "name": "AMAZON COM INC",
+              "bloomberg_ticker": "AMZN:US",
+              "sector_id": 1,
+              "subsector_id": 259,
+              "primary_equity": true
             },
-            "description": "Apple Inc quarterly earnings call for Q4 2023",
-            "transcript_preview": "Welcome to the Apple Q4 2023 earnings call. We'll begin with prepared remarks from CEO Tim Cook...",
-            "audio_url": "https://example.com/audio/event12345.mp3",
+            "title": "Q3 2025 Amazon.com Inc Earnings Call",
+            "event_type": "earnings",
+            "event_date": "2025-10-30T17:00:00",
+            "event_category": "standard",
+            "expected_language": "en",
+            "conference": {
+              "conference_id": null,
+              "conference_name": null
+            },
+            "summary": {
+              "title": null,
+              "summary": null
+            },
             "citation_information": {
-              "title": "Apple Inc Q4 2023 Earnings Call",
-              "url": "https://aiera.com/event/12345"
+              "title": "Q3 2025 Amazon.com Inc Earnings Call",
+              "url": "https://dashboard.aiera.com/companies/1/activity/transcripts?tabs[0]=evt%7C2819716",
+              "metadata": {
+                "type": "event",
+                "url_target": "aiera",
+                "company_id": 1,
+                "event_id": 2819716
+              }
+            }
+          },
+          {
+            "event_id": 2734016,
+            "equity": {
+              "equity_id": 1,
+              "company_id": 1,
+              "name": "AMAZON COM INC",
+              "bloomberg_ticker": "AMZN:US",
+              "sector_id": 1,
+              "subsector_id": 259,
+              "primary_equity": true
+            },
+            "title": "Q2 2025 Amazon.com Inc Earnings Call",
+            "event_type": "earnings",
+            "event_date": "2025-07-31T17:00:00",
+            "event_category": "standard",
+            "expected_language": "en",
+            "conference": {
+              "conference_id": null,
+              "conference_name": null
+            },
+            "summary": {
+              "title": "Amazon's Q2 2025: Strong Revenue Growth",
+              "summary": ["Amazon reported Q2 2025 revenue of $167.7 billion, up 12% year-over-year."]
+            },
+            "citation_information": {
+              "title": "Q2 2025 Amazon.com Inc Earnings Call",
+              "url": "https://dashboard.aiera.com/companies/1/activity/transcripts?tabs[0]=evt%7C2734016",
+              "metadata": {
+                "type": "event",
+                "url_target": "aiera",
+                "company_id": 1,
+                "event_id": 2734016
+              }
             }
           }
         ]
-      },
-      "instructions": ["Event retrieved successfully"]
+      }
+    },
+    "get_event_success": {
+      "instructions": ["Event retrieved successfully"],
+      "response": {
+        "pagination": {
+          "total_count": 1,
+          "current_page": 1,
+          "total_pages": 1,
+          "page_size": 1
+        },
+        "data": [
+          {
+            "event_id": 2734016,
+            "equity": {
+              "equity_id": 1,
+              "company_id": 1,
+              "name": "AMAZON COM INC",
+              "bloomberg_ticker": "AMZN:US",
+              "sector_id": 1,
+              "subsector_id": 259,
+              "primary_equity": true
+            },
+            "title": "Q2 2025 Amazon.com Inc Earnings Call",
+            "event_type": "earnings",
+            "event_date": "2025-07-31T17:00:00",
+            "event_category": "standard",
+            "expected_language": "en",
+            "conference": {
+              "conference_id": null,
+              "conference_name": null
+            },
+            "summary": {
+              "title": "Amazon's Q2 2025: Strong Revenue Growth",
+              "summary": ["Amazon reported Q2 2025 revenue of $167.7 billion, up 12% year-over-year."]
+            },
+            "citation_information": {
+              "title": "Q2 2025 Amazon.com Inc Earnings Call",
+              "url": "https://dashboard.aiera.com/companies/1/activity/transcripts?tabs[0]=evt%7C2734016",
+              "metadata": {
+                "type": "event",
+                "url_target": "aiera",
+                "company_id": 1,
+                "event_id": 2734016
+              }
+            },
+            "transcripts": [
+              {
+                "transcript_item_id": 182926099,
+                "transcript": "Will be against our results for the comparable period of 2024...",
+                "timestamp": "2025-07-31T17:02:01",
+                "start_ms": 240,
+                "duration_ms": 47760,
+                "speaker": "Dave Fildes",
+                "speaker_type": "final",
+                "transcript_section": null,
+                "transcript_version": 3,
+                "citation_information": {
+                  "title": "Q2 2025 Amazon.com Inc Earnings Call",
+                  "url": "https://dashboard.aiera.com/companies/1/activity/transcripts?tabs[0]=evt%7C2734016%7Ctext%7C182926099",
+                  "metadata": {
+                    "type": "event",
+                    "url_target": "aiera",
+                    "company_id": 1,
+                    "event_id": 2734016,
+                    "transcript_item_id": 182926099
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
     },
     "get_upcoming_events_success": {
+      "instructions": ["Upcoming events retrieved successfully"],
       "response": {
         "estimates": [
           {
-            "event_id": 11111,
-            "title": "Apple Inc Q1 2024 Earnings Call (Estimated)",
-            "event_type": "earnings",
-            "event_date": "2024-01-30T22:00:00Z",
+            "estimate_id": 20876,
             "equity": {
-              "equity_id": 123,
-              "company_id": 456,
-              "name": "Apple Inc",
-              "bloomberg_ticker": "AAPL:US"
+              "equity_id": 514,
+              "company_id": 1326,
+              "name": "Wells Fargo & Co",
+              "bloomberg_ticker": "WFC:US",
+              "sector_id": 8,
+              "subsector_id": 94
+            },
+            "estimate": {
+              "call_type": "earnings",
+              "call_date": "2026-01-14T10:00:00",
+              "title": "Q4 Earnings Call"
+            },
+            "actual": {
+              "scheduled_audio_call_id": 2688304,
+              "call_type": "earnings",
+              "call_date": "2026-01-15T10:00:00",
+              "title": "Q4 2025 Wells Fargo & Co Earnings Call",
+              "url": "https://dashboard.aiera.com/companies/1326/calendar?tabs[0]=evt%7C2688304"
             },
             "citation_information": {
-              "title": "Apple Inc Q1 2024 Earnings Call (Estimated)",
-              "url": "https://aiera.com/event/11111"
+              "title": "Q4 2025 Wells Fargo & Co Earnings Call",
+              "url": "https://dashboard.aiera.com/companies/1326/activity/transcripts?tabs[0]=evt%7C2688304",
+              "metadata": {
+                "type": "event",
+                "url_target": "aiera",
+                "company_id": 1326,
+                "event_id": 2688304
+              }
+            }
+          },
+          {
+            "estimate_id": 20880,
+            "equity": {
+              "equity_id": 514,
+              "company_id": 1326,
+              "name": "Wells Fargo & Co",
+              "bloomberg_ticker": "WFC:US",
+              "sector_id": 8,
+              "subsector_id": 94
+            },
+            "estimate": {
+              "call_type": "presentation",
+              "call_date": "2026-02-15T08:00:00",
+              "title": "Financial Services Conference"
+            },
+            "actual": null,
+            "citation_information": {
+              "title": "Financial Services Conference",
+              "url": "https://dashboard.aiera.com/companies/1326/activity",
+              "metadata": {
+                "type": "company",
+                "url_target": "aiera",
+                "company_id": 1326
+              }
             }
           }
         ],
         "actuals": [
           {
-            "event_id": 22222,
-            "title": "Microsoft Corp Q4 2023 Earnings Call",
-            "event_type": "earnings",
-            "event_date": "2023-11-15T21:00:00Z",
+            "event_id": 2820054,
             "equity": {
-              "equity_id": 789,
-              "company_id": 101,
-              "name": "Microsoft Corporation",
-              "bloomberg_ticker": "MSFT:US"
+              "equity_id": 514,
+              "company_id": 1326,
+              "name": "Wells Fargo & Co",
+              "bloomberg_ticker": "WFC:US",
+              "sector_id": 8,
+              "subsector_id": 94
             },
+            "call_type": "earnings_release",
+            "call_date": "2026-01-14T07:00:00",
+            "title": "Wells Fargo & Company to Report Q4, 2025 Results on Jan 14, 2026",
             "citation_information": {
-              "title": "Microsoft Corp Q4 2023 Earnings Call",
-              "url": "https://aiera.com/event/22222"
+              "title": "Wells Fargo & Company to Report Q4, 2025 Results on Jan 14, 2026",
+              "url": "https://dashboard.aiera.com/companies/1326/activity/transcripts?tabs[0]=evt%7C2820054",
+              "metadata": {
+                "type": "event",
+                "url_target": "aiera",
+                "company_id": 1326,
+                "event_id": 2820054
+              }
             }
           }
         ]
-      },
-      "instructions": ["Upcoming events retrieved successfully"]
+      }
+    },
+    "find_conferences_success": {
+      "instructions": ["Conferences found successfully"],
+      "response": {
+        "pagination": {
+          "total_count": 2,
+          "current_page": 1,
+          "total_pages": 1,
+          "page_size": 50
+        },
+        "data": [
+          {
+            "conference_id": 36743,
+            "title": "TD Cowen Global Mining Conference",
+            "event_count": 2,
+            "start_date": "2026-01-28T09:10:00",
+            "end_date": "2026-01-28T09:10:00",
+            "citation_information": {
+              "title": "TD Cowen Global Mining Conference",
+              "url": "https://dashboard.aiera.com/conferences/36743",
+              "metadata": {
+                "type": "conference",
+                "url_target": "aiera",
+                "conference_id": 36743
+              }
+            }
+          },
+          {
+            "conference_id": 36747,
+            "title": "CIBC Western Institutional Investor Conference",
+            "event_count": 2,
+            "start_date": "2026-01-22T17:00:00",
+            "end_date": "2026-01-22T17:00:00",
+            "citation_information": {
+              "title": "CIBC Western Institutional Investor Conference",
+              "url": "https://dashboard.aiera.com/conferences/36747",
+              "metadata": {
+                "type": "conference",
+                "url_target": "aiera",
+                "conference_id": 36747
+              }
+            }
+          }
+        ]
+      }
     }
   },
   "filings": {
     "find_filings_success": {
+      "instructions": ["Filing found successfully"],
       "response": {
+        "pagination": {
+          "total_count": 97,
+          "current_page": 1,
+          "total_pages": 2,
+          "page_size": 50
+        },
         "data": [
           {
-            "filing_id": 789,
-            "title": "Annual Report",
-            "filing_date": "2023-10-27T00:00:00Z",
-            "period_end_date": "2023-09-30T00:00:00Z",
-            "is_amendment": 0,
+            "filing_id": 8587883,
             "equity": {
-              "company_name": "Apple Inc",
-              "ticker": "AAPL"
+              "equity_id": 26058,
+              "company_id": 1,
+              "name": "AMAZON COM INC",
+              "bloomberg_ticker": "AMZ:GR",
+              "sector_id": 1,
+              "subsector_id": 259
             },
-            "form_number": "10-K",
-            "form_name": "10-K"
-          }
-        ],
-        "total": 1
-      },
-      "instructions": ["Filing found successfully"]
-    },
-    "get_filing_success": {
-      "response": {
-        "data": [
-          {
-            "filing_id": 789,
-            "title": "Annual Report",
-            "filing_date": "2023-10-27T00:00:00Z",
-            "period_end_date": "2023-09-30T00:00:00Z",
+            "title": "AMAZON COM INC - 4",
+            "form_number": "4",
+            "form_name": "Statement of Changes in Beneficial Ownership",
+            "filing_organization": "sec",
+            "filing_system": "edgar",
             "is_amendment": 0,
-            "equity": {
-              "company_name": "Apple Inc",
-              "ticker": "AAPL"
-            },
-            "form_number": "10-K",
-            "form_name": "10-K",
-            "summary": "Apple Inc's annual report for fiscal year 2023 showing record revenue and strong performance across all product categories."
+            "period_end_date": "2025-12-01T00:00:00",
+            "release_date": "2025-12-03T17:00:17",
+            "summary": null,
+            "citation_information": {
+              "title": "AMAZON COM INC - 4",
+              "url": "https://dashboard.aiera.com/companies/1/activity/filings?tabs[0]=fl%7C28259872",
+              "metadata": {
+                "type": "filing",
+                "url_target": "aiera",
+                "company_id": 1,
+                "content_id": 28259872,
+                "filing_id": 8587883
+              }
+            }
           }
         ]
-      },
-      "instructions": ["Filing content retrieved successfully"]
+      }
+    },
+    "get_filing_success": {
+      "instructions": ["Filing content retrieved successfully"],
+      "response": {
+        "pagination": {
+          "total_count": 1,
+          "current_page": 1,
+          "total_pages": 1,
+          "page_size": 1
+        },
+        "data": [
+          {
+            "filing_id": 8587883,
+            "equity": {
+              "equity_id": 26058,
+              "company_id": 1,
+              "name": "AMAZON COM INC",
+              "bloomberg_ticker": "AMZ:GR",
+              "sector_id": 1,
+              "subsector_id": 259
+            },
+            "title": "AMAZON COM INC - 4",
+            "form_number": "4",
+            "form_name": "Statement of Changes in Beneficial Ownership",
+            "filing_organization": "sec",
+            "filing_system": "edgar",
+            "is_amendment": 0,
+            "period_end_date": "2025-12-01T00:00:00",
+            "release_date": "2025-12-03T17:00:17",
+            "summary": ["Summary of the filing content"],
+            "citation_information": {
+              "title": "AMAZON COM INC - 4",
+              "url": "https://dashboard.aiera.com/companies/1/activity/filings?tabs[0]=fl%7C28259872",
+              "metadata": {
+                "type": "filing",
+                "url_target": "aiera",
+                "company_id": 1,
+                "content_id": 28259872,
+                "filing_id": 8587883
+              }
+            }
+          }
+        ]
+      }
     }
   },
   "equities": {
     "find_equities_success": {
+      "instructions": ["Equity found successfully"],
       "response": {
+        "pagination": {
+          "total_count": 16639,
+          "current_page": 1,
+          "total_pages": 333,
+          "page_size": 50
+        },
         "data": [
           {
-            "equity_id": 123,
-            "company_id": 456,
-            "name": "Apple Inc",
-            "company_name": "Apple Inc",
-            "bloomberg_ticker": "AAPL:US",
-            "sector_id": 1,
-            "subsector_id": 10,
-            "country": "United States",
-            "primary_equity": true
+            "equity_id": 22685,
+            "company_id": 7501,
+            "name": "SAMSUNG ELECTRONICS CO LTD /FI",
+            "bloomberg_ticker": "005935:KS",
+            "sector_id": 5,
+            "subsector_id": 73,
+            "primary_equity": false,
+            "created": "2021-05-21T20:05:09",
+            "modified": "2025-10-30T03:35:03"
+          },
+          {
+            "equity_id": 21477,
+            "company_id": 2304,
+            "name": "ECOPETROL S.A.",
+            "bloomberg_ticker": "ECOPETL:CB",
+            "sector_id": 12,
+            "subsector_id": 150,
+            "primary_equity": false,
+            "created": "2021-02-09T22:16:30",
+            "modified": "2025-11-15T13:03:52"
           }
-        ],
-        "total": 1
-      },
-      "instructions": ["Equity found successfully"]
+        ]
+      }
     },
     "get_equity_summaries_success": {
+      "instructions": ["Equity summary retrieved successfully"],
       "response": [
         {
-          "equity_id": 123,
-          "company_id": 456,
-          "name": "Apple Inc",
-          "bloomberg_ticker": "AAPL:US",
+          "equity_id": 1,
+          "company_id": 1,
+          "name": "AMAZON COM INC",
+          "bloomberg_ticker": "AMZN:US",
           "sector_id": 1,
-          "subsector_id": 10,
-          "country": "United States",
-          "description": "Apple Inc. designs, manufactures and markets smartphones, personal computers, tablets, wearables and accessories.",
+          "subsector_id": 259,
+          "description": "Amazon.com, Inc. engages in the retail sale of consumer products and subscriptions in North America and internationally.",
+          "country": "United States of America",
+          "created": "2017-06-01T00:00:00",
+          "modified": "2025-12-22T11:01:49",
           "status": "active",
           "leadership": [
             {
-              "name": "Tim Cook",
-              "title": "CEO",
-              "event_count": 15,
-              "last_event_date": "2023-10-26T21:00:00Z"
+              "name": "Andrew R. Jassy",
+              "title": "CEO of Amazon Web Services Inc.",
+              "event_count": 8,
+              "last_event_date": "2025-10-30T17:00:00"
+            },
+            {
+              "name": "Brian T. Olsavsky",
+              "title": "Chief Financial Officer & Senior Vice President",
+              "event_count": 8,
+              "last_event_date": "2025-10-30T17:00:00"
+            }
+          ],
+          "indices": ["S&P 100", "S&P 500", "Russell 3000", "Russell 1000"],
+          "confirmed_events": {
+            "past": [
+              {
+                "event_id": 2819716,
+                "title": "Q3 2025 Amazon.com Inc Earnings Call",
+                "event_type": "earnings",
+                "event_date": "2025-10-30T17:00:00",
+                "fiscal_quarter": 3,
+                "fiscal_year": 2025,
+                "has_human_verified": true,
+                "has_live_transcript": true,
+                "has_audio": true,
+                "summary": {
+                  "title": "Amazon's Future: Andrew Jassy on Capacity Expansion, AI Innovations",
+                  "content": ["Detailed summary content here"]
+                }
+              }
+            ],
+            "upcoming": []
+          },
+          "estimated_events": [
+            {
+              "estimate_id": 18803,
+              "estimate_date": "2026-02-05T17:00:00",
+              "estimate_type": "earnings",
+              "estimate_title": "Q4 Earnings Call"
+            },
+            {
+              "estimate_id": 18804,
+              "estimate_date": "2026-04-30T17:00:00",
+              "estimate_type": "earnings",
+              "estimate_title": "Q1 Earnings Call"
             }
           ]
         }
-      ],
-      "instructions": ["Equity summary retrieved successfully"]
+      ]
+    },
+    "get_available_indexes_success": {
+      "instructions": [],
+      "response": [
+        {
+          "index_id": 3,
+          "name": "Dow Jones Industrial Average",
+          "short_name": "DJIA"
+        },
+        {
+          "index_id": 8,
+          "name": "Russell 1000",
+          "short_name": "RUSSELL1000"
+        },
+        {
+          "index_id": 7,
+          "name": "Russell 2000",
+          "short_name": "RUSSELL2000"
+        },
+        {
+          "index_id": 6,
+          "name": "Russell 3000",
+          "short_name": "RUSSELL3000"
+        },
+        {
+          "index_id": 1,
+          "name": "S&P 100",
+          "short_name": "SP100"
+        },
+        {
+          "index_id": 2,
+          "name": "S&P 500",
+          "short_name": "SP500"
+        }
+      ]
+    },
+    "get_available_watchlists_success": {
+      "instructions": [],
+      "response": [
+        {
+          "watchlist_id": 45245136,
+          "name": "Primary",
+          "type": "primary_watchlist"
+        }
+      ]
+    },
+    "get_index_constituents_success": {
+      "instructions": [],
+      "pagination": {
+        "total_count": 509,
+        "current_page": 1,
+        "total_pages": 11,
+        "page_size": 50
+      },
+      "data": [
+        {
+          "equity_id": 355,
+          "company_id": 4595,
+          "name": "MICROSOFT CORP",
+          "bloomberg_ticker": "MSFT:US",
+          "sector_id": 5,
+          "sub_sector_id": 84,
+          "description": "Microsoft Corporation develops, licenses, and supports software...",
+          "country": "United States of America",
+          "created": "2017-07-06T00:00:00",
+          "modified": "2025-12-19T14:15:59"
+        },
+        {
+          "equity_id": 40,
+          "company_id": 9387,
+          "name": "Apple Inc.",
+          "bloomberg_ticker": "AAPL:US",
+          "sector_id": 5,
+          "sub_sector_id": 73,
+          "description": "Apple Inc. designs, manufactures, and markets smartphones...",
+          "country": "United States of America",
+          "created": "2017-07-01T00:00:00",
+          "modified": "2025-12-19T14:15:59"
+        }
+      ]
+    },
+    "get_sectors_and_subsectors_success": {
+      "instructions": [],
+      "response": [
+        {
+          "sector_id": 1,
+          "gics_code": "25",
+          "name": "Consumer Discretionary",
+          "subsectors": [
+            {
+              "subsector_id": 1,
+              "gics_code": "25203010",
+              "gics_industry_code": "252030",
+              "name": "Apparel, Accessories & Luxury Goods"
+            },
+            {
+              "subsector_id": 5,
+              "gics_code": "25102010",
+              "gics_industry_code": "251020",
+              "name": "Automobile Manufacturers"
+            }
+          ]
+        }
+      ]
     }
   },
   "company_docs": {
     "find_company_docs_success": {
+      "instructions": ["Company document found successfully"],
+      "response": {
+        "pagination": {
+          "total_count": 417,
+          "current_page": 1,
+          "total_pages": 9,
+          "page_size": 50
+        },
+        "data": [
+          {
+            "doc_id": 5488573,
+            "company": {
+              "company_id": 1,
+              "name": "Amazon"
+            },
+            "publish_date": "2025-12-19",
+            "category": "press_release",
+            "title": "United Rentals Scales AI-Powered Manual Assist Application on AWS to Speed Equipment Repairs",
+            "source_url": "https://press.aboutamazon.com/aws/2025/12/united-rentals-scales-ai-applications-with-aws",
+            "summary": [
+              "The document announces that United Rentals has expanded enterprise-wide adoption of Manual Assist AI."
+            ],
+            "keywords": [
+              "generative ai",
+              "ai-powered diagnostics",
+              "manual assist ai"
+            ],
+            "processed": "2025-12-20T00:03:06",
+            "created": "2025-12-20T00:02:33",
+            "modified": "2025-12-20T23:26:34",
+            "citation_information": {
+              "title": "United Rentals Scales AI-Powered Manual Assist Application on AWS to Speed Equipment Repairs",
+              "url": "https://press.aboutamazon.com/aws/2025/12/united-rentals-scales-ai-applications-with-aws",
+              "metadata": {
+                "type": "company_doc",
+                "url_target": "external",
+                "company_id": 1,
+                "company_doc_id": 5488573
+              }
+            }
+          }
+        ]
+      }
+    },
+    "get_company_doc_success": {
+      "instructions": ["Company document retrieved successfully"],
       "response": {
         "pagination": {
           "total_count": 1,
           "current_page": 1,
           "total_pages": 1,
-          "page_size": 50
+          "page_size": 1
         },
         "data": [
           {
-            "doc_id": 456789,
+            "doc_id": 5488573,
             "company": {
-              "company_id": 12345,
-              "name": "Apple Inc"
+              "company_id": 1,
+              "name": "Amazon"
             },
-            "publish_date": "2023-09-15T00:00:00Z",
-            "category": "Sustainability",
-            "title": "Sustainability Report 2023",
-            "source_url": "https://apple.com/sustainability/pdf/Apple_Environmental_Progress_Report_2023.pdf",
-            "summary": ["Apple's commitment to environmental sustainability and carbon neutrality goals for 2030."],
-            "keywords": ["environment", "carbon neutral", "renewable energy"],
+            "publish_date": "2025-12-19",
+            "category": "press_release",
+            "title": "United Rentals Scales AI-Powered Manual Assist Application on AWS to Speed Equipment Repairs",
+            "source_url": "https://press.aboutamazon.com/aws/2025/12/united-rentals-scales-ai-applications-with-aws",
+            "summary": [
+              "The document announces that United Rentals has expanded enterprise-wide adoption of Manual Assist AI."
+            ],
+            "keywords": [
+              "generative ai",
+              "ai-powered diagnostics",
+              "manual assist ai"
+            ],
+            "processed": "2025-12-20T00:03:06",
+            "created": "2025-12-20T00:02:33",
+            "modified": "2025-12-20T23:26:34",
+            "content_raw": "Full document content here...",
             "citation_information": {
-              "title": "Sustainability Report 2023",
-              "url": "https://apple.com/sustainability/pdf/Apple_Environmental_Progress_Report_2023.pdf"
+              "title": "United Rentals Scales AI-Powered Manual Assist Application on AWS to Speed Equipment Repairs",
+              "url": "https://press.aboutamazon.com/aws/2025/12/united-rentals-scales-ai-applications-with-aws",
+              "metadata": {
+                "type": "company_doc",
+                "url_target": "external",
+                "company_id": 1,
+                "company_doc_id": 5488573
+              }
             }
           }
         ]
-      },
-      "instructions": ["Company document found successfully"]
-    },
-    "get_company_doc_success": {
-      "response": {
-        "data": [
-          {
-            "doc_id": 456789,
-            "company": {
-              "company_id": 12345,
-              "name": "Apple Inc"
-            },
-            "publish_date": "2023-09-15T00:00:00Z",
-            "category": "Sustainability",
-            "title": "Sustainability Report 2023",
-            "source_url": "https://apple.com/sustainability/pdf/Apple_Environmental_Progress_Report_2023.pdf",
-            "summary": ["Apple's comprehensive sustainability report covering environmental impact, carbon neutrality goals, and renewable energy initiatives."],
-            "content_raw": "This report outlines Apple's environmental initiatives and progress toward becoming carbon neutral across its entire business...",
-            "keywords": ["environment", "carbon neutral", "renewable energy"],
-            "citation_information": {
-              "title": "Sustainability Report 2023",
-              "url": "https://apple.com/sustainability/pdf/Apple_Environmental_Progress_Report_2023.pdf"
-            }
-          }
-        ]
-      },
-      "instructions": ["Company document retrieved successfully"]
+      }
     },
     "get_company_doc_categories_success": {
-      "response": {
-        "pagination": {
-          "total_count": 3,
-          "current_page": 1,
-          "total_pages": 1,
-          "page_size": 50
-        },
-        "data": {
-          "sustainability": 15,
-          "annual_report": 8,
-          "earnings_release": 12
-        }
+      "pagination": {
+        "total_count": 5163,
+        "current_page": 1,
+        "total_pages": 259,
+        "page_size": 20
       },
-      "instructions": ["Categories retrieved successfully"]
+      "data": {
+        "announcement": 828592,
+        "press_release": 440360,
+        "slide_presentation": 333390,
+        "earnings_release": 303698,
+        "sec_filing": 247404,
+        "financial_report": 84214,
+        "other": 81464,
+        "annual_report": 69484,
+        "transcript": 21255,
+        "sustainability_report": 11007
+      }
     },
     "get_company_doc_keywords_success": {
+      "pagination": {
+        "total_count": 1703856,
+        "current_page": 1,
+        "total_pages": 170386,
+        "page_size": 10
+      },
+      "data": {
+        "financial results": 343826,
+        "financial performance": 274544,
+        "financial statements": 223534,
+        "sustainability": 185838,
+        "corporate governance": 182635,
+        "risk management": 157447,
+        "earnings": 153799,
+        "cash flow": 146470,
+        "net income": 139432,
+        "revenue": 134810
+      }
+    }
+  },
+  "search": {
+    "search_transcripts_success": {
+      "instructions": ["Transcript search completed successfully"],
       "response": {
         "pagination": {
-          "total_count": 5,
-          "current_page": 1,
-          "total_pages": 1,
-          "page_size": 50
+          "total_count": {
+            "value": 4215,
+            "relation": "eq"
+          },
+          "from": 0,
+          "size": 100
         },
-        "data": {
-          "environment": 25,
-          "carbon neutral": 18,
-          "renewable energy": 22,
-          "ESG": 30,
-          "diversity": 12
-        }
-      },
-      "instructions": ["Keywords retrieved successfully"]
+        "result": [
+          {
+            "_score": 9.457697,
+            "date": "2022-04-28T17:30:00",
+            "primary_company_id": 1,
+            "content_id": 182846708,
+            "transcript_event_id": 2108591,
+            "transcript_section": null,
+            "text": "Inflation has been in both periods. Inflation was in the transportation costs, especially in wage inflation last year.",
+            "primary_equity_id": 1,
+            "title": "Q1 2022 Amazon.com Inc Earnings Call",
+            "citation_information": {
+              "title": "Q1 2022 Amazon.com Inc Earnings Call",
+              "url": "https://dashboard.aiera.com/companies/1/activity/transcripts?tabs[0]=evt%7C2108591%7Ctext%7C182846708",
+              "metadata": {
+                "type": "event",
+                "url_target": "aiera",
+                "company_id": 1,
+                "event_id": 2108591,
+                "transcript_item_id": 182846708
+              }
+            }
+          }
+        ]
+      }
+    },
+    "search_filing_chunks_success": {
+      "instructions": ["Filing search completed successfully"],
+      "response": {
+        "pagination": {
+          "total_count": {
+            "value": 10000,
+            "relation": "gte"
+          },
+          "from": 0,
+          "size": 100
+        },
+        "result": [
+          {
+            "_score": 12.584471,
+            "date": "2023-04-12",
+            "primary_company_id": 1,
+            "content_id": 21687400,
+            "filing_id": 7046270,
+            "company_common_name": "Amazon",
+            "filing_type": "DEF14A",
+            "primary_equity_id": 1,
+            "text": "| Aspect | Details |\n|---|---|\n| Notable contextual data | The discussion highlights a historically high CEO-to-median-pay ratio |",
+            "title": "Amazon.com Inc - DEF 14A",
+            "citation_information": {
+              "title": "Amazon.com Inc - DEF 14A",
+              "url": "https://dashboard.aiera.com/companies/1/activity/filings?tabs[0]=fl%7C21687400",
+              "metadata": {
+                "type": "filing",
+                "url_target": "aiera",
+                "company_id": 1,
+                "content_id": 21687400,
+                "filing_id": 7046270
+              }
+            }
+          }
+        ]
+      }
     }
   },
   "third_bridge": {
     "find_third_bridge_events_success": {
+      "instructions": ["Third Bridge event found successfully"],
       "response": {
         "pagination": {
-          "total_count": 1,
+          "total_count": 13,
           "current_page": 1,
           "total_pages": 1,
-          "page_size": 50
+          "page_size": 13
         },
         "data": [
           {
-            "event_id": "11ea4e52843adb71969876b77b0061e1",
+            "event_id": "46abc016e6da845a6459e80a200341c5",
             "content_type": "COMMUNITY",
-            "call_date": "2025-10-13T16:00:00",
-            "title": "Booking.com & OTA Platforms - Former Commercial Executive, Partnerships at Booking Holdings Inc",
+            "call_date": "2025-04-23T19:00:00",
+            "title": "Robotic Delivery Market - Senior Executive, Sales & Operations Planning at Amazon.com Inc",
             "language": "eng",
-            "agenda": ["Over 20 years' experience in the travel industry", "Well-placed to discuss Booking's paid vs unpaid traffic split", "Knowledgeable on Booking's inventory-building process"],
+            "agenda": [
+              "Over 10 years' experience in sales, operations and supply chain planning...",
+              "Expertise in the evolution of the robotic delivery ecosystem...",
+              "Comprehensive knowledge of the competitive landscape..."
+            ],
             "insights": null,
+            "transcripts": [
+              {
+                "start_ms": 155000,
+                "duration_ms": 60000,
+                "transcript": "We're just trying to make sure that we understand the split correctly...",
+                "citation_block": {
+                  "title": "AI Infrastructure Industry - Amazon & Nvidia...",
+                  "url": "https://dashboard.aiera.com/companies/1/calendar?tabs[0]=evt%7C2820893%7Ctext%7C179195065",
+                  "metadata": {
+                    "type": "event",
+                    "url_target": "aiera",
+                    "company_id": 1,
+                    "event_id": 2820893,
+                    "transcript_item_id": 179195065
+                  }
+                }
+              }
+            ],
             "citation_block": {
-              "title": "Booking.com & OTA Platforms - Former Commercial Executive, Partnerships at Booking Holdings Inc",
-              "url": "https://dashboard.aiera.com/companies?tabs[0]=evt%7C2829471"
+              "title": "Robotic Delivery Market - Senior Executive, Sales & Operations Planning at Amazon.com Inc",
+              "url": "https://dashboard.aiera.com/companies/1/calendar?tabs[0]=evt%7C2833969",
+              "metadata": {
+                "type": "event",
+                "url_target": "aiera",
+                "company_id": 1,
+                "event_id": 2833969
+              }
             }
           }
         ]
-      },
-      "instructions": ["Third Bridge event found successfully"]
+      }
     }
   },
   "transcrippets": {
     "find_transcrippets_success": {
+      "instructions": ["Transcrippet found successfully"],
       "response": [
         {
           "transcrippet_id": 123,
@@ -348,10 +885,10 @@
           "trimmed_audio_url": "https://example.com/audio/trans123_trimmed.mp3",
           "word_durations_ms": [500, 300, 400, 600, 350, 800, 200, 450]
         }
-      ],
-      "instructions": ["Transcrippet found successfully"]
+      ]
     },
     "create_transcrippet_success": {
+      "instructions": ["Transcrippet created successfully"],
       "response": {
         "transcrippet_id": 456,
         "company_id": 789,
@@ -377,8 +914,7 @@
         "word_durations_ms": [600, 400, 500, 700, 350, 900, 250, 550],
         "speaker_name": "Tim Cook",
         "speaker_title": "Chief Executive Officer"
-      },
-      "instructions": ["Transcrippet created successfully"]
+      }
     }
   },
   "errors": {

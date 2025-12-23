@@ -277,11 +277,30 @@ class SummaryInfo(BaseModel):
     summary: Optional[List[str]] = Field(None, description="Summary content as list")
 
 
+class CitationMetadata(BaseModel):
+    """Metadata for citation information."""
+
+    type: str = Field(
+        description="Type of citation (e.g., 'event', 'filing', 'company_doc', 'conference', 'company')"
+    )
+    url_target: Optional[str] = Field(
+        None, description="Target for URL (e.g., 'aiera', 'external')"
+    )
+    company_id: Optional[int] = Field(None, description="Company identifier")
+    event_id: Optional[int] = Field(None, description="Event identifier")
+    transcript_item_id: Optional[int] = Field(
+        None, description="Transcript item identifier"
+    )
+
+
 class CitationInfo(BaseModel):
     """Citation information for events."""
 
     title: Optional[str] = Field(None, description="Citation title")
     url: Optional[str] = Field(None, description="Citation URL")
+    metadata: Optional[CitationMetadata] = Field(
+        None, description="Additional metadata about the citation"
+    )
 
 
 class TranscriptItem(BaseModel):
@@ -398,10 +417,73 @@ class ApiPaginationInfo(BaseModel):
     page_size: Optional[int] = Field(None, description="Items per page")
 
 
-class ApiResponseData(BaseModel):
+class EventApiResponseData(BaseModel):
     """API response structure with data and pagination."""
 
     data: List[EventItem] = Field(..., description="List of events")
+    pagination: Optional[ApiPaginationInfo] = Field(
+        None, description="Pagination information"
+    )
+
+
+class ConferenceCitationMetadata(BaseModel):
+    """Metadata for conference citation."""
+
+    type: str = Field(description="Type of citation (e.g., 'conference')")
+    url_target: Optional[str] = Field(
+        None, description="Target for URL (e.g., 'aiera')"
+    )
+    conference_id: Optional[int] = Field(None, description="Conference identifier")
+
+
+class ConferenceCitationInfo(BaseModel):
+    """Citation information for conferences."""
+
+    title: Optional[str] = Field(None, description="Citation title")
+    url: Optional[str] = Field(None, description="Citation URL")
+    metadata: Optional[ConferenceCitationMetadata] = Field(
+        None, description="Additional metadata about the citation"
+    )
+
+
+class ConferenceItem(BaseModel):
+    """Individual conference item."""
+
+    conference_id: int = Field(description="Unique conference identifier")
+    title: str = Field(description="Conference title")
+    event_count: Optional[int] = Field(
+        None, description="Number of events in conference"
+    )
+    start_date: Optional[datetime] = Field(None, description="Conference start date")
+    end_date: Optional[datetime] = Field(None, description="Conference end date")
+    citation_information: Optional[ConferenceCitationInfo] = Field(
+        None, description="Citation information"
+    )
+
+    @field_validator("start_date", "end_date", mode="before")
+    @classmethod
+    def parse_datetime_fields(cls, v):
+        """Parse ISO format datetime strings to datetime objects."""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                return datetime.fromisoformat(v.replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                return None
+        return v
+
+    @field_serializer("start_date", "end_date")
+    def serialize_datetime_fields(self, value: Optional[datetime]) -> Optional[str]:
+        if value is None:
+            return None
+        return value.isoformat()
+
+
+class ConferenceApiResponseData(BaseModel):
+    """API response structure with conference data and pagination."""
+
+    data: List[ConferenceItem] = Field(..., description="List of conferences")
     pagination: Optional[ApiPaginationInfo] = Field(
         None, description="Pagination information"
     )
@@ -411,7 +493,7 @@ class FindEventsResponse(BaseModel):
     """Response from finding events - matches actual API structure."""
 
     instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: Optional[ApiResponseData] = Field(None, description="Response data")
+    response: Optional[EventApiResponseData] = Field(None, description="Response data")
     error: Optional[str] = Field(None, description="Error message if request failed")
 
 
@@ -419,7 +501,9 @@ class FindConferencesResponse(BaseModel):
     """Response from finding conferences - matches actual API structure."""
 
     instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: Optional[ApiResponseData] = Field(None, description="Response data")
+    response: Optional[ConferenceApiResponseData] = Field(
+        None, description="Response data"
+    )
     error: Optional[str] = Field(None, description="Error message if request failed")
 
 
@@ -427,7 +511,7 @@ class GetEventResponse(BaseModel):
     """Response from getting a specific event - matches actual API structure."""
 
     instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: Optional[ApiResponseData] = Field(None, description="Response data")
+    response: Optional[EventApiResponseData] = Field(None, description="Response data")
     error: Optional[str] = Field(None, description="Error message if request failed")
 
 

@@ -35,7 +35,7 @@ class TestEquitiesModels:
         """Test EquityItem model creation."""
         equity_data = {
             "equity_id": 12345,
-            "company_name": "Test Company",
+            "name": "Test Company",
             "ticker": "TEST",
             "bloomberg_ticker": "TEST:US",
             "exchange": "NASDAQ",
@@ -61,7 +61,7 @@ class TestEquitiesModels:
         """Test EquityItem with only required fields."""
         minimal_data = {
             "equity_id": 12345,
-            "company_name": "Test Company",
+            "name": "Test Company",
             "ticker": "TEST",
             "bloomberg_ticker": "TEST:US",
         }
@@ -117,7 +117,7 @@ class TestEquitiesModels:
         """Test EquityDetails inherits from EquityItem."""
         details_data = {
             "equity_id": 12345,
-            "company_name": "Test Company",
+            "name": "Test Company",
             "ticker": "TEST",
             "bloomberg_ticker": "TEST:US",
             "exchange": "NASDAQ",

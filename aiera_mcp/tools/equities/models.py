@@ -169,17 +169,10 @@ class EquityItem(BaseModel):
 
     equity_id: int = Field(description="Unique equity identifier")
     company_id: Optional[int] = Field(None, description="Company ID")
-    company_name: Optional[str] = Field(None, description="Company name")
-    name: Optional[str] = Field(None, description="Company name (alias)")
-    ticker: Optional[str] = Field(None, description="Stock ticker")
+    name: Optional[str] = Field(None, description="Company name")
     bloomberg_ticker: str = Field(description="Bloomberg ticker")
-    exchange: Optional[str] = Field(None, description="Stock exchange")
-    sector: Optional[str] = Field(None, description="Sector name")
-    subsector: Optional[str] = Field(None, description="Subsector name")
     sector_id: Optional[int] = Field(None, description="Sector ID")
     subsector_id: Optional[int] = Field(None, description="Subsector ID")
-    country: Optional[str] = Field(default=None, description="Country of incorporation")
-    market_cap: Optional[float] = Field(None, description="Market capitalization")
     primary_equity: Optional[bool] = Field(None, description="Is primary equity")
     created: Optional[datetime] = Field(None, description="Creation date")
     modified: Optional[datetime] = Field(None, description="Modification date")
@@ -237,28 +230,115 @@ class LeadershipItem(BaseModel):
         return value.isoformat()
 
 
+class EventSummary(BaseModel):
+    """Summary information for a confirmed event."""
+
+    title: Optional[str] = Field(None, description="Summary title")
+    content: Optional[List[str]] = Field(None, description="Summary content paragraphs")
+
+
+class ConfirmedEventItem(BaseModel):
+    """A confirmed past or upcoming event."""
+
+    event_id: int = Field(description="Event identifier")
+    title: str = Field(description="Event title")
+    event_type: str = Field(description="Type of event (e.g., 'earnings')")
+    event_date: Optional[datetime] = Field(None, description="Event date")
+    fiscal_quarter: Optional[int] = Field(None, description="Fiscal quarter")
+    fiscal_year: Optional[int] = Field(None, description="Fiscal year")
+    has_human_verified: Optional[bool] = Field(
+        None, description="Whether event is human verified"
+    )
+    has_live_transcript: Optional[bool] = Field(
+        None, description="Whether event has live transcript"
+    )
+    has_audio: Optional[bool] = Field(None, description="Whether event has audio")
+    summary: Optional[EventSummary] = Field(None, description="Event summary")
+
+    @field_validator("event_date", mode="before")
+    @classmethod
+    def parse_event_date(cls, v):
+        """Parse ISO format datetime strings to datetime objects."""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                return datetime.fromisoformat(v.replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                return None
+        return v
+
+    @field_serializer("event_date")
+    def serialize_datetime(self, value: Optional[datetime]) -> Optional[str]:
+        if value is None:
+            return None
+        return value.isoformat()
+
+
+class ConfirmedEvents(BaseModel):
+    """Confirmed events containing past and upcoming events."""
+
+    past: Optional[List[ConfirmedEventItem]] = Field(
+        default=None, description="Past confirmed events"
+    )
+    upcoming: Optional[List[ConfirmedEventItem]] = Field(
+        default=None, description="Upcoming confirmed events"
+    )
+
+
+class EstimatedEventItem(BaseModel):
+    """An estimated future event."""
+
+    estimate_id: int = Field(description="Estimate identifier")
+    estimate_date: Optional[datetime] = Field(None, description="Estimated event date")
+    estimate_type: str = Field(description="Type of estimated event (e.g., 'earnings')")
+    estimate_title: str = Field(description="Estimated event title")
+
+    @field_validator("estimate_date", mode="before")
+    @classmethod
+    def parse_estimate_date(cls, v):
+        """Parse ISO format datetime strings to datetime objects."""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                return datetime.fromisoformat(v.replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                return None
+        return v
+
+    @field_serializer("estimate_date")
+    def serialize_datetime(self, value: Optional[datetime]) -> Optional[str]:
+        if value is None:
+            return None
+        return value.isoformat()
+
+
 class EquitySummaryItem(BaseModel):
     """Individual equity with full summary information."""
 
     equity_id: int = Field(description="Unique equity identifier")
     company_id: Optional[int] = Field(None, description="Company ID")
-    company_name: Optional[str] = Field(None, description="Company name")
-    name: Optional[str] = Field(None, description="Company name (alias)")
-    ticker: Optional[str] = Field(None, description="Stock ticker")
+    name: Optional[str] = Field(None, description="Company name")
     bloomberg_ticker: str = Field(description="Bloomberg ticker")
-    exchange: Optional[str] = Field(None, description="Stock exchange")
-    sector: Optional[str] = Field(None, description="Sector name")
-    subsector: Optional[str] = Field(None, description="Subsector name")
     sector_id: Optional[int] = Field(None, description="Sector ID")
     subsector_id: Optional[int] = Field(None, description="Subsector ID")
     description: Optional[str] = Field(None, description="Company description")
     country: Optional[str] = Field(None, description="Country")
-    market_cap: Optional[float] = Field(None, description="Market capitalization")
     created: Optional[datetime] = Field(None, description="Creation date")
     modified: Optional[datetime] = Field(None, description="Modification date")
-    status: Optional[str] = Field(None, description="Status")
+    status: Optional[str] = Field(None, description="Status (e.g., 'active')")
     leadership: Optional[List[LeadershipItem]] = Field(
         None, description="Leadership information"
+    )
+    indices: Optional[List[str]] = Field(
+        None, description="List of indices the equity belongs to"
+    )
+    confirmed_events: Optional[ConfirmedEvents] = Field(
+        None, description="Confirmed past and upcoming events"
+    )
+    estimated_events: Optional[List[EstimatedEventItem]] = Field(
+        None, description="Estimated future events"
     )
 
     @field_validator("created", "modified", mode="before")
@@ -362,7 +442,6 @@ class WatchlistItem(BaseModel):
 
     watchlist_id: int = Field(description="Watchlist identifier")
     name: str = Field(description="Watchlist name")
-    description: Optional[str] = Field(None, description="Watchlist description")
     type: Optional[str] = Field(None, description="Watchlist type")
 
     # Alias for backward compatibility
@@ -384,7 +463,7 @@ class ApiPaginationInfo(BaseModel):
 class FindEquitiesApiResponseData(BaseModel):
     """API response structure with data and pagination for find_equities."""
 
-    data: List[EquityItem] = Field(..., description="List of equities")
+    data: List[EquityItem] = Field(None, description="List of equities")
     pagination: Optional[ApiPaginationInfo] = Field(
         None, description="Pagination information"
     )
@@ -413,11 +492,9 @@ class GetEquitySummariesResponse(BaseModel):
 class GetSectorsSubsectorsResponse(BaseModel):
     """Response for get_sectors_and_subsectors tool"""
 
-    instructions: Optional[List[str]] = Field(None, description="API instructions")
     response: Optional[List[SectorSubsector]] = Field(
         None, description="List of sectors and subsectors"
     )
-    error: Optional[str] = Field(None, description="Error message if request failed")
 
 
 class GetAvailableIndexesResponse(BaseModel):
@@ -433,11 +510,10 @@ class GetAvailableIndexesResponse(BaseModel):
 class GetIndexConstituentsResponse(BaseModel):
     """Response for get_index_constituents tool - matches actual API structure."""
 
-    instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: Optional[FindEquitiesApiResponseData] = Field(
-        None, description="Response data"
+    data: List[EquityItem] = Field(None, description="List of equities")
+    pagination: Optional[ApiPaginationInfo] = Field(
+        None, description="Pagination information"
     )
-    error: Optional[str] = Field(None, description="Error message if request failed")
 
 
 class GetAvailableWatchlistsResponse(BaseModel):
@@ -453,8 +529,7 @@ class GetAvailableWatchlistsResponse(BaseModel):
 class GetWatchlistConstituentsResponse(BaseModel):
     """Response for get_watchlist_constituents tool - matches actual API structure."""
 
-    instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: Optional[FindEquitiesApiResponseData] = Field(
-        None, description="Response data"
+    data: List[EquityItem] = Field(None, description="List of equities")
+    pagination: Optional[ApiPaginationInfo] = Field(
+        None, description="Pagination information"
     )
-    error: Optional[str] = Field(None, description="Error message if request failed")
