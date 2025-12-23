@@ -3,7 +3,6 @@
 """Third Bridge event tools for Aiera MCP."""
 
 import logging
-from datetime import datetime
 
 from .models import (
     FindThirdBridgeEventsArgs,
@@ -106,34 +105,9 @@ async def get_third_bridge_event(
         transcript=event_data.get("transcript"),
     )
 
-    # Build citation using citation_block from new API format
-    citations = []
-    citation_block = event_data.get("citation_block")
-    if citation_block and citation_block.get("url"):
-        # Parse the call_date for timestamp
-        timestamp = None
-        try:
-            if event_data.get("call_date"):
-                timestamp = datetime.fromisoformat(
-                    event_data["call_date"].replace("Z", "+00:00")
-                )
-            else:
-                timestamp = datetime.now()
-        except (ValueError, AttributeError):
-            timestamp = datetime.now()
-
-        citations.append(
-            CitationInfo(
-                title=f"Third Bridge: {citation_block.get('title', event_data.get('title', ''))}",
-                url=citation_block.get("url"),
-                timestamp=timestamp,
-            )
-        )
-
     return GetThirdBridgeEventResponse(
         event=event_details,
         instructions=raw_response.get("instructions", []),
-        citation_information=citations,
     )
 
 

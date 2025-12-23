@@ -137,11 +137,7 @@ class TestBaseModels:
         """Test BaseAieraResponse model."""
         test_datetime = datetime(2024, 1, 15, 14, 30, 0)
 
-        citation = CitationInfo(title="Response Citation", timestamp=test_datetime)
-
-        response = BaseAieraResponse(
-            instructions=["Test instruction"], citation_information=[citation]
-        )
+        response = BaseAieraResponse(instructions=["Test instruction"])
 
         assert response.instructions == ["Test instruction"]
         assert len(response.citation_information) == 1
@@ -168,7 +164,6 @@ class TestBaseModels:
             page=2,
             page_size=25,
             instructions=["Paginated results"],
-            citation_information=[citation],
         )
 
         assert response.total == 100

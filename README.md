@@ -171,7 +171,7 @@ from aiera_mcp import find_events, make_aiera_request, correct_bloomberg_ticker
 
 ### Utilities
 - **API Functions**: `make_aiera_request`
-- **Data Correction**: `correct_bloomberg_ticker`, `correct_keywords`, `correct_categories`, `correct_provided_ids`, `correct_event_type`, `correct_transcript_section`
+- **Data Correction**: `correct_bloomberg_ticker`, `correct_keywords`, `correct_categories`, `correct_event_type`, `correct_transcript_section`
 - **Registration**: `register_aiera_tools` - Configure API key provider and get tool registry
 - **Authentication**: `set_api_key_provider`, `get_api_key`, `clear_api_key_provider` - OAuth compatibility functions
 

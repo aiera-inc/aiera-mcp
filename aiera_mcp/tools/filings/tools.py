@@ -236,26 +236,7 @@ async def get_filing(args: GetFilingArgs) -> GetFilingResponse:
         document_count=filing_data.get("document_count", 1),
     )
 
-    # Build citation
-    citations = []
-    if filing_data.get("official_url"):
-        citations.append(
-            CitationInfo(
-                title=f"{filing_data.get('company_name', '')} {filing_data.get('form_type', '')} Filing",
-                url=filing_data.get("official_url"),
-                timestamp=(
-                    datetime.combine(filing_date, datetime.min.time())
-                    if filing_date
-                    else None
-                ),
-            )
-        )
-
     return GetFilingResponse(
         filing=filing_details,
         instructions=raw_response.get("instructions", []),
-        citation_information=citations,
     )
-
-
-# Legacy registration functions removed - all tools now registered via registry

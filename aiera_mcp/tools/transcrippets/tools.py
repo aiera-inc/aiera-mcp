@@ -122,7 +122,6 @@ async def delete_transcrippet(
             success=success,
             message=message,
             instructions=raw_response.get("instructions", []),
-            citation_information=[],
         )
 
     except Exception as e:
@@ -130,7 +129,6 @@ async def delete_transcrippet(
             success=False,
             message=f"Failed to delete transcrippet: {str(e)}",
             instructions=[],
-            citation_information=[],
         )
 
 

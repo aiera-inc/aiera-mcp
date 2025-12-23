@@ -3,7 +3,6 @@
 """Unit tests for transcrippets models."""
 
 import pytest
-from datetime import datetime
 from pydantic import ValidationError
 
 from aiera_mcp.tools.transcrippets.models import (
@@ -337,18 +336,9 @@ class TestTranscrippetsResponses:
             )
         ]
 
-        citations = [
-            CitationInfo(
-                title="Test Citation",
-                url="https://example.com",
-                timestamp=datetime(2023, 10, 26, 22, 0, 0),
-            )
-        ]
-
         response = FindTranscrippetsResponse(
             response=transcrippets,
             instructions=["Test instruction"],
-            citation_information=citations,
         )
 
         assert len(response.response) == 1
@@ -388,7 +378,6 @@ class TestTranscrippetsResponses:
         response = CreateTranscrippetResponse(
             response=transcrippet_item,
             instructions=["Test instruction"],
-            citation_information=[],
         )
 
         assert isinstance(response.response, TranscrippetItem)
@@ -402,7 +391,6 @@ class TestTranscrippetsResponses:
             success=True,
             message="Transcrippet deleted successfully",
             instructions=["Deletion completed"],
-            citation_information=[],
         )
 
         assert response.success is True
@@ -414,7 +402,6 @@ class TestTranscrippetsResponses:
             success=False,
             message="Transcrippet not found",
             instructions=[],
-            citation_information=[],
         )
 
         assert failed_response.success is False

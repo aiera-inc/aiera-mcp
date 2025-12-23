@@ -39,9 +39,6 @@ class BaseAieraResponse(BaseModel):
     instructions: List[str] = Field(
         default=[], description="Instructions or additional information from the API"
     )
-    citation_information: List[CitationInfo] = Field(
-        default=[], description="Source citations for the returned data"
-    )
     error: Optional[str] = Field(None, description="Error message if request failed")
 
 

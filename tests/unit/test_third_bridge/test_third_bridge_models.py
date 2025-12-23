@@ -321,14 +321,6 @@ class TestThirdBridgeResponses:
             )
         ]
 
-        citations = [
-            CitationInfo(
-                title="Test Citation",
-                url="https://example.com",
-                timestamp=datetime(2023, 10, 20, 14, 0, 0),
-            )
-        ]
-
         pagination = ThirdBridgePaginationInfo(
             total_count=1, current_page=1, total_pages=1, page_size=50
         )
@@ -338,7 +330,6 @@ class TestThirdBridgeResponses:
         response = FindThirdBridgeEventsResponse(
             response=response_data,
             instructions=["Test instruction"],
-            citation_information=citations,
         )
 
         assert len(response.response.data) == 1
@@ -365,7 +356,6 @@ class TestThirdBridgeResponses:
         response = GetThirdBridgeEventResponse(
             event=event_details,
             instructions=["Test instruction"],
-            citation_information=[],
         )
 
         assert isinstance(response.event, ThirdBridgeEventDetails)
@@ -379,7 +369,6 @@ class TestThirdBridgeResponses:
         response = GetThirdBridgeEventResponse(
             event=None,  # No event found
             instructions=["No event found"],
-            citation_information=[],
         )
 
         assert response.event is None
@@ -623,13 +612,6 @@ class TestThirdBridgeEventItemDateTimeSerialization:
             insights=["Test insight"],
         )
 
-        # Create citation with datetime
-        citation = CitationInfo(
-            title="Third Bridge Citation",
-            url="https://thirdbridge.com/event/123",
-            timestamp=test_datetime,
-        )
-
         # Create pagination info
         pagination = ThirdBridgePaginationInfo(
             total_count=1, current_page=1, total_pages=1, page_size=50
@@ -642,7 +624,6 @@ class TestThirdBridgeEventItemDateTimeSerialization:
         response = FindThirdBridgeEventsResponse(
             response=response_data,
             instructions=["Third Bridge instruction"],
-            citation_information=[citation],
         )
 
         # Test that entire response can be JSON serialized

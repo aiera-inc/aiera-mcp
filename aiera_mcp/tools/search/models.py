@@ -2,7 +2,7 @@
 
 """Pydantic models for Aiera search tools."""
 
-from typing import List, Optional, Any, Union
+from typing import List, Optional, Any
 from datetime import datetime
 from pydantic import (
     BaseModel,
@@ -28,23 +28,30 @@ class SearchTranscriptsArgs(BaseAieraArgs):
         description="Search query for semantic matching within transcripts. Examples: 'earnings guidance', 'regulatory concerns', 'revenue growth'"
     )
     event_ids: List[int] = Field(
-        description="List of specific event IDs to search within. Obtained from source identification using CompanyEventsFinder."
+        description="List of specific event IDs to search within. Obtained from source identification using find_events."
     )
-    max_results: int = Field(
-        default=20,
-        description="Maximum number of transcript segments to return across all events (10-50 recommended for optimal performance)",
+    equity_ids: List[int] = Field(
+        description="List of specific equity IDs to filter search. Obtained from source identification using find_equities."
     )
-    index: str = Field(
-        default="content_v1_transcript_processed",
-        description="Transcript content index with processed segments, embeddings, and speaker attribution",
+    start_date: str = Field(
+        default="",
+        description="Start date for transcripts search in YYYY-MM-DD format. Example: '2024-01-01'.",
     )
-    min_score: float = Field(
-        default=0.2,
-        description="Minimum relevance score threshold for returned segments (0.0-1.0). Lower values are more permissive and return more results. Default 0.2 balances relevance with coverage.",
+    end_date: str = Field(
+        default="",
+        description="End date for transcripts search in YYYY-MM-DD format. Example: '2024-12-31'.",
     )
     transcript_section: str = Field(
         default="",
         description="Optional filter for specific transcript sections. Options: 'presentation' (prepared remarks), 'q_and_a' (Q&A session). If not provided, searches all sections.",
+    )
+    event_type: str = Field(
+        default="earnings",
+        description="Type of event to include within search. ONLY ONE type per call - to search multiple types, make separate calls. Options: 'earnings' (quarterly earnings calls with Q&A), 'presentation' (investor conferences, company presentations at events - use this for conferences), 'investor_meeting' (investor day events, one-on-one meetings - use this for investor meetings), 'shareholder_meeting' (annual/special shareholder meetings), 'special_situation' (M&A announcements, other corporate actions). Example: for 'conference calls AND meetings', make TWO calls: one with event_type='presentation' and one with event_type='investor_meeting'. Defaults to 'earnings'.",
+    )
+    max_results: int = Field(
+        default=20,
+        description="Maximum number of transcript segments to return across all events (10-50 recommended for optimal performance)",
     )
 
 
@@ -56,12 +63,14 @@ class SearchFilingsArgs(BaseAieraArgs):
     """
 
     query_text: str = Field(
-        default="",
         description="Search query for semantic matching within filing chunks. Examples: 'revenue guidance', 'risk factors', 'acquisition strategy'. Optional if company_name or filing_type is provided.",
     )
-    company_name: str = Field(
-        default="",
-        description="Company name to filter filing chunks. Uses fuzzy search across company_name and company_legal_name fields. Supports variations like 'Apple Inc', 'AAPL', 'Apple Corporation'. Optional if query_text or filing_type is provided.",
+    filing_ids: List[str] = Field(
+        default_factory=list,
+        description="Filter for specific filing IDs. Use to search chunks within specific filing documents. Examples: ['AAPL-10Q-2024-Q1', 'AAPL-10K-2023']. Optional.",
+    )
+    equity_ids: List[int] = Field(
+        description="List of specific equity IDs to filter search. Obtained from source identification using find_equities."
     )
     start_date: str = Field(
         default="",
@@ -75,68 +84,10 @@ class SearchFilingsArgs(BaseAieraArgs):
         default="",
         description="Filter for specific filing types. Examples: '10-K', '10-Q', '8-K', '4', 'DEF 14A'. Optional if query_text or company_name is provided.",
     )
-    filing_ids: List[str] = Field(
-        default_factory=list,
-        description="Filter for specific filing IDs. Use to search chunks within specific filing documents. Examples: ['AAPL-10Q-2024-Q1', 'AAPL-10K-2023']. Optional.",
-    )
-    content_ids: List[str] = Field(
-        default_factory=list,
-        description="Filter for specific content_ids. Use to search within specific content pieces/chunks. Examples: ['25003532', '24964901']. Provides precise targeting of individual document chunks. Optional.",
-    )
     max_results: int = Field(
         default=20,
         description="Maximum number of filing chunks to return (10-50 recommended for optimal performance)",
     )
-    index: str = Field(
-        default="content_v1_filing_chunks",
-        description="Filing chunks index with processed segments, embeddings, and company attribution",
-    )
-    min_score: float = Field(
-        default=0.2,
-        description="Minimum relevance score threshold for returned chunks (0.0-1.0). Lower values are more permissive and return more results.",
-    )
-
-    @field_validator(
-        "query_text", "company_name", "filing_type", "filing_ids", "content_ids"
-    )
-    @classmethod
-    def validate_at_least_one_search_param(cls, v, info):
-        """Ensure at least one of query_text, company_name, filing_type, filing_ids, or content_ids is provided."""
-        # Get all field values at validation time
-        if info.context and "all_fields" in info.context:
-            all_fields = info.context["all_fields"]
-        else:
-            # During individual field validation, we can't check other fields yet
-            return v
-
-        query_text = all_fields.get("query_text", "").strip()
-        company_name = all_fields.get("company_name", "").strip()
-        filing_type = all_fields.get("filing_type", "").strip()
-        filing_ids = all_fields.get("filing_ids", [])
-        content_ids = all_fields.get("content_ids", [])
-
-        if not any([query_text, company_name, filing_type, filing_ids, content_ids]):
-            raise ValueError(
-                "At least one of 'query_text', 'company_name', 'filing_type', 'filing_ids', or 'content_ids' must be provided"
-            )
-        return v
-
-    @model_validator(mode="after")
-    def validate_search_parameters(self):
-        """Ensure at least one search parameter is provided."""
-        if not any(
-            [
-                self.query_text.strip(),
-                self.company_name.strip(),
-                self.filing_type.strip(),
-                self.filing_ids,
-                self.content_ids,
-            ]
-        ):
-            raise ValueError(
-                "At least one of 'query_text', 'company_name', 'filing_type', 'filing_ids', or 'content_ids' must be provided"
-            )
-        return self
 
 
 # Search result item models
@@ -204,41 +155,15 @@ class SearchTotalCount(BaseModel):
     relation: str = Field(description="Relation type (e.g., 'eq')")
 
 
-class SearchPaginationInfo(BaseModel):
-    """Pagination information from search API."""
-
-    total_count: Union[SearchTotalCount, int] = Field(
-        description="Total count information - can be object or integer"
-    )
-    current_page: int = Field(description="Current page number")
-    page_size: int = Field(description="Number of items per page")
-
-    @field_validator("total_count", mode="before")
-    @classmethod
-    def validate_total_count(cls, v):
-        """Handle both object and integer formats for total_count."""
-        if isinstance(v, int):
-            # Convert integer to expected object format
-            return SearchTotalCount(value=v, relation="eq")
-        elif isinstance(v, dict):
-            # Already in object format, let Pydantic handle validation
-            return v
-        else:
-            # Let Pydantic handle other cases
-            return v
-
-
 class SearchResponseData(BaseModel):
     """Search response data container."""
 
-    pagination: SearchPaginationInfo = Field(description="Pagination information")
     result: Optional[List[Any]] = Field(description="Search results (can be null)")
 
 
 class TranscriptSearchResponseData(BaseModel):
     """Transcript search response data container with typed results."""
 
-    pagination: SearchPaginationInfo = Field(description="Pagination information")
     result: Optional[List[TranscriptSearchItem]] = Field(
         description="Transcript search results (can be null)"
     )
