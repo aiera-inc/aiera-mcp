@@ -495,15 +495,13 @@ class TestToolSerializationComprehensive:
                                 {
                                     "event_id": "123",
                                     "title": "Test",
-                                    "company_name": "Test",
-                                    "expert_name": "Test",
-                                    "expert_title": "Test",
-                                    "content_type": "call",
-                                    "language": "English",
+                                    "content_type": "FORUM",
+                                    "language": "EN",
+                                    "agenda": ["Test agenda"],
                                 }
                             )
                             if "call_date" not in test_data:
-                                test_data["call_date"] = datetime(2024, 1, 15, 10, 30)
+                                test_data["call_date"] = "2024-01-15T10:30:00Z"
                         elif "SearchItem" in model_name:
                             if "Transcript" in model_name:
                                 test_data.update(
@@ -619,16 +617,13 @@ class TestToolSerializationComprehensive:
                             "event": {
                                 "event_id": "12345",
                                 "title": "Test Event",
-                                "company_name": "Test Corp",
-                                "expert_name": "Test Expert",
-                                "expert_title": "Test Title",
-                                "content_type": "call",
-                                "call_date": "2024-01-15T16:30:00",
-                                "language": "English",
-                                "description": "Test description",
+                                "content_type": "FORUM",
+                                "call_date": "2024-01-15T16:30:00Z",
+                                "language": "EN",
+                                "agenda": ["Test agenda"],
+                                "insights": ["Test insight"],
                             },
                             "instructions": ["Test instruction"],
-                            "citation_information": [],
                         }
                 elif "Event" in response_model.__name__:
                     # Events have datetime fields

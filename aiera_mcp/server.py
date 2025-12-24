@@ -191,7 +191,7 @@ async def run_server():
 
             # Convert result to dict if needed
             if hasattr(result, "model_dump"):
-                result_dict = result.model_dump()
+                result_dict = result.model_dump(by_alias=True)
             else:
                 result_dict = result
 

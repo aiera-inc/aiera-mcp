@@ -182,11 +182,14 @@ class TestFindThirdBridgeEvents:
                         "language": "EN",
                         "agenda": ["Test agenda item"],
                         "insights": ["Test insight"],
-                        "citation_block": {
+                        "citation_information": {
                             "title": "Test Event",
                             "url": "https://thirdbridge.com/event/tb123",
-                            "expert_name": "Test Expert",
-                            "expert_title": "Test Title",
+                            "metadata": {
+                                "type": "event",
+                                "url_target": "thirdbridge",
+                                "event_id": 123,
+                            },
                         },
                     }
                 ],
@@ -238,7 +241,6 @@ class TestFindThirdBridgeEvents:
             citation.url
             == "https://dashboard.aiera.com/companies/1/calendar?tabs[0]=evt%7C2833969"
         )
-        # Note: expert_name and expert_title are optional in real API and not present in this fixture
 
 
 @pytest.mark.unit
@@ -351,11 +353,14 @@ class TestGetThirdBridgeEvent:
                         "language": "EN",
                         "agenda": ["Test agenda"],
                         "insights": ["Test insights"],
-                        "citation_block": {
+                        "citation_information": {
                             "title": "Test Event",
                             "url": "https://thirdbridge.com/event/tb789",
-                            "expert_name": "Test Expert",
-                            "expert_title": "Test Title",
+                            "metadata": {
+                                "type": "event",
+                                "url_target": "thirdbridge",
+                                "event_id": 789,
+                            },
                         },
                         # Missing call_date
                     }
@@ -394,11 +399,14 @@ class TestGetThirdBridgeEvent:
                         "language": "EN",
                         "agenda": ["Test agenda"],
                         "insights": ["Test insights"],
-                        "citation_block": {
+                        "citation_information": {
                             "title": "Test Event",
                             "url": "https://thirdbridge.com/event/tb789",
-                            "expert_name": "Test Expert",
-                            "expert_title": "Test Title",
+                            "metadata": {
+                                "type": "event",
+                                "url_target": "thirdbridge",
+                                "event_id": 789,
+                            },
                         },
                     }
                 ],
@@ -440,11 +448,14 @@ class TestGetThirdBridgeEvent:
                         "language": "EN",
                         "agenda": ["Test agenda"],
                         "insights": ["Test insights"],
-                        "citation_block": {
+                        "citation_information": {
                             "title": "Apple Supply Chain Analysis",
                             "url": "https://thirdbridge.com/event/tb789",
-                            "expert_name": "Jane Smith",
-                            "expert_title": "Former Apple Supply Chain Director",
+                            "metadata": {
+                                "type": "event",
+                                "url_target": "thirdbridge",
+                                "event_id": 789,
+                            },
                         },
                     }
                 ],
@@ -518,11 +529,14 @@ class TestThirdBridgeToolsErrorHandling:
                         "language": "EN",
                         "agenda": ["Test agenda"],
                         "insights": ["Test insight"],
-                        "citation_block": {
+                        "citation_information": {
                             "title": "Test Event",
                             "url": "https://thirdbridge.com/event/tb123",
-                            "expert_name": "Test Expert",
-                            "expert_title": "Test Title",
+                            "metadata": {
+                                "type": "event",
+                                "url_target": "thirdbridge",
+                                "event_id": 123,
+                            },
                         },
                     },
                     {
@@ -533,11 +547,14 @@ class TestThirdBridgeToolsErrorHandling:
                         "language": "EN",
                         "agenda": ["Test agenda 2"],
                         "insights": ["Test insight 2"],
-                        "citation_block": {
+                        "citation_information": {
                             "title": "Test Event 2",
                             "url": "https://thirdbridge.com/event/tb456",
-                            "expert_name": "Test Expert 2",
-                            "expert_title": "Test Title 2",
+                            "metadata": {
+                                "type": "event",
+                                "url_target": "thirdbridge",
+                                "event_id": 456,
+                            },
                         },
                     },
                 ],
@@ -579,11 +596,14 @@ class TestThirdBridgeToolsErrorHandling:
                         "language": "EN",
                         "agenda": ["Test agenda"],
                         "insights": ["Test insight"],
-                        "citation_block": {
+                        "citation_information": {
                             "title": "Test Event",
                             "url": "https://thirdbridge.com/event/tb123",
-                            "expert_name": None,
-                            "expert_title": None,
+                            "metadata": {
+                                "type": "event",
+                                "url_target": "thirdbridge",
+                                "event_id": 123,
+                            },
                         },
                     }
                 ],
