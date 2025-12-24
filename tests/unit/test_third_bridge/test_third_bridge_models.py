@@ -35,7 +35,7 @@ class TestThirdBridgeModels:
             "language": "EN",
             "agenda": ["Supply chain resilience", "Cost optimization"],
             "insights": ["Key insight about supply chain", "Another strategic insight"],
-            "citation_block": {
+            "citation_information": {
                 "title": "Apple Supply Chain Analysis",
                 "url": "https://thirdbridge.com/event/tb123",
             },
@@ -84,7 +84,7 @@ class TestThirdBridgeModels:
             "language": "EN",
             "agenda": ["Supply chain challenges", "Cost optimization"],  # List[str]
             "insights": ["Key insight 1", "Key insight 2"],  # List[str]
-            "citation_block": {
+            "citation_information": {
                 "title": "Apple Supply Chain Analysis",
                 "url": "https://thirdbridge.com/event/tb123",
             },
@@ -431,40 +431,6 @@ class TestThirdBridgeModelValidation:
         )
         assert event_with_seconds.call_date == "2023-10-20T14:30:45Z"
 
-    def test_optional_citation_block(self):
-        """Test optional citation block handling."""
-        # Event without citation block
-        event = ThirdBridgeEventItem(
-            event_id="tb123",
-            content_type="FORUM",
-            call_date="2023-10-20T14:00:00Z",
-            title="Test Event",
-            language="EN",
-            agenda=["Test agenda"],
-            insights=["Test insight"],
-        )
-        assert event.citation_information is None
-
-        # Event with citation block information
-        event_with_citation = ThirdBridgeEventItem(
-            event_id="tb124",
-            content_type="FORUM",
-            call_date="2023-10-20T14:00:00Z",
-            title="Test Event",
-            language="EN",
-            agenda=["Test agenda"],
-            insights=["Test insight"],
-            citation_block={
-                "title": "Test Event",
-                "url": "https://thirdbridge.com/event/tb124",
-            },
-        )
-        assert event_with_citation.citation_information.title == "Test Event"
-        assert (
-            event_with_citation.citation_information.url
-            == "https://thirdbridge.com/event/tb124"
-        )
-
     def test_event_details_optional_fields(self):
         """Test optional fields in ThirdBridgeEventDetails."""
         # Minimal event details
@@ -540,7 +506,7 @@ class TestThirdBridgeEventItemDateTimeSerialization:
             language="EN",
             agenda=["Test agenda item"],
             insights=["Test insight"],
-            citation_block={
+            citation_information={
                 "title": "Test Event",
                 "url": "https://thirdbridge.com/event/tb123",
                 "expert_name": "Jane Expert",

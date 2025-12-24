@@ -147,7 +147,9 @@ class ThirdBridgeEventItem(BaseModel):
     """Third Bridge event item."""
 
     thirdbridge_event_id: str = Field(
-        validation_alias="event_id", description="Event identifier"
+        validation_alias="event_id",
+        serialization_alias="event_id",
+        description="Event identifier",
     )
     content_type: str = Field(description="Content type (e.g., FORUM, COMMUNITY)")
     call_date: Optional[str] = Field(
@@ -165,7 +167,6 @@ class ThirdBridgeEventItem(BaseModel):
     citation_information: Optional[ThirdBridgeCitationInfo] = Field(
         None,
         description="Citation information",
-        validation_alias=AliasChoices("citation_information", "citation_block"),
     )
 
 
@@ -198,7 +199,8 @@ class ThirdBridgeEventDetails(BaseModel):
     """Detailed Third Bridge event information."""
 
     thirdbridge_event_id: str = Field(
-        validation_alias="event_id",  # Parse from API as "event_id"
+        validation_alias="event_id",
+        serialization_alias="event_id",
         description="Event identifier",
     )
     content_type: str = Field(description="Content type (e.g., FORUM, COMMUNITY)")
@@ -214,7 +216,6 @@ class ThirdBridgeEventDetails(BaseModel):
     citation_information: Optional[ThirdBridgeCitationInfo] = Field(
         None,
         description="Citation information",
-        validation_alias=AliasChoices("citation_information", "citation_block"),
     )
     transcripts: Optional[List[ThirdBridgeTranscriptItem]] = Field(
         None, description="Full event transcripts"

@@ -182,7 +182,7 @@ class TestFindThirdBridgeEvents:
                         "language": "EN",
                         "agenda": ["Test agenda item"],
                         "insights": ["Test insight"],
-                        "citation_block": {
+                        "citation_information": {
                             "title": "Test Event",
                             "url": "https://thirdbridge.com/event/tb123",
                             "expert_name": "Test Expert",
@@ -351,7 +351,7 @@ class TestGetThirdBridgeEvent:
                         "language": "EN",
                         "agenda": ["Test agenda"],
                         "insights": ["Test insights"],
-                        "citation_block": {
+                        "citation_information": {
                             "title": "Test Event",
                             "url": "https://thirdbridge.com/event/tb789",
                             "expert_name": "Test Expert",
@@ -394,7 +394,7 @@ class TestGetThirdBridgeEvent:
                         "language": "EN",
                         "agenda": ["Test agenda"],
                         "insights": ["Test insights"],
-                        "citation_block": {
+                        "citation_information": {
                             "title": "Test Event",
                             "url": "https://thirdbridge.com/event/tb789",
                             "expert_name": "Test Expert",
@@ -440,7 +440,7 @@ class TestGetThirdBridgeEvent:
                         "language": "EN",
                         "agenda": ["Test agenda"],
                         "insights": ["Test insights"],
-                        "citation_block": {
+                        "citation_information": {
                             "title": "Apple Supply Chain Analysis",
                             "url": "https://thirdbridge.com/event/tb789",
                             "expert_name": "Jane Smith",
@@ -518,7 +518,7 @@ class TestThirdBridgeToolsErrorHandling:
                         "language": "EN",
                         "agenda": ["Test agenda"],
                         "insights": ["Test insight"],
-                        "citation_block": {
+                        "citation_information": {
                             "title": "Test Event",
                             "url": "https://thirdbridge.com/event/tb123",
                             "expert_name": "Test Expert",
@@ -533,7 +533,7 @@ class TestThirdBridgeToolsErrorHandling:
                         "language": "EN",
                         "agenda": ["Test agenda 2"],
                         "insights": ["Test insight 2"],
-                        "citation_block": {
+                        "citation_information": {
                             "title": "Test Event 2",
                             "url": "https://thirdbridge.com/event/tb456",
                             "expert_name": "Test Expert 2",
@@ -579,7 +579,7 @@ class TestThirdBridgeToolsErrorHandling:
                         "language": "EN",
                         "agenda": ["Test agenda"],
                         "insights": ["Test insight"],
-                        "citation_block": {
+                        "citation_information": {
                             "title": "Test Event",
                             "url": "https://thirdbridge.com/event/tb123",
                             "expert_name": None,
