@@ -597,8 +597,8 @@ This document defines the possible results and fields from various endpoints of 
             "type": "filing",
             "url_target": "aiera",
             "company_id": 1,
-            "content_id": 21687400,
-            "filing_id": 7046270
+            "filing_id": 7046270,
+            "content_id": 21687400
           }
         }
       }, ...
