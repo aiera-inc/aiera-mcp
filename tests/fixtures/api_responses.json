@@ -1,7 +1,14 @@
 {
   "events": {
     "find_events_success": {
-      "instructions": ["Events found successfully"],
+      "instructions": [
+        "This data is provided for institutional finance professionals...",
+        "The current date is **Monday, December 22, 2025**, and the current time is **11:04 AM**...",
+        "Questions about guidance will always require the transcript...",
+        "Answers to guidance questions should focus on management commentary...",
+        "Some endpoints may require specific permissions...",
+        "IMPORTANT: when referencing this data in a response, ALWAYS include inline citations..."
+      ],
       "response": {
         "pagination": {
           "total_count": 2,
@@ -66,8 +73,10 @@
               "conference_name": null
             },
             "summary": {
-              "title": "Amazon's Q2 2025: Strong Revenue Growth",
-              "summary": ["Amazon reported Q2 2025 revenue of $167.7 billion, up 12% year-over-year."]
+              "title": "Amazon's Q2 2025: Strong Revenue Growth, AI Innovations, and Record-Breaking Prime Day Performance",
+              "summary": [
+                "Amazon reported Q2 2025 revenue of $167.7 billion, up 12% year-over-year, with operating income of $19.2 billion. AWS grew 17.5% to a $123 billion annualized run rate."
+              ]
             },
             "citation_information": {
               "title": "Q2 2025 Amazon.com Inc Earnings Call",
@@ -84,7 +93,10 @@
       }
     },
     "get_event_success": {
-      "instructions": ["Event retrieved successfully"],
+      "instructions": [
+        "This data is provided for institutional finance professionals...",
+        "The current date is **Monday, December 22, 2025**, and the current time is **11:04 AM**..."
+      ],
       "response": {
         "pagination": {
           "total_count": 1,
@@ -136,7 +148,9 @@
                 "duration_ms": 47760,
                 "speaker": "Dave Fildes",
                 "speaker_type": "final",
-                "transcript_section": null,
+                "created": "2025-12-11T23:16:44",
+                "modified": "2025-12-12T00:38:43",
+                "transcript_section": "presentation",
                 "transcript_version": 3,
                 "citation_information": {
                   "title": "Q2 2025 Amazon.com Inc Earnings Call",
@@ -156,7 +170,10 @@
       }
     },
     "get_upcoming_events_success": {
-      "instructions": ["Upcoming events retrieved successfully"],
+      "instructions": [
+        "This data is provided for institutional finance professionals...",
+        "The current date is **Monday, December 22, 2025**, and the current time is **11:04 AM**..."
+      ],
       "response": {
         "estimates": [
           {
@@ -248,13 +265,16 @@
       }
     },
     "find_conferences_success": {
-      "instructions": ["Conferences found successfully"],
+      "instructions": [
+        "This data is provided for institutional finance professionals...",
+        "The current date is **Monday, December 22, 2025**, and the current time is **11:04 AM**..."
+      ],
       "response": {
         "pagination": {
-          "total_count": 2,
+          "total_count": 15,
           "current_page": 1,
           "total_pages": 1,
-          "page_size": 50
+          "page_size": 15
         },
         "data": [
           {
@@ -295,7 +315,10 @@
   },
   "filings": {
     "find_filings_success": {
-      "instructions": ["Filing found successfully"],
+      "instructions": [
+        "This data is provided for institutional finance professionals...",
+        "The current date is **Monday, December 22, 2025**, and the current time is **11:04 AM**..."
+      ],
       "response": {
         "pagination": {
           "total_count": 97,
@@ -322,7 +345,11 @@
             "is_amendment": 0,
             "period_end_date": "2025-12-01T00:00:00",
             "release_date": "2025-12-03T17:00:17",
-            "summary": null,
+            "arrival_date": "2025-12-23T20:00:08",
+            "pulled_date": "2025-12-23T20:02:53",
+            "json_synced": false,
+            "datafiles_synced": false,
+            "summary": ["Summary of the filing content"],
             "citation_information": {
               "title": "AMAZON COM INC - 4",
               "url": "https://dashboard.aiera.com/companies/1/activity/filings?tabs[0]=fl%7C28259872",
@@ -366,6 +393,10 @@
             "is_amendment": 0,
             "period_end_date": "2025-12-01T00:00:00",
             "release_date": "2025-12-03T17:00:17",
+            "arrival_date": "2025-12-23T20:00:08",
+            "pulled_date": "2025-12-23T20:02:53",
+            "json_synced": false,
+            "datafiles_synced": false,
             "summary": ["Summary of the filing content"],
             "citation_information": {
               "title": "AMAZON COM INC - 4",
@@ -385,7 +416,10 @@
   },
   "equities": {
     "find_equities_success": {
-      "instructions": ["Equity found successfully"],
+      "instructions": [
+        "This data is provided for institutional finance professionals...",
+        "The current date is **Monday, December 22, 2025**..."
+      ],
       "response": {
         "pagination": {
           "total_count": 16639,
@@ -420,7 +454,10 @@
       }
     },
     "get_equity_summaries_success": {
-      "instructions": ["Equity summary retrieved successfully"],
+      "instructions": [
+        "This data is provided for institutional finance professionals...",
+        "The current date is **Monday, December 22, 2025**..."
+      ],
       "response": [
         {
           "equity_id": 1,
@@ -429,10 +466,10 @@
           "bloomberg_ticker": "AMZN:US",
           "sector_id": 1,
           "subsector_id": 259,
-          "description": "Amazon.com, Inc. engages in the retail sale of consumer products and subscriptions in North America and internationally.",
+          "description": "Amazon.com, Inc. engages in the retail sale of consumer products and subscriptions in North America and internationally. It operates through three segments: North America, International, and Amazon Web Services.",
           "country": "United States of America",
           "created": "2017-06-01T00:00:00",
-          "modified": "2025-12-22T11:01:49",
+          "modified": "2025-12-23T18:01:27",
           "status": "active",
           "leadership": [
             {
@@ -462,12 +499,41 @@
                 "has_live_transcript": true,
                 "has_audio": true,
                 "summary": {
-                  "title": "Amazon's Future: Andrew Jassy on Capacity Expansion, AI Innovations",
+                  "title": "Amazon's Future: Andrew Jassy on Capacity Expansion, AI Innovations...",
                   "content": ["Detailed summary content here"]
+                },
+                "citation_information": {
+                  "title": "Q3 2025 Amazon.com Inc Earnings Call",
+                  "url": "https://dashboard.aiera.com/companies/1/activity/transcripts?tabs[0]=evt%7C2819716",
+                  "metadata": {
+                    "type": "event",
+                    "url_target": "aiera",
+                    "company_id": 1,
+                    "event_id": 2819716
+                  }
                 }
               }
             ],
-            "upcoming": []
+            "upcoming": [
+              {
+                "event_id": 2831731,
+                "title": "Amazon.com Inc Annual Shareholders Meeting",
+                "event_type": "shareholder_meeting",
+                "event_date": "2025-12-28T21:00:00",
+                "fiscal_quarter": null,
+                "fiscal_year": null,
+                "citation_information": {
+                  "title": "Amazon.com Inc Annual Shareholders Meeting",
+                  "url": "https://dashboard.aiera.com/companies/1/activity/transcripts?tabs[0]=evt%7C2831731",
+                  "metadata": {
+                    "type": "event",
+                    "url_target": "aiera",
+                    "company_id": 1,
+                    "event_id": 2831731
+                  }
+                }
+              }
+            ]
           },
           "estimated_events": [
             {
@@ -487,7 +553,6 @@
       ]
     },
     "get_available_indexes_success": {
-      "instructions": [],
       "response": [
         {
           "index_id": 3,
@@ -522,7 +587,6 @@
       ]
     },
     "get_available_watchlists_success": {
-      "instructions": [],
       "response": [
         {
           "watchlist_id": 45245136,
@@ -532,7 +596,6 @@
       ]
     },
     "get_index_constituents_success": {
-      "instructions": [],
       "pagination": {
         "total_count": 509,
         "current_page": 1,
@@ -547,8 +610,7 @@
           "bloomberg_ticker": "MSFT:US",
           "sector_id": 5,
           "sub_sector_id": 84,
-          "description": "Microsoft Corporation develops, licenses, and supports software...",
-          "country": "United States of America",
+          "primary_equity": true,
           "created": "2017-07-06T00:00:00",
           "modified": "2025-12-19T14:15:59"
         },
@@ -559,15 +621,34 @@
           "bloomberg_ticker": "AAPL:US",
           "sector_id": 5,
           "sub_sector_id": 73,
-          "description": "Apple Inc. designs, manufactures, and markets smartphones...",
-          "country": "United States of America",
+          "primary_equity": true,
           "created": "2017-07-01T00:00:00",
           "modified": "2025-12-19T14:15:59"
         }
       ]
     },
+    "get_watchlist_constituents_success": {
+      "pagination": {
+        "total_count": 8,
+        "current_page": 1,
+        "total_pages": 1,
+        "page_size": 8
+      },
+      "data": [
+        {
+          "equity_id": 355,
+          "company_id": 4595,
+          "name": "MICROSOFT CORP",
+          "bloomberg_ticker": "MSFT:US",
+          "sector_id": 5,
+          "subsector_id": 84,
+          "primary_equity": true,
+          "created": "2017-07-06T00:00:00",
+          "modified": "2025-12-22T12:01:53"
+        }
+      ]
+    },
     "get_sectors_and_subsectors_success": {
-      "instructions": [],
       "response": [
         {
           "sector_id": 1,
@@ -593,7 +674,10 @@
   },
   "company_docs": {
     "find_company_docs_success": {
-      "instructions": ["Company document found successfully"],
+      "instructions": [
+        "This data is provided for institutional finance professionals...",
+        "The current date is **Monday, December 22, 2025**, and the current time is **11:04 AM**..."
+      ],
       "response": {
         "pagination": {
           "total_count": 417,
@@ -613,12 +697,16 @@
             "title": "United Rentals Scales AI-Powered Manual Assist Application on AWS to Speed Equipment Repairs",
             "source_url": "https://press.aboutamazon.com/aws/2025/12/united-rentals-scales-ai-applications-with-aws",
             "summary": [
-              "The document announces that United Rentals has expanded enterprise-wide adoption of Manual Assist AI."
+              "The document announces that United Rentals has expanded enterprise-wide adoption of Manual Assist AI, a web-based application built on Amazon Web Services (AWS).",
+              "Manual Assist AI, developed in collaboration with AWS using services including Amazon Bedrock and Amazon OpenSearch, is designed to reduce the time required to find critical service information."
             ],
             "keywords": [
               "generative ai",
               "ai-powered diagnostics",
-              "manual assist ai"
+              "manual assist ai",
+              "equipment manuals",
+              "field service",
+              "technician productivity"
             ],
             "processed": "2025-12-20T00:03:06",
             "created": "2025-12-20T00:02:33",
@@ -668,7 +756,7 @@
             "processed": "2025-12-20T00:03:06",
             "created": "2025-12-20T00:02:33",
             "modified": "2025-12-20T23:26:34",
-            "content_raw": "Full document content here...",
+            "content_raw": "December 18, 2025 Amazon Business Prime Offers Small and Midsize Businesses Even More Value with New Benefits from Intuit QuickBooks, CrowdStrike, and Gusto...",
             "citation_information": {
               "title": "United Rentals Scales AI-Powered Manual Assist Application on AWS to Speed Equipment Repairs",
               "url": "https://press.aboutamazon.com/aws/2025/12/united-rentals-scales-ai-applications-with-aws",
@@ -726,16 +814,11 @@
   },
   "search": {
     "search_transcripts_success": {
-      "instructions": ["Transcript search completed successfully"],
+      "instructions": [
+        "This data is provided for institutional finance professionals...",
+        "The current date is **Monday, December 22, 2025**, and the current time is **11:04 AM**..."
+      ],
       "response": {
-        "pagination": {
-          "total_count": {
-            "value": 4215,
-            "relation": "eq"
-          },
-          "from": 0,
-          "size": 100
-        },
         "result": [
           {
             "_score": 9.457697,
@@ -744,7 +827,7 @@
             "content_id": 182846708,
             "transcript_event_id": 2108591,
             "transcript_section": null,
-            "text": "Inflation has been in both periods. Inflation was in the transportation costs, especially in wage inflation last year.",
+            "text": "Inflation has been in both periods. Inflation was in the transportation costs, especially in wage inflation last year. It remains there. It's been amplified a bit by the fuel costs following the Ukraine conflict.",
             "primary_equity_id": 1,
             "title": "Q1 2022 Amazon.com Inc Earnings Call",
             "citation_information": {
@@ -758,12 +841,37 @@
                 "transcript_item_id": 182846708
               }
             }
+          },
+          {
+            "_score": 8.921383,
+            "date": "2022-04-28T17:30:00",
+            "primary_company_id": 1,
+            "content_id": 182846689,
+            "transcript_event_id": 2108591,
+            "transcript_section": null,
+            "text": "What you're seeing there in the growth in shipping costs versus the unit growth, a little bit on the unit side, but it's essentially a factor of inflation and productivity.",
+            "primary_equity_id": 1,
+            "title": "Q1 2022 Amazon.com Inc Earnings Call",
+            "citation_information": {
+              "title": "Q1 2022 Amazon.com Inc Earnings Call",
+              "url": "https://dashboard.aiera.com/companies/1/activity/transcripts?tabs[0]=evt%7C2108591%7Ctext%7C182846689",
+              "metadata": {
+                "type": "event",
+                "url_target": "aiera",
+                "company_id": 1,
+                "event_id": 2108591,
+                "transcript_item_id": 182846689
+              }
+            }
           }
         ]
       }
     },
     "search_filing_chunks_success": {
-      "instructions": ["Filing search completed successfully"],
+      "instructions": [
+        "This data is provided for institutional finance professionals...",
+        "The current date is **Monday, December 22, 2025**, and the current time is **11:04 AM**..."
+      ],
       "response": {
         "pagination": {
           "total_count": {
@@ -783,7 +891,7 @@
             "company_common_name": "Amazon",
             "filing_type": "DEF14A",
             "primary_equity_id": 1,
-            "text": "| Aspect | Details |\n|---|---|\n| Notable contextual data | The discussion highlights a historically high CEO-to-median-pay ratio |",
+            "text": "| Aspect | Details |\n|---|---|\n| Notable contextual data | The discussion highlights a historically high CEO-to-median-pay ratio among S&P 500 companies in 2021 |",
             "title": "Amazon.com Inc - DEF 14A",
             "citation_information": {
               "title": "Amazon.com Inc - DEF 14A",
@@ -803,7 +911,10 @@
   },
   "third_bridge": {
     "find_third_bridge_events_success": {
-      "instructions": ["Third Bridge event found successfully"],
+      "instructions": [
+        "This data is provided for institutional finance professionals...",
+        "The current date is **Monday, December 22, 2025**, and the current time is **11:04 AM**..."
+      ],
       "response": {
         "pagination": {
           "total_count": 13,
@@ -824,12 +935,50 @@
               "Comprehensive knowledge of the competitive landscape..."
             ],
             "insights": null,
+            "citation_information": {
+              "title": "Robotic Delivery Market - Senior Executive, Sales & Operations Planning at Amazon.com Inc",
+              "url": "https://dashboard.aiera.com/companies/1/calendar?tabs[0]=evt%7C2833969",
+              "metadata": {
+                "type": "event",
+                "url_target": "aiera",
+                "company_id": 1,
+                "event_id": 2833969
+              }
+            }
+          }
+        ]
+      }
+    },
+    "get_third_bridge_event_success": {
+      "instructions": [
+        "This data is provided for institutional finance professionals...",
+        "The current date is **Monday, December 22, 2025**, and the current time is **11:04 AM**..."
+      ],
+      "response": {
+        "pagination": {
+          "total_count": 1,
+          "current_page": 1,
+          "total_pages": 1,
+          "page_size": 1
+        },
+        "data": [
+          {
+            "event_id": "46abc016e6da845a6459e80a200341c5",
+            "content_type": "COMMUNITY",
+            "call_date": "2025-04-23T19:00:00",
+            "title": "Robotic Delivery Market - Senior Executive, Sales & Operations Planning at Amazon.com Inc",
+            "language": "eng",
+            "agenda": [
+              "Over 10 years' experience in sales, operations and supply chain planning...",
+              "Expertise in the evolution of the robotic delivery ecosystem..."
+            ],
+            "insights": ["Key insight about robotic delivery market trends"],
             "transcripts": [
               {
                 "start_ms": 155000,
                 "duration_ms": 60000,
                 "transcript": "We're just trying to make sure that we understand the split correctly...",
-                "citation_block": {
+                "citation_information": {
                   "title": "AI Infrastructure Industry - Amazon & Nvidia...",
                   "url": "https://dashboard.aiera.com/companies/1/calendar?tabs[0]=evt%7C2820893%7Ctext%7C179195065",
                   "metadata": {
@@ -842,7 +991,7 @@
                 }
               }
             ],
-            "citation_block": {
+            "citation_information": {
               "title": "Robotic Delivery Market - Senior Executive, Sales & Operations Planning at Amazon.com Inc",
               "url": "https://dashboard.aiera.com/companies/1/calendar?tabs[0]=evt%7C2833969",
               "metadata": {

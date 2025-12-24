@@ -224,6 +224,9 @@ class FilingSearchItem(BaseModel):
     primary_company_id: int = Field(description="Primary company identifier")
     content_id: str = Field(description="Filing chunk content identifier")
     filing_id: str = Field(description="Filing identifier")
+    company_common_name: Optional[str] = Field(
+        default=None, description="Company common name"
+    )
     text: str = Field(description="The matching text content from the filing chunk")
     primary_equity_id: int = Field(
         description="Primary equity identifier. Can be found using the find_equities tool."

@@ -2,7 +2,7 @@
 
 """Third Bridge domain models for Aiera MCP."""
 
-from pydantic import BaseModel, Field, field_validator, field_serializer
+from pydantic import AliasChoices, BaseModel, Field, field_validator, field_serializer
 from typing import Optional, List, Any, Union
 
 from ..common.models import BaseAieraResponse, PaginatedResponse
@@ -160,7 +160,7 @@ class ThirdBridgeEventItem(BaseModel):
     citation_information: Optional[ThirdBridgeCitationInfo] = Field(
         None,
         description="Citation information",
-        validation_alias="citation_block",
+        validation_alias=AliasChoices("citation_information", "citation_block"),
     )
 
 
@@ -181,12 +181,12 @@ class ThirdBridgeModerator(BaseModel):
 class ThirdBridgeTranscriptItem(BaseModel):
     """Third Bridge transcript item."""
 
-    timestamp: str = Field(description="Timestamp of the transcript segment")
-    discussionItem: List[Any] = Field(
-        default=[], description="Discussion items in this segment"
+    start_ms: Optional[int] = Field(None, description="Start time in milliseconds")
+    duration_ms: Optional[int] = Field(None, description="Duration in milliseconds")
+    transcript: Optional[str] = Field(None, description="Transcript text content")
+    citation_information: Optional[ThirdBridgeCitationInfo] = Field(
+        None, description="Citation information for this transcript item"
     )
-    # Allow additional fields that may be present
-    model_config = {"extra": "allow"}
 
 
 class ThirdBridgeEventDetails(BaseModel):
@@ -209,7 +209,7 @@ class ThirdBridgeEventDetails(BaseModel):
     citation_information: Optional[ThirdBridgeCitationInfo] = Field(
         None,
         description="Citation information",
-        validation_alias="citation_block",
+        validation_alias=AliasChoices("citation_information", "citation_block"),
     )
     specialists: Optional[List[ThirdBridgeSpecialist]] = Field(
         None, description="Expert specialists participating in the event"
@@ -217,8 +217,8 @@ class ThirdBridgeEventDetails(BaseModel):
     moderators: Optional[List[ThirdBridgeModerator]] = Field(
         None, description="Moderators of the event"
     )
-    transcript: Optional[List[ThirdBridgeTranscriptItem]] = Field(
-        None, description="Full event transcript"
+    transcripts: Optional[List[ThirdBridgeTranscriptItem]] = Field(
+        None, description="Full event transcripts"
     )
 
 

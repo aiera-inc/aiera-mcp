@@ -74,6 +74,9 @@ class TestFindCompanyDocs:
             "generative ai",
             "ai-powered diagnostics",
             "manual assist ai",
+            "equipment manuals",
+            "field service",
+            "technician productivity",
         ]
         assert first_doc.publish_date == "2025-12-19"
 
@@ -282,7 +285,10 @@ class TestGetCompanyDoc:
             result.document.summary[0]
             == "The document announces that United Rentals has expanded enterprise-wide adoption of Manual Assist AI."
         )
-        assert result.document.content_raw == "Full document content here..."
+        assert (
+            result.document.content_raw
+            == "December 18, 2025 Amazon Business Prime Offers Small and Midsize Businesses Even More Value with New Benefits from Intuit QuickBooks, CrowdStrike, and Gusto..."
+        )
         assert result.document.company.name == "Amazon"
         assert result.document.company.company_id == 1
         assert result.document.attachments is None

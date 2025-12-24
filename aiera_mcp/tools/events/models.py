@@ -270,6 +270,13 @@ class GroupingInfo(BaseModel):
     grouping_name: Optional[str] = Field(None, description="Grouping name")
 
 
+class ConferenceInfo(BaseModel):
+    """Conference information for events."""
+
+    conference_id: Optional[int] = Field(None, description="Conference ID")
+    conference_name: Optional[str] = Field(None, description="Conference name")
+
+
 class SummaryInfo(BaseModel):
     """Event summary information."""
 
@@ -368,6 +375,9 @@ class EventItem(BaseModel):
     )
     grouping: Optional[GroupingInfo] = Field(
         None, description="Event grouping information"
+    )
+    conference: Optional[ConferenceInfo] = Field(
+        None, description="Conference information"
     )
     summary: Optional[SummaryInfo] = Field(None, description="Event summary")
     citation_information: Optional[CitationInfo] = Field(

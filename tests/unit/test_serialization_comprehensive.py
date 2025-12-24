@@ -75,6 +75,22 @@ class TestToolSerializationComprehensive:
             if "page_size" in properties:
                 sample_data["page_size"] = 50
 
+            # Handle Categories/Keywords responses with top-level pagination and data
+            if "pagination" in required_fields and "data" in required_fields:
+                if (
+                    "Categories" in model_class.__name__
+                    or "Keywords" in model_class.__name__
+                ):
+                    sample_data["pagination"] = {
+                        "total_count": 0,
+                        "current_page": 1,
+                        "total_pages": 0,
+                        "page_size": 50,
+                    }
+                    sample_data["data"] = {}
+                    # Skip the response in required_fields logic below
+                    return sample_data
+
             # Add specific required fields based on response type
             if "response" in required_fields:  # Most new response models
                 # Determine response structure based on model name or properties
@@ -124,15 +140,15 @@ class TestToolSerializationComprehensive:
                     "Categories" in model_class.__name__
                     or "Keywords" in model_class.__name__
                 ):
-                    sample_data["response"] = {
-                        "data": {},
-                        "pagination": {
-                            "total_count": 0,
-                            "current_page": 1,
-                            "total_pages": 0,
-                            "page_size": 50,
-                        },
+                    # GetCompanyDocCategoriesResponse and GetCompanyDocKeywordsResponse
+                    # have pagination and data at the top level, not nested under response
+                    sample_data["pagination"] = {
+                        "total_count": 0,
+                        "current_page": 1,
+                        "total_pages": 0,
+                        "page_size": 50,
                     }
+                    sample_data["data"] = {}
                 elif (
                     "ThirdBridge" in model_class.__name__
                     and "Find" in model_class.__name__
@@ -523,7 +539,9 @@ class TestToolSerializationComprehensive:
                                     }
                                 )
                         elif model_name == "CitationInfo":
-                            test_data.update({"title": "Test Citation"})
+                            test_data.update(
+                                {"title": "Test Citation", "url": "http://test.com"}
+                            )
 
                         # Try to create and serialize the model
                         model_instance = model_class(**test_data)
@@ -639,10 +657,12 @@ class TestToolSerializationComprehensive:
                             "response": {
                                 "estimates": [
                                     {
-                                        "event_id": 12345,
-                                        "title": "Test Event",
-                                        "event_type": "earnings",
-                                        "event_date": datetime(2024, 1, 15, 16, 30, 0),
+                                        "estimate_id": 12345,
+                                        "estimate": {
+                                            "call_type": "earnings",
+                                            "call_date": "2024-01-15",
+                                            "title": "Test Event",
+                                        },
                                     }
                                 ],
                                 "actuals": [],
@@ -711,11 +731,6 @@ class TestToolSerializationComprehensive:
                         test_data = {
                             "instructions": ["Search completed"],
                             "response": {
-                                "pagination": {
-                                    "total_count": {"value": 1, "relation": "eq"},
-                                    "current_page": 1,
-                                    "page_size": 50,
-                                },
                                 "result": [
                                     {
                                         "date": datetime(2024, 1, 15, 16, 30, 0),
@@ -738,11 +753,6 @@ class TestToolSerializationComprehensive:
                         test_data = {
                             "instructions": ["Search completed"],
                             "response": {
-                                "pagination": {
-                                    "total_count": {"value": 1, "relation": "eq"},
-                                    "current_page": 1,
-                                    "page_size": 50,
-                                },
                                 "result": [
                                     {
                                         "date": datetime(2024, 1, 15, 9, 0, 0),
@@ -770,11 +780,6 @@ class TestToolSerializationComprehensive:
                         test_data = {
                             "instructions": ["Search completed"],
                             "response": {
-                                "pagination": {
-                                    "total_count": {"value": 1, "relation": "eq"},
-                                    "current_page": 1,
-                                    "page_size": 50,
-                                },
                                 "result": [
                                     {
                                         "date": datetime(2024, 1, 15, 9, 0, 0),
@@ -830,35 +835,27 @@ class TestToolSerializationComprehensive:
         """Test serialization with edge case values."""
         print("\\nTesting edge case serialization scenarios:")
 
-        edge_cases = [
-            ("Empty datetime", datetime.min),
-            (
-                "Max datetime",
-                datetime.max.replace(microsecond=0),
-            ),  # Remove microseconds for JSON compat
-            ("Current datetime", datetime.now()),
-            ("Empty date", date.min),
-            ("Max date", date.max),
-            ("Current date", date.today()),
-        ]
+        # Test with CitationInfo model which now uses metadata instead of timestamp
+        from aiera_mcp.tools.common.models import CitationInfo, CitationMetadata
 
-        # Test with CitationInfo model
-        from aiera_mcp.tools.common.models import CitationInfo
+        edge_cases = [
+            ("Event metadata", CitationMetadata(type="event", event_id=123)),
+            ("Filing metadata", CitationMetadata(type="filing", filing_id=456)),
+            (
+                "Company doc metadata",
+                CitationMetadata(type="company_doc", company_doc_id=789),
+            ),
+            ("None metadata", None),
+        ]
 
         for case_name, test_value in edge_cases:
             try:
-                if isinstance(test_value, date) and not isinstance(
-                    test_value, datetime
-                ):
-                    # Skip date values for CitationInfo since it expects datetime
-                    continue
-
-                citation = CitationInfo(title=f"Test {case_name}", timestamp=test_value)
+                citation = CitationInfo(title=f"Test {case_name}", metadata=test_value)
                 serialized = citation.model_dump()
                 json_str = json.dumps(serialized)
 
-                print(f"  ✓ {case_name}: {test_value} -> {serialized['timestamp']}")
+                print(f"  ✓ {case_name}: serialized correctly")
 
             except Exception as e:
-                print(f"  ✗ {case_name}: {test_value} failed - {e}")
+                print(f"  ✗ {case_name}: failed - {e}")
                 # Don't fail the test for edge cases, just report them

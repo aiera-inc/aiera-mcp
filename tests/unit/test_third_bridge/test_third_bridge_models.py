@@ -4,7 +4,6 @@
 
 import pytest
 import json
-from datetime import datetime
 from pydantic import ValidationError
 
 from aiera_mcp.tools.third_bridge.models import (
@@ -39,8 +38,6 @@ class TestThirdBridgeModels:
             "citation_block": {
                 "title": "Apple Supply Chain Analysis",
                 "url": "https://thirdbridge.com/event/tb123",
-                "expert_name": "Jane Smith",
-                "expert_title": "Former Apple Supply Chain Director",
             },
         }
 
@@ -54,7 +51,7 @@ class TestThirdBridgeModels:
         assert event.language == "EN"
         assert len(event.agenda) == 2
         assert len(event.insights) == 2
-        assert event.citation_block.expert_name == "Jane Smith"
+        assert event.citation_information.title == "Apple Supply Chain Analysis"
 
     def test_third_bridge_event_item_optional_fields(self):
         """Test ThirdBridgeEventItem with only required fields."""
@@ -75,7 +72,7 @@ class TestThirdBridgeModels:
         assert event.title == "Test Event"
         assert event.language == "EN"
         assert event.insights is None  # Optional field
-        assert event.citation_block is None
+        assert event.citation_information is None
 
     def test_third_bridge_event_details_with_lists(self):
         """Test ThirdBridgeEventDetails with List types for agenda, insights, transcript."""
@@ -90,15 +87,17 @@ class TestThirdBridgeModels:
             "citation_block": {
                 "title": "Apple Supply Chain Analysis",
                 "url": "https://thirdbridge.com/event/tb123",
-                "expert_name": "Jane Smith",
-                "expert_title": "Former Apple Supply Chain Director",
             },
             "specialists": [
                 {"title": "Former Supply Chain Director", "initials": "JS"}
             ],
             "moderators": [{"id": "mod123", "initials": "AB"}],
-            "transcript": [
-                {"timestamp": "[00:00:01]", "discussionItem": ["Opening remarks"]}
+            "transcripts": [
+                {
+                    "start_ms": 1000,
+                    "duration_ms": 60000,
+                    "transcript": "Opening remarks",
+                }
             ],
         }
 
@@ -127,8 +126,8 @@ class TestThirdBridgeModels:
         assert len(details.moderators) == 1
         assert details.moderators[0].id == "mod123"
 
-        assert len(details.transcript) == 1
-        assert details.transcript[0].timestamp == "[00:00:01]"
+        assert len(details.transcripts) == 1
+        assert details.transcripts[0].start_ms == 1000
 
 
 @pytest.mark.unit
@@ -291,11 +290,13 @@ class TestThirdBridgeNewModels:
     def test_third_bridge_transcript_item(self):
         """Test ThirdBridgeTranscriptItem model."""
         transcript_item = ThirdBridgeTranscriptItem(
-            timestamp="[00:00:01]", discussionItem=["Opening remarks", "Introduction"]
+            start_ms=1000,
+            duration_ms=60000,
+            transcript="Opening remarks and introduction",
         )
-        assert transcript_item.timestamp == "[00:00:01]"
-        assert len(transcript_item.discussionItem) == 2
-        assert transcript_item.discussionItem[0] == "Opening remarks"
+        assert transcript_item.start_ms == 1000
+        assert transcript_item.duration_ms == 60000
+        assert transcript_item.transcript == "Opening remarks and introduction"
 
 
 @pytest.mark.unit
@@ -338,7 +339,6 @@ class TestThirdBridgeResponses:
         assert response.response.pagination.current_page == 1
         assert response.response.pagination.page_size == 50
         assert response.instructions == ["Test instruction"]
-        assert len(response.citation_information) == 1
 
     def test_get_third_bridge_event_response(self):
         """Test GetThirdBridgeEventResponse model."""
@@ -453,7 +453,7 @@ class TestThirdBridgeModelValidation:
             agenda=["Test agenda"],
             insights=["Test insight"],
         )
-        assert event.citation_block is None
+        assert event.citation_information is None
 
         # Event with citation block information
         event_with_citation = ThirdBridgeEventItem(
@@ -467,12 +467,13 @@ class TestThirdBridgeModelValidation:
             citation_block={
                 "title": "Test Event",
                 "url": "https://thirdbridge.com/event/tb124",
-                "expert_name": "Jane Smith",
-                "expert_title": "Former Executive",
             },
         )
-        assert event_with_citation.citation_block.expert_name == "Jane Smith"
-        assert event_with_citation.citation_block.expert_title == "Former Executive"
+        assert event_with_citation.citation_information.title == "Test Event"
+        assert (
+            event_with_citation.citation_information.url
+            == "https://thirdbridge.com/event/tb124"
+        )
 
     def test_event_details_optional_fields(self):
         """Test optional fields in ThirdBridgeEventDetails."""
@@ -486,7 +487,7 @@ class TestThirdBridgeModelValidation:
         )
         assert details.agenda is None
         assert details.insights is None
-        assert details.transcript is None
+        assert details.transcripts is None
         assert details.specialists is None
         assert details.moderators is None
 
@@ -499,13 +500,15 @@ class TestThirdBridgeModelValidation:
             language="EN",
             agenda=["Test agenda"],
             insights=["Test insights"],
-            transcript=[{"timestamp": "[00:00:01]", "discussionItem": []}],
+            transcripts=[
+                {"start_ms": 1000, "duration_ms": 60000, "transcript": "Test"}
+            ],
             specialists=[{"title": "Expert", "initials": "EX"}],
             moderators=[{"id": "mod1", "initials": "MO"}],
         )
         assert isinstance(details_full.agenda, list)
         assert isinstance(details_full.insights, list)
-        assert isinstance(details_full.transcript, list)
+        assert isinstance(details_full.transcripts, list)
         assert isinstance(details_full.specialists, list)
         assert isinstance(details_full.moderators, list)
 
@@ -599,8 +602,6 @@ class TestThirdBridgeEventItemDateTimeSerialization:
             ThirdBridgePaginationInfo,
         )
 
-        test_datetime = datetime(2024, 1, 15, 14, 30, 0)
-
         # Create Third Bridge event with new structure
         event = ThirdBridgeEventItem(
             event_id="tb123",
@@ -637,7 +638,6 @@ class TestThirdBridgeEventItemDateTimeSerialization:
         # Verify fields were serialized correctly in JSON
         parsed = json.loads(json_str)
         assert isinstance(parsed["response"]["data"][0]["call_date"], str)
-        assert isinstance(parsed["citation_information"][0]["timestamp"], str)
 
     def test_minimal_third_bridge_event_serialization(self):
         """Test serialization of Third Bridge event with minimal required fields."""

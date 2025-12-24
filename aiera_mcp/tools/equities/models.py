@@ -2,7 +2,7 @@
 
 """Equities domain models for Aiera MCP."""
 
-from pydantic import BaseModel, Field, field_validator, field_serializer
+from pydantic import AliasChoices, BaseModel, Field, field_validator, field_serializer
 from typing import Optional, List, Any, Dict, Union
 from datetime import datetime
 
@@ -172,7 +172,11 @@ class EquityItem(BaseModel):
     name: Optional[str] = Field(None, description="Company name")
     bloomberg_ticker: str = Field(description="Bloomberg ticker")
     sector_id: Optional[int] = Field(None, description="Sector ID")
-    subsector_id: Optional[int] = Field(None, description="Subsector ID")
+    subsector_id: Optional[int] = Field(
+        None,
+        description="Subsector ID",
+        validation_alias=AliasChoices("subsector_id", "sub_sector_id"),
+    )
     primary_equity: Optional[bool] = Field(None, description="Is primary equity")
     created: Optional[datetime] = Field(None, description="Creation date")
     modified: Optional[datetime] = Field(None, description="Modification date")
@@ -230,6 +234,27 @@ class LeadershipItem(BaseModel):
         return value.isoformat()
 
 
+class ConfirmedEventCitationMetadata(BaseModel):
+    """Metadata for confirmed event citation."""
+
+    type: str = Field(description="Type of citation (e.g., 'event')")
+    url_target: Optional[str] = Field(
+        None, description="Target for URL (e.g., 'aiera')"
+    )
+    company_id: Optional[int] = Field(None, description="Company identifier")
+    event_id: Optional[int] = Field(None, description="Event identifier")
+
+
+class ConfirmedEventCitationInfo(BaseModel):
+    """Citation information for confirmed events."""
+
+    title: str = Field(description="Citation title")
+    url: str = Field(description="Citation URL")
+    metadata: Optional[ConfirmedEventCitationMetadata] = Field(
+        None, description="Citation metadata"
+    )
+
+
 class EventSummary(BaseModel):
     """Summary information for a confirmed event."""
 
@@ -254,6 +279,9 @@ class ConfirmedEventItem(BaseModel):
     )
     has_audio: Optional[bool] = Field(None, description="Whether event has audio")
     summary: Optional[EventSummary] = Field(None, description="Event summary")
+    citation_information: Optional[ConfirmedEventCitationInfo] = Field(
+        None, description="Citation information for this event"
+    )
 
     @field_validator("event_date", mode="before")
     @classmethod

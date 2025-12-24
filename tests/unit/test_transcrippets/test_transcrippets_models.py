@@ -343,7 +343,6 @@ class TestTranscrippetsResponses:
 
         assert len(response.response) == 1
         assert response.instructions == ["Test instruction"]
-        assert len(response.citation_information) == 1
 
     def test_create_transcrippet_response(self):
         """Test CreateTranscrippetResponse model."""

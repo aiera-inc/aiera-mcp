@@ -70,10 +70,10 @@ This document defines the possible results and fields from various endpoints of 
       "bloomberg_ticker": "AMZN:US",
       "sector_id": 1,
       "subsector_id": 259,
-      "description": "Amazon.com, Inc. engages in the retail sale of consumer products and subscriptions in North America and internationally. It operates through three segments: North America, International, and Amazon Web Services...",
+      "description": "Amazon.com, Inc. engages in the retail sale of consumer products and subscriptions in North America and internationally. It operates through three segments: North America, International, and Amazon Web Services. The company also manufactures and sells electronic devices, including Kindle, Fire tablets, Fire TVs, Rings, and Echo and other devices.",
       "country": "United States of America",
       "created": "2017-06-01T00:00:00",
-      "modified": "2025-12-22T11:01:49",
+      "modified": "2025-12-23T18:01:27",
       "status": "active",
       "leadership": [
         {
@@ -105,10 +105,39 @@ This document defines the possible results and fields from various endpoints of 
             "summary": {
               "title": "Amazon's Future: Andrew Jassy on Capacity Expansion, AI Innovations...",
               "content": ["...detailed summary..."]
-            }
+            },
+            "citation_information": {
+                "title": "Q3 2025 CBAK Energy Technology Inc Earnings Call",
+                "url": "https://dashboard.aiera.com/companies/279/activity/transcripts?tabs[0]=evt%7C2826481",
+                "metadata": {
+                    "type": "event",
+                    "url_target": "aiera",
+                    "company_id": 279,
+                    "event_id": 2826481
+                }
+             }
           }, ...
         ],
-        "upcoming": []
+        "upcoming": [
+          {
+            "event_id": 2831731,
+            "title": "CBAK Energy Technology Inc Annual Shareholders Meeting",
+            "event_type": "shareholder_meeting",
+            "event_date": "2025-12-28T21:00:00",
+            "fiscal_quarter": null,
+            "fiscal_year": null,
+            "citation_information": {
+                "title": "CBAK Energy Technology Inc Annual Shareholders Meeting",
+                "url": "https://dashboard.aiera.com/companies/279/activity/transcripts?tabs[0]=evt%7C2831731",
+                "metadata": {
+                    "type": "event",
+                    "url_target": "aiera",
+                    "company_id": 279,
+                    "event_id": 2831731
+                }
+            }
+          }, ...
+        ]
       },
       "estimated_events": [
         {
@@ -229,7 +258,9 @@ This document defines the possible results and fields from various endpoints of 
             "duration_ms": 47760,
             "speaker": "Dave Fildes",
             "speaker_type": "final",
-            "transcript_section": null,
+            "created": "2025-12-11T23:16:44",
+            "modified": "2025-12-12T00:38:43",
+            "transcript_section": "presentation",
             "transcript_version": 3,
             "citation_information": {
               "title": "Q2 2025 Amazon.com Inc Earnings Call",
@@ -367,14 +398,6 @@ This document defines the possible results and fields from various endpoints of 
     "IMPORTANT: when referencing this data in a response, ALWAYS include inline citations..."
   ],
   "response": {
-    "pagination": {
-      "total_count": {
-        "value": 4215,
-        "relation": "eq"
-      },
-      "from": 0,
-      "size": 100
-    },
     "result": [
       {
         "_score": 9.457697,
@@ -520,7 +543,11 @@ This document defines the possible results and fields from various endpoints of 
         "is_amendment": 0,
         "period_end_date": "2025-12-01T00:00:00",
         "release_date": "2025-12-03T17:00:17",
-        "summary": null,
+        "arrival_date": "2025-12-23T20:00:08",
+        "pulled_date": "2025-12-23T20:02:53",
+        "json_synced": false,
+        "datafiles_synced": false,
+        "summary": ["...summary text..."],
         "citation_information": {
           "title": "AMAZON COM INC - 4",
           "url": "https://dashboard.aiera.com/companies/1/activity/filings?tabs[0]=fl%7C28259872",
@@ -528,8 +555,8 @@ This document defines the possible results and fields from various endpoints of 
             "type": "filing",
             "url_target": "aiera",
             "company_id": 1,
-            "content_id": 28259872,
-            "filing_id": 8587883
+            "filing_id": 8587883,
+            "content_id": 28259872
           }
         }
       }, ...
@@ -551,14 +578,6 @@ This document defines the possible results and fields from various endpoints of 
     "IMPORTANT: when referencing this data in a response, ALWAYS include inline citations..."
   ],
   "response": {
-    "pagination": {
-      "total_count": {
-        "value": 10000,
-        "relation": "gte"
-      },
-      "from": 0,
-      "size": 100
-    },
     "result": [
       {
         "_score": 12.584471,
@@ -608,6 +627,57 @@ This document defines the possible results and fields from various endpoints of 
       "page_size": 50
     },
     "data": [
+      {
+        "doc_id": 5488573,
+        "company": {
+          "company_id": 1,
+          "name": "Amazon"
+        },
+        "publish_date": "2025-12-19",
+        "category": "press_release",
+        "title": "United Rentals Scales AI-Powered Manual Assist Application on AWS to Speed Equipment Repairs",
+        "source_url": "https://press.aboutamazon.com/aws/2025/12/united-rentals-scales-ai-applications-with-aws",
+        "summary": [
+          "The document announces that United Rentals has expanded enterprise-wide adoption of Manual Assist AI, a web-based application built on Amazon Web Services (AWS) that provides AI-powered diagnostics and instant access to thousands of equipment manufacturer manuals for service teams. The application now supports more than 4,000 monthly users, helping technicians quickly locate relevant manuals, summarize procedures, and identify the most important technical details to accelerate troubleshooting and repairs.",
+          "Manual Assist AI, developed in collaboration with AWS using services including Amazon Bedrock and Amazon OpenSearch, is designed to reduce the time required to find critical service information, enabling faster, more accurate maintenance both in the shop and in the field. United Rentals highlights that the tool improves fleet utilization by getting equipment back into service more quickly, aligning with its broader strategy to use generative AI to expand employee capacity and increase customer value.",
+          "AWS underscores the partnership as an example of how AI can enhance productivity and safety across industries, while United Rentals positions Manual Assist AI as part of its Worksite Performance Solutions innovation strategy. This strategy emphasizes digital tools, advanced equipment technologies, and data analytics aimed at improving project efficiency, safety, and overall worksite performance. The release also provides background on United Rentals' global footprint, fleet size, and market indices membership, along with investor relations contact information."
+        ],
+        "keywords": [
+          "generative ai",
+          "ai-powered diagnostics",
+          "manual assist ai",
+          "equipment manuals",
+          "field service",
+          "technician productivity",
+          "equipment downtime",
+          "fleet utilization",
+          "cloud infrastructure",
+          "amazon bedrock",
+          "amazon opensearch",
+          "digital tools",
+          "worksite performance solutions",
+          "project efficiency",
+          "jobsite productivity",
+          "predictive maintenance",
+          "troubleshooting",
+          "service procedures",
+          "industrial equipment",
+          "rental equipment operations"
+        ],
+        "processed": "2025-12-20T00:03:06",
+        "created": "2025-12-20T00:02:33",
+        "modified": "2025-12-20T23:26:34",
+        "citation_information": {
+          "title": "United Rentals Scales AI-Powered Manual Assist Application on AWS to Speed Equipment Repairs",
+          "url": "https://press.aboutamazon.com/aws/2025/12/united-rentals-scales-ai-applications-with-aws",
+          "metadata": {
+            "type": "company_doc",
+            "url_target": "external",
+            "company_id": 1,
+            "company_doc_id": 5488573
+          }
+        }
+      },
       {
         "doc_id": 5488573,
         "company": {
@@ -751,12 +821,27 @@ This document defines the possible results and fields from various endpoints of 
         "call_date": "2025-04-23T19:00:00",
         "title": "Robotic Delivery Market - Senior Executive, Sales & Operations Planning at Amazon.com Inc",
         "language": "eng",
-        "agenda": [
-          "Over 10 years' experience in sales, operations and supply chain planning...",
-          "Expertise in the evolution of the robotic delivery ecosystem...",
-          "Comprehensive knowledge of the competitive landscape..."
-        ],
-        "insights": null,
+        "agenda": ["...agenda text..."],
+        "insights": ["...insights text..."],
+        "citation_information": {
+          "title": "Robotic Delivery Market - Senior Executive, Sales & Operations Planning at Amazon.com Inc",
+          "url": "https://dashboard.aiera.com/companies/1/calendar?tabs[0]=evt%7C2833969",
+          "metadata": {
+            "type": "event",
+            "url_target": "aiera",
+            "company_id": 1,
+            "event_id": 2833969
+          }
+        }
+      },
+      {
+        "event_id": "46abc016e6da845a6459e80a200341c5",
+        "content_type": "COMMUNITY",
+        "call_date": "2025-04-23T19:00:00",
+        "title": "Robotic Delivery Market - Senior Executive, Sales & Operations Planning at Amazon.com Inc",
+        "language": "eng",
+        "agenda": ["...agenda text..."],
+        "insights": ["...insights text..."],
         "transcripts": [
           {
             "start_ms": 155000,
@@ -775,16 +860,6 @@ This document defines the possible results and fields from various endpoints of 
             }
           }, ...
         ]
-        "citation_information": {
-          "title": "Robotic Delivery Market - Senior Executive, Sales & Operations Planning at Amazon.com Inc",
-          "url": "https://dashboard.aiera.com/companies/1/calendar?tabs[0]=evt%7C2833969",
-          "metadata": {
-            "type": "event",
-            "url_target": "aiera",
-            "company_id": 1,
-            "event_id": 2833969
-          }
-        }
       }, ...
     ]
   }
@@ -848,21 +923,8 @@ This document defines the possible results and fields from various endpoints of 
       "bloomberg_ticker": "MSFT:US",
       "sector_id": 5,
       "sub_sector_id": 84,
-      "description": "Microsoft Corporation develops, licenses, and supports software...",
-      "country": "United States of America",
+      "primary_equity": true,
       "created": "2017-07-06T00:00:00",
-      "modified": "2025-12-19T14:15:59"
-    },
-    {
-      "equity_id": 40,
-      "company_id": 9387,
-      "name": "Apple Inc.",
-      "bloomberg_ticker": "AAPL:US",
-      "sector_id": 5,
-      "sub_sector_id": 73,
-      "description": "Apple Inc. designs, manufactures, and markets smartphones...",
-      "country": "United States of America",
-      "created": "2017-07-01T00:00:00",
       "modified": "2025-12-19T14:15:59"
     }, ...
   ]
@@ -901,21 +963,8 @@ This document defines the possible results and fields from various endpoints of 
       "bloomberg_ticker": "MSFT:US",
       "sector_id": 5,
       "subsector_id": 84,
-      "description": "Microsoft Corporation develops, licenses, and supports software...",
-      "country": "United States of America",
+      "primary_equity": true,
       "created": "2017-07-06T00:00:00",
-      "modified": "2025-12-22T12:01:53"
-    },
-    {
-      "equity_id": 40,
-      "company_id": 9387,
-      "name": "Apple Inc.",
-      "bloomberg_ticker": "AAPL:US",
-      "sector_id": 5,
-      "subsector_id": 73,
-      "description": "Apple Inc. designs, manufactures, and markets smartphones...",
-      "country": "United States of America",
-      "created": "2017-07-01T00:00:00",
       "modified": "2025-12-22T12:01:53"
     }, ...
   ]

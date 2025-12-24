@@ -264,18 +264,21 @@ class TestGetThirdBridgeEvent:
                         "insights": [
                             "Key insights on Apple's supply chain management strategies"
                         ],
-                        "citation_block": {
+                        "citation_information": {
                             "title": "Apple Supply Chain Analysis",
                             "url": "https://thirdbridge.com/event/tb789",
-                            "expert_name": "Jane Smith",
-                            "expert_title": "Former Apple Supply Chain Director",
+                            "metadata": {
+                                "type": "event",
+                                "url_target": "aiera",
+                                "company_id": 1,
+                                "event_id": 2833969,
+                            },
                         },
-                        "transcript": [
+                        "transcripts": [
                             {
-                                "timestamp": "[00:00:01]",
-                                "discussionItem": [
-                                    "Full transcript of the expert discussion..."
-                                ],
+                                "start_ms": 1000,
+                                "duration_ms": 60000,
+                                "transcript": "Full transcript of the expert discussion...",
                             }
                         ],
                     }
@@ -303,7 +306,7 @@ class TestGetThirdBridgeEvent:
         assert result.event.title == "Apple Supply Chain Analysis"
         assert result.event.agenda is not None
         assert result.event.insights is not None
-        assert result.event.transcript is not None
+        assert result.event.transcripts is not None
 
         # Check API call parameters
         call_args = mock_http_dependencies["mock_make_request"].call_args
