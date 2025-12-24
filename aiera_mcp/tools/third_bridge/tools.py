@@ -3,7 +3,6 @@
 """Third Bridge event tools for Aiera MCP."""
 
 import logging
-from datetime import datetime
 
 from .models import (
     FindThirdBridgeEventsArgs,
@@ -89,51 +88,12 @@ async def get_third_bridge_event(
 
     event_data = events_data[0]  # Get the first (and should be only) event
 
-    # Build detailed event using new API field names
-    event_details = ThirdBridgeEventDetails(
-        event_id=event_data.get("event_id", ""),
-        content_type=event_data.get("content_type", ""),
-        call_date=event_data.get("call_date", ""),
-        title=event_data.get("title", ""),
-        language=event_data.get("language", ""),
-        agenda=event_data.get(
-            "agenda"
-        ),  # This should be Optional[str] in ThirdBridgeEventDetails
-        insights=event_data.get(
-            "insights"
-        ),  # This should be Optional[str] in ThirdBridgeEventDetails
-        citation_block=event_data.get("citation_block"),
-        transcript=event_data.get("transcript"),
-    )
-
-    # Build citation using citation_block from new API format
-    citations = []
-    citation_block = event_data.get("citation_block")
-    if citation_block and citation_block.get("url"):
-        # Parse the call_date for timestamp
-        timestamp = None
-        try:
-            if event_data.get("call_date"):
-                timestamp = datetime.fromisoformat(
-                    event_data["call_date"].replace("Z", "+00:00")
-                )
-            else:
-                timestamp = datetime.now()
-        except (ValueError, AttributeError):
-            timestamp = datetime.now()
-
-        citations.append(
-            CitationInfo(
-                title=f"Third Bridge: {citation_block.get('title', event_data.get('title', ''))}",
-                url=citation_block.get("url"),
-                timestamp=timestamp,
-            )
-        )
+    # Build detailed event using model_validate to apply validation_aliases
+    event_details = ThirdBridgeEventDetails.model_validate(event_data)
 
     return GetThirdBridgeEventResponse(
         event=event_details,
         instructions=raw_response.get("instructions", []),
-        citation_information=citations,
     )
 
 

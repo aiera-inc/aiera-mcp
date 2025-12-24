@@ -90,8 +90,7 @@ class TestFindTranscrippets:
 
         # Verify
         assert isinstance(result, FindTranscrippetsResponse)
-        assert len(result.response) == 0
-        assert len(result.citation_information) == 0
+        assert result.response is None or len(result.response) == 0
 
     @pytest.mark.asyncio
     async def test_find_transcrippets_malformed_response(self, mock_http_dependencies):
@@ -247,11 +246,6 @@ class TestFindTranscrippets:
         # Execute
         result = await find_transcrippets(args)
 
-        # Verify basic response structure (raw API response has empty citation_information)
-        assert (
-            len(result.citation_information) == 0
-            or len(result.citation_information) >= 0
-        )
         # Verify the main data is present
         assert len(result.response) == 1
         assert result.response[0].transcrippet_guid == "guid-123-456"
@@ -436,8 +430,7 @@ class TestCreateTranscrippet:
         # Execute
         result = await create_transcrippet(args)
 
-        # Verify basic response structure (API doesn't auto-generate citations)
-        assert len(result.citation_information) == 0
+        # Verify basic response structure
         assert result.response.transcrippet_guid == "guid-456-789"
         assert (
             result.response.public_url

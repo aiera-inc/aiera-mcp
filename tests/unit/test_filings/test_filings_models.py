@@ -32,15 +32,15 @@ class TestFilingsModels:
             "filing_date": datetime(2023, 10, 27),
             "period_end_date": datetime(2023, 9, 30),
             "is_amendment": 0,  # Changed to integer
-            "equity": EquityInfo(company_name="Test Company", ticker="TEST"),
+            "equity": EquityInfo(name="Test Company", bloomberg_ticker="TEST:US"),
             "form_number": "10-K",  # Changed from form_type
         }
 
         filing = FilingItem(**filing_data)
 
         assert filing.filing_id == 12345
-        assert filing.equity.company_name == "Test Company"
-        assert filing.equity.ticker == "TEST"
+        assert filing.equity.name == "Test Company"
+        assert filing.equity.bloomberg_ticker == "TEST:US"
         assert filing.form_number == "10-K"
         assert filing.title == "Annual Report"
         assert filing.filing_date == datetime(2023, 10, 27)
@@ -100,7 +100,7 @@ class TestFilingsModels:
             "title": "Annual Report",
             "filing_date": datetime(2023, 10, 27),
             "is_amendment": 0,
-            "equity": EquityInfo(company_name="Test Company", ticker="TEST"),
+            "equity": EquityInfo(name="Test Company", bloomberg_ticker="TEST:US"),
             "form_number": "10-K",
             "summary": FilingSummary(
                 summary="Test summary",
@@ -115,7 +115,7 @@ class TestFilingsModels:
 
         # Test inherited fields
         assert details.filing_id == 12345
-        assert details.equity.company_name == "Test Company"
+        assert details.equity.name == "Test Company"
         assert details.form_number == "10-K"
 
         # Test new fields
@@ -278,7 +278,7 @@ class TestFilingsResponses:
                 title="Annual Report",
                 filing_date=datetime(2023, 10, 27),
                 is_amendment=0,
-                equity=EquityInfo(company_name="Test Company", ticker="TEST"),
+                equity=EquityInfo(name="Test Company", bloomberg_ticker="TEST:US"),
                 form_number="10-K",
             )
         ]
@@ -289,7 +289,7 @@ class TestFilingsResponses:
 
         assert len(response.response.data) == 1
         assert response.instructions == ["Test instruction"]
-        assert response.response.data[0].equity.company_name == "Test Company"
+        assert response.response.data[0].equity.name == "Test Company"
 
     def test_get_filing_response(self):
         """Test GetFilingResponse model."""
@@ -300,7 +300,7 @@ class TestFilingsResponses:
             title="Annual Report",
             filing_date=datetime(2023, 10, 27),
             is_amendment=0,
-            equity=EquityInfo(company_name="Test Company", ticker="TEST"),
+            equity=EquityInfo(name="Test Company", bloomberg_ticker="TEST:US"),
             form_number="10-K",
             summary=FilingSummary(
                 summary="Test summary",

@@ -51,7 +51,6 @@ from aiera_mcp.tools.transcrippets.tools import (
 from aiera_mcp.tools.search.tools import (
     search_transcripts,
     search_filings,
-    search_filing_chunks,
 )
 
 # Import parameter and response models
@@ -107,10 +106,8 @@ from aiera_mcp.tools.transcrippets.models import (
 from aiera_mcp.tools.search.models import (
     SearchTranscriptsArgs,
     SearchFilingsArgs,
-    SearchFilingChunksArgs,
     SearchTranscriptsResponse,
     SearchFilingsResponse,
-    SearchFilingChunksResponse,
 )
 
 # Configure logging
@@ -470,7 +467,7 @@ async def test_tool_with_comparison(
             result.parsed_response = parsed_response
 
             # Log result count for search tools
-            if tool_name in ["search_transcripts", "search_filing_chunks"]:
+            if tool_name in ["search_transcripts", "search_filings"]:
                 try:
                     if hasattr(parsed_response, "response") and hasattr(
                         parsed_response.response, "result"
@@ -540,9 +537,9 @@ async def test_tool_with_comparison(
                         document_types=["10-K"],
                         max_results=5,
                     )
-                elif args_model == SearchFilingChunksArgs:
+                elif args_model == SearchFilingsArgs:
                     # Use the new argument structure
-                    args_instance = SearchFilingChunksArgs(
+                    args_instance = SearchFilingsArgs(
                         query_text="revenue guidance",
                         company_name="Apple Inc",
                         filing_type="10-K",
@@ -900,92 +897,6 @@ async def run_comprehensive_tests():
             "tool_function": search_filings,
             "args_model": SearchFilingsArgs,
             "response_model": SearchFilingsResponse,
-            "endpoint": "/chat-support/search/filings",
-            "method": "POST",
-            "data": {
-                "query": {
-                    "bool": {
-                        "should": [
-                            {
-                                "match_phrase": {
-                                    "title": {"query": "Apple Inc", "boost": 15.0}
-                                }
-                            },
-                            {
-                                "wildcard": {
-                                    "title": {
-                                        "value": "*Apple Inc*",
-                                        "case_insensitive": True,
-                                        "boost": 8.0,
-                                    }
-                                }
-                            },
-                            {
-                                "wildcard": {
-                                    "title": {
-                                        "value": "*Apple*",
-                                        "case_insensitive": True,
-                                        "boost": 6.0,
-                                    }
-                                }
-                            },
-                            {"term": {"company_name.keyword": "Apple Inc"}},
-                            {"term": {"issuer_name.keyword": "Apple Inc"}},
-                            {"term": {"entity_name.keyword": "Apple Inc"}},
-                            {"term": {"filer_name.keyword": "Apple Inc"}},
-                        ],
-                        "filter": [
-                            {
-                                "range": {
-                                    "date": {"gte": "2024-01-01", "lte": "2024-12-31"}
-                                }
-                            },
-                            {
-                                "bool": {
-                                    "should": [
-                                        {
-                                            "match_phrase": {
-                                                "title": {
-                                                    "query": "10-K",
-                                                    "boost": 10.0,
-                                                }
-                                            }
-                                        },
-                                        {"term": {"document_type.keyword": "10-K"}},
-                                        {"term": {"form_type.keyword": "10-K"}},
-                                        {"term": {"filing_type.keyword": "10-K"}},
-                                    ],
-                                    "minimum_should_match": 1,
-                                }
-                            },
-                        ],
-                        "minimum_should_match": 1,
-                    }
-                },
-                "size": 5,
-                "_source": [
-                    "content_id",
-                    "title",
-                    "company_name",
-                    "issuer_name",
-                    "entity_name",
-                    "document_type",
-                    "form_type",
-                    "filing_type",
-                    "date",
-                    "filing_date",
-                    "filing_id",
-                ],
-                "sort": [{"date": {"order": "desc"}}, {"_score": {"order": "desc"}}],
-                "timeout": "15s",
-                "search_pipeline": "hybrid_search_pipeline",
-            },
-        },
-        {
-            "tool_name": "search_filing_chunks",
-            "tool_function": search_filing_chunks,
-            "args_model": SearchFilingChunksArgs,
-            "response_model": SearchFilingChunksResponse,
             "endpoint": "/chat-support/search/filing-chunks",
             "method": "POST",
             "params": {"search_pipeline": "hybrid_search_pipeline"},

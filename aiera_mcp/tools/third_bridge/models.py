@@ -2,7 +2,7 @@
 
 """Third Bridge domain models for Aiera MCP."""
 
-from pydantic import BaseModel, Field, field_validator, field_serializer
+from pydantic import AliasChoices, BaseModel, Field, field_validator, field_serializer
 from typing import Optional, List, Any, Union
 
 from ..common.models import BaseAieraResponse, PaginatedResponse
@@ -114,14 +114,32 @@ class GetThirdBridgeEventArgs(BaseToolArgs):
     )
 
 
+# Search result item models
+class ThirdBridgeCitationMetadata(BaseModel):
+    """Metadata for third bridge citation."""
+
+    type: str = Field(
+        description="The type of citation ('event', 'filing', 'company_doc', 'conference', or 'company')"
+    )
+    url_target: Optional[str] = Field(
+        None, description="Whether the URL will be to Aiera or an external source"
+    )
+    company_id: Optional[int] = Field(None, description="Company identifier")
+    event_id: Optional[int] = Field(None, description="Event identifier")
+    transcript_item_id: Optional[int] = Field(
+        None, description="Transcript item identifier"
+    )
+
+
 # Citation models
-class ThirdBridgeCitationBlock(BaseModel):
+class ThirdBridgeCitationInfo(BaseModel):
     """Citation information for Third Bridge events."""
 
     title: str = Field(description="Event title")
     url: str = Field(description="URL to the event")
-    expert_name: Optional[str] = Field(None, description="Expert name")
-    expert_title: Optional[str] = Field(None, description="Expert job title")
+    metadata: Optional[ThirdBridgeCitationMetadata] = Field(
+        None, description="Additional metadata about the citation"
+    )
 
 
 # Response models (extracted from responses.py)
@@ -132,15 +150,22 @@ class ThirdBridgeEventItem(BaseModel):
         validation_alias="event_id", description="Event identifier"
     )
     content_type: str = Field(description="Content type (e.g., FORUM, COMMUNITY)")
-    call_date: str = Field(description="Event date and time as string")
+    call_date: Optional[str] = Field(
+        default="", description="Event date and time as string"
+    )
     title: str = Field(description="Event title")
     language: str = Field(description="Event language")
     agenda: List[str] = Field(description="Event agenda items")
     insights: Optional[List[str]] = Field(
         None, description="Key insights from the event (can be null)"
     )
-    citation_block: Optional[ThirdBridgeCitationBlock] = Field(
-        None, description="Citation information"
+    transcripts: Optional[List["ThirdBridgeTranscriptItem"]] = Field(
+        None, description="Event transcripts (when included)"
+    )
+    citation_information: Optional[ThirdBridgeCitationInfo] = Field(
+        None,
+        description="Citation information",
+        validation_alias=AliasChoices("citation_information", "citation_block"),
     )
 
 
@@ -161,12 +186,12 @@ class ThirdBridgeModerator(BaseModel):
 class ThirdBridgeTranscriptItem(BaseModel):
     """Third Bridge transcript item."""
 
-    timestamp: str = Field(description="Timestamp of the transcript segment")
-    discussionItem: List[Any] = Field(
-        default=[], description="Discussion items in this segment"
+    start_ms: Optional[int] = Field(None, description="Start time in milliseconds")
+    duration_ms: Optional[int] = Field(None, description="Duration in milliseconds")
+    transcript: Optional[str] = Field(None, description="Transcript text content")
+    citation_information: Optional[ThirdBridgeCitationInfo] = Field(
+        None, description="Citation information for this transcript item"
     )
-    # Allow additional fields that may be present
-    model_config = {"extra": "allow"}
 
 
 class ThirdBridgeEventDetails(BaseModel):
@@ -177,24 +202,22 @@ class ThirdBridgeEventDetails(BaseModel):
         description="Event identifier",
     )
     content_type: str = Field(description="Content type (e.g., FORUM, COMMUNITY)")
-    call_date: str = Field(description="Event date and time as string")
+    call_date: Optional[str] = Field(
+        default="", description="Event date and time as string"
+    )
     title: str = Field(description="Event title")
     language: str = Field(description="Event language")
     agenda: Optional[List[str]] = Field(None, description="Event agenda items")
     insights: Optional[List[str]] = Field(
         None, description="Key insights from the event"
     )
-    citation_block: Optional[ThirdBridgeCitationBlock] = Field(
-        None, description="Citation information"
+    citation_information: Optional[ThirdBridgeCitationInfo] = Field(
+        None,
+        description="Citation information",
+        validation_alias=AliasChoices("citation_information", "citation_block"),
     )
-    specialists: Optional[List[ThirdBridgeSpecialist]] = Field(
-        None, description="Expert specialists participating in the event"
-    )
-    moderators: Optional[List[ThirdBridgeModerator]] = Field(
-        None, description="Moderators of the event"
-    )
-    transcript: Optional[List[ThirdBridgeTranscriptItem]] = Field(
-        None, description="Full event transcript"
+    transcripts: Optional[List[ThirdBridgeTranscriptItem]] = Field(
+        None, description="Full event transcripts"
     )
 
 

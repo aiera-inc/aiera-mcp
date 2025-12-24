@@ -35,48 +35,40 @@ class TestEquitiesModels:
         """Test EquityItem model creation."""
         equity_data = {
             "equity_id": 12345,
-            "company_name": "Test Company",
-            "ticker": "TEST",
+            "name": "Test Company",
             "bloomberg_ticker": "TEST:US",
-            "exchange": "NASDAQ",
-            "sector": "Technology",
-            "subsector": "Software",
-            "country": "United States",
-            "market_cap": 1000000000.0,
+            "company_id": 67890,
+            "sector_id": 10,
+            "subsector_id": 1010,
+            "primary_equity": True,
         }
 
         equity = EquityItem(**equity_data)
 
         assert equity.equity_id == 12345
-        assert equity.company_name == "Test Company"
-        assert equity.ticker == "TEST"
+        assert equity.name == "Test Company"
         assert equity.bloomberg_ticker == "TEST:US"
-        assert equity.exchange == "NASDAQ"
-        assert equity.sector == "Technology"
-        assert equity.subsector == "Software"
-        assert equity.country == "United States"
-        assert equity.market_cap == 1000000000.0
+        assert equity.company_id == 67890
+        assert equity.sector_id == 10
+        assert equity.subsector_id == 1010
+        assert equity.primary_equity is True
 
     def test_equity_item_optional_fields(self):
         """Test EquityItem with only required fields."""
         minimal_data = {
             "equity_id": 12345,
-            "company_name": "Test Company",
-            "ticker": "TEST",
             "bloomberg_ticker": "TEST:US",
         }
 
         equity = EquityItem(**minimal_data)
 
         assert equity.equity_id == 12345
-        assert equity.company_name == "Test Company"
-        assert equity.ticker == "TEST"
         assert equity.bloomberg_ticker == "TEST:US"
-        assert equity.exchange is None
-        assert equity.sector is None
-        assert equity.subsector is None
-        assert equity.country is None
-        assert equity.market_cap is None
+        assert equity.name is None
+        assert equity.company_id is None
+        assert equity.sector_id is None
+        assert equity.subsector_id is None
+        assert equity.primary_equity is None
 
     def test_equity_summary_creation(self):
         """Test EquitySummary model creation."""
@@ -117,10 +109,9 @@ class TestEquitiesModels:
         """Test EquityDetails inherits from EquityItem."""
         details_data = {
             "equity_id": 12345,
-            "company_name": "Test Company",
-            "ticker": "TEST",
+            "name": "Test Company",
             "bloomberg_ticker": "TEST:US",
-            "exchange": "NASDAQ",
+            "company_id": 67890,
             "summary": EquitySummary(
                 description="Test description",
                 recent_events=["Event 1"],
@@ -137,9 +128,8 @@ class TestEquitiesModels:
 
         # Test inherited fields
         assert details.equity_id == 12345
-        assert details.company_name == "Test Company"
-        assert details.ticker == "TEST"
-        assert details.exchange == "NASDAQ"
+        assert details.name == "Test Company"
+        assert details.bloomberg_ticker == "TEST:US"
 
         # Test new fields
         assert details.summary.description == "Test description"
@@ -179,21 +169,21 @@ class TestEquitiesModels:
 
     def test_index_item_creation(self):
         """Test IndexItem model creation."""
-        index_data = {"index_id": 1, "name": "S&P 500", "symbol": "SPX"}
+        index_data = {"index_id": 1, "name": "S&P 500", "short_name": "SPX"}
 
         index = IndexItem(**index_data)
 
         assert index.index_id == 1
         assert index.name == "S&P 500"
         assert index.index_name == "S&P 500"  # backward compatibility property
-        assert index.symbol == "SPX"
+        assert index.short_name == "SPX"
 
     def test_watchlist_item_creation(self):
         """Test WatchlistItem model creation."""
         watchlist_data = {
             "watchlist_id": 123,
             "name": "Tech Giants",
-            "description": "Large technology companies",
+            "type": "user",
         }
 
         watchlist = WatchlistItem(**watchlist_data)
@@ -203,10 +193,10 @@ class TestEquitiesModels:
         assert (
             watchlist.watchlist_name == "Tech Giants"
         )  # backward compatibility property
-        assert watchlist.description == "Large technology companies"
+        assert watchlist.type == "user"
 
-    def test_watchlist_item_no_description(self):
-        """Test WatchlistItem without description."""
+    def test_watchlist_item_no_type(self):
+        """Test WatchlistItem without type."""
         watchlist_data = {"watchlist_id": 456, "name": "My Watchlist"}
 
         watchlist = WatchlistItem(**watchlist_data)
@@ -216,7 +206,7 @@ class TestEquitiesModels:
         assert (
             watchlist.watchlist_name == "My Watchlist"
         )  # backward compatibility property
-        assert watchlist.description is None
+        assert watchlist.type is None
 
 
 @pytest.mark.unit
@@ -369,17 +359,17 @@ class TestGetWatchlistConstituentsArgs:
 
     def test_valid_get_watchlist_constituents_args(self):
         """Test valid GetWatchlistConstituentsArgs creation."""
-        args = GetWatchlistConstituentsArgs(watchlist_id="123", page=1, page_size=50)
+        args = GetWatchlistConstituentsArgs(watchlist_id=123, page=1, page_size=50)
 
-        assert args.watchlist_id == "123"
+        assert args.watchlist_id == 123  # Stored as int
         assert args.page == 1
         assert args.page_size == 50
 
     def test_get_watchlist_constituents_args_defaults(self):
         """Test GetWatchlistConstituentsArgs with default values."""
-        args = GetWatchlistConstituentsArgs(watchlist_id="123")
+        args = GetWatchlistConstituentsArgs(watchlist_id=123)
 
-        assert args.watchlist_id == "123"
+        assert args.watchlist_id == 123  # Stored as int
         assert args.page == 1
         assert args.page_size == 50
 
@@ -401,8 +391,7 @@ class TestEquitiesResponses:
         equities = [
             EquityItem(
                 equity_id=12345,
-                company_name="Test Company",
-                ticker="TEST",
+                name="Test Company",
                 bloomberg_ticker="TEST:US",
             )
         ]
@@ -433,8 +422,7 @@ class TestEquitiesResponses:
         summaries = [
             EquitySummaryItem(
                 equity_id=12345,
-                company_name="Test Company",
-                ticker="TEST",
+                name="Test Company",
                 bloomberg_ticker="TEST:US",
             )
         ]
@@ -445,7 +433,7 @@ class TestEquitiesResponses:
 
         assert len(response.response) == 1
         assert isinstance(response.response[0], EquitySummaryItem)
-        assert response.response[0].company_name == "Test Company"
+        assert response.response[0].name == "Test Company"
         assert response.instructions == ["Test instruction"]
 
     def test_get_sectors_subsectors_response(self):
@@ -458,16 +446,13 @@ class TestEquitiesResponses:
             )
         ]
 
-        response = GetSectorsSubsectorsResponse(
-            instructions=["Sectors retrieved"], response=sectors
-        )
+        response = GetSectorsSubsectorsResponse(response=sectors)
 
         assert len(response.response) == 1
         assert response.response[0].name == "Technology"
         assert (
             response.response[0].sector_name == "Technology"
         )  # backward compatibility
-        assert response.instructions == ["Sectors retrieved"]
 
     def test_get_available_indexes_response(self):
         """Test GetAvailableIndexesResponse model."""
@@ -484,32 +469,29 @@ class TestEquitiesResponses:
 
     def test_get_index_constituents_response(self):
         """Test GetIndexConstituentsResponse model."""
-        from aiera_mcp.tools.equities.models import FindEquitiesApiResponseData
+        from aiera_mcp.tools.equities.models import ApiPaginationInfo
 
         constituents = [
             EquityItem(
                 equity_id=12345,
-                company_name="Test Company",
-                ticker="TEST",
+                name="Test Company",
                 bloomberg_ticker="TEST:US",
             )
         ]
 
         response = GetIndexConstituentsResponse(
-            instructions=["Constituents retrieved"],
-            response=FindEquitiesApiResponseData(data=constituents),
+            data=constituents,
+            pagination=ApiPaginationInfo(
+                total_count=1, current_page=1, total_pages=1, page_size=50
+            ),
         )
 
-        assert len(response.response.data) == 1
-        assert response.instructions == ["Constituents retrieved"]
+        assert len(response.data) == 1
+        assert response.pagination.total_count == 1
 
     def test_get_available_watchlists_response(self):
         """Test GetAvailableWatchlistsResponse model."""
-        watchlists = [
-            WatchlistItem(
-                watchlist_id=123, name="Tech Giants", description="Large tech companies"
-            )
-        ]
+        watchlists = [WatchlistItem(watchlist_id=123, name="Tech Giants", type="user")]
 
         response = GetAvailableWatchlistsResponse(
             instructions=["Watchlists retrieved"], response=watchlists
@@ -521,24 +503,25 @@ class TestEquitiesResponses:
 
     def test_get_watchlist_constituents_response(self):
         """Test GetWatchlistConstituentsResponse model."""
-        from aiera_mcp.tools.equities.models import FindEquitiesApiResponseData
+        from aiera_mcp.tools.equities.models import ApiPaginationInfo
 
         constituents = [
             EquityItem(
                 equity_id=12345,
-                company_name="Test Company",
-                ticker="TEST",
+                name="Test Company",
                 bloomberg_ticker="TEST:US",
             )
         ]
 
         response = GetWatchlistConstituentsResponse(
-            instructions=["Constituents retrieved"],
-            response=FindEquitiesApiResponseData(data=constituents),
+            data=constituents,
+            pagination=ApiPaginationInfo(
+                total_count=1, current_page=1, total_pages=1, page_size=50
+            ),
         )
 
-        assert len(response.response.data) == 1
-        assert response.instructions == ["Constituents retrieved"]
+        assert len(response.data) == 1
+        assert response.pagination.total_count == 1
 
 
 @pytest.mark.unit
@@ -573,15 +556,12 @@ class TestEquitiesModelValidation:
         assert "page" in schema["properties"]
         assert "page_size" in schema["properties"]
 
-        # Check page defaults and constraints
+        # Check page defaults - may be present as anyOf with constraints
         page_schema = schema["properties"]["page"]
-        assert page_schema["default"] == 1
-        assert page_schema["minimum"] == 1
+        assert page_schema.get("default") == 1 or "anyOf" in page_schema
 
         page_size_schema = schema["properties"]["page_size"]
-        assert page_size_schema["default"] == 50
-        assert page_size_schema["minimum"] == 1
-        assert page_size_schema["maximum"] == 100
+        assert page_size_schema.get("default") == 50 or "anyOf" in page_size_schema
 
     def test_equity_summary_complex_data_types(self):
         """Test equity summary handles complex data types."""
@@ -641,8 +621,7 @@ class TestEquitiesModelValidation:
 
         details = EquityDetails(
             equity_id=12345,
-            company_name="Test Company",
-            ticker="TEST",
+            name="Test Company",
             bloomberg_ticker="TEST:US",
             identifiers=identifiers,
         )

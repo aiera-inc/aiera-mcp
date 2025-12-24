@@ -2,7 +2,6 @@
 
 """Common base models for Aiera MCP tools."""
 
-from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel, Field, field_serializer
 
@@ -13,24 +12,37 @@ class BaseAieraArgs(BaseModel):
     pass
 
 
+class CitationMetadata(BaseModel):
+    """Metadata for citation information."""
+
+    type: str = Field(
+        description="The type of citation ('event', 'filing', 'company_doc', 'conference', or 'company')"
+    )
+    url_target: Optional[str] = Field(
+        None, description="Whether the URL will be to Aiera or an external source"
+    )
+
+    company_id: Optional[int] = Field(None, description="Company identifier")
+    event_id: Optional[int] = Field(None, description="Event identifier")
+    transcript_item_id: Optional[int] = Field(
+        None, description="Transcript item identifier"
+    )
+    filing_id: Optional[int] = Field(None, description="Filing identifier")
+    content_id: Optional[int] = Field(None, description="Content identifier")
+    company_doc_id: Optional[int] = Field(
+        None, description="Company document identifier"
+    )
+    conference_id: Optional[int] = Field(None, description="Conference identifier")
+
+
 class CitationInfo(BaseModel):
     """Information for citing data sources."""
 
-    title: str = Field(..., description="Title or description of the source")
-    url: Optional[str] = Field(None, description="URL to the source (if available)")
-    timestamp: Optional[datetime] = Field(
-        None, description="When the data was created/published"
+    title: Optional[str] = Field(None, description="Title or description of the source")
+    url: Optional[str] = Field(None, description="URL to the source")
+    metadata: Optional[CitationMetadata] = Field(
+        None, description="Additional metadata about the citation"
     )
-    source: Optional[str] = Field(
-        None, description="Source name (e.g., 'Aiera', 'SEC')"
-    )
-
-    @field_serializer("timestamp")
-    def serialize_timestamp(self, value: Optional[datetime]) -> Optional[str]:
-        """Serialize datetime to ISO format string for JSON compatibility."""
-        if value is None:
-            return None
-        return value.isoformat()
 
 
 class BaseAieraResponse(BaseModel):
@@ -38,9 +50,6 @@ class BaseAieraResponse(BaseModel):
 
     instructions: List[str] = Field(
         default=[], description="Instructions or additional information from the API"
-    )
-    citation_information: List[CitationInfo] = Field(
-        default=[], description="Source citations for the returned data"
     )
     error: Optional[str] = Field(None, description="Error message if request failed")
 

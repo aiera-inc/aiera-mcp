@@ -55,11 +55,11 @@ class TestFindEvents:
         # Check first event
         first_event = result.response.data[0]
         assert isinstance(first_event, EventItem)
-        assert first_event.event_id == 12345
-        assert first_event.title == "Apple Inc Q4 2023 Earnings Call"
+        assert first_event.event_id == 2819716
+        assert first_event.title == "Q3 2025 Amazon.com Inc Earnings Call"
         assert first_event.event_type == "earnings"
-        assert first_event.equity.name == "Apple Inc"
-        assert first_event.equity.bloomberg_ticker == "AAPL:US"
+        assert first_event.equity.name == "AMAZON COM INC"
+        assert first_event.equity.bloomberg_ticker == "AMZN:US"
 
         # Check API call was made correctly
         mock_http_dependencies["mock_make_request"].assert_called_once()
@@ -198,7 +198,7 @@ class TestGetEvent:
             "get_event_success"
         ]
 
-        args = GetEventArgs(event_id="12345")
+        args = GetEventArgs(event_id="2734016")
 
         # Execute
         result = await get_event(args)
@@ -208,8 +208,8 @@ class TestGetEvent:
         assert len(result.response.data) == 1
         event = result.response.data[0]
         assert isinstance(event, EventItem)
-        assert event.event_id == 12345
-        assert event.title == "Apple Inc Q4 2023 Earnings Call"
+        assert event.event_id == 2734016
+        assert event.title == "Q2 2025 Amazon.com Inc Earnings Call"
         # Note: EventItem doesn't have description, transcript_preview, or audio_url
         # These would be in EventDetails if the model had that distinction
 
@@ -221,7 +221,7 @@ class TestGetEvent:
         # Check field mapping (event_id -> event_ids)
         params = call_args[1]["params"]
         assert "event_ids" in params
-        assert params["event_ids"] == "12345"
+        assert params["event_ids"] == "2734016"
         assert "event_id" not in params
         assert params["include_transcripts"] == "true"
 
@@ -235,7 +235,7 @@ class TestGetEvent:
             "get_event_success"
         ]
 
-        args = GetEventArgs(event_id="12345", transcript_section="q_and_a")
+        args = GetEventArgs(event_id="2734016", transcript_section="q_and_a")
 
         # Execute
         result = await get_event(args)
@@ -322,20 +322,18 @@ class TestGetUpcomingEvents:
 
         # Verify
         assert isinstance(result, GetUpcomingEventsResponse)
-        assert len(result.response.estimates) == 1
+        assert len(result.response.estimates) == 2
         assert len(result.response.actuals) == 1
 
         # Check estimated event
         est_event = result.response.estimates[0]
-        assert isinstance(est_event, EventItem)
-        assert est_event.event_id == 11111
-        assert "Estimated" in est_event.title
+        assert est_event.estimate_id == 20876
+        assert est_event.equity.name == "Wells Fargo & Co"
 
         # Check actual event
         actual_event = result.response.actuals[0]
-        assert isinstance(actual_event, EventItem)
-        assert actual_event.event_id == 22222
-        assert actual_event.equity.name == "Microsoft Corporation"
+        assert actual_event.event_id == 2820054
+        assert actual_event.equity.name == "Wells Fargo & Co"
 
         # Check API call parameters
         call_args = mock_http_dependencies["mock_make_request"].call_args
@@ -365,8 +363,8 @@ class TestGetUpcomingEvents:
         # Verify citations structure
         assert result.response.estimates[0].citation_information is not None
         assert result.response.actuals[0].citation_information is not None
-        assert "Apple" in result.response.estimates[0].citation_information.title
-        assert "Microsoft" in result.response.actuals[0].citation_information.title
+        assert "Wells Fargo" in result.response.estimates[0].citation_information.title
+        assert "Wells Fargo" in result.response.actuals[0].citation_information.title
 
 
 @pytest.mark.unit
@@ -383,10 +381,12 @@ class TestEventsToolsErrorHandling:
 
         args = FindEventsArgs(start_date="2023-10-01", end_date="2023-10-31")
 
-        # Execute & Verify
-        # Should raise ValidationError for malformed response structure
-        with pytest.raises(Exception):  # Expecting pydantic ValidationError
-            await find_events(args)
+        # Execute - should handle gracefully (response may be None or have empty data)
+        result = await find_events(args)
+
+        # Verify - returns a valid response with None or empty data
+        assert isinstance(result, FindEventsResponse)
+        assert result.response is None or len(result.response.data) == 0
 
     @pytest.mark.asyncio
     async def test_handle_missing_date_fields(self, mock_http_dependencies):

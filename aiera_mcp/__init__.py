@@ -77,7 +77,7 @@ def clear_api_key_provider() -> None:
     _api_key_provider = None
 
 
-# List of all available tool names for reference with include/exclude
+# List of all available tool names for reference
 AVAILABLE_TOOLS = [
     # Event Tools
     "find_events",
@@ -104,6 +104,13 @@ AVAILABLE_TOOLS = [
     # Third Bridge Tools
     "find_third_bridge_events",
     "get_third_bridge_event",
+    # Transcrippet Tools
+    "find_transcrippets",
+    "create_transcrippet",
+    "delete_transcrippet",
+    # Search Tools
+    "search_transcripts",
+    "search_filings",
 ]
 
 # Convenience tool groups for common use cases
@@ -126,6 +133,18 @@ THIRD_BRIDGE_TOOLS = ["find_third_bridge_events", "get_third_bridge_event"]
 EMBEDDING_SEARCH_PIPELINE = "embedding_pipeline"
 HYBRID_SEARCH_PIPELINE = "hybrid_search_pipeline"
 
+# Import tool functions from domain modules
+from .tools.events import find_events, find_conferences, get_event, get_upcoming_events
+from .tools.filings import find_filings, get_filing
+from .tools.equities import (
+    find_equities,
+    get_equity_summaries,
+    get_sectors_and_subsectors,
+    get_available_indexes,
+    get_index_constituents,
+    get_available_watchlists,
+    get_watchlist_constituents,
+)
 from .tools.company_docs import (
     find_company_docs,
     get_company_doc,
@@ -138,6 +157,7 @@ from .tools.transcrippets import (
     create_transcrippet,
     delete_transcrippet,
 )
+from .tools.search import search_transcripts, search_filings
 
 # Import configuration
 from .config import get_settings, reload_settings, AieraSettings
@@ -153,7 +173,7 @@ from .context import (
 )
 
 # Import utilities
-from .tools.base import make_aiera_request, AIERA_BASE_URL, CITATION_PROMPT
+from .tools.base import make_aiera_request, AIERA_BASE_URL
 from .tools.utils import (
     correct_bloomberg_ticker,
     correct_keywords,
@@ -192,6 +212,8 @@ __all__ = [
     "find_transcrippets",
     "create_transcrippet",
     "delete_transcrippet",
+    "search_transcripts",
+    "search_filings",
     # Utilities
     "make_aiera_request",
     "correct_bloomberg_ticker",
@@ -221,7 +243,6 @@ __all__ = [
     "DEFAULT_PAGE_SIZE",
     "DEFAULT_MAX_PAGE_SIZE",
     "AIERA_BASE_URL",
-    "CITATION_PROMPT",
     "AVAILABLE_TOOLS",
     # Tool Groups
     "EVENT_TOOLS",

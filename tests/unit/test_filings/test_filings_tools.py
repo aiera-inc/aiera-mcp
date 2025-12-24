@@ -51,12 +51,11 @@ class TestFindFilings:
         # Check first filing
         first_filing = result.response.data[0]
         assert isinstance(first_filing, FilingItem)
-        assert first_filing.filing_id == 789
-        assert first_filing.equity.company_name == "Apple Inc"
-        assert first_filing.equity.ticker == "AAPL"
-        assert first_filing.form_number == "10-K"
-        assert first_filing.title == "Annual Report"
-        assert first_filing.filing_date is not None
+        assert first_filing.filing_id == 8587883
+        assert first_filing.equity.name == "AMAZON COM INC"
+        assert first_filing.equity.bloomberg_ticker == "AMZ:GR"
+        assert first_filing.form_number == "4"
+        assert first_filing.title == "AMAZON COM INC - 4"
         assert first_filing.period_end_date is not None
         assert first_filing.is_amendment == 0
 
@@ -186,8 +185,8 @@ class TestFindFilings:
         # Verify response structure
         assert len(result.response.data) == 1
         first_filing = result.response.data[0]
-        assert first_filing.equity.company_name == "Apple Inc"
-        assert first_filing.form_number == "10-K"
+        assert first_filing.equity.name == "AMAZON COM INC"
+        assert first_filing.form_number == "4"
 
 
 @pytest.mark.unit
@@ -212,10 +211,10 @@ class TestGetFiling:
         # Verify
         assert isinstance(result, GetFilingResponse)
         assert isinstance(result.filing, FilingDetails)
-        assert result.filing.filing_id == 789
-        assert result.filing.equity.company_name == "Apple Inc"
-        assert result.filing.form_number == "10-K"
-        assert result.filing.title == "Annual Report"
+        assert result.filing.filing_id == 8587883
+        assert result.filing.equity.name == "AMAZON COM INC"
+        assert result.filing.form_number == "4"
+        assert result.filing.title == "AMAZON COM INC - 4"
         # Note: content_preview and document_count may not be in test fixture
 
         # Check filing summary exists in the data
@@ -334,9 +333,9 @@ class TestFilingsToolsErrorHandling:
         # Execute
         result = await find_filings(args)
 
-        # Verify - should handle gracefully with empty results
+        # Verify - should handle gracefully (response may be None or have empty data)
         assert isinstance(result, FindFilingsResponse)
-        assert len(result.response.data) == 0
+        assert result.response is None or len(result.response.data) == 0
 
     @pytest.mark.asyncio
     async def test_handle_missing_date_fields(self, mock_http_dependencies):

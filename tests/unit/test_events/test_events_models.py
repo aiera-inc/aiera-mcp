@@ -17,7 +17,7 @@ from aiera_mcp.tools.events.models import (
     EventItem,
     EventDetails,
     EventType,
-    ApiResponseData,
+    EventApiResponseData,
 )
 from aiera_mcp.tools.common.models import CitationInfo
 
@@ -294,7 +294,7 @@ class TestEventsResponses:
         )
 
         response = GetEventResponse(
-            response=ApiResponseData(data=[event_item]),
+            response=EventApiResponseData(data=[event_item]),
             instructions=["Test instruction"],
         )
 
@@ -304,22 +304,28 @@ class TestEventsResponses:
 
     def test_get_upcoming_events_response(self):
         """Test GetUpcomingEventsResponse model."""
-        events = [
-            EventItem(
-                event_id=12345,
-                title="Upcoming Event",
-                event_type=EventType.EARNINGS,
-                event_date=datetime(2023, 11, 15, 21, 0, 0),
+        from aiera_mcp.tools.events.models import EstimatedEventItem, EstimateInfo
+
+        estimates = [
+            EstimatedEventItem(
+                estimate_id=12345,
+                estimate=EstimateInfo(
+                    call_type="earnings",
+                    call_date="2023-11-15",
+                    title="Upcoming Earnings Event",
+                ),
             )
         ]
 
         response = GetUpcomingEventsResponse(
             instructions=["Upcoming events found"],
-            response={"estimates": events, "actuals": []},
+            response={"estimates": estimates, "actuals": []},
         )
 
         assert len(response.response.estimates) == 1
-        assert response.response.estimates[0].title == "Upcoming Event"
+        assert (
+            response.response.estimates[0].estimate.title == "Upcoming Earnings Event"
+        )
         assert response.instructions == ["Upcoming events found"]
 
 
@@ -435,38 +441,42 @@ class TestEventItemDateTimeSerialization:
         assert isinstance(serialized["event_date"], str)
         assert serialized["event_date"] == test_datetime.isoformat()
 
-    def test_citation_info_datetime_serialization(self):
-        """Test that CitationInfo datetime fields are serialized correctly."""
-        test_datetime = datetime(2024, 1, 15, 14, 30, 0)
+    def test_citation_info_metadata_serialization(self):
+        """Test that CitationInfo metadata fields are serialized correctly."""
+        from aiera_mcp.tools.common.models import CitationMetadata
+
+        metadata = CitationMetadata(
+            type="event",
+            event_id=12345,
+            company_id=678,
+        )
 
         citation = CitationInfo(
             title="Test Citation",
             url="https://example.com",
-            timestamp=test_datetime,
-            source="Test Source",
+            metadata=metadata,
         )
 
         # Test model_dump serialization
         serialized = citation.model_dump()
 
-        # timestamp should be serialized as string
-        assert isinstance(serialized["timestamp"], str)
-        assert serialized["timestamp"] == test_datetime.isoformat()
+        # metadata should be serialized correctly
+        assert serialized["metadata"]["type"] == "event"
+        assert serialized["metadata"]["event_id"] == 12345
 
-    def test_citation_info_optional_timestamp_serialization(self):
-        """Test CitationInfo with None timestamp."""
+    def test_citation_info_optional_metadata_serialization(self):
+        """Test CitationInfo with None metadata."""
         citation = CitationInfo(
             title="Test Citation",
             url="https://example.com",
-            timestamp=None,
-            source="Test Source",
+            metadata=None,
         )
 
         # Test model_dump serialization
         serialized = citation.model_dump()
 
-        # timestamp should remain None when not provided
-        assert serialized["timestamp"] is None
+        # metadata should remain None when not provided
+        assert serialized["metadata"] is None
 
     def test_events_response_json_serialization(self):
         """Test that complete response models can be serialized to JSON."""

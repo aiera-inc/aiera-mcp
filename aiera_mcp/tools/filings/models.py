@@ -122,8 +122,36 @@ class GetFilingArgs(BaseToolArgs):
 class EquityInfo(BaseModel):
     """Company equity information embedded in filings."""
 
-    company_name: Optional[str] = Field(None, description="Name of the company")
-    ticker: Optional[str] = Field(None, description="Company ticker symbol")
+    equity_id: Optional[int] = Field(None, description="Equity identifier")
+    company_id: Optional[int] = Field(None, description="Company identifier")
+    name: Optional[str] = Field(None, description="Name of the company")
+    bloomberg_ticker: Optional[str] = Field(None, description="Bloomberg ticker")
+    sector_id: Optional[int] = Field(None, description="Sector identifier")
+    subsector_id: Optional[int] = Field(None, description="Subsector identifier")
+
+
+class FilingCitationMetadata(BaseModel):
+    """Metadata for filing citation."""
+
+    type: str = Field(
+        description="The type of citation ('event', 'filing', 'company_doc', 'conference', or 'company')"
+    )
+    url_target: Optional[str] = Field(
+        None, description="Whether the URL will be to Aiera or an external source"
+    )
+    company_id: Optional[int] = Field(None, description="Company identifier")
+    content_id: Optional[int] = Field(None, description="Content identifier")
+    filing_id: Optional[int] = Field(None, description="Filing identifier")
+
+
+class FilingCitationInfo(BaseModel):
+    """Citation information for filings."""
+
+    title: Optional[str] = Field(None, description="Citation title")
+    url: Optional[str] = Field(None, description="Citation URL")
+    metadata: Optional[FilingCitationMetadata] = Field(
+        None, description="Additional metadata about the citation"
+    )
 
 
 class FilingItem(BaseModel):
@@ -147,7 +175,8 @@ class FilingItem(BaseModel):
     json_synced: Optional[bool] = Field(None, description="JSON sync status")
     datafiles_synced: Optional[bool] = Field(None, description="Data files sync status")
     summary: Optional[List[str]] = Field(None, description="Filing summary as list")
-    citation_information: Optional[Dict[str, str]] = Field(
+    content_raw: Optional[str] = Field(None, description="Raw filing content")
+    citation_information: Optional[FilingCitationInfo] = Field(
         None, description="Citation information"
     )
 

@@ -63,7 +63,7 @@ class TestCompanyDocsModels:
         doc = CompanyDocItem(**minimal_data)
 
         assert doc.doc_id == 12345
-        assert doc.keywords == []  # Default value
+        assert doc.keywords is None  # Optional field, default None
         assert doc.processed is None
         assert doc.created is None
         assert doc.modified is None
@@ -343,49 +343,47 @@ class TestCompanyDocsResponses:
     def test_get_company_doc_categories_response(self):
         """Test GetCompanyDocCategoriesResponse model."""
         # Use proper structure for GetCompanyDocCategoriesResponse
+        # Note: pagination and data are at the top level, not nested under response
         response_data = {
-            "response": {
-                "pagination": {
-                    "total_count": 2,
-                    "current_page": 1,
-                    "total_pages": 1,
-                    "page_size": 50,
-                },
-                "data": {"sustainability": 25, "governance": 18},
+            "pagination": {
+                "total_count": 2,
+                "current_page": 1,
+                "total_pages": 1,
+                "page_size": 50,
             },
+            "data": {"sustainability": 25, "governance": 18},
             "instructions": ["Categories retrieved"],
         }
 
         response = GetCompanyDocCategoriesResponse.model_validate(response_data)
 
-        assert isinstance(response.response.data, dict)
-        assert response.response.data["sustainability"] == 25
-        assert response.response.data["governance"] == 18
-        assert response.response.pagination.total_count == 2
+        assert isinstance(response.data, dict)
+        assert response.data["sustainability"] == 25
+        assert response.data["governance"] == 18
+        assert response.pagination.total_count == 2
         assert response.instructions == ["Categories retrieved"]
 
     def test_get_company_doc_keywords_response(self):
         """Test GetCompanyDocKeywordsResponse model."""
         # Use proper structure for GetCompanyDocKeywordsResponse
+        # Note: pagination and data are at the top level, not nested under response
         response_data = {
-            "response": {
-                "pagination": {
-                    "total_count": 2,
-                    "current_page": 1,
-                    "total_pages": 1,
-                    "page_size": 50,
-                },
-                "data": {"ESG": 15, "climate": 23},
+            "pagination": {
+                "total_count": 2,
+                "current_page": 1,
+                "total_pages": 1,
+                "page_size": 50,
             },
+            "data": {"ESG": 15, "climate": 23},
             "instructions": ["Keywords retrieved"],
         }
 
         response = GetCompanyDocKeywordsResponse.model_validate(response_data)
 
-        assert isinstance(response.response.data, dict)
-        assert response.response.data["ESG"] == 15
-        assert response.response.data["climate"] == 23
-        assert response.response.pagination.total_count == 2
+        assert isinstance(response.data, dict)
+        assert response.data["ESG"] == 15
+        assert response.data["climate"] == 23
+        assert response.pagination.total_count == 2
         assert response.instructions == ["Keywords retrieved"]
 
 

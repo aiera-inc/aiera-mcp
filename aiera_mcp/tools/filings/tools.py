@@ -43,6 +43,12 @@ async def find_filings(args: FindFilingsArgs) -> FindFilingsResponse:
 
     # Return the structured response that matches the actual API format
     # Parse individual filings to match new model structure
+    logger.debug(f"Raw API response keys: {raw_response.keys()}")
+    if "response" in raw_response:
+        logger.debug(
+            f"response keys: {raw_response['response'].keys() if isinstance(raw_response['response'], dict) else type(raw_response['response'])}"
+        )
+
     if "response" in raw_response and "data" in raw_response["response"]:
         filings_data = []
         for filing_data in raw_response["response"]["data"]:
@@ -97,13 +103,36 @@ async def find_filings(args: FindFilingsArgs) -> FindFilingsResponse:
             equity_info = None
             if "equity" in filing_data:
                 equity_data = filing_data["equity"]
+                logger.debug(f"Raw equity data from API: {equity_data}")
+                logger.debug(f"Equity data type: {type(equity_data)}")
                 if isinstance(equity_data, dict):
+                    logger.debug(f"Equity data keys: {equity_data.keys()}")
+                    # Handle both API field name conventions
                     equity_info = {
-                        "company_name": equity_data.get("name")
-                        or equity_data.get("company_name"),
-                        "ticker": equity_data.get("bloomberg_ticker")
-                        or equity_data.get("ticker"),
+                        "equity_id": equity_data.get("equity_id")
+                        or equity_data.get("id"),
+                        "company_id": equity_data.get("company_id")
+                        or equity_data.get("companyId"),
+                        "name": equity_data.get("name")
+                        or equity_data.get("company_name")
+                        or equity_data.get("companyName"),
+                        "bloomberg_ticker": equity_data.get("bloomberg_ticker")
+                        or equity_data.get("ticker")
+                        or equity_data.get("bloombergTicker"),
+                        "sector_id": equity_data.get("sector_id")
+                        or equity_data.get("sectorId"),
+                        "subsector_id": equity_data.get("subsector_id")
+                        or equity_data.get("subsectorId"),
                     }
+                    logger.debug(f"Parsed equity info: {equity_info}")
+                else:
+                    logger.warning(
+                        f"Equity data is not a dict, it's: {type(equity_data)}"
+                    )
+            else:
+                logger.debug(
+                    f"No 'equity' key in filing_data. Keys present: {filing_data.keys()}"
+                )
 
             # Create new filing structure matching the actual response
             parsed_filing = {
@@ -123,10 +152,16 @@ async def find_filings(args: FindFilingsArgs) -> FindFilingsResponse:
                 "json_synced": filing_data.get("json_synced"),
                 "datafiles_synced": filing_data.get("datafiles_synced"),
                 "summary": filing_data.get("summary"),
+                "citation_information": filing_data.get("citation_information"),
             }
             filings_data.append(parsed_filing)
 
         raw_response["response"]["data"] = filings_data
+        logger.debug(f"Transformation complete. Processed {len(filings_data)} filings.")
+    else:
+        logger.warning(
+            f"Transformation skipped! API response structure unexpected. Keys: {raw_response.keys()}"
+        )
 
     # Handle malformed responses gracefully
     try:
@@ -206,8 +241,12 @@ async def get_filing(args: GetFilingArgs) -> GetFilingResponse:
         or filing_data.get("key_points")
         or filing_data.get("financial_highlights")
     ):
+        # Handle summary being either a string or a list
+        summary_text = filing_data.get("summary")
+        if isinstance(summary_text, list):
+            summary_text = " ".join(summary_text) if summary_text else None
         summary = FilingSummary(
-            summary=filing_data.get("summary"),
+            summary=summary_text,
             key_points=filing_data.get("key_points", []),
             financial_highlights=filing_data.get("financial_highlights", {}),
         )
@@ -215,6 +254,7 @@ async def get_filing(args: GetFilingArgs) -> GetFilingResponse:
     # Build detailed filing
     # Handle API field mapping - get_filing returns different structure than find_filings
     equity_data = filing_data.get("equity", {})
+    logger.debug(f"get_filing raw equity data: {equity_data}")
     filing_details = FilingDetails(
         filing_id=filing_data.get("filing_id", 0),
         title=filing_data.get("title", ""),
@@ -223,8 +263,18 @@ async def get_filing(args: GetFilingArgs) -> GetFilingResponse:
         is_amendment=filing_data.get("is_amendment", 0),
         equity=(
             EquityInfo(
-                company_name=equity_data.get("company_name", ""),
-                ticker=equity_data.get("ticker", ""),
+                equity_id=equity_data.get("equity_id") or equity_data.get("id"),
+                company_id=equity_data.get("company_id")
+                or equity_data.get("companyId"),
+                name=equity_data.get("name")
+                or equity_data.get("company_name")
+                or equity_data.get("companyName"),
+                bloomberg_ticker=equity_data.get("bloomberg_ticker")
+                or equity_data.get("ticker")
+                or equity_data.get("bloombergTicker"),
+                sector_id=equity_data.get("sector_id") or equity_data.get("sectorId"),
+                subsector_id=equity_data.get("subsector_id")
+                or equity_data.get("subsectorId"),
             )
             if equity_data
             else None
@@ -236,26 +286,7 @@ async def get_filing(args: GetFilingArgs) -> GetFilingResponse:
         document_count=filing_data.get("document_count", 1),
     )
 
-    # Build citation
-    citations = []
-    if filing_data.get("official_url"):
-        citations.append(
-            CitationInfo(
-                title=f"{filing_data.get('company_name', '')} {filing_data.get('form_type', '')} Filing",
-                url=filing_data.get("official_url"),
-                timestamp=(
-                    datetime.combine(filing_date, datetime.min.time())
-                    if filing_date
-                    else None
-                ),
-            )
-        )
-
     return GetFilingResponse(
         filing=filing_details,
         instructions=raw_response.get("instructions", []),
-        citation_information=citations,
     )
-
-
-# Legacy registration functions removed - all tools now registered via registry

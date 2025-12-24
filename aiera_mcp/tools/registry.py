@@ -23,10 +23,15 @@ from .company_docs import (
 )
 from .third_bridge import find_third_bridge_events, get_third_bridge_event
 from .transcrippets import find_transcrippets, create_transcrippet, delete_transcrippet
-from .search import search_transcripts, search_filings, search_filing_chunks
+from .search import search_transcripts, search_filings
 
 # Import all parameter model classes from domain modules
-from .events import FindEventsArgs, FindConferencesArgs, GetEventArgs, GetUpcomingEventsArgs
+from .events import (
+    FindEventsArgs,
+    FindConferencesArgs,
+    GetEventArgs,
+    GetUpcomingEventsArgs,
+)
 from .filings import FindFilingsArgs, GetFilingArgs
 from .equities import (
     FindEquitiesArgs,
@@ -49,11 +54,11 @@ from .transcrippets import (
     CreateTranscrippetArgs,
     DeleteTranscrippetArgs,
 )
-from .search import SearchTranscriptsArgs, SearchFilingsArgs, SearchFilingChunksArgs
+from .search import SearchTranscriptsArgs, SearchFilingsArgs
 
 TOOL_REGISTRY = {
     "find_events": {
-        "display_name": "Event Finder",
+        "display_name": "Find Events",
         "input_schema": FindEventsArgs.model_json_schema(),
         "function": find_events,
         "args_model": FindEventsArgs,
@@ -62,7 +67,7 @@ TOOL_REGISTRY = {
         "destructive": False,
     },
     "find_conferences": {
-        "display_name": "Conference Finder",
+        "display_name": "Find Conferences",
         "input_schema": FindConferencesArgs.model_json_schema(),
         "function": find_conferences,
         "args_model": FindConferencesArgs,
@@ -71,7 +76,7 @@ TOOL_REGISTRY = {
         "destructive": False,
     },
     "get_event": {
-        "display_name": "Event Retriever",
+        "display_name": "Get Event",
         "input_schema": GetEventArgs.model_json_schema(),
         "function": get_event,
         "args_model": GetEventArgs,
@@ -80,7 +85,7 @@ TOOL_REGISTRY = {
         "destructive": False,
     },
     "get_upcoming_events": {
-        "display_name": "Upcoming Events Finder",
+        "display_name": "Get Upcoming Events",
         "input_schema": GetUpcomingEventsArgs.model_json_schema(),
         "function": get_upcoming_events,
         "args_model": GetUpcomingEventsArgs,
@@ -89,7 +94,7 @@ TOOL_REGISTRY = {
         "destructive": False,
     },
     "find_filings": {
-        "display_name": "Filing Finder",
+        "display_name": "Find Filings",
         "input_schema": FindFilingsArgs.model_json_schema(),
         "function": find_filings,
         "args_model": FindFilingsArgs,
@@ -97,17 +102,17 @@ TOOL_REGISTRY = {
         "read_only": True,
         "destructive": False,
     },
-    # 'get_filing': {
-    #     'display_name': 'Filing Retriever',
-    #     'input_schema': GetFilingArgs.model_json_schema(),
-    #     'function': get_filing,
-    #     'args_model': GetFilingArgs,
-    #     'category': 'filings',
-    #     'read_only': True,
-    #     'destructive': False,
-    # },
+    "get_filing": {
+        "display_name": "Get Filing",
+        "input_schema": GetFilingArgs.model_json_schema(),
+        "function": get_filing,
+        "args_model": GetFilingArgs,
+        "category": "filings",
+        "read_only": True,
+        "destructive": False,
+    },
     "find_equities": {
-        "display_name": "Equity Finder",
+        "display_name": "Find Equities",
         "input_schema": FindEquitiesArgs.model_json_schema(),
         "function": find_equities,
         "args_model": FindEquitiesArgs,
@@ -116,7 +121,7 @@ TOOL_REGISTRY = {
         "destructive": False,
     },
     "get_equity_summaries": {
-        "display_name": "Equity Summary Retriever",
+        "display_name": "Get Equity Summaries",
         "input_schema": GetEquitySummariesArgs.model_json_schema(),
         "function": get_equity_summaries,
         "args_model": GetEquitySummariesArgs,
@@ -125,7 +130,7 @@ TOOL_REGISTRY = {
         "destructive": False,
     },
     "get_available_watchlists": {
-        "display_name": "Watchlist Explorer",
+        "display_name": "Get Available Watchlists",
         "input_schema": GetAvailableWatchlistsArgs.model_json_schema(),
         "function": get_available_watchlists,
         "args_model": GetAvailableWatchlistsArgs,
@@ -134,7 +139,7 @@ TOOL_REGISTRY = {
         "destructive": False,
     },
     "get_available_indexes": {
-        "display_name": "Index Explorer",
+        "display_name": "Get Available Indexes",
         "input_schema": GetAvailableIndexesArgs.model_json_schema(),
         "function": get_available_indexes,
         "args_model": GetAvailableIndexesArgs,
@@ -143,7 +148,7 @@ TOOL_REGISTRY = {
         "destructive": False,
     },
     "get_sectors_and_subsectors": {
-        "display_name": "Sector Explorer",
+        "display_name": "Get Sectors and Subsectors",
         "input_schema": GetSectorsAndSubsectorsArgs.model_json_schema(),
         "function": get_sectors_and_subsectors,
         "args_model": GetSectorsAndSubsectorsArgs,
@@ -152,7 +157,7 @@ TOOL_REGISTRY = {
         "destructive": False,
     },
     "get_index_constituents": {
-        "display_name": "Index Constituent Finder",
+        "display_name": "Get Index Constituents",
         "input_schema": GetIndexConstituentsArgs.model_json_schema(),
         "function": get_index_constituents,
         "args_model": GetIndexConstituentsArgs,
@@ -161,7 +166,7 @@ TOOL_REGISTRY = {
         "destructive": False,
     },
     "get_watchlist_constituents": {
-        "display_name": "Watchlist Constituent Finder",
+        "display_name": "Get Watchlist Constituents",
         "input_schema": GetWatchlistConstituentsArgs.model_json_schema(),
         "function": get_watchlist_constituents,
         "args_model": GetWatchlistConstituentsArgs,
@@ -170,7 +175,7 @@ TOOL_REGISTRY = {
         "destructive": False,
     },
     "find_company_docs": {
-        "display_name": "Company Document Finder",
+        "display_name": "Find Company Documents",
         "input_schema": FindCompanyDocsArgs.model_json_schema(),
         "function": find_company_docs,
         "args_model": FindCompanyDocsArgs,
@@ -179,7 +184,7 @@ TOOL_REGISTRY = {
         "destructive": False,
     },
     "get_company_doc": {
-        "display_name": "Company Document Retriever",
+        "display_name": "Get Company Document",
         "input_schema": GetCompanyDocArgs.model_json_schema(),
         "function": get_company_doc,
         "args_model": GetCompanyDocArgs,
@@ -188,7 +193,7 @@ TOOL_REGISTRY = {
         "destructive": False,
     },
     "get_company_doc_categories": {
-        "display_name": "Document Category Explorer",
+        "display_name": "Get Company Document Categories",
         "input_schema": GetCompanyDocCategoriesArgs.model_json_schema(),
         "function": get_company_doc_categories,
         "args_model": GetCompanyDocCategoriesArgs,
@@ -197,7 +202,7 @@ TOOL_REGISTRY = {
         "destructive": False,
     },
     "get_company_doc_keywords": {
-        "display_name": "Document Keyword Explorer",
+        "display_name": "Get Company Document Keywords",
         "input_schema": GetCompanyDocKeywordsArgs.model_json_schema(),
         "function": get_company_doc_keywords,
         "args_model": GetCompanyDocKeywordsArgs,
@@ -206,7 +211,7 @@ TOOL_REGISTRY = {
         "destructive": False,
     },
     "find_third_bridge_events": {
-        "display_name": "Third Bridge Event Finder",
+        "display_name": "Find Third Bridge Events",
         "input_schema": FindThirdBridgeEventsArgs.model_json_schema(),
         "function": find_third_bridge_events,
         "args_model": FindThirdBridgeEventsArgs,
@@ -215,7 +220,7 @@ TOOL_REGISTRY = {
         "destructive": False,
     },
     "get_third_bridge_event": {
-        "display_name": "Third Bridge Event Retriever",
+        "display_name": "Get Third Bridge Event",
         "input_schema": GetThirdBridgeEventArgs.model_json_schema(),
         "function": get_third_bridge_event,
         "args_model": GetThirdBridgeEventArgs,
@@ -224,7 +229,7 @@ TOOL_REGISTRY = {
         "destructive": False,
     },
     "find_transcrippets": {
-        "display_name": "Transcrippet Finder",
+        "display_name": "Find Transcrippets",
         "input_schema": FindTranscrippetsArgs.model_json_schema(),
         "function": find_transcrippets,
         "args_model": FindTranscrippetsArgs,
@@ -233,7 +238,7 @@ TOOL_REGISTRY = {
         "destructive": False,
     },
     "create_transcrippet": {
-        "display_name": "Transcrippet Creator",
+        "display_name": "Create Transcrippet",
         "input_schema": CreateTranscrippetArgs.model_json_schema(),
         "function": create_transcrippet,
         "args_model": CreateTranscrippetArgs,
@@ -242,7 +247,7 @@ TOOL_REGISTRY = {
         "destructive": False,
     },
     "delete_transcrippet": {
-        "display_name": "Transcrippet Deleter",
+        "display_name": "Delete Transcrippet",
         "input_schema": DeleteTranscrippetArgs.model_json_schema(),
         "function": delete_transcrippet,
         "args_model": DeleteTranscrippetArgs,
@@ -251,7 +256,7 @@ TOOL_REGISTRY = {
         "destructive": True,
     },
     "search_transcripts": {
-        "display_name": "Transcript Searcher",
+        "display_name": "Search Transcripts",
         "input_schema": SearchTranscriptsArgs.model_json_schema(),
         "function": search_transcripts,
         "args_model": SearchTranscriptsArgs,
@@ -260,19 +265,10 @@ TOOL_REGISTRY = {
         "destructive": False,
     },
     "search_filings": {
-        "display_name": "Filing Searcher",
+        "display_name": "Search Filings",
         "input_schema": SearchFilingsArgs.model_json_schema(),
         "function": search_filings,
         "args_model": SearchFilingsArgs,
-        "category": "search",
-        "read_only": True,
-        "destructive": False,
-    },
-    "search_filing_chunks": {
-        "display_name": "Filing Chunk Searcher",
-        "input_schema": SearchFilingChunksArgs.model_json_schema(),
-        "function": search_filing_chunks,
-        "args_model": SearchFilingChunksArgs,
         "category": "search",
         "read_only": True,
         "destructive": False,

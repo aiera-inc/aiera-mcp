@@ -4,7 +4,6 @@
 
 import pytest
 import json
-from datetime import datetime
 from pydantic import ValidationError
 
 from aiera_mcp.tools.common.models import (
@@ -23,71 +22,76 @@ class TestCitationInfo:
 
     def test_citation_info_creation(self):
         """Test CitationInfo model creation."""
+        from aiera_mcp.tools.common.models import CitationMetadata
+
         citation_data = {
             "title": "Test Citation",
             "url": "https://example.com/document",
-            "timestamp": datetime(2024, 1, 15, 14, 30, 0),
-            "source": "Test Source",
+            "metadata": CitationMetadata(type="event", company_id=123),
         }
 
         citation = CitationInfo(**citation_data)
 
         assert citation.title == "Test Citation"
         assert citation.url == "https://example.com/document"
-        assert citation.timestamp == datetime(2024, 1, 15, 14, 30, 0)
-        assert citation.source == "Test Source"
+        assert citation.metadata.type == "event"
+        assert citation.metadata.company_id == 123
 
     def test_citation_info_minimal(self):
-        """Test CitationInfo with only required fields."""
+        """Test CitationInfo with only optional fields."""
         citation = CitationInfo(title="Minimal Citation")
 
         assert citation.title == "Minimal Citation"
         assert citation.url is None
-        assert citation.timestamp is None
-        assert citation.source is None
+        assert citation.metadata is None
 
-    def test_citation_info_datetime_serialization(self):
-        """Test that CitationInfo datetime fields are serialized to strings."""
-        test_datetime = datetime(2024, 1, 15, 14, 30, 0)
+    def test_citation_info_with_metadata(self):
+        """Test CitationInfo with metadata."""
+        from aiera_mcp.tools.common.models import CitationMetadata
+
+        metadata = CitationMetadata(
+            type="filing",
+            url_target="aiera",
+            company_id=456,
+            filing_id=789,
+        )
 
         citation = CitationInfo(
             title="Test Citation",
             url="https://example.com",
-            timestamp=test_datetime,
-            source="Test Source",
+            metadata=metadata,
         )
 
         # Test model_dump serialization
         serialized = citation.model_dump()
 
-        # timestamp should be serialized as string, not datetime object
-        assert isinstance(serialized["timestamp"], str)
-        assert serialized["timestamp"] == test_datetime.isoformat()
+        assert serialized["title"] == "Test Citation"
+        assert serialized["url"] == "https://example.com"
+        assert serialized["metadata"]["type"] == "filing"
+        assert serialized["metadata"]["company_id"] == 456
 
-    def test_citation_info_optional_timestamp_serialization(self):
-        """Test CitationInfo with None timestamp."""
+    def test_citation_info_optional_metadata_serialization(self):
+        """Test CitationInfo with None metadata."""
         citation = CitationInfo(
             title="Test Citation",
             url="https://example.com",
-            timestamp=None,
-            source="Test Source",
+            metadata=None,
         )
 
         # Test model_dump serialization
         serialized = citation.model_dump()
 
-        # timestamp should remain None when not provided
-        assert serialized["timestamp"] is None
+        # metadata should remain None when not provided
+        assert serialized["metadata"] is None
 
     def test_citation_info_json_serialization(self):
         """Test that CitationInfo can be fully serialized to JSON."""
-        test_datetime = datetime(2024, 1, 15, 14, 30, 0)
+        from aiera_mcp.tools.common.models import CitationMetadata
 
         citation = CitationInfo(
             title="JSON Test Citation",
             url="https://example.com/json",
-            timestamp=test_datetime,
-            source="JSON Test",
+            metadata=CitationMetadata(type="event", event_id=123),
         )
 
         # Test full JSON serialization
@@ -98,10 +102,10 @@ class TestCitationInfo:
         assert isinstance(json_str, str)
         assert len(json_str) > 0
 
-        # Verify datetime field was serialized as string in JSON
+        # Verify structure in JSON
         parsed = json.loads(json_str)
-        assert isinstance(parsed["timestamp"], str)
-        assert parsed["timestamp"] == test_datetime.isoformat()
+        assert parsed["title"] == "JSON Test Citation"
+        assert parsed["metadata"]["type"] == "event"
 
 
 @pytest.mark.unit
@@ -135,16 +139,10 @@ class TestBaseModels:
 
     def test_base_aiera_response(self):
         """Test BaseAieraResponse model."""
-        test_datetime = datetime(2024, 1, 15, 14, 30, 0)
-
-        citation = CitationInfo(title="Response Citation", timestamp=test_datetime)
-
-        response = BaseAieraResponse(
-            instructions=["Test instruction"], citation_information=[citation]
-        )
+        response = BaseAieraResponse(instructions=["Test instruction"])
 
         assert response.instructions == ["Test instruction"]
-        assert len(response.citation_information) == 1
+        assert response.error is None
 
         # Test serialization
         serialized = response.model_dump()
@@ -153,22 +151,17 @@ class TestBaseModels:
         # Should serialize without errors
         assert isinstance(json_str, str)
 
-        # Verify nested datetime serialization
+        # Verify structure
         parsed = json.loads(json_str)
-        assert isinstance(parsed["citation_information"][0]["timestamp"], str)
+        assert parsed["instructions"] == ["Test instruction"]
 
     def test_paginated_response(self):
         """Test PaginatedResponse model."""
-        test_datetime = datetime(2024, 1, 15, 14, 30, 0)
-
-        citation = CitationInfo(title="Paginated Citation", timestamp=test_datetime)
-
         response = PaginatedResponse(
             total=100,
             page=2,
             page_size=25,
             instructions=["Paginated results"],
-            citation_information=[citation],
         )
 
         assert response.total == 100
@@ -176,18 +169,18 @@ class TestBaseModels:
         assert response.page_size == 25
         assert response.instructions == ["Paginated results"]
 
-        # Test JSON serialization with pagination and datetime
+        # Test JSON serialization with pagination
         serialized = response.model_dump()
         json_str = json.dumps(serialized)
 
         # Should serialize without errors
         assert isinstance(json_str, str)
 
-        # Verify structure and datetime serialization
+        # Verify structure
         parsed = json.loads(json_str)
         assert parsed["total"] == 100
         assert parsed["page"] == 2
-        assert isinstance(parsed["citation_information"][0]["timestamp"], str)
+        assert parsed["page_size"] == 25
 
 
 @pytest.mark.unit
@@ -196,9 +189,9 @@ class TestCommonModelValidation:
 
     def test_citation_info_validation(self):
         """Test CitationInfo field validation."""
-        # Title is required
-        with pytest.raises(ValidationError):
-            CitationInfo()  # Missing required title
+        # All fields are optional in CitationInfo
+        citation = CitationInfo()
+        assert citation.title is None
 
         # Valid URL formats (basic test)
         citation = CitationInfo(
@@ -206,27 +199,27 @@ class TestCommonModelValidation:
         )
         assert citation.url == "https://example.com/path/to/document"
 
-    def test_datetime_edge_cases(self):
-        """Test datetime handling edge cases."""
-        # Test with different datetime formats
-        formats_to_test = [
-            datetime(2024, 1, 1, 0, 0, 0),  # Midnight
-            datetime(2024, 12, 31, 23, 59, 59),  # End of year
-            datetime(2024, 6, 15, 12, 30, 45, 123456),  # With microseconds
+    def test_citation_metadata_edge_cases(self):
+        """Test CitationMetadata handling edge cases."""
+        from aiera_mcp.tools.common.models import CitationMetadata
+
+        # Test with different metadata configurations
+        configs_to_test = [
+            {"type": "event", "event_id": 123},
+            {"type": "filing", "filing_id": 456, "company_id": 789},
+            {"type": "company_doc", "company_doc_id": 101, "url_target": "aiera"},
         ]
 
-        for test_dt in formats_to_test:
-            citation = CitationInfo(
-                title=f"DateTime Test {test_dt.isoformat()}", timestamp=test_dt
-            )
+        for config in configs_to_test:
+            metadata = CitationMetadata(**config)
+            citation = CitationInfo(title=f"Test {config['type']}", metadata=metadata)
 
             serialized = citation.model_dump()
             json_str = json.dumps(serialized)
 
-            # Should handle all datetime formats
+            # Should handle all configurations
             parsed = json.loads(json_str)
-            assert isinstance(parsed["timestamp"], str)
-            assert parsed["timestamp"] == test_dt.isoformat()
+            assert parsed["metadata"]["type"] == config["type"]
 
     def test_model_inheritance(self):
         """Test model inheritance relationships."""

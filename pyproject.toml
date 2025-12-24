@@ -12,6 +12,9 @@ dependencies = [
     "pydantic-settings>=2.0.0",
 ]
 
+[project.scripts]
+aiera-mcp = "aiera_mcp.server:run"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0",
