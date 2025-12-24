@@ -263,13 +263,6 @@ class EquityInfo(BaseModel):
     primary_equity: Optional[bool] = Field(None, description="Is primary equity")
 
 
-class GroupingInfo(BaseModel):
-    """Event grouping information."""
-
-    grouping_id: Optional[int] = Field(None, description="Grouping ID")
-    grouping_name: Optional[str] = Field(None, description="Grouping name")
-
-
 class ConferenceInfo(BaseModel):
     """Conference information for events."""
 
@@ -320,25 +313,18 @@ class TranscriptItem(BaseModel):
     timestamp: Optional[datetime] = Field(
         None, description="Timestamp of the transcript item"
     )
-    start_ms: Optional[int] = Field(None, description="Start time in milliseconds")
-    duration_ms: Optional[int] = Field(None, description="Duration in milliseconds")
     speaker: Optional[str] = Field(None, description="Speaker name")
     speaker_type: Optional[str] = Field(
         None, description="Speaker type (e.g., 'final', 'estimate')"
     )
-    created: Optional[datetime] = Field(None, description="Creation timestamp")
-    modified: Optional[datetime] = Field(None, description="Modification timestamp")
     transcript_section: Optional[str] = Field(
         None, description="Section of transcript (e.g., 'presentation', 'q_and_a')"
-    )
-    transcript_version: Optional[int] = Field(
-        None, description="Version of the transcript"
     )
     citation_information: Optional[CitationInfo] = Field(
         None, description="Citation information for this transcript item"
     )
 
-    @field_validator("timestamp", "created", "modified", mode="before")
+    @field_validator("timestamp", mode="before")
     @classmethod
     def parse_datetime_fields(cls, v):
         """Parse ISO format datetime strings to datetime objects."""
@@ -353,7 +339,7 @@ class TranscriptItem(BaseModel):
         # If it's already a datetime object, return as is
         return v
 
-    @field_serializer("timestamp", "created", "modified")
+    @field_serializer("timestamp")
     def serialize_datetime_fields(self, value: Optional[datetime]) -> Optional[str]:
         """Serialize datetime fields to ISO format string for JSON compatibility."""
         if value is None:
@@ -372,9 +358,6 @@ class EventItem(BaseModel):
     event_category: Optional[str] = Field(None, description="Event category")
     expected_language: Optional[str] = Field(
         None, description="Expected language of the event"
-    )
-    grouping: Optional[GroupingInfo] = Field(
-        None, description="Event grouping information"
     )
     conference: Optional[ConferenceInfo] = Field(
         None, description="Conference information"
