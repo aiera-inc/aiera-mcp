@@ -72,26 +72,33 @@ class FindEquitiesArgs(BaseToolArgs, BloombergTickerMixin):
         default=None,
         description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces.",
     )
+
     isin: Optional[str] = Field(
         default=None,
         description="International Securities Identification Number (ISIN).",
     )
+
     ric: Optional[str] = Field(
         default=None, description="Reuters Instrument Code (RIC)."
     )
+
     ticker: Optional[str] = Field(
         default=None, description="Stock ticker symbol (without country code)."
     )
+
     permid: Optional[str] = Field(
         default=None, description="Refinitiv Permanent Identifier (PermID)."
     )
+
     search: Optional[str] = Field(
         default=None,
         description="Search term to filter results. Searches within company names or tickers.",
     )
+
     page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )
+
     page_size: Union[int, str] = Field(
         default=50, ge=1, le=100, description="Number of items per page (1-100)."
     )
@@ -237,9 +244,11 @@ class LeadershipItem(BaseModel):
 class ConfirmedEventCitationMetadata(BaseModel):
     """Metadata for confirmed event citation."""
 
-    type: str = Field(description="Type of citation (e.g., 'event')")
+    type: str = Field(
+        description="The type of citation ('event', 'filing', 'company_doc', 'conference', or 'company')"
+    )
     url_target: Optional[str] = Field(
-        None, description="Target for URL (e.g., 'aiera')"
+        None, description="Whether the URL will be to Aiera or an external source"
     )
     company_id: Optional[int] = Field(None, description="Company identifier")
     event_id: Optional[int] = Field(None, description="Event identifier")

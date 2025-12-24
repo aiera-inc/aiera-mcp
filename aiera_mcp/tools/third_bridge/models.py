@@ -118,9 +118,11 @@ class GetThirdBridgeEventArgs(BaseToolArgs):
 class ThirdBridgeCitationMetadata(BaseModel):
     """Metadata for third bridge citation."""
 
-    type: str = Field(description="Type of citation (e.g., 'event')")
+    type: str = Field(
+        description="The type of citation ('event', 'filing', 'company_doc', 'conference', or 'company')"
+    )
     url_target: Optional[str] = Field(
-        None, description="Target for URL (e.g., 'aiera')"
+        None, description="Whether the URL will be to Aiera or an external source"
     )
     company_id: Optional[int] = Field(None, description="Company identifier")
     event_id: Optional[int] = Field(None, description="Event identifier")
@@ -156,6 +158,9 @@ class ThirdBridgeEventItem(BaseModel):
     agenda: List[str] = Field(description="Event agenda items")
     insights: Optional[List[str]] = Field(
         None, description="Key insights from the event (can be null)"
+    )
+    transcripts: Optional[List["ThirdBridgeTranscriptItem"]] = Field(
+        None, description="Event transcripts (when included)"
     )
     citation_information: Optional[ThirdBridgeCitationInfo] = Field(
         None,

@@ -94,9 +94,11 @@ class SearchFilingsArgs(BaseAieraArgs):
 class TranscriptSearchCitationMetadata(BaseModel):
     """Metadata for transcript search citation."""
 
-    type: str = Field(description="Type of citation (e.g., 'event')")
+    type: str = Field(
+        description="The type of citation ('event', 'filing', 'company_doc', 'conference', or 'company')"
+    )
     url_target: Optional[str] = Field(
-        None, description="Target for URL (e.g., 'aiera')"
+        None, description="Whether the URL will be to Aiera or an external source"
     )
     company_id: Optional[int] = Field(None, description="Company identifier")
     event_id: Optional[int] = Field(None, description="Event identifier")
@@ -118,6 +120,10 @@ class TranscriptSearchCitation(BaseModel):
 class TranscriptSearchItem(BaseModel):
     """Individual transcript search result item."""
 
+    score: float = Field(
+        validation_alias="_score",
+        description="Search relevance score (aliased from _score)",
+    )
     date: datetime = Field(description="Date and time of the transcript")
     primary_company_id: int = Field(description="Primary company identifier.")
     transcript_item_id: int = Field(
@@ -198,9 +204,11 @@ class SearchTranscriptsResponse(BaseAieraResponse):
 class FilingSearchCitationMetadata(BaseModel):
     """Metadata for filing search citation."""
 
-    type: str = Field(description="Type of citation (e.g., 'filing')")
+    type: str = Field(
+        description="The type of citation ('event', 'filing', 'company_doc', 'conference', or 'company')"
+    )
     url_target: Optional[str] = Field(
-        None, description="Target for URL (e.g., 'aiera')"
+        None, description="Whether the URL will be to Aiera or an external source"
     )
     company_id: Optional[int] = Field(None, description="Company identifier")
     content_id: Optional[int] = Field(None, description="Content identifier")

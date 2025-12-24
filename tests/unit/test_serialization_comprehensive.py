@@ -508,6 +508,7 @@ class TestToolSerializationComprehensive:
                             if "Transcript" in model_name:
                                 test_data.update(
                                     {
+                                        "_score": 9.5,
                                         "primary_company_id": 123,
                                         "transcript_event_id": 789,
                                         "transcript_section": "q_and_a",
@@ -733,6 +734,7 @@ class TestToolSerializationComprehensive:
                             "response": {
                                 "result": [
                                     {
+                                        "_score": 9.5,
                                         "date": datetime(2024, 1, 15, 16, 30, 0),
                                         "primary_company_id": 123,
                                         "content_id": 456,  # Uses alias for transcript_item_id

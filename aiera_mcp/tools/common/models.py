@@ -16,11 +16,12 @@ class CitationMetadata(BaseModel):
     """Metadata for citation information."""
 
     type: str = Field(
-        description="Type of citation (e.g., 'event', 'filing', 'company_doc', 'conference', 'company')"
+        description="The type of citation ('event', 'filing', 'company_doc', 'conference', or 'company')"
     )
     url_target: Optional[str] = Field(
-        None, description="Target for URL (e.g., 'aiera', 'external')"
+        None, description="Whether the URL will be to Aiera or an external source"
     )
+
     company_id: Optional[int] = Field(None, description="Company identifier")
     event_id: Optional[int] = Field(None, description="Event identifier")
     transcript_item_id: Optional[int] = Field(

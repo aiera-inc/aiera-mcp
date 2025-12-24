@@ -133,9 +133,11 @@ class EquityInfo(BaseModel):
 class FilingCitationMetadata(BaseModel):
     """Metadata for filing citation."""
 
-    type: str = Field(description="Type of citation (e.g., 'filing')")
+    type: str = Field(
+        description="The type of citation ('event', 'filing', 'company_doc', 'conference', or 'company')"
+    )
     url_target: Optional[str] = Field(
-        None, description="Target for URL (e.g., 'aiera')"
+        None, description="Whether the URL will be to Aiera or an external source"
     )
     company_id: Optional[int] = Field(None, description="Company identifier")
     content_id: Optional[int] = Field(None, description="Content identifier")
@@ -173,6 +175,7 @@ class FilingItem(BaseModel):
     json_synced: Optional[bool] = Field(None, description="JSON sync status")
     datafiles_synced: Optional[bool] = Field(None, description="Data files sync status")
     summary: Optional[List[str]] = Field(None, description="Filing summary as list")
+    content_raw: Optional[str] = Field(None, description="Raw filing content")
     citation_information: Optional[FilingCitationInfo] = Field(
         None, description="Citation information"
     )
