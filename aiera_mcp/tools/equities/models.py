@@ -465,7 +465,6 @@ class IndexItem(BaseModel):
 
     index_id: int = Field(description="Index identifier")
     name: str = Field(description="Index name")
-    symbol: Optional[str] = Field(None, description="Index symbol")
     short_name: Optional[str] = Field(None, description="Index short name/symbol")
 
     # Alias for backward compatibility

@@ -395,13 +395,13 @@ class TestGetAvailableIndexes:
         assert isinstance(first_index, IndexItem)
         assert first_index.index_id == 3
         assert first_index.name == "S&P 500"
-        assert first_index.symbol == "SPX"
+        assert first_index.short_name == "SP500"
 
         # Check second index
         second_index = result.response[1]
         assert second_index.index_id == 8
         assert second_index.name == "NASDAQ 100"
-        assert second_index.symbol == "NDX"
+        assert second_index.short_name == "NDX"
 
         # Check API call
         call_args = mock_http_dependencies["mock_make_request"].call_args

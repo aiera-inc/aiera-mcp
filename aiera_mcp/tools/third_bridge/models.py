@@ -216,12 +216,6 @@ class ThirdBridgeEventDetails(BaseModel):
         description="Citation information",
         validation_alias=AliasChoices("citation_information", "citation_block"),
     )
-    specialists: Optional[List[ThirdBridgeSpecialist]] = Field(
-        None, description="Expert specialists participating in the event"
-    )
-    moderators: Optional[List[ThirdBridgeModerator]] = Field(
-        None, description="Moderators of the event"
-    )
     transcripts: Optional[List[ThirdBridgeTranscriptItem]] = Field(
         None, description="Full event transcripts"
     )

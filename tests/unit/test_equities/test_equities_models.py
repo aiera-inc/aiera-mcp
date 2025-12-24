@@ -169,14 +169,14 @@ class TestEquitiesModels:
 
     def test_index_item_creation(self):
         """Test IndexItem model creation."""
-        index_data = {"index_id": 1, "name": "S&P 500", "symbol": "SPX"}
+        index_data = {"index_id": 1, "name": "S&P 500", "short_name": "SPX"}
 
         index = IndexItem(**index_data)
 
         assert index.index_id == 1
         assert index.name == "S&P 500"
         assert index.index_name == "S&P 500"  # backward compatibility property
-        assert index.symbol == "SPX"
+        assert index.short_name == "SPX"
 
     def test_watchlist_item_creation(self):
         """Test WatchlistItem model creation."""

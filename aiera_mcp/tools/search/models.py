@@ -5,6 +5,7 @@
 from typing import List, Optional, Any
 from datetime import datetime
 from pydantic import (
+    AliasChoices,
     BaseModel,
     Field,
     field_validator,
@@ -121,8 +122,8 @@ class TranscriptSearchItem(BaseModel):
     """Individual transcript search result item."""
 
     score: float = Field(
-        validation_alias="_score",
-        description="Search relevance score (aliased from _score)",
+        validation_alias=AliasChoices("_score", "score"),
+        description="Search relevance score",
     )
     date: datetime = Field(description="Date and time of the transcript")
     primary_company_id: int = Field(description="Primary company identifier.")
@@ -244,8 +245,8 @@ class FilingSearchItem(BaseModel):
         default=None, description="Type of SEC filing (e.g., '10-K', '10-Q', '8-K')"
     )
     score: float = Field(
-        validation_alias="_score",
-        description="Search relevance score (aliased from _score)",
+        validation_alias=AliasChoices("_score", "score"),
+        description="Search relevance score",
     )
     citation_information: FilingSearchCitation = Field(
         description="Citation details for this result"

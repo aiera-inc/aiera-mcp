@@ -88,10 +88,6 @@ class TestThirdBridgeModels:
                 "title": "Apple Supply Chain Analysis",
                 "url": "https://thirdbridge.com/event/tb123",
             },
-            "specialists": [
-                {"title": "Former Supply Chain Director", "initials": "JS"}
-            ],
-            "moderators": [{"id": "mod123", "initials": "AB"}],
             "transcripts": [
                 {
                     "start_ms": 1000,
@@ -119,13 +115,7 @@ class TestThirdBridgeModels:
         assert len(details.insights) == 2
         assert details.insights[0] == "Key insight 1"
 
-        # Test new fields
-        assert len(details.specialists) == 1
-        assert details.specialists[0].initials == "JS"
-
-        assert len(details.moderators) == 1
-        assert details.moderators[0].id == "mod123"
-
+        # Test transcripts
         assert len(details.transcripts) == 1
         assert details.transcripts[0].start_ms == 1000
 
@@ -488,8 +478,6 @@ class TestThirdBridgeModelValidation:
         assert details.agenda is None
         assert details.insights is None
         assert details.transcripts is None
-        assert details.specialists is None
-        assert details.moderators is None
 
         # Event details with all optional fields
         details_full = ThirdBridgeEventDetails(
@@ -503,14 +491,10 @@ class TestThirdBridgeModelValidation:
             transcripts=[
                 {"start_ms": 1000, "duration_ms": 60000, "transcript": "Test"}
             ],
-            specialists=[{"title": "Expert", "initials": "EX"}],
-            moderators=[{"id": "mod1", "initials": "MO"}],
         )
         assert isinstance(details_full.agenda, list)
         assert isinstance(details_full.insights, list)
         assert isinstance(details_full.transcripts, list)
-        assert isinstance(details_full.specialists, list)
-        assert isinstance(details_full.moderators, list)
 
     def test_agenda_and_insights_handling(self):
         """Test agenda and insights field handling."""
