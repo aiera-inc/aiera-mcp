@@ -77,31 +77,42 @@ class ProvidedIdsMixin(BaseModel):
 class FindTranscrippetsArgs(BaseToolArgs, ProvidedIdsMixin):
     """Find Transcrippets™ filtered by various identifiers and date ranges."""
 
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context and instruction generation.",
+    )
+
     transcrippet_id: Optional[str] = Field(
         default=None,
         description="Transcrippet ID(s). For multiple IDs, use comma-separated list without spaces.",
     )
+
     event_id: Optional[str] = Field(
         default=None,
         description="Event ID(s) to filter by. For multiple IDs, use comma-separated list without spaces.",
     )
+
     equity_id: Optional[str] = Field(
         default=None,
         description="Equity ID(s) to filter by. For multiple IDs, use comma-separated list without spaces.",
     )
+
     speaker_id: Optional[str] = Field(
         default=None,
         description="Speaker ID(s) to filter by. For multiple IDs, use comma-separated list without spaces.",
     )
+
     transcript_item_id: Optional[str] = Field(
         default=None,
         description="Transcript item ID(s) to filter by. For multiple IDs, use comma-separated list without spaces.",
     )
+
     created_start_date: Optional[str] = Field(
         default=None,
         description="Start date for transcrippet creation filter in ISO format (YYYY-MM-DD).",
         pattern=r"^\d{4}-\d{2}-\d{2}$",
     )
+
     created_end_date: Optional[str] = Field(
         default=None,
         description="End date for transcrippet creation filter in ISO format (YYYY-MM-DD).",
@@ -112,21 +123,31 @@ class FindTranscrippetsArgs(BaseToolArgs, ProvidedIdsMixin):
 class CreateTranscrippetArgs(BaseToolArgs):
     """Create a new Transcrippet™ from an event transcript segment."""
 
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context and instruction generation.",
+    )
+
     event_id: int = Field(
         description="Event ID from which to create the transcrippet. Use find_events to obtain valid event IDs."
     )
+
     transcript: str = Field(
         description="The transcript text content to include in the transcrippet."
     )
+
     transcript_item_id: int = Field(
         description="ID of the starting transcript item for the segment."
     )
+
     transcript_item_offset: int = Field(
         ge=0, description="Character offset within the starting transcript item."
     )
+
     transcript_end_item_id: int = Field(
         description="ID of the ending transcript item for the segment."
     )
+
     transcript_end_item_offset: int = Field(
         ge=0, description="Character offset within the ending transcript item."
     )
@@ -134,6 +155,11 @@ class CreateTranscrippetArgs(BaseToolArgs):
 
 class DeleteTranscrippetArgs(BaseToolArgs):
     """Delete a Transcrippet™ by its ID."""
+
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context and instruction generation.",
+    )
 
     transcrippet_id: str = Field(
         description="Unique identifier for the transcrippet to delete. This operation cannot be undone."

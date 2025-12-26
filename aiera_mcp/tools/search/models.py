@@ -25,31 +25,48 @@ class SearchTranscriptsArgs(BaseAieraArgs):
     in prior searches. Provides speaker attribution and contextual results.
     """
 
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context and instruction generation.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
     query_text: str = Field(
         description="Search query for semantic matching within transcripts. Examples: 'earnings guidance', 'regulatory concerns', 'revenue growth'"
     )
+
     event_ids: List[int] = Field(
         description="List of specific event IDs to search within. Obtained from source identification using find_events."
     )
+
     equity_ids: List[int] = Field(
         description="List of specific equity IDs to filter search. Obtained from source identification using find_equities."
     )
+
     start_date: str = Field(
         default="",
         description="Start date for transcripts search in YYYY-MM-DD format. Example: '2024-01-01'.",
     )
+
     end_date: str = Field(
         default="",
         description="End date for transcripts search in YYYY-MM-DD format. Example: '2024-12-31'.",
     )
+
     transcript_section: str = Field(
         default="",
         description="Optional filter for specific transcript sections. Options: 'presentation' (prepared remarks), 'q_and_a' (Q&A session). If not provided, searches all sections.",
     )
+
     event_type: str = Field(
         default="earnings",
         description="Type of event to include within search. ONLY ONE type per call - to search multiple types, make separate calls. Options: 'earnings' (quarterly earnings calls with Q&A), 'presentation' (investor conferences, company presentations at events - use this for conferences), 'investor_meeting' (investor day events, one-on-one meetings - use this for investor meetings), 'shareholder_meeting' (annual/special shareholder meetings), 'special_situation' (M&A announcements, other corporate actions). Example: for 'conference calls AND meetings', make TWO calls: one with event_type='presentation' and one with event_type='investor_meeting'. Defaults to 'earnings'.",
     )
+
     max_results: int = Field(
         default=20,
         description="Maximum number of transcript segments to return across all events (10-50 recommended for optimal performance)",
@@ -63,28 +80,44 @@ class SearchFilingsArgs(BaseAieraArgs):
     with high-quality semantic relevance scoring.
     """
 
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context and instruction generation.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
     query_text: str = Field(
         description="Search query for semantic matching within filing chunks. Examples: 'revenue guidance', 'risk factors', 'acquisition strategy'. Optional if company_name or filing_type is provided.",
     )
+
     filing_ids: List[str] = Field(
         default_factory=list,
         description="Filter for specific filing IDs. Use to search chunks within specific filing documents. Examples: ['AAPL-10Q-2024-Q1', 'AAPL-10K-2023']. Optional.",
     )
+
     equity_ids: List[int] = Field(
         description="List of specific equity IDs to filter search. Obtained from source identification using find_equities."
     )
+
     start_date: str = Field(
         default="",
         description="Start date for filing chunks search in YYYY-MM-DD format. Example: '2024-01-01'. If not provided, defaults to 6 months ago.",
     )
+
     end_date: str = Field(
         default="",
         description="End date for filing chunks search in YYYY-MM-DD format. Example: '2024-12-31'. If not provided, defaults to today.",
     )
+
     filing_type: str = Field(
         default="",
         description="Filter for specific filing types. Examples: '10-K', '10-Q', '8-K', '4', 'DEF 14A'. Optional if query_text or company_name is provided.",
     )
+
     max_results: int = Field(
         default=20,
         description="Maximum number of filing chunks to return (10-50 recommended for optimal performance)",

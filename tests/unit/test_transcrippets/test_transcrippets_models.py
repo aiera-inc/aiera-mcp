@@ -159,6 +159,16 @@ class TestFindTranscrippetsArgs:
         assert args.transcript_item_id is None
         assert args.created_start_date is None
         assert args.created_end_date is None
+        assert args.originating_prompt is None  # Default value
+
+    def test_find_transcrippets_args_with_originating_prompt(self):
+        """Test FindTranscrippetsArgs with originating_prompt field."""
+        args = FindTranscrippetsArgs(
+            event_id="12345",
+            originating_prompt="Find transcrippets for this event",
+        )
+
+        assert args.originating_prompt == "Find transcrippets for this event"
 
     def test_find_transcrippets_args_date_format_validation(self):
         """Test date format validation."""
@@ -214,6 +224,21 @@ class TestCreateTranscrippetArgs:
         assert args.transcript_item_id == 789
         assert args.transcript_item_offset == 0
         assert args.transcript_end_item_id == 790
+        assert args.originating_prompt is None  # Default value
+
+    def test_create_transcrippet_args_with_originating_prompt(self):
+        """Test CreateTranscrippetArgs with originating_prompt field."""
+        args = CreateTranscrippetArgs(
+            event_id=12345,
+            transcript="This is the transcript text content",
+            transcript_item_id=789,
+            transcript_item_offset=0,
+            transcript_end_item_id=790,
+            transcript_end_item_offset=100,
+            originating_prompt="Create a transcrippet from this segment",
+        )
+
+        assert args.originating_prompt == "Create a transcrippet from this segment"
         assert args.transcript_end_item_offset == 100
 
     def test_create_transcrippet_args_required_fields(self):

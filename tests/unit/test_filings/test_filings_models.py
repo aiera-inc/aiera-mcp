@@ -155,6 +155,20 @@ class TestFindFilingsArgs:
         assert args.bloomberg_ticker is None
         assert args.form_number is None
         assert args.watchlist_id is None
+        assert args.originating_prompt is None  # Default value
+        assert args.include_base_instructions is True  # Default value
+
+    def test_find_filings_args_with_originating_prompt(self):
+        """Test FindFilingsArgs with originating_prompt field."""
+        args = FindFilingsArgs(
+            start_date="2023-10-01",
+            end_date="2023-10-31",
+            originating_prompt="Find all 10-K filings for Apple",
+            include_base_instructions=False,
+        )
+
+        assert args.originating_prompt == "Find all 10-K filings for Apple"
+        assert args.include_base_instructions is False
 
     def test_find_filings_args_date_format_validation(self):
         """Test date format validation."""
@@ -254,6 +268,18 @@ class TestGetFilingArgs:
         """Test valid GetFilingArgs creation."""
         args = GetFilingArgs(filing_id="12345")  # String as per model definition
         assert args.filing_id == "12345"
+        assert args.originating_prompt is None
+        assert args.include_base_instructions is True
+
+    def test_get_filing_args_with_originating_prompt(self):
+        """Test GetFilingArgs with originating_prompt field."""
+        args = GetFilingArgs(
+            filing_id="12345",
+            originating_prompt="Get details for this 10-K filing",
+            include_base_instructions=False,
+        )
+        assert args.originating_prompt == "Get details for this 10-K filing"
+        assert args.include_base_instructions is False
 
     def test_get_filing_args_required_field(self):
         """Test that filing_id is required."""

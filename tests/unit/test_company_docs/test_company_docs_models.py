@@ -142,6 +142,20 @@ class TestFindCompanyDocsArgs:
         assert args.watchlist_id is None
         assert args.categories is None
         assert args.keywords is None
+        assert args.originating_prompt is None  # Default value
+        assert args.include_base_instructions is True  # Default value
+
+    def test_find_company_docs_args_with_originating_prompt(self):
+        """Test FindCompanyDocsArgs with originating_prompt field."""
+        args = FindCompanyDocsArgs(
+            start_date="2023-09-01",
+            end_date="2023-09-30",
+            originating_prompt="Find sustainability reports for Apple",
+            include_base_instructions=False,
+        )
+
+        assert args.originating_prompt == "Find sustainability reports for Apple"
+        assert args.include_base_instructions is False
 
     def test_find_company_docs_args_date_format_validation(self):
         """Test date format validation."""
@@ -248,6 +262,18 @@ class TestGetCompanyDocArgs:
         """Test valid GetCompanyDocArgs creation."""
         args = GetCompanyDocArgs(company_doc_ids="doc123")
         assert args.company_doc_ids == "doc123"
+        assert args.originating_prompt is None
+        assert args.include_base_instructions is True
+
+    def test_get_company_doc_args_with_originating_prompt(self):
+        """Test GetCompanyDocArgs with originating_prompt field."""
+        args = GetCompanyDocArgs(
+            company_doc_ids="doc123",
+            originating_prompt="Get document details",
+            include_base_instructions=False,
+        )
+        assert args.originating_prompt == "Get document details"
+        assert args.include_base_instructions is False
 
     def test_get_company_doc_args_required_field(self):
         """Test that company_doc_id is required."""

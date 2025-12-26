@@ -111,45 +111,65 @@ class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
     This tool provides access to a comprehensive database of corporate events with transcripts and summaries.
     """
 
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context and instruction generation.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
     start_date: str = Field(
         description="Start date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET). Required to define the search period.",
         pattern=r"^\d{4}-\d{2}-\d{2}$",
     )
+
     end_date: str = Field(
         description="End date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET). Required to define the search period.",
         pattern=r"^\d{4}-\d{2}-\d{2}$",
     )
+
     bloomberg_ticker: Optional[str] = Field(
         default=None,
         description="Optional: Bloomberg ticker(s) to filter by specific companies in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces (e.g., 'AAPL:US,MSFT:US,GOOGL:US'). Defaults to ':US' if country code omitted. Leave empty to search across all companies.",
     )
+
     watchlist_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific watchlist. Use get_available_watchlists to find valid IDs.",
     )
+
     index_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific index. Use get_available_indexes to find valid IDs.",
     )
+
     sector_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific sector. Use get_sectors_and_subsectors to find valid IDs.",
     )
+
     subsector_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific subsector. Use get_sectors_and_subsectors to find valid IDs.",
     )
+
     conference_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific conference. Use find_conferences to find valid IDs.",
     )
+
     event_type: str = Field(
         default="earnings",
         description="Type of event to search for. ONLY ONE type per call - to search multiple types, make separate calls. Options: 'earnings' (quarterly earnings calls with Q&A), 'presentation' (investor conferences, company presentations at events - use this for 'conference calls'), 'investor_meeting' (investor day events, one-on-one meetings - use this for 'investor meetings'), 'shareholder_meeting' (annual/special shareholder meetings), 'special_situation' (M&A announcements, other corporate actions). Example: for 'conference calls AND meetings', make TWO calls: one with event_type='presentation' and one with event_type='investor_meeting'. Defaults to 'earnings'.",
     )
+
     page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )
+
     page_size: Union[int, str] = Field(
         default=50, ge=1, le=100, description="Number of items per page (1-100)."
     )
@@ -177,17 +197,30 @@ class FindConferencesArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
     This tool provides access to a comprehensive database of upcoming and historical conferences.
     """
 
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context and instruction generation.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
     start_date: str = Field(
         description="Start date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET). Required to define the search period.",
         pattern=r"^\d{4}-\d{2}-\d{2}$",
     )
+
     end_date: str = Field(
         description="End date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET). Required to define the search period.",
         pattern=r"^\d{4}-\d{2}-\d{2}$",
     )
+
     page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )
+
     page_size: Union[int, str] = Field(
         default=50, ge=1, le=100, description="Number of items per page (1-100)."
     )
@@ -196,9 +229,20 @@ class FindConferencesArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
 class GetEventArgs(BaseToolArgs):
     """Get detailed information about a specific event including transcripts. If you need to retrieve more than one event, make multiple sequential calls. Transcripts are not availble for future events."""
 
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context and instruction generation.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
     event_id: str = Field(
         description="Unique identifier for the event. Obtained from find_events tool."
     )
+
     transcript_section: Optional[str] = Field(
         default=None,
         description="Filter transcripts by section. Only applicable for earnings events. Options: 'presentation', 'q_and_a'.",
@@ -220,30 +264,46 @@ class GetUpcomingEventsArgs(BaseToolArgs, BloombergTickerMixin):
     To find upcoming events for multiple companies, provide a comma-separated list of bloomberg_tickers. You do not need to make multiple calls.
     """
 
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context and instruction generation.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
     start_date: str = Field(
         description="Start date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET).",
         pattern=r"^\d{4}-\d{2}-\d{2}$",
     )
+
     end_date: str = Field(
         description="End date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET).",
         pattern=r"^\d{4}-\d{2}-\d{2}$",
     )
+
     bloomberg_ticker: Optional[str] = Field(
         default=None,
         description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces.",
     )
+
     watchlist_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific watchlist. Use get_available_watchlists to find valid IDs.",
     )
+
     index_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific index. Use get_available_indexes to find valid IDs.",
     )
+
     sector_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific sector. Use get_sectors_and_subsectors to find valid IDs.",
     )
+
     subsector_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific subsector. Use get_sectors_and_subsectors to find valid IDs.",
