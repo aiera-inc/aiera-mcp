@@ -70,41 +70,60 @@ class BloombergTickerMixin(BaseModel):
 class FindFilingsArgs(BaseToolArgs, BloombergTickerMixin):
     """Find SEC filings filtered by date range and optional filters. To find filings for multiple companies, provide a comma-separated list of bloomberg_tickers. You do not need to make multiple calls."""
 
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized; and if it is being truncated or summarized, please append a parenthetical saying so.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
     start_date: str = Field(
         description="Start date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET).",
         pattern=r"^\d{4}-\d{2}-\d{2}$",
     )
+
     end_date: str = Field(
         description="End date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET).",
         pattern=r"^\d{4}-\d{2}-\d{2}$",
     )
+
     bloomberg_ticker: Optional[str] = Field(
         default=None,
         description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces.",
     )
+
     watchlist_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific watchlist. Use get_available_watchlists to find valid IDs.",
     )
+
     index_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific index. Use get_available_indexes to find valid IDs.",
     )
+
     sector_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific sector. Use get_sectors_and_subsectors to find valid IDs.",
     )
+
     subsector_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific subsector. Use get_sectors_and_subsectors to find valid IDs.",
     )
+
     form_number: Optional[str] = Field(
         default=None,
         description="SEC form type to filter by (e.g., '10-K', '10-Q', '8-K').",
     )
+
     page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )
+
     page_size: Union[int, str] = Field(
         default=50, ge=1, le=100, description="Number of items per page (1-100)."
     )
@@ -112,6 +131,16 @@ class FindFilingsArgs(BaseToolArgs, BloombergTickerMixin):
 
 class GetFilingArgs(BaseToolArgs):
     """Get detailed information about a specific SEC filing."""
+
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized; and if it is being truncated or summarized, please append a parenthetical saying so.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
 
     filing_id: str = Field(
         description="Unique identifier for the SEC filing. Obtained from find_filings results."
@@ -137,7 +166,8 @@ class FilingCitationMetadata(BaseModel):
         description="The type of citation ('event', 'filing', 'company_doc', 'conference', or 'company')"
     )
     url_target: Optional[str] = Field(
-        None, description="Whether the URL will be to Aiera or an external source"
+        None,
+        description="Whether the citation URL will go to Aiera or to an external source",
     )
     company_id: Optional[int] = Field(None, description="Company identifier")
     content_id: Optional[int] = Field(None, description="Content identifier")

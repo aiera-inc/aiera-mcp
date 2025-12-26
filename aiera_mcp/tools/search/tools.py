@@ -119,6 +119,8 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
         },
         "size": args.max_results,
         "search_pipeline": "hybrid_search_pipeline",
+        "include_base_instructions": args.include_base_instructions,
+        "originating_prompt": args.originating_prompt,
     }
 
     # Try ML-inference search...
@@ -185,6 +187,8 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
                     }
                 },
                 "size": args.max_results,
+                "include_base_instructions": args.include_base_instructions,
+                "originating_prompt": args.originating_prompt,
             }
 
             raw_response = await make_aiera_request(
@@ -301,6 +305,8 @@ async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
         },
         "size": args.max_results,
         "search_pipeline": "hybrid_search_pipeline",
+        "include_base_instructions": args.include_base_instructions,
+        "originating_prompt": args.originating_prompt,
     }
 
     # Try ML-inference search...
@@ -360,6 +366,8 @@ async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
                     }
                 },
                 "size": args.max_results,
+                "include_base_instructions": args.include_base_instructions,
+                "originating_prompt": args.originating_prompt,
             }
 
             raw_response = await make_aiera_request(
@@ -382,216 +390,6 @@ async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
 
     # if failed, send empty response...
     return _get_empty_filings_response(args.max_results)
-
-
-def _build_filings_company_filter(company_name: str) -> dict:
-    """Build a comprehensive fuzzy company search filter for filing chunks index.
-
-    Uses fuzzy matching against both company_common_name and company_legal_name fields
-    to handle variations, typos, and different name formats effectively.
-
-    Based on the opensearch-mcp-server-py implementation for optimal matching.
-    """
-    import re
-
-    def _remove_special_characters(text: str) -> str:
-        """Remove special characters from company names that might not be in filings."""
-        clean_text = re.sub(r'[!@#$%^&*()_+\-=\[\]{}|\\:;"\',.<>?/]', "", text)
-        clean_text = re.sub(r"\s+", " ", clean_text).strip()
-        return clean_text
-
-    def _escape_wildcard_special_chars(text: str) -> str:
-        """Escape special characters in text for use in OpenSearch wildcard queries."""
-        special_chars = ["*", "?", "[", "]", "{", "}", "\\", "!"]
-        escaped_text = text
-        for char in special_chars:
-            escaped_text = escaped_text.replace(char, f"\\{char}")
-        return escaped_text
-
-    # Create variations with special characters handled
-    company_clean = _remove_special_characters(company_name)
-
-    # Build comprehensive filter with fuzzy matching as the primary approach
-    should_clauses = [
-        # Highest priority: exact matches for perfect accuracy
-        {
-            "term": {
-                "company_common_name.keyword": {"value": company_name, "boost": 10.0}
-            }
-        },
-        {
-            "term": {
-                "company_legal_name.keyword": {"value": company_name, "boost": 10.0}
-            }
-        },
-        # High priority: fuzzy matching on both company name fields with different fuzziness levels
-        {
-            "fuzzy": {
-                "company_common_name": {
-                    "value": company_name,
-                    "fuzziness": "AUTO",
-                    "boost": 8.0,
-                    "max_expansions": 50,
-                }
-            }
-        },
-        {
-            "fuzzy": {
-                "company_legal_name": {
-                    "value": company_name,
-                    "fuzziness": "AUTO",
-                    "boost": 8.0,
-                    "max_expansions": 50,
-                }
-            }
-        },
-        {
-            "fuzzy": {
-                "company_common_name": {
-                    "value": company_clean,
-                    "fuzziness": "AUTO",
-                    "boost": 7.5,
-                    "max_expansions": 50,
-                }
-            }
-        },
-        {
-            "fuzzy": {
-                "company_legal_name": {
-                    "value": company_clean,
-                    "fuzziness": "AUTO",
-                    "boost": 7.5,
-                    "max_expansions": 50,
-                }
-            }
-        },
-        # Medium-high priority: phrase matching for multi-word company names
-        {
-            "match_phrase": {
-                "company_common_name": {"query": company_name, "boost": 6.0, "slop": 1}
-            }
-        },
-        {
-            "match_phrase": {
-                "company_legal_name": {"query": company_name, "boost": 6.0, "slop": 1}
-            }
-        },
-        {
-            "match_phrase": {
-                "company_common_name": {"query": company_clean, "boost": 5.5, "slop": 1}
-            }
-        },
-        {
-            "match_phrase": {
-                "company_legal_name": {"query": company_clean, "boost": 5.5, "slop": 1}
-            }
-        },
-        # Medium priority: word-based matching with fuzzy operator
-        {
-            "match": {
-                "company_common_name": {
-                    "query": company_name,
-                    "boost": 5.0,
-                    "operator": "and",
-                    "fuzziness": "AUTO",
-                }
-            }
-        },
-        {
-            "match": {
-                "company_legal_name": {
-                    "query": company_name,
-                    "boost": 5.0,
-                    "operator": "and",
-                    "fuzziness": "AUTO",
-                }
-            }
-        },
-        {
-            "match": {
-                "company_common_name": {
-                    "query": company_clean,
-                    "boost": 4.5,
-                    "operator": "and",
-                    "fuzziness": "AUTO",
-                }
-            }
-        },
-        {
-            "match": {
-                "company_legal_name": {
-                    "query": company_clean,
-                    "boost": 4.5,
-                    "operator": "and",
-                    "fuzziness": "AUTO",
-                }
-            }
-        },
-        # Lower priority: title fuzzy matching for additional coverage
-        {
-            "fuzzy": {
-                "title": {
-                    "value": company_name,
-                    "fuzziness": "AUTO",
-                    "boost": 3.0,
-                    "max_expansions": 25,
-                }
-            }
-        },
-        {
-            "fuzzy": {
-                "title": {
-                    "value": company_clean,
-                    "fuzziness": "AUTO",
-                    "boost": 2.5,
-                    "max_expansions": 25,
-                }
-            }
-        },
-    ]
-
-    # Add selective wildcards for longer names to catch format variations
-    if len(company_name) > 4:
-        should_clauses.extend(
-            [
-                {
-                    "wildcard": {
-                        "company_common_name.keyword": {
-                            "value": f"*{_escape_wildcard_special_chars(company_name)}*",
-                            "boost": 2.0,
-                        }
-                    }
-                },
-                {
-                    "wildcard": {
-                        "company_legal_name.keyword": {
-                            "value": f"*{_escape_wildcard_special_chars(company_name)}*",
-                            "boost": 2.0,
-                        }
-                    }
-                },
-                {
-                    "wildcard": {
-                        "company_common_name.keyword": {
-                            "value": f"*{_escape_wildcard_special_chars(company_clean)}*",
-                            "boost": 1.8,
-                        }
-                    }
-                },
-                {
-                    "wildcard": {
-                        "company_legal_name.keyword": {
-                            "value": f"*{_escape_wildcard_special_chars(company_clean)}*",
-                            "boost": 1.8,
-                        }
-                    }
-                },
-            ]
-        )
-
-    company_filter = {"bool": {"should": should_clauses, "minimum_should_match": 1}}
-
-    return company_filter
 
 
 def _get_empty_filings_response(max_results: int) -> SearchFilingsResponse:

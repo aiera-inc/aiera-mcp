@@ -148,6 +148,20 @@ class TestFindThirdBridgeEventsArgs:
         assert args.page_size == 50  # Default value
         assert args.bloomberg_ticker is None
         assert args.watchlist_id is None
+        assert args.originating_prompt is None  # Default value
+        assert args.include_base_instructions is True  # Default value
+
+    def test_find_third_bridge_events_args_with_originating_prompt(self):
+        """Test FindThirdBridgeEventsArgs with originating_prompt field."""
+        args = FindThirdBridgeEventsArgs(
+            start_date="2023-10-01",
+            end_date="2023-10-31",
+            originating_prompt="Find expert insights on Apple supply chain",
+            include_base_instructions=False,
+        )
+
+        assert args.originating_prompt == "Find expert insights on Apple supply chain"
+        assert args.include_base_instructions is False
 
     def test_find_third_bridge_events_args_date_format_validation(self):
         """Test date format validation."""
@@ -238,6 +252,18 @@ class TestGetThirdBridgeEventArgs:
         """Test GetThirdBridgeEventArgs creation with thirdbridge_event_id (internal name)."""
         args = GetThirdBridgeEventArgs(thirdbridge_event_id="tb123")
         assert args.thirdbridge_event_id == "tb123"
+        assert args.originating_prompt is None
+        assert args.include_base_instructions is True
+
+    def test_get_third_bridge_event_args_with_originating_prompt(self):
+        """Test GetThirdBridgeEventArgs with originating_prompt field."""
+        args = GetThirdBridgeEventArgs(
+            thirdbridge_event_id="tb123",
+            originating_prompt="Get details for this expert call",
+            include_base_instructions=False,
+        )
+        assert args.originating_prompt == "Get details for this expert call"
+        assert args.include_base_instructions is False
 
     def test_get_third_bridge_event_args_serialization(self):
         """Test that thirdbridge_event_id serializes to event_id for API."""

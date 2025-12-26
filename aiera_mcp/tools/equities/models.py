@@ -68,6 +68,11 @@ class BloombergTickerMixin(BaseModel):
 class FindEquitiesArgs(BaseToolArgs, BloombergTickerMixin):
     """Find companies and equities using various identifiers or search. To find equities for multiple companies, provide a comma-separated list of bloomberg_tickers, isins, rics, or a search term. You do not need to make multiple calls."""
 
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized; and if it is being truncated or summarized, please append a parenthetical saying so.",
+    )
+
     bloomberg_ticker: Optional[str] = Field(
         default=None,
         description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces.",
@@ -110,6 +115,16 @@ class GetEquitySummariesArgs(BaseToolArgs, BloombergTickerMixin):
     To find summaries for multiple companies, provide a comma-separated list of bloomberg_tickers. You do not need to make multiple calls.
     """
 
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized; and if it is being truncated or summarized, please append a parenthetical saying so.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
     bloomberg_ticker: str = Field(
         description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces."
     )
@@ -118,12 +133,19 @@ class GetEquitySummariesArgs(BaseToolArgs, BloombergTickerMixin):
 class GetIndexConstituentsArgs(BaseToolArgs):
     """Get all equities within a specific stock market index."""
 
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized; and if it is being truncated or summarized, please append a parenthetical saying so.",
+    )
+
     index: Union[str, int] = Field(
         description="Index identifier. Use get_available_indexes to find valid values."
     )
+
     page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )
+
     page_size: Union[int, str] = Field(
         default=50, ge=1, le=100, description="Number of items per page (1-100)."
     )
@@ -132,12 +154,19 @@ class GetIndexConstituentsArgs(BaseToolArgs):
 class GetWatchlistConstituentsArgs(BaseToolArgs):
     """Get all equities within a specific watchlist."""
 
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized; and if it is being truncated or summarized, please append a parenthetical saying so.",
+    )
+
     watchlist_id: Union[str, int] = Field(
         description="Watchlist identifier. Use get_available_watchlists to find valid values."
     )
+
     page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )
+
     page_size: Union[int, str] = Field(
         default=50, ge=1, le=100, description="Number of items per page (1-100)."
     )
@@ -146,25 +175,38 @@ class GetWatchlistConstituentsArgs(BaseToolArgs):
 class GetAvailableWatchlistsArgs(BaseToolArgs):
     """Retrieve all available watchlists with their IDs, names, and descriptions. Used to find valid watchlist IDs for filtering other tools."""
 
-    pass
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized; and if it is being truncated or summarized, please append a parenthetical saying so.",
+    )
 
 
 class GetAvailableIndexesArgs(BaseToolArgs):
     """Retrieve all available stock market indices with their IDs, names, and descriptions. Used to find valid index IDs for filtering other tools."""
 
-    pass
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized; and if it is being truncated or summarized, please append a parenthetical saying so.",
+    )
 
 
 class GetSectorsAndSubsectorsArgs(BaseToolArgs):
     """Retrieve all available sectors and subsectors with their IDs, names, and hierarchical relationships. Used to find valid sector/subsector IDs for filtering other tools."""
 
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized; and if it is being truncated or summarized, please append a parenthetical saying so.",
+    )
+
     search: Optional[str] = Field(
         default=None,
         description="Search term to filter results. Searches within relevant text fields.",
     )
+
     page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )
+
     page_size: Union[int, str] = Field(
         default=50, ge=1, le=100, description="Number of items per page (1-100)."
     )
@@ -248,7 +290,8 @@ class ConfirmedEventCitationMetadata(BaseModel):
         description="The type of citation ('event', 'filing', 'company_doc', 'conference', or 'company')"
     )
     url_target: Optional[str] = Field(
-        None, description="Whether the URL will be to Aiera or an external source"
+        None,
+        description="Whether the citation URL will go to Aiera or to an external source",
     )
     company_id: Optional[int] = Field(None, description="Company identifier")
     event_id: Optional[int] = Field(None, description="Event identifier")

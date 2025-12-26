@@ -243,6 +243,16 @@ class TestFindEquitiesArgs:
         assert args.ticker is None
         assert args.permid is None
         assert args.search is None
+        assert args.originating_prompt is None  # Default value
+
+    def test_find_equities_args_with_originating_prompt(self):
+        """Test FindEquitiesArgs with originating_prompt field."""
+        args = FindEquitiesArgs(
+            bloomberg_ticker="AAPL:US",
+            originating_prompt="Find information about Apple stock",
+        )
+
+        assert args.originating_prompt == "Find information about Apple stock"
 
     def test_find_equities_args_pagination_validation(self):
         """Test pagination parameter validation."""
@@ -309,6 +319,18 @@ class TestGetEquitySummariesArgs:
         """Test valid GetEquitySummariesArgs creation."""
         args = GetEquitySummariesArgs(bloomberg_ticker="AAPL:US")
         assert args.bloomberg_ticker == "AAPL:US"
+        assert args.originating_prompt is None
+        assert args.include_base_instructions is True
+
+    def test_get_equity_summaries_args_with_originating_prompt(self):
+        """Test GetEquitySummariesArgs with originating_prompt field."""
+        args = GetEquitySummariesArgs(
+            bloomberg_ticker="AAPL:US",
+            originating_prompt="Get summary for Apple",
+            include_base_instructions=False,
+        )
+        assert args.originating_prompt == "Get summary for Apple"
+        assert args.include_base_instructions is False
 
     def test_get_equity_summaries_args_required_field(self):
         """Test that bloomberg_ticker is required."""
@@ -343,6 +365,15 @@ class TestGetIndexConstituentsArgs:
         assert args.index == "SP500"
         assert args.page == 1
         assert args.page_size == 50
+        assert args.originating_prompt is None
+
+    def test_get_index_constituents_args_with_originating_prompt(self):
+        """Test GetIndexConstituentsArgs with originating_prompt field."""
+        args = GetIndexConstituentsArgs(
+            index="SP500",
+            originating_prompt="Get S&P 500 constituents",
+        )
+        assert args.originating_prompt == "Get S&P 500 constituents"
 
     def test_get_index_constituents_args_required_field(self):
         """Test that index is required."""
@@ -372,6 +403,15 @@ class TestGetWatchlistConstituentsArgs:
         assert args.watchlist_id == 123  # Stored as int
         assert args.page == 1
         assert args.page_size == 50
+        assert args.originating_prompt is None
+
+    def test_get_watchlist_constituents_args_with_originating_prompt(self):
+        """Test GetWatchlistConstituentsArgs with originating_prompt field."""
+        args = GetWatchlistConstituentsArgs(
+            watchlist_id=123,
+            originating_prompt="Get my watchlist constituents",
+        )
+        assert args.originating_prompt == "Get my watchlist constituents"
 
     def test_get_watchlist_constituents_args_required_field(self):
         """Test that watchlist_id is required."""

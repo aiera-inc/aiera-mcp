@@ -110,6 +110,16 @@ class FindCompanyDocsArgs(BaseToolArgs, BloombergTickerMixin, CategoriesKeywords
     This tool provides access to company-published documents with summaries and metadata.
     """
 
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized; and if it is being truncated or summarized, please append a parenthetical saying so.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
     start_date: str = Field(
         description="Start date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET). Required to define the search period.",
         pattern=r"^\d{4}-\d{2}-\d{2}$",
@@ -167,6 +177,16 @@ class FindCompanyDocsArgs(BaseToolArgs, BloombergTickerMixin, CategoriesKeywords
 class GetCompanyDocArgs(BaseToolArgs):
     """Get detailed information about a specific company document including a summary and other metadata."""
 
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized; and if it is being truncated or summarized, please append a parenthetical saying so.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
     company_doc_ids: str = Field(
         description="Comma separated unique identifiers for the company documents. Obtained from find_company_docs results."
     )
@@ -174,6 +194,11 @@ class GetCompanyDocArgs(BaseToolArgs):
 
 class GetCompanyDocCategoriesArgs(BaseToolArgs):
     """Retrieve all available document categories for filtering company documents. Used to find valid category values for find_company_docs."""
+
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized; and if it is being truncated or summarized, please append a parenthetical saying so.",
+    )
 
     search: Optional[str] = Field(
         default=None,
@@ -191,6 +216,11 @@ class GetCompanyDocCategoriesArgs(BaseToolArgs):
 
 class GetCompanyDocKeywordsArgs(BaseToolArgs):
     """Retrieve all available keywords for filtering company documents. Used to find valid keyword values for find_company_docs."""
+
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized; and if it is being truncated or summarized, please append a parenthetical saying so.",
+    )
 
     search: Optional[str] = Field(
         default=None,
@@ -221,7 +251,8 @@ class DocumentCitationMetadata(BaseModel):
         description="The type of citation ('event', 'filing', 'company_doc', 'conference', or 'company')"
     )
     url_target: Optional[str] = Field(
-        None, description="Whether the URL will be to Aiera or an external source"
+        None,
+        description="Whether the citation URL will go to Aiera or to an external source",
     )
     company_id: Optional[int] = Field(None, description="Company identifier")
     company_doc_id: Optional[int] = Field(
@@ -247,13 +278,13 @@ class CompanyDocItem(BaseModel):
     doc_id: int = Field(description="Document identifier")
     company: CompanyInfo = Field(description="Company information")
     publish_date: Optional[str] = Field(
-        None, description="Publication date as string (can be null)"
+        None, description="Publication date (can be null)"
     )
     category: Optional[str] = Field(None, description="Document category (can be null)")
     title: Optional[str] = Field(None, description="Document title (can be null)")
-    source_url: str = Field(description="Source URL")
+    source_url: str = Field(description="Original source URL")
     summary: Optional[List[str]] = Field(
-        None, description="Document summary as list of strings (can be null)"
+        None, description="Document summary (can be null)"
     )
     keywords: Optional[List[str]] = Field(
         None, description="Document keywords (can be null)"

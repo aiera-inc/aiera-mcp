@@ -19,7 +19,8 @@ class CitationMetadata(BaseModel):
         description="The type of citation ('event', 'filing', 'company_doc', 'conference', or 'company')"
     )
     url_target: Optional[str] = Field(
-        None, description="Whether the URL will be to Aiera or an external source"
+        None,
+        description="Whether the citation URL will go to Aiera or to an external source",
     )
 
     company_id: Optional[int] = Field(None, description="Company identifier")
@@ -49,8 +50,10 @@ class BaseAieraResponse(BaseModel):
     """Base response model with common Aiera metadata."""
 
     instructions: List[str] = Field(
-        default=[], description="Instructions or additional information from the API"
+        default=[],
+        description="Important instructions from the API",
     )
+
     error: Optional[str] = Field(None, description="Error message if request failed")
 
 
