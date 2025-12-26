@@ -132,7 +132,8 @@ class TranscriptSearchCitationMetadata(BaseModel):
         description="The type of citation ('event', 'filing', 'company_doc', 'conference', or 'company')"
     )
     url_target: Optional[str] = Field(
-        None, description="Whether the URL will be to Aiera or an external source"
+        None,
+        description="Whether the citation URL will go to Aiera or to an external source",
     )
     company_id: Optional[int] = Field(None, description="Company identifier")
     event_id: Optional[int] = Field(None, description="Event identifier")
@@ -242,7 +243,8 @@ class FilingSearchCitationMetadata(BaseModel):
         description="The type of citation ('event', 'filing', 'company_doc', 'conference', or 'company')"
     )
     url_target: Optional[str] = Field(
-        None, description="Whether the URL will be to Aiera or an external source"
+        None,
+        description="Whether the citation URL will go to Aiera or to an external source",
     )
     company_id: Optional[int] = Field(None, description="Company identifier")
     content_id: Optional[int] = Field(None, description="Content identifier")

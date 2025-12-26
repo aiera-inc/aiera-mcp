@@ -119,7 +119,7 @@ def get_api_documentation() -> str:
     Use tool argument schemas for complete parameter documentation and validation.
 
     **Be aware:** certain tools (get_event, get_filing, get_document) may return large text fields. Ensure your client can handle large responses.
-    If you need to fetch multiple documents, favor search tools or tools that return summaries.
+    If you need to fetch multiple documents, it is recommended to favor the search tools, or use tools that return summaries.
     """
 
 
