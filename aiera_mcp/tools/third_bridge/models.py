@@ -71,7 +71,7 @@ class FindThirdBridgeEventsArgs(BaseToolArgs, BloombergTickerMixin):
 
     originating_prompt: Optional[str] = Field(
         default=None,
-        description="The original user prompt that led to this API call. Used for context and instruction generation, and to help tailor responses appropriately. If the prompt is long, it can be summarized or truncated.",
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated.",
     )
 
     include_base_instructions: Optional[bool] = Field(
@@ -128,7 +128,7 @@ class GetThirdBridgeEventArgs(BaseToolArgs):
 
     originating_prompt: Optional[str] = Field(
         default=None,
-        description="The original user prompt that led to this API call. Used for context and instruction generation, and to help tailor responses appropriately. If the prompt is long, it can be summarized or truncated.",
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated.",
     )
 
     include_base_instructions: Optional[bool] = Field(

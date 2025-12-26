@@ -70,7 +70,7 @@ class FindEquitiesArgs(BaseToolArgs, BloombergTickerMixin):
 
     originating_prompt: Optional[str] = Field(
         default=None,
-        description="The original user prompt that led to this API call. Used for context and instruction generation, and to help tailor responses appropriately. If the prompt is long, it can be summarized or truncated.",
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated.",
     )
 
     bloomberg_ticker: Optional[str] = Field(
@@ -117,7 +117,7 @@ class GetEquitySummariesArgs(BaseToolArgs, BloombergTickerMixin):
 
     originating_prompt: Optional[str] = Field(
         default=None,
-        description="The original user prompt that led to this API call. Used for context and instruction generation, and to help tailor responses appropriately. If the prompt is long, it can be summarized or truncated.",
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated.",
     )
 
     include_base_instructions: Optional[bool] = Field(
@@ -135,7 +135,7 @@ class GetIndexConstituentsArgs(BaseToolArgs):
 
     originating_prompt: Optional[str] = Field(
         default=None,
-        description="The original user prompt that led to this API call. Used for context and instruction generation, and to help tailor responses appropriately. If the prompt is long, it can be summarized or truncated.",
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated.",
     )
 
     index: Union[str, int] = Field(
@@ -156,7 +156,7 @@ class GetWatchlistConstituentsArgs(BaseToolArgs):
 
     originating_prompt: Optional[str] = Field(
         default=None,
-        description="The original user prompt that led to this API call. Used for context and instruction generation, and to help tailor responses appropriately. If the prompt is long, it can be summarized or truncated.",
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated.",
     )
 
     watchlist_id: Union[str, int] = Field(
@@ -177,7 +177,7 @@ class GetAvailableWatchlistsArgs(BaseToolArgs):
 
     originating_prompt: Optional[str] = Field(
         default=None,
-        description="The original user prompt that led to this API call. Used for context and instruction generation, and to help tailor responses appropriately. If the prompt is long, it can be summarized or truncated.",
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated.",
     )
 
 
@@ -186,7 +186,7 @@ class GetAvailableIndexesArgs(BaseToolArgs):
 
     originating_prompt: Optional[str] = Field(
         default=None,
-        description="The original user prompt that led to this API call. Used for context and instruction generation, and to help tailor responses appropriately. If the prompt is long, it can be summarized or truncated.",
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated.",
     )
 
 
@@ -195,7 +195,7 @@ class GetSectorsAndSubsectorsArgs(BaseToolArgs):
 
     originating_prompt: Optional[str] = Field(
         default=None,
-        description="The original user prompt that led to this API call. Used for context and instruction generation, and to help tailor responses appropriately. If the prompt is long, it can be summarized or truncated.",
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated.",
     )
 
     search: Optional[str] = Field(
