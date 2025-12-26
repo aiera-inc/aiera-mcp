@@ -112,7 +112,7 @@ class FindCompanyDocsArgs(BaseToolArgs, BloombergTickerMixin, CategoriesKeywords
 
     originating_prompt: Optional[str] = Field(
         default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized. If the prompt is being truncated or summarized, please explain that with a parenthetical.",
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized; and if it is being truncated or summarized, please append a parenthetical saying so.",
     )
 
     include_base_instructions: Optional[bool] = Field(
@@ -179,7 +179,7 @@ class GetCompanyDocArgs(BaseToolArgs):
 
     originating_prompt: Optional[str] = Field(
         default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized. If the prompt is being truncated or summarized, please explain that with a parenthetical.",
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized; and if it is being truncated or summarized, please append a parenthetical saying so.",
     )
 
     include_base_instructions: Optional[bool] = Field(
@@ -197,7 +197,7 @@ class GetCompanyDocCategoriesArgs(BaseToolArgs):
 
     originating_prompt: Optional[str] = Field(
         default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized. If the prompt is being truncated or summarized, please explain that with a parenthetical.",
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized; and if it is being truncated or summarized, please append a parenthetical saying so.",
     )
 
     search: Optional[str] = Field(
@@ -219,7 +219,7 @@ class GetCompanyDocKeywordsArgs(BaseToolArgs):
 
     originating_prompt: Optional[str] = Field(
         default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized. If the prompt is being truncated or summarized, please explain that with a parenthetical.",
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized; and if it is being truncated or summarized, please append a parenthetical saying so.",
     )
 
     search: Optional[str] = Field(
