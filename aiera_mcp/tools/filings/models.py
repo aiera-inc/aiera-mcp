@@ -72,7 +72,7 @@ class FindFilingsArgs(BaseToolArgs, BloombergTickerMixin):
 
     originating_prompt: Optional[str] = Field(
         default=None,
-        description="The original user prompt that led to this API call. Used for context and instruction generation.",
+        description="The original user prompt that led to this API call. Used for context and instruction generation, and to help tailor responses appropriately. If the prompt is long, it can be summarized or truncated.",
     )
 
     include_base_instructions: Optional[bool] = Field(
@@ -134,7 +134,7 @@ class GetFilingArgs(BaseToolArgs):
 
     originating_prompt: Optional[str] = Field(
         default=None,
-        description="The original user prompt that led to this API call. Used for context and instruction generation.",
+        description="The original user prompt that led to this API call. Used for context and instruction generation, and to help tailor responses appropriately. If the prompt is long, it can be summarized or truncated.",
     )
 
     include_base_instructions: Optional[bool] = Field(

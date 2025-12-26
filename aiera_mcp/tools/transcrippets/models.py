@@ -79,7 +79,7 @@ class FindTranscrippetsArgs(BaseToolArgs, ProvidedIdsMixin):
 
     originating_prompt: Optional[str] = Field(
         default=None,
-        description="The original user prompt that led to this API call. Used for context and instruction generation.",
+        description="The original user prompt that led to this API call. Used for context and instruction generation, and to help tailor responses appropriately. If the prompt is long, it can be summarized or truncated.",
     )
 
     transcrippet_id: Optional[str] = Field(
@@ -125,7 +125,7 @@ class CreateTranscrippetArgs(BaseToolArgs):
 
     originating_prompt: Optional[str] = Field(
         default=None,
-        description="The original user prompt that led to this API call. Used for context and instruction generation.",
+        description="The original user prompt that led to this API call. Used for context and instruction generation, and to help tailor responses appropriately. If the prompt is long, it can be summarized or truncated.",
     )
 
     event_id: int = Field(
@@ -158,7 +158,7 @@ class DeleteTranscrippetArgs(BaseToolArgs):
 
     originating_prompt: Optional[str] = Field(
         default=None,
-        description="The original user prompt that led to this API call. Used for context and instruction generation.",
+        description="The original user prompt that led to this API call. Used for context and instruction generation, and to help tailor responses appropriately. If the prompt is long, it can be summarized or truncated.",
     )
 
     transcrippet_id: str = Field(
