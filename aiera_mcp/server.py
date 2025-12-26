@@ -3,7 +3,6 @@
 import os
 import httpx
 import logging
-from datetime import datetime
 from typing import Any, Dict, Optional, Callable, List
 from collections.abc import AsyncIterator
 
@@ -80,46 +79,47 @@ def get_api_documentation() -> str:
 
     ## Tool Categories
 
-    **Events & Transcripts**: Find and retrieve corporate events (earnings calls, conferences, meetings) with full transcripts and metadata.
+    **Events & Transcripts**: Find and retrieve corporate events (earnings calls, conferences, meetings, etc.) with full transcripts and metadata.
 
     **SEC Filings**: Search and retrieve SEC filings (10-K, 10-Q, 8-K, etc.) with summaries and full content.
 
-    **Company Data**: Access equity information, sector classifications, index constituents, and watchlists.
-
-    **Company Documents**: Find investor relations documents, press releases, and regulatory filings published by companies.
+    **Company Documents**: Find company publications, including press releases, regulatory filings, announcements, and more.
 
     **Expert Insights**: Access Third Bridge expert interview events and insights.
 
-    **Transcrippets™**: Create, find, and manage curated transcript segments for key insights and memorable quotes.
-
     **Search**: Perform semantic search across transcripts and filings with advanced filtering.
+
+    **Company Data**: Access equity information, sector classifications, index constituents, and watchlists.
+
+    **Transcrippets™**: Create, find, and manage curated transcript segments for key insights and memorable quotes.
 
     ## Key Features
 
-    - **Comprehensive Coverage**: Access to events, filings, documents, and expert insights across all major markets
-    - **Rich Metadata**: Detailed summaries, speaker information, and structured data for all content
-    - **Flexible Filtering**: Search by date ranges, tickers, sectors, indices, watchlists, and custom criteria
-    - **Pagination Support**: Handle large result sets efficiently with pagination
-    - **Citation Ready**: All responses include citation information for professional use
+    - **Comprehensive Coverage**: Access to events, filings, documents, and expert insights across all major markets.
+    - **Rich Metadata**: Detailed summaries, speaker information, and structured data for all content.
+    - **Flexible Filtering**: Search by date ranges, tickers, sectors, indices, watchlists, and custom criteria.
+    - **Pagination Support**: Handle large result sets efficiently with pagination.
+    - **Citation Ready**: All responses include citation information for professional use.
 
     ## Authentication & Usage
 
-    - Requires `AIERA_API_KEY` environment variable
-    - All dates use Eastern Time (ET)
-    - Current date: **{datetime.now().strftime("%Y-%m-%d")}**
-    - Bloomberg tickers use format "TICKER:COUNTRY" (e.g., "AAPL:US")
-    - Multiple values in comma-separated lists (no spaces)
+    - Requires `AIERA_API_KEY` environment variable.
+    - Bloomberg tickers use format "TICKER:COUNTRY" (e.g., "AAPL:US").
+    - Multiple values in comma-separated lists (no spaces).
 
     ## Tool Parameters
 
     Each tool provides detailed parameter descriptions and validation through its input schema. Common patterns include:
 
-    - **Date ranges**: ISO format (YYYY-MM-DD) with start_date and end_date
-    - **Entity filtering**: Filter by tickers, watchlists, indices, sectors, or subsectors
-    - **Pagination**: Page number and page size parameters where applicable
-    - **Content filtering**: Categories, keywords, form types for targeted searches
+    - **Date ranges**: ISO format (YYYY-MM-DD) with start_date and end_date.
+    - **Entity filtering**: Filter by tickers, watchlists, indices, sectors, or subsectors.
+    - **Pagination**: Page number and page size parameters where applicable.
+    - **Content filtering**: Categories, keywords, form types for targeted searches.
 
     Use tool argument schemas for complete parameter documentation and validation.
+
+    **Be aware:** certain tools (get_event, get_filing, get_document) may return large text fields. Ensure your client can handle large responses.
+    If you need to fetch multiple documents, favor search tools or tools that return summaries.
     """
 
 
