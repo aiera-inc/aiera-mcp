@@ -5,6 +5,7 @@
 import pytest
 import pytest_asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
+from contextlib import ExitStack
 
 import httpx
 
@@ -50,81 +51,37 @@ async def mock_http_dependencies(mock_server_import, mock_make_aiera_request):
     def get_api_key_patch():
         return "test-api-key"
 
-    with (
-        patch("aiera_mcp.tools.base.get_http_client", side_effect=get_client_patch),
-        patch(
-            "aiera_mcp.get_api_key",
-            side_effect=get_api_key_patch,
-        ),
-        patch(
-            "aiera_mcp.tools.transcrippets.tools.get_api_key",
-            return_value="test-api-key",
-        ),
-        patch(
-            "aiera_mcp.tools.transcrippets.tools.get_http_client",
-            side_effect=get_client_patch,
-        ),
-        patch(
-            "aiera_mcp.tools.transcrippets.tools.make_aiera_request",
-            mock_make_aiera_request,
-        ),
-        patch(
-            "aiera_mcp.tools.third_bridge.tools.get_api_key",
-            return_value="test-api-key",
-        ),
-        patch(
-            "aiera_mcp.tools.third_bridge.tools.get_http_client",
-            side_effect=get_client_patch,
-        ),
-        patch(
-            "aiera_mcp.tools.third_bridge.tools.make_aiera_request",
-            mock_make_aiera_request,
-        ),
-        patch(
-            "aiera_mcp.tools.filings.tools.get_api_key",
-            return_value="test-api-key",
-        ),
-        patch(
-            "aiera_mcp.tools.filings.tools.get_http_client",
-            side_effect=get_client_patch,
-        ),
-        patch(
-            "aiera_mcp.tools.filings.tools.make_aiera_request", mock_make_aiera_request
-        ),
-        patch(
-            "aiera_mcp.tools.equities.tools.get_api_key",
-            return_value="test-api-key",
-        ),
-        patch(
-            "aiera_mcp.tools.equities.tools.get_http_client",
-            side_effect=get_client_patch,
-        ),
-        patch(
-            "aiera_mcp.tools.equities.tools.make_aiera_request", mock_make_aiera_request
-        ),
-        patch(
-            "aiera_mcp.tools.events.tools.get_api_key",
-            return_value="test-api-key",
-        ),
-        patch(
-            "aiera_mcp.tools.events.tools.get_http_client", side_effect=get_client_patch
-        ),
-        patch(
-            "aiera_mcp.tools.events.tools.make_aiera_request", mock_make_aiera_request
-        ),
-        patch(
-            "aiera_mcp.tools.company_docs.tools.get_api_key",
-            return_value="test-api-key",
-        ),
-        patch(
-            "aiera_mcp.tools.company_docs.tools.get_http_client",
-            side_effect=get_client_patch,
-        ),
-        patch(
-            "aiera_mcp.tools.company_docs.tools.make_aiera_request",
-            mock_make_aiera_request,
-        ),
-    ):
+    # Use ExitStack to manage many context managers
+    with ExitStack() as stack:
+        # Base patches
+        stack.enter_context(
+            patch("aiera_mcp.tools.base.get_http_client", side_effect=get_client_patch)
+        )
+        stack.enter_context(
+            patch("aiera_mcp.get_api_key", side_effect=get_api_key_patch)
+        )
+
+        # Tool-specific patches - organized by domain
+        tool_modules = [
+            "aiera_mcp.tools.transcrippets.tools",
+            "aiera_mcp.tools.third_bridge.tools",
+            "aiera_mcp.tools.filings.tools",
+            "aiera_mcp.tools.equities.tools",
+            "aiera_mcp.tools.events.tools",
+            "aiera_mcp.tools.company_docs.tools",
+            "aiera_mcp.tools.search.tools",
+        ]
+
+        for module in tool_modules:
+            stack.enter_context(
+                patch(f"{module}.get_api_key", return_value="test-api-key")
+            )
+            stack.enter_context(
+                patch(f"{module}.get_http_client", side_effect=get_client_patch)
+            )
+            stack.enter_context(
+                patch(f"{module}.make_aiera_request", mock_make_aiera_request)
+            )
 
         yield {
             "mock_client": mock_client,
@@ -168,6 +125,12 @@ def third_bridge_api_responses(sample_api_responses):
 def transcrippets_api_responses(sample_api_responses):
     """Transcrippets API response fixtures."""
     return sample_api_responses.get("transcrippets", {})
+
+
+@pytest.fixture
+def search_api_responses(sample_api_responses):
+    """Search API response fixtures."""
+    return sample_api_responses.get("search", {})
 
 
 @pytest.fixture

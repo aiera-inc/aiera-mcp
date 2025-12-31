@@ -7,17 +7,25 @@ import pytest_asyncio
 from datetime import datetime
 from unittest.mock import AsyncMock
 
-from aiera_mcp.tools.events.tools import find_events, get_event, get_upcoming_events
+from aiera_mcp.tools.events.tools import (
+    find_events,
+    find_conferences,
+    get_event,
+    get_upcoming_events,
+)
 from aiera_mcp.tools.events.models import (
     FindEventsArgs,
+    FindConferencesArgs,
     GetEventArgs,
     GetUpcomingEventsArgs,
     FindEventsResponse,
+    FindConferencesResponse,
     GetEventResponse,
     GetUpcomingEventsResponse,
     EventItem,
     EventDetails,
     EventType,
+    ConferenceItem,
 )
 
 
@@ -182,6 +190,179 @@ class TestFindEvents:
         assert params["watchlist_id"] == "123"
         assert params["sector_id"] == "456"
         assert params["subsector_id"] == "789"
+
+
+@pytest.mark.unit
+class TestFindConferences:
+    """Test the find_conferences tool."""
+
+    @pytest.mark.asyncio
+    async def test_find_conferences_success(
+        self, mock_http_dependencies, events_api_responses
+    ):
+        """Test successful conference search."""
+        # Setup
+        mock_http_dependencies["mock_make_request"].return_value = events_api_responses[
+            "find_conferences_success"
+        ]
+
+        args = FindConferencesArgs(
+            start_date="2026-01-01",
+            end_date="2026-01-31",
+        )
+
+        # Execute
+        result = await find_conferences(args)
+
+        # Verify
+        assert isinstance(result, FindConferencesResponse)
+        assert len(result.response.data) == 2
+        assert result.response.pagination.total_count == 15
+
+        # Check first conference
+        first_conference = result.response.data[0]
+        assert isinstance(first_conference, ConferenceItem)
+        assert first_conference.conference_id == 36743
+        assert first_conference.title == "TD Cowen Global Mining Conference"
+        assert first_conference.event_count == 2
+
+        # Check API call was made correctly
+        mock_http_dependencies["mock_make_request"].assert_called_once()
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        assert call_args[1]["method"] == "GET"
+        assert call_args[1]["endpoint"] == "/chat-support/find-conferences"
+
+        # Check parameters were passed correctly
+        params = call_args[1]["params"]
+        assert params["start_date"] == "2026-01-01"
+        assert params["end_date"] == "2026-01-31"
+
+    @pytest.mark.asyncio
+    async def test_find_conferences_empty_results(self, mock_http_dependencies):
+        """Test find_conferences with empty results."""
+        # Setup
+        empty_response = {
+            "response": {
+                "data": [],
+                "pagination": {
+                    "total_count": 0,
+                    "current_page": 1,
+                    "total_pages": 0,
+                    "page_size": 50,
+                },
+            },
+            "instructions": [],
+        }
+        mock_http_dependencies["mock_make_request"].return_value = empty_response
+
+        args = FindConferencesArgs(start_date="2099-01-01", end_date="2099-01-31")
+
+        # Execute
+        result = await find_conferences(args)
+
+        # Verify
+        assert isinstance(result, FindConferencesResponse)
+        assert len(result.response.data) == 0
+        assert result.response.pagination.total_count == 0
+
+    @pytest.mark.asyncio
+    async def test_find_conferences_with_pagination(
+        self, mock_http_dependencies, events_api_responses
+    ):
+        """Test find_conferences with pagination parameters."""
+        # Setup
+        mock_http_dependencies["mock_make_request"].return_value = events_api_responses[
+            "find_conferences_success"
+        ]
+
+        args = FindConferencesArgs(
+            start_date="2026-01-01",
+            end_date="2026-01-31",
+            page=2,
+            page_size=25,
+        )
+
+        # Execute
+        result = await find_conferences(args)
+
+        # Verify
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        params = call_args[1]["params"]
+        assert params["page"] == "2"
+        assert params["page_size"] == "25"
+
+    @pytest.mark.asyncio
+    async def test_find_conferences_citations(
+        self, mock_http_dependencies, events_api_responses
+    ):
+        """Test that find_conferences includes proper citation information."""
+        # Setup
+        mock_http_dependencies["mock_make_request"].return_value = events_api_responses[
+            "find_conferences_success"
+        ]
+
+        args = FindConferencesArgs(
+            start_date="2026-01-01",
+            end_date="2026-01-31",
+        )
+
+        # Execute
+        result = await find_conferences(args)
+
+        # Verify citations
+        first_conference = result.response.data[0]
+        assert first_conference.citation_information is not None
+        assert (
+            first_conference.citation_information.title
+            == "TD Cowen Global Mining Conference"
+        )
+        assert "conferences" in first_conference.citation_information.url
+        assert first_conference.citation_information.metadata.type == "conference"
+        assert first_conference.citation_information.metadata.conference_id == 36743
+
+    @pytest.mark.asyncio
+    async def test_find_conferences_exclude_instructions(
+        self, mock_http_dependencies, events_api_responses
+    ):
+        """Test find_conferences with exclude_instructions."""
+        # Setup
+        mock_http_dependencies["mock_make_request"].return_value = events_api_responses[
+            "find_conferences_success"
+        ]
+
+        args = FindConferencesArgs(
+            start_date="2026-01-01",
+            end_date="2026-01-31",
+            exclude_instructions=True,
+        )
+
+        # Execute
+        result = await find_conferences(args)
+
+        # Verify instructions are empty
+        assert result.instructions == []
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "exception_type", [ConnectionError, TimeoutError, ValueError]
+    )
+    async def test_find_conferences_network_errors_propagate(
+        self, mock_http_dependencies, exception_type
+    ):
+        """Test that network errors are properly propagated."""
+        # Setup
+        mock_http_dependencies["mock_make_request"].side_effect = exception_type(
+            "Test error"
+        )
+
+        args = FindConferencesArgs(
+            start_date="2026-01-01",
+            end_date="2026-01-31",
+        )
+
+        # Execute & Verify
+        with pytest.raises(exception_type):
+            await find_conferences(args)
 
 
 @pytest.mark.unit

@@ -382,7 +382,7 @@ async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
             raw_response = await make_aiera_request(
                 client=client,
                 method="POST",
-                endpoint="/chat-support/search/transcripts",
+                endpoint="/chat-support/search/filing-chunks",
                 api_key=api_key,
                 params={},
                 data=query,
