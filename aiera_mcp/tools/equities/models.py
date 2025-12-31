@@ -73,6 +73,11 @@ class FindEquitiesArgs(BaseToolArgs, BloombergTickerMixin):
         description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized; and if it is being truncated or summarized, please append a parenthetical saying so.",
     )
 
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
     bloomberg_ticker: Optional[str] = Field(
         default=None,
         description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces.",
@@ -125,6 +130,11 @@ class GetEquitySummariesArgs(BaseToolArgs, BloombergTickerMixin):
         description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
     )
 
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
     bloomberg_ticker: str = Field(
         description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces."
     )
@@ -136,6 +146,11 @@ class GetIndexConstituentsArgs(BaseToolArgs):
     originating_prompt: Optional[str] = Field(
         default=None,
         description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized; and if it is being truncated or summarized, please append a parenthetical saying so.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
     )
 
     index: Union[str, int] = Field(
@@ -159,6 +174,11 @@ class GetWatchlistConstituentsArgs(BaseToolArgs):
         description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized; and if it is being truncated or summarized, please append a parenthetical saying so.",
     )
 
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
     watchlist_id: Union[str, int] = Field(
         description="Watchlist identifier. Use get_available_watchlists to find valid values."
     )
@@ -180,6 +200,11 @@ class GetAvailableWatchlistsArgs(BaseToolArgs):
         description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized; and if it is being truncated or summarized, please append a parenthetical saying so.",
     )
 
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
 
 class GetAvailableIndexesArgs(BaseToolArgs):
     """Retrieve all available stock market indices with their IDs, names, and descriptions. Used to find valid index IDs for filtering other tools."""
@@ -189,6 +214,11 @@ class GetAvailableIndexesArgs(BaseToolArgs):
         description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized; and if it is being truncated or summarized, please append a parenthetical saying so.",
     )
 
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
 
 class GetSectorsAndSubsectorsArgs(BaseToolArgs):
     """Retrieve all available sectors and subsectors with their IDs, names, and hierarchical relationships. Used to find valid sector/subsector IDs for filtering other tools."""
@@ -196,6 +226,11 @@ class GetSectorsAndSubsectorsArgs(BaseToolArgs):
     originating_prompt: Optional[str] = Field(
         default=None,
         description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized; and if it is being truncated or summarized, please append a parenthetical saying so.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
     )
 
     search: Optional[str] = Field(

@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 
-import os
 import httpx
 import logging
 from typing import Any, Dict, Optional, Callable, List
-from collections.abc import AsyncIterator
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
@@ -15,13 +13,6 @@ logger = logging.getLogger(__name__)
 
 # Import settings and API key provider functions from package
 from .config import get_settings
-
-try:
-    pass
-except ImportError:
-    # Fallback for standalone usage
-    def get_api_key() -> Optional[str]:
-        return os.getenv("AIERA_API_KEY")
 
 
 # Global HTTP client for Lambda environment with proper configuration

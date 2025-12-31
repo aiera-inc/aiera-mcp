@@ -19,16 +19,8 @@ DEFAULT_HEADERS = {
     "X-MCP-Origin": "local_mcp",
 }
 
-
-# Backward compatibility - expose AIERA_BASE_URL as a module-level variable
-# This will be dynamically resolved from settings
-def _get_base_url() -> str:
-    """Get the base URL from settings."""
-    return get_settings().aiera_base_url
-
-
-# For backward compatibility, keep AIERA_BASE_URL as a module constant
-# but it will be resolved at import time
+# Public constant for backward compatibility
+# Note: This is evaluated at import time; for dynamic access use get_settings().aiera_base_url
 AIERA_BASE_URL = get_settings().aiera_base_url
 
 # Global HTTP client for Lambda environment with proper configuration

@@ -82,6 +82,11 @@ class FindTranscrippetsArgs(BaseToolArgs, ProvidedIdsMixin):
         description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized; and if it is being truncated or summarized, please append a parenthetical saying so.",
     )
 
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
     transcrippet_id: Optional[str] = Field(
         default=None,
         description="Transcrippet ID(s). For multiple IDs, use comma-separated list without spaces.",
@@ -128,6 +133,11 @@ class CreateTranscrippetArgs(BaseToolArgs):
         description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized; and if it is being truncated or summarized, please append a parenthetical saying so.",
     )
 
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
     event_id: int = Field(
         description="Event ID from which to create the transcrippet. Use find_events to obtain valid event IDs."
     )
@@ -159,6 +169,11 @@ class DeleteTranscrippetArgs(BaseToolArgs):
     originating_prompt: Optional[str] = Field(
         default=None,
         description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized; and if it is being truncated or summarized, please append a parenthetical saying so.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
     )
 
     transcrippet_id: str = Field(

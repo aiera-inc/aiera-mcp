@@ -43,7 +43,10 @@ async def find_third_bridge_events(
 
     # Return the structured response directly - no transformation needed
     # since FindThirdBridgeEventsResponse model now matches the actual API format
-    return FindThirdBridgeEventsResponse.model_validate(raw_response)
+    response = FindThirdBridgeEventsResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
 
 
 async def get_third_bridge_event(
@@ -91,10 +94,13 @@ async def get_third_bridge_event(
     # Build detailed event using model_validate to apply validation_aliases
     event_details = ThirdBridgeEventDetails.model_validate(event_data)
 
-    return GetThirdBridgeEventResponse(
+    response = GetThirdBridgeEventResponse(
         event=event_details,
         instructions=raw_response.get("instructions", []),
     )
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
 
 
 # Legacy registration functions removed - all tools now registered via registry

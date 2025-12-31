@@ -44,7 +44,10 @@ async def find_events(args: FindEventsArgs) -> FindEventsResponse:
     )
 
     # Pydantic validators will automatically parse datetime strings and nested objects
-    return FindEventsResponse.model_validate(raw_response)
+    response = FindEventsResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
 
 
 async def find_conferences(args: FindConferencesArgs) -> FindConferencesResponse:
@@ -66,7 +69,10 @@ async def find_conferences(args: FindConferencesArgs) -> FindConferencesResponse
     )
 
     # Pydantic validators will automatically parse datetime strings and nested objects
-    return FindConferencesResponse.model_validate(raw_response)
+    response = FindConferencesResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
 
 
 async def get_event(args: GetEventArgs) -> GetEventResponse:
@@ -93,7 +99,10 @@ async def get_event(args: GetEventArgs) -> GetEventResponse:
     )
 
     # Pydantic validators will automatically parse datetime strings and nested objects
-    return GetEventResponse.model_validate(raw_response)
+    response = GetEventResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
 
 
 async def get_upcoming_events(args: GetUpcomingEventsArgs) -> GetUpcomingEventsResponse:
@@ -115,7 +124,10 @@ async def get_upcoming_events(args: GetUpcomingEventsArgs) -> GetUpcomingEventsR
     )
 
     # Pydantic validators will automatically parse datetime strings and nested objects
-    return GetUpcomingEventsResponse.model_validate(raw_response)
+    response = GetUpcomingEventsResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
 
 
 # Legacy registration functions removed - all tools now registered via registry

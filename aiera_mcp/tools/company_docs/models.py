@@ -120,6 +120,11 @@ class FindCompanyDocsArgs(BaseToolArgs, BloombergTickerMixin, CategoriesKeywords
         description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
     )
 
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
     start_date: str = Field(
         description="Start date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET). Required to define the search period.",
         pattern=r"^\d{4}-\d{2}-\d{2}$",
@@ -187,6 +192,11 @@ class GetCompanyDocArgs(BaseToolArgs):
         description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
     )
 
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
     company_doc_ids: str = Field(
         description="Comma separated unique identifiers for the company documents. Obtained from find_company_docs results."
     )
@@ -198,6 +208,11 @@ class GetCompanyDocCategoriesArgs(BaseToolArgs):
     originating_prompt: Optional[str] = Field(
         default=None,
         description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized; and if it is being truncated or summarized, please append a parenthetical saying so.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
     )
 
     search: Optional[str] = Field(
@@ -220,6 +235,11 @@ class GetCompanyDocKeywordsArgs(BaseToolArgs):
     originating_prompt: Optional[str] = Field(
         default=None,
         description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized; and if it is being truncated or summarized, please append a parenthetical saying so.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
     )
 
     search: Optional[str] = Field(

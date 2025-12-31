@@ -49,7 +49,10 @@ async def find_company_docs(args: FindCompanyDocsArgs) -> FindCompanyDocsRespons
 
     # Return the structured response directly - no transformation needed
     # since FindCompanyDocsResponse model now matches the actual API format
-    return FindCompanyDocsResponse.model_validate(raw_response)
+    response = FindCompanyDocsResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
 
 
 async def get_company_doc(args: GetCompanyDocArgs) -> GetCompanyDocResponse:
@@ -96,7 +99,10 @@ async def get_company_doc(args: GetCompanyDocArgs) -> GetCompanyDocResponse:
         "instructions": raw_response.get("instructions", []),
     }
 
-    return GetCompanyDocResponse.model_validate(response_data)
+    response = GetCompanyDocResponse.model_validate(response_data)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
 
 
 async def get_company_doc_categories(
@@ -121,7 +127,10 @@ async def get_company_doc_categories(
 
     # Return the structured response directly - no transformation needed
     # since GetCompanyDocCategoriesResponse model now matches the actual API format
-    return GetCompanyDocCategoriesResponse.model_validate(raw_response)
+    response = GetCompanyDocCategoriesResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
 
 
 async def get_company_doc_keywords(
@@ -146,7 +155,10 @@ async def get_company_doc_keywords(
 
     # Return the structured response directly - no transformation needed
     # since GetCompanyDocKeywordsResponse model now matches the actual API format
-    return GetCompanyDocKeywordsResponse.model_validate(raw_response)
+    response = GetCompanyDocKeywordsResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
 
 
 # Legacy registration functions removed - all tools now registered via registry

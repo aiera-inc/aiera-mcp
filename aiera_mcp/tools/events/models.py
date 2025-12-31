@@ -121,6 +121,11 @@ class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
         description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
     )
 
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
     start_date: str = Field(
         description="Start date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET). Required to define the search period.",
         pattern=r"^\d{4}-\d{2}-\d{2}$",
@@ -207,6 +212,11 @@ class FindConferencesArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
         description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
     )
 
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
     start_date: str = Field(
         description="Start date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET). Required to define the search period.",
         pattern=r"^\d{4}-\d{2}-\d{2}$",
@@ -237,6 +247,11 @@ class GetEventArgs(BaseToolArgs):
     include_base_instructions: Optional[bool] = Field(
         default=True,
         description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
     )
 
     event_id: str = Field(
@@ -272,6 +287,11 @@ class GetUpcomingEventsArgs(BaseToolArgs, BloombergTickerMixin):
     include_base_instructions: Optional[bool] = Field(
         default=True,
         description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
     )
 
     start_date: str = Field(
