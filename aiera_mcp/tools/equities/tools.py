@@ -49,7 +49,10 @@ async def find_equities(args: FindEquitiesArgs) -> FindEquitiesResponse:
     # Pydantic validators will automatically parse datetime strings and nested objects
     # Handle malformed responses gracefully
     try:
-        return FindEquitiesResponse.model_validate(raw_response)
+        response = FindEquitiesResponse.model_validate(raw_response)
+        if args.exclude_instructions:
+            response.instructions = []
+        return response
     except Exception as e:
         logger.warning(f"Failed to parse API response: {e}")
         # Return empty response for malformed data
@@ -106,7 +109,10 @@ async def get_equity_summaries(
 
     # Return the structured response directly - no transformation needed
     # since GetEquitySummariesResponse model now matches the actual API format
-    return GetEquitySummariesResponse.model_validate(raw_response)
+    response = GetEquitySummariesResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
 
 
 async def get_available_indexes(
@@ -129,7 +135,10 @@ async def get_available_indexes(
         params=params,
     )
 
-    return GetAvailableIndexesResponse.model_validate(raw_response)
+    response = GetAvailableIndexesResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
 
 
 async def get_index_constituents(
@@ -176,7 +185,10 @@ async def get_available_watchlists(
         params=params,
     )
 
-    return GetAvailableWatchlistsResponse.model_validate(raw_response)
+    response = GetAvailableWatchlistsResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
 
 
 async def get_watchlist_constituents(

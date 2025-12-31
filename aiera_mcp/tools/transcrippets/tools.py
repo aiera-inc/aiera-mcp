@@ -49,7 +49,10 @@ async def find_transcrippets(args: FindTranscrippetsArgs) -> FindTranscrippetsRe
                 )
 
     # Return the structured response with the added public URLs
-    return FindTranscrippetsResponse.model_validate(raw_response)
+    response = FindTranscrippetsResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
 
 
 async def create_transcrippet(
@@ -82,7 +85,10 @@ async def create_transcrippet(
         ] = f"https://public.aiera.com/shared/transcrippet.html?id={guid}"
 
     # Return the structured response with the added public URL
-    return CreateTranscrippetResponse.model_validate(raw_response)
+    response = CreateTranscrippetResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
 
 
 async def delete_transcrippet(
@@ -118,11 +124,14 @@ async def delete_transcrippet(
             success = False
             message = raw_response["response"].get("error", "Deletion failed")
 
-        return DeleteTranscrippetResponse(
+        response = DeleteTranscrippetResponse(
             success=success,
             message=message,
             instructions=raw_response.get("instructions", []),
         )
+        if args.exclude_instructions:
+            response.instructions = []
+        return response
 
     except Exception as e:
         return DeleteTranscrippetResponse(

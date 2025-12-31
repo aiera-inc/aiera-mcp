@@ -35,6 +35,11 @@ class SearchTranscriptsArgs(BaseAieraArgs):
         description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
     )
 
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
     query_text: str = Field(
         description="Search query for semantic matching within transcripts. Examples: 'earnings guidance', 'regulatory concerns', 'revenue growth'"
     )
@@ -88,6 +93,11 @@ class SearchFilingsArgs(BaseAieraArgs):
     include_base_instructions: Optional[bool] = Field(
         default=True,
         description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
     )
 
     query_text: str = Field(

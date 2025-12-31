@@ -143,7 +143,10 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
             and raw_response["response"].get("result")
         ):
             logger.info("search_transcripts ML inference successful")
-            return SearchTranscriptsResponse.model_validate(raw_response)
+            response = SearchTranscriptsResponse.model_validate(raw_response)
+            if args.exclude_instructions:
+                response.instructions = []
+            return response
 
     except asyncio.TimeoutError:
         logger.warning(
@@ -202,7 +205,10 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
 
             if raw_response and "response" in raw_response:
                 logger.info("search_transcripts standard pipeline search successful")
-                return SearchTranscriptsResponse.model_validate(raw_response)
+                response = SearchTranscriptsResponse.model_validate(raw_response)
+                if args.exclude_instructions:
+                    response.instructions = []
+                return response
 
         except Exception as pipeline_error:
             logger.info(
@@ -329,7 +335,10 @@ async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
             and raw_response["response"].get("result")
         ):
             logger.info("search_filings ML inference successful")
-            return SearchFilingsResponse.model_validate(raw_response)
+            response = SearchFilingsResponse.model_validate(raw_response)
+            if args.exclude_instructions:
+                response.instructions = []
+            return response
 
     except asyncio.TimeoutError:
         logger.warning(
@@ -381,7 +390,10 @@ async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
 
             if raw_response and "response" in raw_response:
                 logger.info("search_filings standard pipeline search successful")
-                return SearchFilingsResponse.model_validate(raw_response)
+                response = SearchFilingsResponse.model_validate(raw_response)
+                if args.exclude_instructions:
+                    response.instructions = []
+                return response
 
         except Exception as pipeline_error:
             logger.info(

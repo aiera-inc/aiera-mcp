@@ -165,7 +165,10 @@ async def find_filings(args: FindFilingsArgs) -> FindFilingsResponse:
 
     # Handle malformed responses gracefully
     try:
-        return FindFilingsResponse.model_validate(raw_response)
+        response = FindFilingsResponse.model_validate(raw_response)
+        if args.exclude_instructions:
+            response.instructions = []
+        return response
     except Exception as e:
         logger.warning(f"Failed to parse API response: {e}")
         # Return empty response for malformed data
@@ -286,7 +289,10 @@ async def get_filing(args: GetFilingArgs) -> GetFilingResponse:
         document_count=filing_data.get("document_count", 1),
     )
 
-    return GetFilingResponse(
+    response = GetFilingResponse(
         filing=filing_details,
         instructions=raw_response.get("instructions", []),
     )
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
