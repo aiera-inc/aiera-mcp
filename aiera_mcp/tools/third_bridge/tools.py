@@ -52,7 +52,7 @@ async def find_third_bridge_events(
 async def get_third_bridge_event(
     args: GetThirdBridgeEventArgs,
 ) -> GetThirdBridgeEventResponse:
-    """Retrieve an expert insight events from Third Bridge, including agenda, insights, transcript, and other metadata."""
+    """Retrieve an expert insight event from Third Bridge, including agenda, insights, transcript, and other metadata."""
     logger.info("tool called: get_third_bridge_event")
 
     # Get client and API key (no context needed for standard MCP)

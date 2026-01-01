@@ -76,7 +76,7 @@ async def find_conferences(args: FindConferencesArgs) -> FindConferencesResponse
 
 
 async def get_event(args: GetEventArgs) -> GetEventResponse:
-    """Retrieve an event, including the summary, transcript, and other metadata. Optionally, you filter the transcripts by section ('presentation' or 'q_and_a')."""
+    """Retrieve an event, including the summary, transcript, and other metadata. Optionally, you can filter the transcripts by section ('presentation' or 'q_and_a')."""
     logger.info("tool called: get_event")
 
     # Get client and API key (no context needed for standard MCP)

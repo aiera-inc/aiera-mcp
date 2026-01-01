@@ -27,7 +27,12 @@ class SearchTranscriptsArgs(BaseAieraArgs):
 
     originating_prompt: Optional[str] = Field(
         default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized; and if it is being truncated or summarized, please append a parenthetical saying so.",
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
+    )
+
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
     )
 
     include_base_instructions: Optional[bool] = Field(
@@ -45,11 +50,13 @@ class SearchTranscriptsArgs(BaseAieraArgs):
     )
 
     event_ids: List[int] = Field(
-        description="List of specific event IDs to search within. Obtained from source identification using find_events."
+        default_factory=list,
+        description="Optional list of specific event IDs to search within. Obtained from source identification using find_events.",
     )
 
     equity_ids: List[int] = Field(
-        description="List of specific equity IDs to filter search. Obtained from source identification using find_equities."
+        default_factory=list,
+        description="Optional list of specific equity IDs to filter search. Obtained from source identification using find_equities.",
     )
 
     start_date: str = Field(
@@ -87,7 +94,12 @@ class SearchFilingsArgs(BaseAieraArgs):
 
     originating_prompt: Optional[str] = Field(
         default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized; and if it is being truncated or summarized, please append a parenthetical saying so.",
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
+    )
+
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
     )
 
     include_base_instructions: Optional[bool] = Field(
@@ -110,7 +122,8 @@ class SearchFilingsArgs(BaseAieraArgs):
     )
 
     equity_ids: List[int] = Field(
-        description="List of specific equity IDs to filter search. Obtained from source identification using find_equities."
+        default_factory=list,
+        description="Optional list of specific equity IDs to filter search. Obtained from source identification using find_equities.",
     )
 
     start_date: str = Field(
