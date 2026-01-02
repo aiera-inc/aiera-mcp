@@ -3,8 +3,8 @@
 """Equities domain models for Aiera MCP."""
 
 from pydantic import AliasChoices, BaseModel, Field, field_validator, field_serializer
-from typing import Optional, List, Any, Dict, Union
-from datetime import datetime
+from typing import Optional, List, Any, Dict, Union, Literal
+from datetime import datetime, date
 
 
 # Mixins for validation (extracted from original params.py)
@@ -682,3 +682,214 @@ class GetWatchlistConstituentsResponse(BaseModel):
     pagination: Optional[ApiPaginationInfo] = Field(
         None, description="Pagination information"
     )
+
+
+class GetFinancialsArgs(BaseToolArgs, BloombergTickerMixin):
+    """Retrieve financial data (income statements, balance sheets, cash flow statements) for a company.
+    Use this tool to get detailed financial metrics for a specific company and fiscal period.
+    """
+
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
+    )
+
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
+    bloomberg_ticker: str = Field(
+        description="Bloomberg ticker in format 'TICKER:COUNTRY' (e.g., 'AAPL:US')."
+    )
+
+    source: Literal["income-statement", "balance-sheet", "cash-flow-statement"] = Field(
+        description="The type of financial statement to retrieve."
+    )
+
+    source_type: Literal["as-reported", "standardized"] = Field(
+        description="The format type of the financial data: 'as-reported' for original filings or 'standardized' for normalized data."
+    )
+
+    period: Literal["annual", "quarterly", "semi-annual", "ltm", "ytd", "latest"] = (
+        Field(description="The reporting period type for the financial data.")
+    )
+
+    fiscal_year: int = Field(description="The fiscal year for the financial data.")
+
+    fiscal_quarter: Optional[int] = Field(
+        default=None,
+        description="The fiscal quarter for the financial data (1-4). Required for quarterly periods.",
+    )
+
+
+class FinancialMetricInfo(BaseModel):
+    """Metadata about a financial metric."""
+
+    metric_name: str = Field(description="Name of the financial metric")
+    metric_format: Optional[str] = Field(
+        None, description="What the metric represents (e.g., number, ratio)"
+    )
+    is_point_in_time: Optional[bool] = Field(
+        None, description="Whether the metric is a point-in-time value"
+    )
+    is_currency: Optional[bool] = Field(
+        None, description="Whether the metric is a currency value"
+    )
+    is_per_share: Optional[bool] = Field(
+        None, description="Whether the metric is a per-share value"
+    )
+    is_key_metric: Optional[bool] = Field(
+        None, description="Whether the metric is a key/important metric"
+    )
+    is_total: Optional[bool] = Field(
+        None, description="Whether the metric is a total/sum value"
+    )
+    headers: Optional[List[str]] = Field(
+        None, description="Header hierarchy for the metric"
+    )
+
+
+class FinancialCitationMetadata(BaseModel):
+    """Metadata for financial citation."""
+
+    type: Optional[str] = Field(None, description="The type of citation")
+    url_target: Optional[str] = Field(
+        None,
+        description="Whether the citation URL will go to Aiera or to an external source",
+    )
+
+
+class FinancialCitationInfo(BaseModel):
+    """Citation information for financial metrics."""
+
+    title: Optional[str] = Field(None, description="Citation title")
+    url: Optional[str] = Field(None, description="Citation URL")
+    metadata: Optional[FinancialCitationMetadata] = Field(
+        None, description="Citation metadata"
+    )
+
+
+class FinancialMetricItem(BaseModel):
+    """Individual financial metric with value and citation."""
+
+    metric: FinancialMetricInfo = Field(description="Metric metadata")
+    metric_value: Optional[Union[int, float]] = Field(
+        None, description="The metric value"
+    )
+    metric_unit: Optional[str] = Field(
+        None, description="Unit of the metric value (e.g. M, B)"
+    )
+    metric_currency: Optional[str] = Field(
+        None, description="Currency of the metric value (e.g. USD, EUR)"
+    )
+    metric_is_calculated: Optional[bool] = Field(
+        None, description="Whether the metric was calculated"
+    )
+    citation_information: Optional[FinancialCitationInfo] = Field(
+        None, description="Citation information for this metric"
+    )
+
+
+class FinancialPeriodItem(BaseModel):
+    """Financial data for a specific period."""
+
+    period_type: Optional[str] = Field(
+        None, description="Type of period (annual, quarterly, etc.)"
+    )
+    report_date: Optional[date] = Field(None, description="Report date")
+    period_duration: Optional[str] = Field(None, description="Duration of the period")
+    calendar_year: Optional[int] = Field(None, description="Calendar year")
+    calendar_quarter: Optional[int] = Field(None, description="Calendar quarter")
+    fiscal_year: Optional[int] = Field(None, description="Fiscal year")
+    fiscal_quarter: Optional[int] = Field(None, description="Fiscal quarter")
+    is_restated: Optional[bool] = Field(
+        None, description="Whether the data was restated"
+    )
+    earnings_date: Optional[datetime] = Field(None, description="Earnings release date")
+    filing_date: Optional[datetime] = Field(None, description="Filing date")
+    metrics: Optional[List[FinancialMetricItem]] = Field(
+        None, description="List of financial metrics"
+    )
+
+    @field_validator("report_date", mode="before")
+    @classmethod
+    def parse_report_date(cls, v):
+        """Parse date strings to date objects."""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                return date.fromisoformat(v)
+            except (ValueError, AttributeError):
+                return None
+        return v
+
+    @field_validator("earnings_date", "filing_date", mode="before")
+    @classmethod
+    def parse_datetime_fields(cls, v):
+        """Parse ISO format datetime strings to datetime objects."""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                return datetime.fromisoformat(v.replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                return None
+        return v
+
+    @field_serializer("report_date")
+    def serialize_report_date(self, value: Optional[date]) -> Optional[str]:
+        """Serialize date fields to ISO format string."""
+        if value is None:
+            return None
+        return value.isoformat()
+
+    @field_serializer("earnings_date", "filing_date")
+    def serialize_datetime_fields(self, value: Optional[datetime]) -> Optional[str]:
+        """Serialize datetime fields to ISO format string."""
+        if value is None:
+            return None
+        return value.isoformat()
+
+
+class FinancialEquityInfo(BaseModel):
+    """Equity information in financials response."""
+
+    equity_id: Optional[int] = Field(None, description="Unique equity identifier")
+    company_id: Optional[int] = Field(None, description="Company ID")
+    name: Optional[str] = Field(None, description="Company name")
+    bloomberg_ticker: Optional[str] = Field(None, description="Bloomberg ticker")
+    sector_id: Optional[int] = Field(None, description="Sector ID")
+    subsector_id: Optional[int] = Field(None, description="Subsector ID")
+
+
+class FinancialsResponseData(BaseModel):
+    """Response data containing equity and financials."""
+
+    equity: Optional[FinancialEquityInfo] = Field(
+        None, description="Equity information"
+    )
+    financials: Optional[List[FinancialPeriodItem]] = Field(
+        None, description="List of financial period data"
+    )
+
+
+class GetFinancialsResponse(BaseModel):
+    """Response for get_financials tool."""
+
+    instructions: Optional[List[str]] = Field(None, description="API instructions")
+    response: Optional[List[FinancialsResponseData]] = Field(
+        None, description="List of response data with equity and financials"
+    )
+    error: Optional[str] = Field(None, description="Error message if request failed")

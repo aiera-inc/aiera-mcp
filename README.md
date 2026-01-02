@@ -24,6 +24,7 @@ This package exposes Aiera API endpoints as MCP tools, providing access to compr
 - **Company Information**: Symbology, summaries, sectors, and watchlists
 - **Company Documents**: Press releases, slide presentations, disclosures, etc.
 - **SEC Filings**: Filing data and metadata
+- **Financials**: Income statements, balance sheets, and cash flow statements
 - **Third Bridge**: Expert insight events
 - **Search**: Semantic search within transcripts, SEC filing content, company documents, etc.
 - **Transcrippets**: Create, manage, and retrieve transcript excerpts
@@ -165,7 +166,7 @@ from aiera_mcp import find_events, make_aiera_request, correct_bloomberg_ticker
 - **Company Documents**: `find_company_docs`, `get_company_doc`, `get_company_doc_categories`, `get_company_doc_keywords`
 - **Third Bridge**: `find_third_bridge_events`, `get_third_bridge_event`
 - **Search**: `search_transcripts`, `search_filings`
-- **Equities**: `find_equities`, `get_equity_summaries`, `get_sectors_and_subsectors`
+- **Equities**: `find_equities`, `get_equity_summaries`, `get_sectors_and_subsectors`, `get_financials`
 - **Indexes & Watchlists**: `get_available_indexes`, `get_index_constituents`, `get_available_watchlists`, `get_watchlist_constituents`
 - **Transcrippets**: `find_transcrippets`, `create_transcrippet`, `delete_transcrippet`
 

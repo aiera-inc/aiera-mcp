@@ -670,6 +670,110 @@
           ]
         }
       ]
+    },
+    "get_financials_success": {
+      "instructions": [
+        "This data is provided for institutional finance professionals...",
+        "The current date is **Monday, December 22, 2025**..."
+      ],
+      "response": {
+        "equity": {
+          "equity_id": 1,
+          "company_id": 1,
+          "name": "AMAZON COM INC",
+          "bloomberg_ticker": "AMZN:US",
+          "sector_id": 1,
+          "subsector_id": 259
+        },
+        "financials": [
+          {
+            "period_type": "annual",
+            "report_date": "2024-12-31",
+            "period_duration": "12M",
+            "calendar_year": 2024,
+            "calendar_quarter": null,
+            "fiscal_year": 2024,
+            "fiscal_quarter": null,
+            "is_restated": false,
+            "earnings_date": "2025-02-06T17:00:00",
+            "filing_date": "2025-02-07T00:00:00",
+            "metrics": [
+              {
+                "metric": {
+                  "metric_name": "Total Revenue",
+                  "metric_format": "currency",
+                  "is_point_in_time": false,
+                  "is_currency": true,
+                  "is_per_share": false,
+                  "is_key_metric": true,
+                  "is_total": true,
+                  "headers": ["Income Statement", "Revenue"]
+                },
+                "metric_value": 574785000000,
+                "metric_unit": "USD",
+                "metric_currency": "USD",
+                "metric_is_calculated": false,
+                "citation_information": {
+                  "title": "Amazon FY2024 Annual Report",
+                  "url": "https://dashboard.aiera.com/companies/1/activity/filings",
+                  "metadata": {
+                    "type": "filing",
+                    "url_target": "aiera"
+                  }
+                }
+              },
+              {
+                "metric": {
+                  "metric_name": "Net Income",
+                  "metric_format": "currency",
+                  "is_point_in_time": false,
+                  "is_currency": true,
+                  "is_per_share": false,
+                  "is_key_metric": true,
+                  "is_total": true,
+                  "headers": ["Income Statement", "Net Income"]
+                },
+                "metric_value": 30425000000,
+                "metric_unit": "USD",
+                "metric_currency": "USD",
+                "metric_is_calculated": false,
+                "citation_information": {
+                  "title": "Amazon FY2024 Annual Report",
+                  "url": "https://dashboard.aiera.com/companies/1/activity/filings",
+                  "metadata": {
+                    "type": "filing",
+                    "url_target": "aiera"
+                  }
+                }
+              },
+              {
+                "metric": {
+                  "metric_name": "Earnings Per Share",
+                  "metric_format": "decimal",
+                  "is_point_in_time": false,
+                  "is_currency": true,
+                  "is_per_share": true,
+                  "is_key_metric": true,
+                  "is_total": false,
+                  "headers": ["Income Statement", "EPS"]
+                },
+                "metric_value": 2.90,
+                "metric_unit": "USD",
+                "metric_currency": "USD",
+                "metric_is_calculated": true,
+                "citation_information": {
+                  "title": "Amazon FY2024 Annual Report",
+                  "url": "https://dashboard.aiera.com/companies/1/activity/filings",
+                  "metadata": {
+                    "type": "filing",
+                    "url_target": "aiera"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
     }
   },
   "company_docs": {

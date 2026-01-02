@@ -687,3 +687,60 @@ This document defines the possible results and fields from various endpoints of 
   ]
 }
 ```
+
+## /chat-support/get-financials
+
+```json
+{
+  "instructions": ["STRING", "STRING", ... ],
+  "response": [
+    "equity": {
+        "equity_id": INTEGER,
+        "company_id": INTEGER,
+        "name": "STRING",
+        "bloomberg_ticker": "STRING",
+        "sector_id": INTEGER,
+        "subsector_id": INTEGER
+    },
+    "financials": [
+        {
+            "period_type": "STRING",
+            "report_date": DATE,
+            "period_duration": "STRING",
+            "calendar_year": INTEGER,
+            "calendar_quarter": INTEGER,
+            "fiscal_year": INTEGER,
+            "fiscal_quarter": INTEGER,
+            "is_restated": BOOLEAN,
+            "earnings_date": DATETIME,
+            "filing_date": DATETIME,
+            "metrics": [
+                {
+                    "metric": {
+                        "metric_name": "STRING",
+                        "metric_format": "STRING",
+                        "is_point_in_time": BOOLEAN,
+                        "is_currency": BOOLEAN,
+                        "is_per_share": BOOLEAN,
+                        "is_key_metric": BOOLEAN,
+                        "is_total": BOOLEAN,
+                        "headers": LIST/NULL
+                    },
+                    "metric_value": INTEGER,
+                    "metric_unit": "STRING",
+                    "metric_currency": "STRING",
+                    "metric_is_calculated": BOOLEAN,
+                    "citation_information": {
+                      "title": "STRING",
+                      "url": "URL",
+                      "metadata": {
+                        "type": "STRING",
+                        "url_target": "STRING",
+                      }
+                    }
+                }, ...
+            ]
+        }, ...
+    ]
+}
+```
