@@ -895,9 +895,6 @@ class GetFinancialsResponse(BaseModel):
     error: Optional[str] = Field(None, description="Error message if request failed")
 
 
-# ===== Ratios Models =====
-
-
 class GetRatiosArgs(BaseToolArgs, BloombergTickerMixin):
     """Retrieve financial ratios for a company.
     Use this tool to get ratio metrics like profitability, liquidity,
@@ -1012,9 +1009,6 @@ class GetRatiosResponse(BaseModel):
         None, description="List of response data with equity and ratios"
     )
     error: Optional[str] = Field(None, description="Error message if request failed")
-
-
-# ===== KPIs and Segments Models =====
 
 
 class GetKpisAndSegmentsArgs(BaseToolArgs, BloombergTickerMixin):
