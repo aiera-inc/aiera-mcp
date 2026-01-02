@@ -776,6 +776,120 @@
           ]
         }
       ]
+    },
+    "get_ratios_success": {
+      "instructions": [
+        "This data is provided for institutional finance professionals...",
+        "The current date is **Monday, December 22, 2025**..."
+      ],
+      "response": [
+        {
+          "equity": {
+            "equity_id": 1,
+            "company_id": 1,
+            "name": "AMAZON COM INC",
+            "bloomberg_ticker": "AMZN:US",
+            "sector_id": 1,
+            "subsector_id": 259
+          },
+          "periods": [
+            {
+              "period_type": "annual",
+              "report_date": "2024-12-31",
+              "period_duration": "12M",
+              "calendar_year": 2024,
+              "calendar_quarter": null,
+              "fiscal_year": 2024,
+              "fiscal_quarter": null,
+              "ratios": [
+                {
+                  "ratio_id": "gross_margin",
+                  "ratio": "Gross Margin",
+                  "ratio_category": "Profitability",
+                  "ratio_value": 0.478
+                },
+                {
+                  "ratio_id": "operating_margin",
+                  "ratio": "Operating Margin",
+                  "ratio_category": "Profitability",
+                  "ratio_value": 0.106
+                },
+                {
+                  "ratio_id": "current_ratio",
+                  "ratio": "Current Ratio",
+                  "ratio_category": "Liquidity",
+                  "ratio_value": 1.07
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "get_kpis_and_segments_success": {
+      "instructions": [
+        "This data is provided for institutional finance professionals...",
+        "The current date is **Monday, December 22, 2025**..."
+      ],
+      "response": [
+        {
+          "equity": {
+            "equity_id": 1,
+            "company_id": 1,
+            "name": "AMAZON COM INC",
+            "bloomberg_ticker": "AMZN:US",
+            "sector_id": 1,
+            "subsector_id": 259
+          },
+          "periods": [
+            {
+              "period_type": "annual",
+              "report_date": "2024-12-31",
+              "period_duration": "12M",
+              "calendar_year": 2024,
+              "calendar_quarter": null,
+              "fiscal_year": 2024,
+              "fiscal_quarter": null,
+              "kpi": [
+                {
+                  "metric_id": "aws_revenue",
+                  "metric_name": "AWS Revenue",
+                  "metric_format": "currency",
+                  "is_currency": true,
+                  "is_important": true,
+                  "metric_value": 90757000000
+                },
+                {
+                  "metric_id": "prime_members",
+                  "metric_name": "Prime Members",
+                  "metric_format": "count",
+                  "is_currency": false,
+                  "is_important": true,
+                  "metric_value": 200000000
+                }
+              ],
+              "segment": [
+                {
+                  "metric_id": "north_america",
+                  "metric_name": "North America",
+                  "metric_format": "currency",
+                  "is_currency": true,
+                  "is_important": true,
+                  "metric_value": 353460000000
+                },
+                {
+                  "metric_id": "international",
+                  "metric_name": "International",
+                  "metric_format": "currency",
+                  "is_currency": true,
+                  "is_important": true,
+                  "metric_value": 130568000000
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   },
   "company_docs": {
