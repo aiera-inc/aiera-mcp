@@ -236,15 +236,7 @@ async def get_financials(args: GetFinancialsArgs) -> GetFinancialsResponse:
     )
 
     # Validate and return the structured response
-    try:
-        response = GetFinancialsResponse.model_validate(raw_response)
-        if args.exclude_instructions:
-            response.instructions = []
-        return response
-    except Exception as e:
-        logger.warning(f"Failed to parse API response: {e}")
-        # Return empty response for malformed data
-        return GetFinancialsResponse(instructions=[], response=None, error=str(e))
-
-
-# Legacy registration functions removed - all tools now registered via registry
+    response = GetFinancialsResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response

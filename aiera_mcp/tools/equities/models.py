@@ -684,11 +684,6 @@ class GetWatchlistConstituentsResponse(BaseModel):
     )
 
 
-# ============================================================================
-# Get Financials Models
-# ============================================================================
-
-
 class GetFinancialsArgs(BaseToolArgs, BloombergTickerMixin):
     """Retrieve financial data (income statements, balance sheets, cash flow statements) for a company.
     Use this tool to get detailed financial metrics for a specific company and fiscal period.
@@ -743,7 +738,7 @@ class FinancialMetricInfo(BaseModel):
 
     metric_name: str = Field(description="Name of the financial metric")
     metric_format: Optional[str] = Field(
-        None, description="Display format for the metric"
+        None, description="What the metric represents (e.g., number, ratio)"
     )
     is_point_in_time: Optional[bool] = Field(
         None, description="Whether the metric is a point-in-time value"
@@ -792,9 +787,11 @@ class FinancialMetricItem(BaseModel):
     metric_value: Optional[Union[int, float]] = Field(
         None, description="The metric value"
     )
-    metric_unit: Optional[str] = Field(None, description="Unit of the metric value")
+    metric_unit: Optional[str] = Field(
+        None, description="Unit of the metric value (e.g. M, B)"
+    )
     metric_currency: Optional[str] = Field(
-        None, description="Currency of the metric value"
+        None, description="Currency of the metric value (e.g. USD, EUR)"
     )
     metric_is_calculated: Optional[bool] = Field(
         None, description="Whether the metric was calculated"
