@@ -889,7 +889,7 @@ class GetFinancialsResponse(BaseModel):
     """Response for get_financials tool."""
 
     instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: Optional[FinancialsResponseData] = Field(
-        None, description="Response data with equity and financials"
+    response: Optional[List[FinancialsResponseData]] = Field(
+        None, description="List of response data with equity and financials"
     )
     error: Optional[str] = Field(None, description="Error message if request failed")

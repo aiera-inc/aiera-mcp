@@ -1006,18 +1006,20 @@ class TestFinancialsModels:
         """Test GetFinancialsResponse model creation."""
         response = GetFinancialsResponse(
             instructions=["Test instruction"],
-            response=FinancialsResponseData(
-                equity=FinancialEquityInfo(
-                    equity_id=1,
-                    name="Test Company",
-                    bloomberg_ticker="TEST:US",
-                ),
-                financials=[],
-            ),
+            response=[
+                FinancialsResponseData(
+                    equity=FinancialEquityInfo(
+                        equity_id=1,
+                        name="Test Company",
+                        bloomberg_ticker="TEST:US",
+                    ),
+                    financials=[],
+                )
+            ],
         )
 
         assert response.instructions == ["Test instruction"]
-        assert response.response.equity.name == "Test Company"
+        assert response.response[0].equity.name == "Test Company"
         assert response.error is None
 
     def test_get_financials_response_with_error(self):
