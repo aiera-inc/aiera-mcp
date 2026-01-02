@@ -15,6 +15,8 @@ from .equities import (
     get_index_constituents,
     get_watchlist_constituents,
     get_financials,
+    get_ratios,
+    get_kpis_and_segments,
 )
 from .company_docs import (
     find_company_docs,
@@ -43,6 +45,8 @@ from .equities import (
     GetAvailableIndexesArgs,
     GetSectorsAndSubsectorsArgs,
     GetFinancialsArgs,
+    GetRatiosArgs,
+    GetKpisAndSegmentsArgs,
 )
 from .company_docs import (
     FindCompanyDocsArgs,
@@ -181,6 +185,24 @@ TOOL_REGISTRY = {
         "input_schema": GetFinancialsArgs.model_json_schema(),
         "function": get_financials,
         "args_model": GetFinancialsArgs,
+        "category": "equities",
+        "read_only": True,
+        "destructive": False,
+    },
+    "get_ratios": {
+        "display_name": "Get Ratios",
+        "input_schema": GetRatiosArgs.model_json_schema(),
+        "function": get_ratios,
+        "args_model": GetRatiosArgs,
+        "category": "equities",
+        "read_only": True,
+        "destructive": False,
+    },
+    "get_kpis_and_segments": {
+        "display_name": "Get KPIs and Segments",
+        "input_schema": GetKpisAndSegmentsArgs.model_json_schema(),
+        "function": get_kpis_and_segments,
+        "args_model": GetKpisAndSegmentsArgs,
         "category": "equities",
         "read_only": True,
         "destructive": False,

@@ -725,11 +725,11 @@ class GetFinancialsArgs(BaseToolArgs, BloombergTickerMixin):
         Field(description="The reporting period type for the financial data.")
     )
 
-    fiscal_year: int = Field(description="The fiscal year for the financial data.")
+    calendar_year: int = Field(description="The calendar year for the financial data.")
 
-    fiscal_quarter: Optional[int] = Field(
+    calendar_quarter: Optional[int] = Field(
         default=None,
-        description="The fiscal quarter for the financial data (1-4). Required for quarterly periods.",
+        description="The calendar quarter for the financial data (1-4). Required for quarterly periods.",
     )
 
 
@@ -880,7 +880,7 @@ class FinancialsResponseData(BaseModel):
     equity: Optional[FinancialEquityInfo] = Field(
         None, description="Equity information"
     )
-    financials: Optional[List[FinancialPeriodItem]] = Field(
+    periods: Optional[List[FinancialPeriodItem]] = Field(
         None, description="List of financial period data"
     )
 
@@ -891,5 +891,250 @@ class GetFinancialsResponse(BaseModel):
     instructions: Optional[List[str]] = Field(None, description="API instructions")
     response: Optional[List[FinancialsResponseData]] = Field(
         None, description="List of response data with equity and financials"
+    )
+    error: Optional[str] = Field(None, description="Error message if request failed")
+
+
+class GetRatiosArgs(BaseToolArgs, BloombergTickerMixin):
+    """Retrieve financial ratios for a company.
+    Use this tool to get ratio metrics like profitability, liquidity,
+    and valuation ratios for a specific company and fiscal period.
+    """
+
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
+    )
+
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
+    bloomberg_ticker: str = Field(
+        description="Bloomberg ticker in format 'TICKER:COUNTRY' (e.g., 'AAPL:US')."
+    )
+
+    period: Literal["annual", "quarterly", "semi-annual", "ltm", "ytd", "latest"] = (
+        Field(description="The reporting period type for the ratio data.")
+    )
+
+    calendar_year: int = Field(description="The calendar year for the ratio data.")
+
+    calendar_quarter: Optional[int] = Field(
+        default=None,
+        description="The calendar quarter for the ratio data (1-4). Required for quarterly periods.",
+    )
+
+
+class RatioItem(BaseModel):
+    """Individual ratio metric."""
+
+    ratio_id: Optional[str] = Field(None, description="Unique ratio identifier")
+    ratio: Optional[str] = Field(None, description="Ratio name")
+    ratio_category: Optional[str] = Field(None, description="Ratio category")
+    ratio_value: Optional[float] = Field(None, description="Ratio value")
+
+
+class RatioPeriodItem(BaseModel):
+    """Ratio data for a specific period."""
+
+    period_type: Optional[str] = Field(
+        None, description="Type of period (annual, quarterly, etc.)"
+    )
+    report_date: Optional[date] = Field(None, description="Report date")
+    period_duration: Optional[str] = Field(None, description="Duration of the period")
+    calendar_year: Optional[int] = Field(None, description="Calendar year")
+    calendar_quarter: Optional[int] = Field(None, description="Calendar quarter")
+    fiscal_year: Optional[int] = Field(None, description="Fiscal year")
+    fiscal_quarter: Optional[int] = Field(None, description="Fiscal quarter")
+    ratios: Optional[List[RatioItem]] = Field(None, description="List of ratios")
+
+    @field_validator("report_date", mode="before")
+    @classmethod
+    def parse_report_date(cls, v):
+        """Parse date strings to date objects."""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                return date.fromisoformat(v)
+            except (ValueError, AttributeError):
+                return None
+        return v
+
+    @field_serializer("report_date")
+    def serialize_report_date(self, value: Optional[date]) -> Optional[str]:
+        """Serialize date fields to ISO format string."""
+        if value is None:
+            return None
+        return value.isoformat()
+
+
+class RatiosEquityInfo(BaseModel):
+    """Equity information in ratios response."""
+
+    equity_id: Optional[int] = Field(None, description="Unique equity identifier")
+    company_id: Optional[int] = Field(None, description="Company ID")
+    name: Optional[str] = Field(None, description="Company name")
+    bloomberg_ticker: Optional[str] = Field(None, description="Bloomberg ticker")
+    sector_id: Optional[int] = Field(None, description="Sector ID")
+    subsector_id: Optional[int] = Field(None, description="Subsector ID")
+
+
+class RatiosResponseData(BaseModel):
+    """Response data containing equity and ratios."""
+
+    equity: Optional[RatiosEquityInfo] = Field(None, description="Equity information")
+    periods: Optional[List[RatioPeriodItem]] = Field(
+        None, description="List of ratio period data"
+    )
+
+
+class GetRatiosResponse(BaseModel):
+    """Response for get_ratios tool."""
+
+    instructions: Optional[List[str]] = Field(None, description="API instructions")
+    response: Optional[List[RatiosResponseData]] = Field(
+        None, description="List of response data with equity and ratios"
+    )
+    error: Optional[str] = Field(None, description="Error message if request failed")
+
+
+class GetKpisAndSegmentsArgs(BaseToolArgs, BloombergTickerMixin):
+    """Retrieve KPIs and business segment data for a company.
+    Use this tool to get key performance indicators and segment-level
+    metrics for a specific company and fiscal period.
+    """
+
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
+    )
+
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
+    bloomberg_ticker: str = Field(
+        description="Bloomberg ticker in format 'TICKER:COUNTRY' (e.g., 'AAPL:US')."
+    )
+
+    period: Literal["annual", "quarterly", "semi-annual", "ltm", "ytd", "latest"] = (
+        Field(description="The reporting period type for the KPI and segment data.")
+    )
+
+    calendar_year: int = Field(
+        description="The calendar year for the KPI and segment data."
+    )
+
+    calendar_quarter: Optional[int] = Field(
+        default=None,
+        description="The calendar quarter for the KPI and segment data (1-4). Required for quarterly periods.",
+    )
+
+
+class KpiSegmentMetricItem(BaseModel):
+    """Individual KPI or segment metric."""
+
+    metric_id: Optional[str] = Field(None, description="Unique metric identifier")
+    metric_name: Optional[str] = Field(None, description="Metric name")
+    metric_format: Optional[str] = Field(None, description="Metric format")
+    is_currency: Optional[bool] = Field(
+        None, description="Whether metric is currency-based"
+    )
+    is_important: Optional[bool] = Field(
+        None, description="Whether metric is important"
+    )
+    metric_value: Optional[int] = Field(None, description="Metric value")
+
+
+class KpiSegmentPeriodItem(BaseModel):
+    """KPI and segment data for a specific period."""
+
+    period_type: Optional[str] = Field(
+        None, description="Type of period (annual, quarterly, etc.)"
+    )
+    report_date: Optional[date] = Field(None, description="Report date")
+    period_duration: Optional[str] = Field(None, description="Duration of the period")
+    calendar_year: Optional[int] = Field(None, description="Calendar year")
+    calendar_quarter: Optional[int] = Field(None, description="Calendar quarter")
+    fiscal_year: Optional[int] = Field(None, description="Fiscal year")
+    fiscal_quarter: Optional[int] = Field(None, description="Fiscal quarter")
+    kpi: Optional[List[KpiSegmentMetricItem]] = Field(None, description="List of KPIs")
+    segment: Optional[List[KpiSegmentMetricItem]] = Field(
+        None, description="List of segment metrics"
+    )
+
+    @field_validator("report_date", mode="before")
+    @classmethod
+    def parse_report_date(cls, v):
+        """Parse date strings to date objects."""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                return date.fromisoformat(v)
+            except (ValueError, AttributeError):
+                return None
+        return v
+
+    @field_serializer("report_date")
+    def serialize_report_date(self, value: Optional[date]) -> Optional[str]:
+        """Serialize date fields to ISO format string."""
+        if value is None:
+            return None
+        return value.isoformat()
+
+
+class KpisSegmentsEquityInfo(BaseModel):
+    """Equity information in KPIs/segments response."""
+
+    equity_id: Optional[int] = Field(None, description="Unique equity identifier")
+    company_id: Optional[int] = Field(None, description="Company ID")
+    name: Optional[str] = Field(None, description="Company name")
+    bloomberg_ticker: Optional[str] = Field(None, description="Bloomberg ticker")
+    sector_id: Optional[int] = Field(None, description="Sector ID")
+    subsector_id: Optional[int] = Field(None, description="Subsector ID")
+
+
+class KpisSegmentsResponseData(BaseModel):
+    """Response data containing equity and KPIs/segments."""
+
+    equity: Optional[KpisSegmentsEquityInfo] = Field(
+        None, description="Equity information"
+    )
+    periods: Optional[List[KpiSegmentPeriodItem]] = Field(
+        None, description="List of KPI and segment period data"
+    )
+
+
+class GetKpisAndSegmentsResponse(BaseModel):
+    """Response for get_kpis_and_segments tool."""
+
+    instructions: Optional[List[str]] = Field(None, description="API instructions")
+    response: Optional[List[KpisSegmentsResponseData]] = Field(
+        None, description="List of response data with equity and KPIs/segments"
     )
     error: Optional[str] = Field(None, description="Error message if request failed")

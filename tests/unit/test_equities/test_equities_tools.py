@@ -15,6 +15,8 @@ from aiera_mcp.tools.equities.tools import (
     get_available_watchlists,
     get_watchlist_constituents,
     get_financials,
+    get_ratios,
+    get_kpis_and_segments,
 )
 from aiera_mcp.tools.equities.models import (
     FindEquitiesArgs,
@@ -25,6 +27,8 @@ from aiera_mcp.tools.equities.models import (
     GetAvailableIndexesArgs,
     GetAvailableWatchlistsArgs,
     GetFinancialsArgs,
+    GetRatiosArgs,
+    GetKpisAndSegmentsArgs,
     FindEquitiesResponse,
     GetEquitySummariesResponse,
     GetSectorsSubsectorsResponse,
@@ -33,6 +37,8 @@ from aiera_mcp.tools.equities.models import (
     GetAvailableWatchlistsResponse,
     GetWatchlistConstituentsResponse,
     GetFinancialsResponse,
+    GetRatiosResponse,
+    GetKpisAndSegmentsResponse,
     EquityItem,
     EquityDetails,
     EquitySummary,
@@ -689,7 +695,7 @@ class TestGetFinancials:
             source="income-statement",
             source_type="standardized",
             period="annual",
-            fiscal_year=2024,
+            calendar_year=2024,
         )
 
         # Execute
@@ -698,16 +704,17 @@ class TestGetFinancials:
         # Verify
         assert isinstance(result, GetFinancialsResponse)
         assert result.response is not None
-        assert result.response.equity is not None
-        assert result.response.equity.bloomberg_ticker == "AMZN:US"
-        assert result.response.equity.name == "AMAZON COM INC"
-        assert result.response.equity.equity_id == 1
+        assert len(result.response) == 1
+        assert result.response[0].equity is not None
+        assert result.response[0].equity.bloomberg_ticker == "AMZN:US"
+        assert result.response[0].equity.name == "AMAZON COM INC"
+        assert result.response[0].equity.equity_id == 1
 
-        # Check financials data
-        assert result.response.financials is not None
-        assert len(result.response.financials) == 1
+        # Check periods data
+        assert result.response[0].periods is not None
+        assert len(result.response[0].periods) == 1
 
-        first_period = result.response.financials[0]
+        first_period = result.response[0].periods[0]
         assert first_period.period_type == "annual"
         assert first_period.fiscal_year == 2024
         assert first_period.metrics is not None
@@ -730,13 +737,13 @@ class TestGetFinancials:
         assert params["source"] == "income-statement"
         assert params["source_type"] == "standardized"
         assert params["period"] == "annual"
-        assert params["fiscal_year"] == 2024
+        assert params["calendar_year"] == 2024
 
     @pytest.mark.asyncio
-    async def test_get_financials_with_fiscal_quarter(
+    async def test_get_financials_with_calendar_quarter(
         self, mock_http_dependencies, equities_api_responses
     ):
-        """Test get_financials with fiscal_quarter parameter."""
+        """Test get_financials with calendar_quarter parameter."""
         # Setup
         mock_http_dependencies["mock_make_request"].return_value = (
             equities_api_responses["get_financials_success"]
@@ -747,8 +754,8 @@ class TestGetFinancials:
             source="balance-sheet",
             source_type="as-reported",
             period="quarterly",
-            fiscal_year=2024,
-            fiscal_quarter=3,
+            calendar_year=2024,
+            calendar_quarter=3,
         )
 
         # Execute
@@ -764,8 +771,8 @@ class TestGetFinancials:
         assert params["source"] == "balance-sheet"
         assert params["source_type"] == "as-reported"
         assert params["period"] == "quarterly"
-        assert params["fiscal_year"] == 2024
-        assert params["fiscal_quarter"] == 3
+        assert params["calendar_year"] == 2024
+        assert params["calendar_quarter"] == 3
 
     @pytest.mark.asyncio
     async def test_get_financials_exclude_instructions(
@@ -782,7 +789,7 @@ class TestGetFinancials:
             source="cash-flow-statement",
             source_type="standardized",
             period="annual",
-            fiscal_year=2024,
+            calendar_year=2024,
             exclude_instructions=True,
         )
 
@@ -799,7 +806,7 @@ class TestGetFinancials:
         # Setup
         empty_response = {
             "instructions": [],
-            "response": {"equity": None, "financials": []},
+            "response": [{"equity": None, "periods": []}],
         }
         mock_http_dependencies["mock_make_request"].return_value = empty_response
 
@@ -808,7 +815,7 @@ class TestGetFinancials:
             source="income-statement",
             source_type="standardized",
             period="annual",
-            fiscal_year=2024,
+            calendar_year=2024,
         )
 
         # Execute
@@ -816,7 +823,7 @@ class TestGetFinancials:
 
         # Verify
         assert isinstance(result, GetFinancialsResponse)
-        assert result.response.financials == []
+        assert result.response[0].periods == []
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -837,7 +844,7 @@ class TestGetFinancials:
             source=source,
             source_type="standardized",
             period="annual",
-            fiscal_year=2024,
+            calendar_year=2024,
         )
 
         # Execute
@@ -867,7 +874,7 @@ class TestGetFinancials:
             source="income-statement",
             source_type="standardized",
             period=period,
-            fiscal_year=2024,
+            calendar_year=2024,
         )
 
         # Execute
@@ -875,5 +882,295 @@ class TestGetFinancials:
 
         # Verify
         assert isinstance(result, GetFinancialsResponse)
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        assert call_args[1]["params"]["period"] == period
+
+
+@pytest.mark.unit
+class TestGetRatios:
+    """Test the get_ratios tool."""
+
+    @pytest.mark.asyncio
+    async def test_get_ratios_success(
+        self, mock_http_dependencies, equities_api_responses
+    ):
+        """Test successful ratios retrieval."""
+        # Setup
+        mock_http_dependencies["mock_make_request"].return_value = (
+            equities_api_responses["get_ratios_success"]
+        )
+
+        args = GetRatiosArgs(
+            bloomberg_ticker="AMZN:US",
+            period="annual",
+            calendar_year=2024,
+        )
+
+        # Execute
+        result = await get_ratios(args)
+
+        # Verify
+        assert isinstance(result, GetRatiosResponse)
+        assert result.response is not None
+        assert len(result.response) == 1
+        assert result.response[0].equity is not None
+        assert result.response[0].equity.bloomberg_ticker == "AMZN:US"
+        assert result.response[0].equity.name == "AMAZON COM INC"
+
+        # Check periods data
+        assert result.response[0].periods is not None
+        assert len(result.response[0].periods) == 1
+
+        first_period = result.response[0].periods[0]
+        assert first_period.period_type == "annual"
+        assert first_period.calendar_year == 2024
+        assert first_period.ratios is not None
+        assert len(first_period.ratios) == 3
+
+        # Check first ratio (Gross Margin)
+        gross_margin = first_period.ratios[0]
+        assert gross_margin.ratio == "Gross Margin"
+        assert gross_margin.ratio_category == "Profitability"
+        assert gross_margin.ratio_value == 0.478
+
+        # Check API call parameters
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        assert call_args[1]["method"] == "GET"
+        assert call_args[1]["endpoint"] == "/chat-support/get-ratios"
+
+        params = call_args[1]["params"]
+        assert params["bloomberg_ticker"] == "AMZN:US"
+        assert params["period"] == "annual"
+        assert params["calendar_year"] == 2024
+
+    @pytest.mark.asyncio
+    async def test_get_ratios_with_calendar_quarter(
+        self, mock_http_dependencies, equities_api_responses
+    ):
+        """Test get_ratios with calendar_quarter parameter."""
+        # Setup
+        mock_http_dependencies["mock_make_request"].return_value = (
+            equities_api_responses["get_ratios_success"]
+        )
+
+        args = GetRatiosArgs(
+            bloomberg_ticker="AAPL:US",
+            period="quarterly",
+            calendar_year=2024,
+            calendar_quarter=3,
+        )
+
+        # Execute
+        result = await get_ratios(args)
+
+        # Verify
+        assert isinstance(result, GetRatiosResponse)
+
+        # Check API call parameters
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        params = call_args[1]["params"]
+        assert params["bloomberg_ticker"] == "AAPL:US"
+        assert params["period"] == "quarterly"
+        assert params["calendar_year"] == 2024
+        assert params["calendar_quarter"] == 3
+
+    @pytest.mark.asyncio
+    async def test_get_ratios_exclude_instructions(
+        self, mock_http_dependencies, equities_api_responses
+    ):
+        """Test get_ratios with exclude_instructions flag."""
+        # Setup
+        mock_http_dependencies["mock_make_request"].return_value = (
+            equities_api_responses["get_ratios_success"]
+        )
+
+        args = GetRatiosArgs(
+            bloomberg_ticker="AMZN:US",
+            period="annual",
+            calendar_year=2024,
+            exclude_instructions=True,
+        )
+
+        # Execute
+        result = await get_ratios(args)
+
+        # Verify
+        assert isinstance(result, GetRatiosResponse)
+        assert result.instructions == []
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "period",
+        ["annual", "quarterly", "semi-annual", "ltm", "ytd", "latest"],
+    )
+    async def test_get_ratios_different_periods(
+        self, mock_http_dependencies, equities_api_responses, period
+    ):
+        """Test get_ratios with different period types."""
+        # Setup
+        mock_http_dependencies["mock_make_request"].return_value = (
+            equities_api_responses["get_ratios_success"]
+        )
+
+        args = GetRatiosArgs(
+            bloomberg_ticker="AMZN:US",
+            period=period,
+            calendar_year=2024,
+        )
+
+        # Execute
+        result = await get_ratios(args)
+
+        # Verify
+        assert isinstance(result, GetRatiosResponse)
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        assert call_args[1]["params"]["period"] == period
+
+
+@pytest.mark.unit
+class TestGetKpisAndSegments:
+    """Test the get_kpis_and_segments tool."""
+
+    @pytest.mark.asyncio
+    async def test_get_kpis_and_segments_success(
+        self, mock_http_dependencies, equities_api_responses
+    ):
+        """Test successful KPIs and segments retrieval."""
+        # Setup
+        mock_http_dependencies["mock_make_request"].return_value = (
+            equities_api_responses["get_kpis_and_segments_success"]
+        )
+
+        args = GetKpisAndSegmentsArgs(
+            bloomberg_ticker="AMZN:US",
+            period="annual",
+            calendar_year=2024,
+        )
+
+        # Execute
+        result = await get_kpis_and_segments(args)
+
+        # Verify
+        assert isinstance(result, GetKpisAndSegmentsResponse)
+        assert result.response is not None
+        assert len(result.response) == 1
+        assert result.response[0].equity is not None
+        assert result.response[0].equity.bloomberg_ticker == "AMZN:US"
+        assert result.response[0].equity.name == "AMAZON COM INC"
+
+        # Check periods data
+        assert result.response[0].periods is not None
+        assert len(result.response[0].periods) == 1
+
+        first_period = result.response[0].periods[0]
+        assert first_period.period_type == "annual"
+        assert first_period.calendar_year == 2024
+
+        # Check KPIs
+        assert first_period.kpi is not None
+        assert len(first_period.kpi) == 2
+        aws_kpi = first_period.kpi[0]
+        assert aws_kpi.metric_name == "AWS Revenue"
+        assert aws_kpi.is_currency is True
+        assert aws_kpi.metric_value == 90757000000
+
+        # Check Segments
+        assert first_period.segment is not None
+        assert len(first_period.segment) == 2
+        north_america = first_period.segment[0]
+        assert north_america.metric_name == "North America"
+        assert north_america.is_currency is True
+        assert north_america.metric_value == 353460000000
+
+        # Check API call parameters
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        assert call_args[1]["method"] == "GET"
+        assert call_args[1]["endpoint"] == "/chat-support/get-segments-and-kpis"
+
+        params = call_args[1]["params"]
+        assert params["bloomberg_ticker"] == "AMZN:US"
+        assert params["period"] == "annual"
+        assert params["calendar_year"] == 2024
+
+    @pytest.mark.asyncio
+    async def test_get_kpis_and_segments_with_calendar_quarter(
+        self, mock_http_dependencies, equities_api_responses
+    ):
+        """Test get_kpis_and_segments with calendar_quarter parameter."""
+        # Setup
+        mock_http_dependencies["mock_make_request"].return_value = (
+            equities_api_responses["get_kpis_and_segments_success"]
+        )
+
+        args = GetKpisAndSegmentsArgs(
+            bloomberg_ticker="AAPL:US",
+            period="quarterly",
+            calendar_year=2024,
+            calendar_quarter=3,
+        )
+
+        # Execute
+        result = await get_kpis_and_segments(args)
+
+        # Verify
+        assert isinstance(result, GetKpisAndSegmentsResponse)
+
+        # Check API call parameters
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        params = call_args[1]["params"]
+        assert params["bloomberg_ticker"] == "AAPL:US"
+        assert params["period"] == "quarterly"
+        assert params["calendar_year"] == 2024
+        assert params["calendar_quarter"] == 3
+
+    @pytest.mark.asyncio
+    async def test_get_kpis_and_segments_exclude_instructions(
+        self, mock_http_dependencies, equities_api_responses
+    ):
+        """Test get_kpis_and_segments with exclude_instructions flag."""
+        # Setup
+        mock_http_dependencies["mock_make_request"].return_value = (
+            equities_api_responses["get_kpis_and_segments_success"]
+        )
+
+        args = GetKpisAndSegmentsArgs(
+            bloomberg_ticker="AMZN:US",
+            period="annual",
+            calendar_year=2024,
+            exclude_instructions=True,
+        )
+
+        # Execute
+        result = await get_kpis_and_segments(args)
+
+        # Verify
+        assert isinstance(result, GetKpisAndSegmentsResponse)
+        assert result.instructions == []
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "period",
+        ["annual", "quarterly", "semi-annual", "ltm", "ytd", "latest"],
+    )
+    async def test_get_kpis_and_segments_different_periods(
+        self, mock_http_dependencies, equities_api_responses, period
+    ):
+        """Test get_kpis_and_segments with different period types."""
+        # Setup
+        mock_http_dependencies["mock_make_request"].return_value = (
+            equities_api_responses["get_kpis_and_segments_success"]
+        )
+
+        args = GetKpisAndSegmentsArgs(
+            bloomberg_ticker="AMZN:US",
+            period=period,
+            calendar_year=2024,
+        )
+
+        # Execute
+        result = await get_kpis_and_segments(args)
+
+        # Verify
+        assert isinstance(result, GetKpisAndSegmentsResponse)
         call_args = mock_http_dependencies["mock_make_request"].call_args
         assert call_args[1]["params"]["period"] == period

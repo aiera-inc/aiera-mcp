@@ -11,6 +11,8 @@ from aiera_mcp.tools.equities.models import (
     GetIndexConstituentsArgs,
     GetWatchlistConstituentsArgs,
     GetFinancialsArgs,
+    GetRatiosArgs,
+    GetKpisAndSegmentsArgs,
     FindEquitiesResponse,
     GetEquitySummariesResponse,
     GetSectorsSubsectorsResponse,
@@ -19,6 +21,8 @@ from aiera_mcp.tools.equities.models import (
     GetAvailableWatchlistsResponse,
     GetWatchlistConstituentsResponse,
     GetFinancialsResponse,
+    GetRatiosResponse,
+    GetKpisAndSegmentsResponse,
     EquityItem,
     EquityDetails,
     EquitySummary,
@@ -30,6 +34,14 @@ from aiera_mcp.tools.equities.models import (
     FinancialPeriodItem,
     FinancialEquityInfo,
     FinancialsResponseData,
+    RatioItem,
+    RatioPeriodItem,
+    RatiosEquityInfo,
+    RatiosResponseData,
+    KpiSegmentMetricItem,
+    KpiSegmentPeriodItem,
+    KpisSegmentsEquityInfo,
+    KpisSegmentsResponseData,
 )
 from aiera_mcp.tools.common.models import CitationInfo
 
@@ -695,15 +707,15 @@ class TestGetFinancialsArgs:
             source="income-statement",
             source_type="standardized",
             period="annual",
-            fiscal_year=2024,
+            calendar_year=2024,
         )
 
         assert args.bloomberg_ticker == "AAPL:US"
         assert args.source == "income-statement"
         assert args.source_type == "standardized"
         assert args.period == "annual"
-        assert args.fiscal_year == 2024
-        assert args.fiscal_quarter is None  # Optional, not provided
+        assert args.calendar_year == 2024
+        assert args.calendar_quarter is None  # Optional, not provided
         assert args.include_base_instructions is True  # Default value
         assert args.exclude_instructions is False  # Default value
 
@@ -714,8 +726,8 @@ class TestGetFinancialsArgs:
             source="balance-sheet",
             source_type="as-reported",
             period="quarterly",
-            fiscal_year=2024,
-            fiscal_quarter=3,
+            calendar_year=2024,
+            calendar_quarter=3,
             originating_prompt="Get Q3 2024 balance sheet for Microsoft",
             self_identification="test-session-123",
             include_base_instructions=False,
@@ -726,8 +738,8 @@ class TestGetFinancialsArgs:
         assert args.source == "balance-sheet"
         assert args.source_type == "as-reported"
         assert args.period == "quarterly"
-        assert args.fiscal_year == 2024
-        assert args.fiscal_quarter == 3
+        assert args.calendar_year == 2024
+        assert args.calendar_quarter == 3
         assert args.originating_prompt == "Get Q3 2024 balance sheet for Microsoft"
         assert args.self_identification == "test-session-123"
         assert args.include_base_instructions is False
@@ -741,7 +753,7 @@ class TestGetFinancialsArgs:
                 source="income-statement",
                 source_type="standardized",
                 period="annual",
-                fiscal_year=2024,
+                calendar_year=2024,
             )
         assert "bloomberg_ticker" in str(exc_info.value)
 
@@ -751,7 +763,7 @@ class TestGetFinancialsArgs:
                 bloomberg_ticker="AAPL:US",
                 source_type="standardized",
                 period="annual",
-                fiscal_year=2024,
+                calendar_year=2024,
             )
         assert "source" in str(exc_info.value)
 
@@ -761,7 +773,7 @@ class TestGetFinancialsArgs:
                 bloomberg_ticker="AAPL:US",
                 source="income-statement",
                 period="annual",
-                fiscal_year=2024,
+                calendar_year=2024,
             )
         assert "source_type" in str(exc_info.value)
 
@@ -771,11 +783,11 @@ class TestGetFinancialsArgs:
                 bloomberg_ticker="AAPL:US",
                 source="income-statement",
                 source_type="standardized",
-                fiscal_year=2024,
+                calendar_year=2024,
             )
         assert "period" in str(exc_info.value)
 
-        # Missing fiscal_year
+        # Missing calendar_year
         with pytest.raises(ValidationError) as exc_info:
             GetFinancialsArgs(
                 bloomberg_ticker="AAPL:US",
@@ -783,7 +795,7 @@ class TestGetFinancialsArgs:
                 source_type="standardized",
                 period="annual",
             )
-        assert "fiscal_year" in str(exc_info.value)
+        assert "calendar_year" in str(exc_info.value)
 
     @pytest.mark.parametrize(
         "source",
@@ -796,7 +808,7 @@ class TestGetFinancialsArgs:
             source=source,
             source_type="standardized",
             period="annual",
-            fiscal_year=2024,
+            calendar_year=2024,
         )
         assert args.source == source
 
@@ -811,7 +823,7 @@ class TestGetFinancialsArgs:
             source="income-statement",
             source_type=source_type,
             period="annual",
-            fiscal_year=2024,
+            calendar_year=2024,
         )
         assert args.source_type == source_type
 
@@ -826,7 +838,7 @@ class TestGetFinancialsArgs:
             source="income-statement",
             source_type="standardized",
             period=period,
-            fiscal_year=2024,
+            calendar_year=2024,
         )
         assert args.period == period
 
@@ -838,7 +850,7 @@ class TestGetFinancialsArgs:
                 source="invalid-source",
                 source_type="standardized",
                 period="annual",
-                fiscal_year=2024,
+                calendar_year=2024,
             )
 
     def test_get_financials_args_invalid_source_type(self):
@@ -849,7 +861,7 @@ class TestGetFinancialsArgs:
                 source="income-statement",
                 source_type="invalid-type",
                 period="annual",
-                fiscal_year=2024,
+                calendar_year=2024,
             )
 
     def test_get_financials_args_invalid_period(self):
@@ -860,7 +872,7 @@ class TestGetFinancialsArgs:
                 source="income-statement",
                 source_type="standardized",
                 period="invalid-period",
-                fiscal_year=2024,
+                calendar_year=2024,
             )
 
     def test_get_financials_args_json_schema(self):
@@ -872,8 +884,8 @@ class TestGetFinancialsArgs:
         assert "source" in schema["properties"]
         assert "source_type" in schema["properties"]
         assert "period" in schema["properties"]
-        assert "fiscal_year" in schema["properties"]
-        assert "fiscal_quarter" in schema["properties"]
+        assert "calendar_year" in schema["properties"]
+        assert "calendar_quarter" in schema["properties"]
 
 
 @pytest.mark.unit
@@ -989,7 +1001,7 @@ class TestFinancialsModels:
                 name="Test Company",
                 bloomberg_ticker="TEST:US",
             ),
-            financials=[
+            periods=[
                 FinancialPeriodItem(
                     period_type="annual",
                     fiscal_year=2024,
@@ -999,8 +1011,8 @@ class TestFinancialsModels:
         )
 
         assert response_data.equity.bloomberg_ticker == "TEST:US"
-        assert len(response_data.financials) == 1
-        assert response_data.financials[0].fiscal_year == 2024
+        assert len(response_data.periods) == 1
+        assert response_data.periods[0].fiscal_year == 2024
 
     def test_get_financials_response_creation(self):
         """Test GetFinancialsResponse model creation."""
@@ -1013,7 +1025,7 @@ class TestFinancialsModels:
                         name="Test Company",
                         bloomberg_ticker="TEST:US",
                     ),
-                    financials=[],
+                    periods=[],
                 )
             ],
         )
@@ -1031,4 +1043,480 @@ class TestFinancialsModels:
         )
 
         assert response.error == "Failed to retrieve financial data"
+        assert response.response is None
+
+
+@pytest.mark.unit
+class TestGetRatiosArgs:
+    """Test GetRatiosArgs model."""
+
+    def test_valid_get_ratios_args(self):
+        """Test valid GetRatiosArgs creation with all required fields."""
+        args = GetRatiosArgs(
+            bloomberg_ticker="AAPL:US",
+            period="annual",
+            calendar_year=2024,
+        )
+
+        assert args.bloomberg_ticker == "AAPL:US"
+        assert args.period == "annual"
+        assert args.calendar_year == 2024
+        assert args.calendar_quarter is None  # Optional, not provided
+        assert args.include_base_instructions is True  # Default value
+        assert args.exclude_instructions is False  # Default value
+
+    def test_get_ratios_args_with_optional_fields(self):
+        """Test GetRatiosArgs with optional fields."""
+        args = GetRatiosArgs(
+            bloomberg_ticker="MSFT:US",
+            period="quarterly",
+            calendar_year=2024,
+            calendar_quarter=3,
+            originating_prompt="Get Q3 2024 ratios for Microsoft",
+            self_identification="test-session-123",
+            include_base_instructions=False,
+            exclude_instructions=True,
+        )
+
+        assert args.bloomberg_ticker == "MSFT:US"
+        assert args.period == "quarterly"
+        assert args.calendar_year == 2024
+        assert args.calendar_quarter == 3
+        assert args.originating_prompt == "Get Q3 2024 ratios for Microsoft"
+        assert args.self_identification == "test-session-123"
+        assert args.include_base_instructions is False
+        assert args.exclude_instructions is True
+
+    def test_get_ratios_args_required_fields(self):
+        """Test that required fields are enforced."""
+        # Missing bloomberg_ticker
+        with pytest.raises(ValidationError) as exc_info:
+            GetRatiosArgs(
+                period="annual",
+                calendar_year=2024,
+            )
+        assert "bloomberg_ticker" in str(exc_info.value)
+
+        # Missing period
+        with pytest.raises(ValidationError) as exc_info:
+            GetRatiosArgs(
+                bloomberg_ticker="AAPL:US",
+                calendar_year=2024,
+            )
+        assert "period" in str(exc_info.value)
+
+        # Missing calendar_year
+        with pytest.raises(ValidationError) as exc_info:
+            GetRatiosArgs(
+                bloomberg_ticker="AAPL:US",
+                period="annual",
+            )
+        assert "calendar_year" in str(exc_info.value)
+
+    @pytest.mark.parametrize(
+        "period",
+        ["annual", "quarterly", "semi-annual", "ltm", "ytd", "latest"],
+    )
+    def test_get_ratios_args_valid_periods(self, period):
+        """Test all valid period values."""
+        args = GetRatiosArgs(
+            bloomberg_ticker="AAPL:US",
+            period=period,
+            calendar_year=2024,
+        )
+        assert args.period == period
+
+    def test_get_ratios_args_invalid_period(self):
+        """Test that invalid period values are rejected."""
+        with pytest.raises(ValidationError):
+            GetRatiosArgs(
+                bloomberg_ticker="AAPL:US",
+                period="invalid-period",
+                calendar_year=2024,
+            )
+
+    def test_get_ratios_args_json_schema(self):
+        """Test that GetRatiosArgs generates a valid JSON schema."""
+        schema = GetRatiosArgs.model_json_schema()
+
+        assert "properties" in schema
+        assert "bloomberg_ticker" in schema["properties"]
+        assert "period" in schema["properties"]
+        assert "calendar_year" in schema["properties"]
+        assert "calendar_quarter" in schema["properties"]
+
+
+@pytest.mark.unit
+class TestRatiosModels:
+    """Test ratio data models."""
+
+    def test_ratio_item_creation(self):
+        """Test RatioItem model creation."""
+        ratio = RatioItem(
+            ratio_id="gross_margin",
+            ratio="Gross Margin",
+            ratio_category="Profitability",
+            ratio_value=0.478,
+        )
+
+        assert ratio.ratio_id == "gross_margin"
+        assert ratio.ratio == "Gross Margin"
+        assert ratio.ratio_category == "Profitability"
+        assert ratio.ratio_value == 0.478
+
+    def test_ratio_item_minimal(self):
+        """Test RatioItem with minimal data."""
+        ratio = RatioItem()
+
+        assert ratio.ratio_id is None
+        assert ratio.ratio is None
+        assert ratio.ratio_category is None
+        assert ratio.ratio_value is None
+
+    def test_ratio_period_item_creation(self):
+        """Test RatioPeriodItem model creation."""
+        period_item = RatioPeriodItem(
+            period_type="annual",
+            report_date="2024-12-31",
+            period_duration="12M",
+            calendar_year=2024,
+            fiscal_year=2024,
+            ratios=[
+                RatioItem(
+                    ratio_id="current_ratio",
+                    ratio="Current Ratio",
+                    ratio_value=1.07,
+                )
+            ],
+        )
+
+        assert period_item.period_type == "annual"
+        assert period_item.fiscal_year == 2024
+        assert len(period_item.ratios) == 1
+        assert period_item.ratios[0].ratio == "Current Ratio"
+
+    def test_ratio_period_item_date_parsing(self):
+        """Test RatioPeriodItem date field parsing."""
+        from datetime import date
+
+        period_item = RatioPeriodItem(
+            period_type="quarterly",
+            report_date="2024-09-30",
+            fiscal_year=2024,
+            fiscal_quarter=3,
+        )
+
+        assert period_item.report_date == date(2024, 9, 30)
+
+    def test_ratios_equity_info_creation(self):
+        """Test RatiosEquityInfo model creation."""
+        equity_info = RatiosEquityInfo(
+            equity_id=1,
+            company_id=1,
+            name="AMAZON COM INC",
+            bloomberg_ticker="AMZN:US",
+            sector_id=1,
+            subsector_id=259,
+        )
+
+        assert equity_info.equity_id == 1
+        assert equity_info.name == "AMAZON COM INC"
+        assert equity_info.bloomberg_ticker == "AMZN:US"
+
+    def test_ratios_response_data_creation(self):
+        """Test RatiosResponseData model creation."""
+        response_data = RatiosResponseData(
+            equity=RatiosEquityInfo(
+                equity_id=1,
+                name="Test Company",
+                bloomberg_ticker="TEST:US",
+            ),
+            periods=[
+                RatioPeriodItem(
+                    period_type="annual",
+                    fiscal_year=2024,
+                    ratios=[],
+                )
+            ],
+        )
+
+        assert response_data.equity.bloomberg_ticker == "TEST:US"
+        assert len(response_data.periods) == 1
+        assert response_data.periods[0].fiscal_year == 2024
+
+    def test_get_ratios_response_creation(self):
+        """Test GetRatiosResponse model creation."""
+        response = GetRatiosResponse(
+            instructions=["Test instruction"],
+            response=[
+                RatiosResponseData(
+                    equity=RatiosEquityInfo(
+                        equity_id=1,
+                        name="Test Company",
+                        bloomberg_ticker="TEST:US",
+                    ),
+                    periods=[],
+                )
+            ],
+        )
+
+        assert response.instructions == ["Test instruction"]
+        assert response.response[0].equity.name == "Test Company"
+        assert response.error is None
+
+    def test_get_ratios_response_with_error(self):
+        """Test GetRatiosResponse with error."""
+        response = GetRatiosResponse(
+            instructions=[],
+            response=None,
+            error="Failed to retrieve ratio data",
+        )
+
+        assert response.error == "Failed to retrieve ratio data"
+        assert response.response is None
+
+
+@pytest.mark.unit
+class TestGetKpisAndSegmentsArgs:
+    """Test GetKpisAndSegmentsArgs model."""
+
+    def test_valid_get_kpis_and_segments_args(self):
+        """Test valid GetKpisAndSegmentsArgs creation with all required fields."""
+        args = GetKpisAndSegmentsArgs(
+            bloomberg_ticker="AAPL:US",
+            period="annual",
+            calendar_year=2024,
+        )
+
+        assert args.bloomberg_ticker == "AAPL:US"
+        assert args.period == "annual"
+        assert args.calendar_year == 2024
+        assert args.calendar_quarter is None  # Optional, not provided
+        assert args.include_base_instructions is True  # Default value
+        assert args.exclude_instructions is False  # Default value
+
+    def test_get_kpis_and_segments_args_with_optional_fields(self):
+        """Test GetKpisAndSegmentsArgs with optional fields."""
+        args = GetKpisAndSegmentsArgs(
+            bloomberg_ticker="MSFT:US",
+            period="quarterly",
+            calendar_year=2024,
+            calendar_quarter=3,
+            originating_prompt="Get Q3 2024 KPIs for Microsoft",
+            self_identification="test-session-123",
+            include_base_instructions=False,
+            exclude_instructions=True,
+        )
+
+        assert args.bloomberg_ticker == "MSFT:US"
+        assert args.period == "quarterly"
+        assert args.calendar_year == 2024
+        assert args.calendar_quarter == 3
+        assert args.originating_prompt == "Get Q3 2024 KPIs for Microsoft"
+        assert args.self_identification == "test-session-123"
+        assert args.include_base_instructions is False
+        assert args.exclude_instructions is True
+
+    def test_get_kpis_and_segments_args_required_fields(self):
+        """Test that required fields are enforced."""
+        # Missing bloomberg_ticker
+        with pytest.raises(ValidationError) as exc_info:
+            GetKpisAndSegmentsArgs(
+                period="annual",
+                calendar_year=2024,
+            )
+        assert "bloomberg_ticker" in str(exc_info.value)
+
+        # Missing period
+        with pytest.raises(ValidationError) as exc_info:
+            GetKpisAndSegmentsArgs(
+                bloomberg_ticker="AAPL:US",
+                calendar_year=2024,
+            )
+        assert "period" in str(exc_info.value)
+
+        # Missing calendar_year
+        with pytest.raises(ValidationError) as exc_info:
+            GetKpisAndSegmentsArgs(
+                bloomberg_ticker="AAPL:US",
+                period="annual",
+            )
+        assert "calendar_year" in str(exc_info.value)
+
+    @pytest.mark.parametrize(
+        "period",
+        ["annual", "quarterly", "semi-annual", "ltm", "ytd", "latest"],
+    )
+    def test_get_kpis_and_segments_args_valid_periods(self, period):
+        """Test all valid period values."""
+        args = GetKpisAndSegmentsArgs(
+            bloomberg_ticker="AAPL:US",
+            period=period,
+            calendar_year=2024,
+        )
+        assert args.period == period
+
+    def test_get_kpis_and_segments_args_invalid_period(self):
+        """Test that invalid period values are rejected."""
+        with pytest.raises(ValidationError):
+            GetKpisAndSegmentsArgs(
+                bloomberg_ticker="AAPL:US",
+                period="invalid-period",
+                calendar_year=2024,
+            )
+
+    def test_get_kpis_and_segments_args_json_schema(self):
+        """Test that GetKpisAndSegmentsArgs generates a valid JSON schema."""
+        schema = GetKpisAndSegmentsArgs.model_json_schema()
+
+        assert "properties" in schema
+        assert "bloomberg_ticker" in schema["properties"]
+        assert "period" in schema["properties"]
+        assert "calendar_year" in schema["properties"]
+        assert "calendar_quarter" in schema["properties"]
+
+
+@pytest.mark.unit
+class TestKpisSegmentsModels:
+    """Test KPI and segment data models."""
+
+    def test_kpi_segment_metric_item_creation(self):
+        """Test KpiSegmentMetricItem model creation."""
+        metric = KpiSegmentMetricItem(
+            metric_id="aws_revenue",
+            metric_name="AWS Revenue",
+            metric_format="currency",
+            is_currency=True,
+            is_important=True,
+            metric_value=90757000000,
+        )
+
+        assert metric.metric_id == "aws_revenue"
+        assert metric.metric_name == "AWS Revenue"
+        assert metric.metric_format == "currency"
+        assert metric.is_currency is True
+        assert metric.is_important is True
+        assert metric.metric_value == 90757000000
+
+    def test_kpi_segment_metric_item_minimal(self):
+        """Test KpiSegmentMetricItem with minimal data."""
+        metric = KpiSegmentMetricItem()
+
+        assert metric.metric_id is None
+        assert metric.metric_name is None
+        assert metric.metric_format is None
+        assert metric.is_currency is None
+        assert metric.is_important is None
+        assert metric.metric_value is None
+
+    def test_kpi_segment_period_item_creation(self):
+        """Test KpiSegmentPeriodItem model creation."""
+        period_item = KpiSegmentPeriodItem(
+            period_type="annual",
+            report_date="2024-12-31",
+            period_duration="12M",
+            calendar_year=2024,
+            fiscal_year=2024,
+            kpi=[
+                KpiSegmentMetricItem(
+                    metric_id="aws_revenue",
+                    metric_name="AWS Revenue",
+                    metric_value=90757000000,
+                )
+            ],
+            segment=[
+                KpiSegmentMetricItem(
+                    metric_id="north_america",
+                    metric_name="North America",
+                    metric_value=353460000000,
+                )
+            ],
+        )
+
+        assert period_item.period_type == "annual"
+        assert period_item.fiscal_year == 2024
+        assert len(period_item.kpi) == 1
+        assert period_item.kpi[0].metric_name == "AWS Revenue"
+        assert len(period_item.segment) == 1
+        assert period_item.segment[0].metric_name == "North America"
+
+    def test_kpi_segment_period_item_date_parsing(self):
+        """Test KpiSegmentPeriodItem date field parsing."""
+        from datetime import date
+
+        period_item = KpiSegmentPeriodItem(
+            period_type="quarterly",
+            report_date="2024-09-30",
+            fiscal_year=2024,
+            fiscal_quarter=3,
+        )
+
+        assert period_item.report_date == date(2024, 9, 30)
+
+    def test_kpis_segments_equity_info_creation(self):
+        """Test KpisSegmentsEquityInfo model creation."""
+        equity_info = KpisSegmentsEquityInfo(
+            equity_id=1,
+            company_id=1,
+            name="AMAZON COM INC",
+            bloomberg_ticker="AMZN:US",
+            sector_id=1,
+            subsector_id=259,
+        )
+
+        assert equity_info.equity_id == 1
+        assert equity_info.name == "AMAZON COM INC"
+        assert equity_info.bloomberg_ticker == "AMZN:US"
+
+    def test_kpis_segments_response_data_creation(self):
+        """Test KpisSegmentsResponseData model creation."""
+        response_data = KpisSegmentsResponseData(
+            equity=KpisSegmentsEquityInfo(
+                equity_id=1,
+                name="Test Company",
+                bloomberg_ticker="TEST:US",
+            ),
+            periods=[
+                KpiSegmentPeriodItem(
+                    period_type="annual",
+                    fiscal_year=2024,
+                    kpi=[],
+                    segment=[],
+                )
+            ],
+        )
+
+        assert response_data.equity.bloomberg_ticker == "TEST:US"
+        assert len(response_data.periods) == 1
+        assert response_data.periods[0].fiscal_year == 2024
+
+    def test_get_kpis_and_segments_response_creation(self):
+        """Test GetKpisAndSegmentsResponse model creation."""
+        response = GetKpisAndSegmentsResponse(
+            instructions=["Test instruction"],
+            response=[
+                KpisSegmentsResponseData(
+                    equity=KpisSegmentsEquityInfo(
+                        equity_id=1,
+                        name="Test Company",
+                        bloomberg_ticker="TEST:US",
+                    ),
+                    periods=[],
+                )
+            ],
+        )
+
+        assert response.instructions == ["Test instruction"]
+        assert response.response[0].equity.name == "Test Company"
+        assert response.error is None
+
+    def test_get_kpis_and_segments_response_with_error(self):
+        """Test GetKpisAndSegmentsResponse with error."""
+        response = GetKpisAndSegmentsResponse(
+            instructions=[],
+            response=None,
+            error="Failed to retrieve KPIs and segments data",
+        )
+
+        assert response.error == "Failed to retrieve KPIs and segments data"
         assert response.response is None
