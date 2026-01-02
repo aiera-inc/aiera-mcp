@@ -702,7 +702,7 @@ This document defines the possible results and fields from various endpoints of 
         "sector_id": INTEGER,
         "subsector_id": INTEGER
     },
-    "financials": [
+    "periods": [
         {
             "period_type": "STRING",
             "report_date": DATE,
@@ -738,6 +738,90 @@ This document defines the possible results and fields from various endpoints of 
                         "url_target": "STRING",
                       }
                     }
+                }, ...
+            ]
+        }, ...
+    ]
+}
+```
+
+## /chat-support/get-ratios
+
+```json
+{
+  "instructions": ["STRING", "STRING", ... ],
+  "response": [
+    "equity": {
+        "equity_id": INTEGER,
+        "company_id": INTEGER,
+        "name": "STRING",
+        "bloomberg_ticker": "STRING",
+        "sector_id": INTEGER,
+        "subsector_id": INTEGER
+    },
+    "periods": [
+        {
+            "period_type": "STRING",
+            "report_date": DATE,
+            "period_duration": "STRING",
+            "calendar_year": INTEGER,
+            "calendar_quarter": INTEGER,
+            "fiscal_year": INTEGER,
+            "fiscal_quarter": INTEGER,
+            "ratios": [
+                {
+                    "ratio_id": "STRING",
+                    "ratio": "STRING",
+                    "ratio_category": "STRING",
+                    "ratio_value": FLOAT
+                }, ...
+            ]
+        }, ...
+    ]
+}
+```
+
+## /chat-support/get-segments-and-kpis
+
+```json
+{
+  "instructions": ["STRING", "STRING", ... ],
+  "response": [
+    "equity": {
+        "equity_id": INTEGER,
+        "company_id": INTEGER,
+        "name": "STRING",
+        "bloomberg_ticker": "STRING",
+        "sector_id": INTEGER,
+        "subsector_id": INTEGER
+    },
+    "periods": [
+        {
+            "period_type": "STRING",
+            "report_date": DATE,
+            "period_duration": "STRING",
+            "calendar_year": INTEGER,
+            "calendar_quarter": INTEGER,
+            "fiscal_year": INTEGER,
+            "fiscal_quarter": INTEGER,
+            "kpi": [
+                {
+                    "metric_id": "STRING",
+                    "metric_name": "STRING",
+                    "metric_format": "STRING",
+                    "is_currency": BOOLEAN,
+                    "is_important": BOOLEAN,
+                    "metric_value": INTEGER
+                }, ...
+            ],
+            "segment": [
+                {
+                    "metric_id": "STRING",
+                    "metric_name": "STRING",
+                    "metric_format": "STRING",
+                    "is_currency": BOOLEAN,
+                    "is_important": BOOLEAN,
+                    "metric_value": INTEGER
                 }, ...
             ]
         }, ...

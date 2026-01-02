@@ -880,7 +880,7 @@ class FinancialsResponseData(BaseModel):
     equity: Optional[FinancialEquityInfo] = Field(
         None, description="Equity information"
     )
-    financials: Optional[List[FinancialPeriodItem]] = Field(
+    periods: Optional[List[FinancialPeriodItem]] = Field(
         None, description="List of financial period data"
     )
 
