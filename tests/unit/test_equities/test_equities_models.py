@@ -695,15 +695,15 @@ class TestGetFinancialsArgs:
             source="income-statement",
             source_type="standardized",
             period="annual",
-            fiscal_year=2024,
+            calendar_year=2024,
         )
 
         assert args.bloomberg_ticker == "AAPL:US"
         assert args.source == "income-statement"
         assert args.source_type == "standardized"
         assert args.period == "annual"
-        assert args.fiscal_year == 2024
-        assert args.fiscal_quarter is None  # Optional, not provided
+        assert args.calendar_year == 2024
+        assert args.calendar_quarter is None  # Optional, not provided
         assert args.include_base_instructions is True  # Default value
         assert args.exclude_instructions is False  # Default value
 
@@ -714,8 +714,8 @@ class TestGetFinancialsArgs:
             source="balance-sheet",
             source_type="as-reported",
             period="quarterly",
-            fiscal_year=2024,
-            fiscal_quarter=3,
+            calendar_year=2024,
+            calendar_quarter=3,
             originating_prompt="Get Q3 2024 balance sheet for Microsoft",
             self_identification="test-session-123",
             include_base_instructions=False,
@@ -726,8 +726,8 @@ class TestGetFinancialsArgs:
         assert args.source == "balance-sheet"
         assert args.source_type == "as-reported"
         assert args.period == "quarterly"
-        assert args.fiscal_year == 2024
-        assert args.fiscal_quarter == 3
+        assert args.calendar_year == 2024
+        assert args.calendar_quarter == 3
         assert args.originating_prompt == "Get Q3 2024 balance sheet for Microsoft"
         assert args.self_identification == "test-session-123"
         assert args.include_base_instructions is False
@@ -741,7 +741,7 @@ class TestGetFinancialsArgs:
                 source="income-statement",
                 source_type="standardized",
                 period="annual",
-                fiscal_year=2024,
+                calendar_year=2024,
             )
         assert "bloomberg_ticker" in str(exc_info.value)
 
@@ -751,7 +751,7 @@ class TestGetFinancialsArgs:
                 bloomberg_ticker="AAPL:US",
                 source_type="standardized",
                 period="annual",
-                fiscal_year=2024,
+                calendar_year=2024,
             )
         assert "source" in str(exc_info.value)
 
@@ -761,7 +761,7 @@ class TestGetFinancialsArgs:
                 bloomberg_ticker="AAPL:US",
                 source="income-statement",
                 period="annual",
-                fiscal_year=2024,
+                calendar_year=2024,
             )
         assert "source_type" in str(exc_info.value)
 
@@ -771,11 +771,11 @@ class TestGetFinancialsArgs:
                 bloomberg_ticker="AAPL:US",
                 source="income-statement",
                 source_type="standardized",
-                fiscal_year=2024,
+                calendar_year=2024,
             )
         assert "period" in str(exc_info.value)
 
-        # Missing fiscal_year
+        # Missing calendar_year
         with pytest.raises(ValidationError) as exc_info:
             GetFinancialsArgs(
                 bloomberg_ticker="AAPL:US",
@@ -783,7 +783,7 @@ class TestGetFinancialsArgs:
                 source_type="standardized",
                 period="annual",
             )
-        assert "fiscal_year" in str(exc_info.value)
+        assert "calendar_year" in str(exc_info.value)
 
     @pytest.mark.parametrize(
         "source",
@@ -796,7 +796,7 @@ class TestGetFinancialsArgs:
             source=source,
             source_type="standardized",
             period="annual",
-            fiscal_year=2024,
+            calendar_year=2024,
         )
         assert args.source == source
 
@@ -811,7 +811,7 @@ class TestGetFinancialsArgs:
             source="income-statement",
             source_type=source_type,
             period="annual",
-            fiscal_year=2024,
+            calendar_year=2024,
         )
         assert args.source_type == source_type
 
@@ -826,7 +826,7 @@ class TestGetFinancialsArgs:
             source="income-statement",
             source_type="standardized",
             period=period,
-            fiscal_year=2024,
+            calendar_year=2024,
         )
         assert args.period == period
 
@@ -838,7 +838,7 @@ class TestGetFinancialsArgs:
                 source="invalid-source",
                 source_type="standardized",
                 period="annual",
-                fiscal_year=2024,
+                calendar_year=2024,
             )
 
     def test_get_financials_args_invalid_source_type(self):
@@ -849,7 +849,7 @@ class TestGetFinancialsArgs:
                 source="income-statement",
                 source_type="invalid-type",
                 period="annual",
-                fiscal_year=2024,
+                calendar_year=2024,
             )
 
     def test_get_financials_args_invalid_period(self):
@@ -860,7 +860,7 @@ class TestGetFinancialsArgs:
                 source="income-statement",
                 source_type="standardized",
                 period="invalid-period",
-                fiscal_year=2024,
+                calendar_year=2024,
             )
 
     def test_get_financials_args_json_schema(self):
@@ -872,8 +872,8 @@ class TestGetFinancialsArgs:
         assert "source" in schema["properties"]
         assert "source_type" in schema["properties"]
         assert "period" in schema["properties"]
-        assert "fiscal_year" in schema["properties"]
-        assert "fiscal_quarter" in schema["properties"]
+        assert "calendar_year" in schema["properties"]
+        assert "calendar_quarter" in schema["properties"]
 
 
 @pytest.mark.unit
@@ -989,7 +989,7 @@ class TestFinancialsModels:
                 name="Test Company",
                 bloomberg_ticker="TEST:US",
             ),
-            financials=[
+            periods=[
                 FinancialPeriodItem(
                     period_type="annual",
                     fiscal_year=2024,
@@ -999,8 +999,8 @@ class TestFinancialsModels:
         )
 
         assert response_data.equity.bloomberg_ticker == "TEST:US"
-        assert len(response_data.financials) == 1
-        assert response_data.financials[0].fiscal_year == 2024
+        assert len(response_data.periods) == 1
+        assert response_data.periods[0].fiscal_year == 2024
 
     def test_get_financials_response_creation(self):
         """Test GetFinancialsResponse model creation."""
@@ -1013,7 +1013,7 @@ class TestFinancialsModels:
                         name="Test Company",
                         bloomberg_ticker="TEST:US",
                     ),
-                    financials=[],
+                    periods=[],
                 )
             ],
         )

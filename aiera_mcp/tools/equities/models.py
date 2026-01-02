@@ -725,11 +725,11 @@ class GetFinancialsArgs(BaseToolArgs, BloombergTickerMixin):
         Field(description="The reporting period type for the financial data.")
     )
 
-    fiscal_year: int = Field(description="The fiscal year for the financial data.")
+    calendar_year: int = Field(description="The calendar year for the financial data.")
 
-    fiscal_quarter: Optional[int] = Field(
+    calendar_quarter: Optional[int] = Field(
         default=None,
-        description="The fiscal quarter for the financial data (1-4). Required for quarterly periods.",
+        description="The calendar quarter for the financial data (1-4). Required for quarterly periods.",
     )
 
 

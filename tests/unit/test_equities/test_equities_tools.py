@@ -689,7 +689,7 @@ class TestGetFinancials:
             source="income-statement",
             source_type="standardized",
             period="annual",
-            fiscal_year=2024,
+            calendar_year=2024,
         )
 
         # Execute
@@ -698,16 +698,17 @@ class TestGetFinancials:
         # Verify
         assert isinstance(result, GetFinancialsResponse)
         assert result.response is not None
-        assert result.response.equity is not None
-        assert result.response.equity.bloomberg_ticker == "AMZN:US"
-        assert result.response.equity.name == "AMAZON COM INC"
-        assert result.response.equity.equity_id == 1
+        assert len(result.response) == 1
+        assert result.response[0].equity is not None
+        assert result.response[0].equity.bloomberg_ticker == "AMZN:US"
+        assert result.response[0].equity.name == "AMAZON COM INC"
+        assert result.response[0].equity.equity_id == 1
 
-        # Check financials data
-        assert result.response.financials is not None
-        assert len(result.response.financials) == 1
+        # Check periods data
+        assert result.response[0].periods is not None
+        assert len(result.response[0].periods) == 1
 
-        first_period = result.response.financials[0]
+        first_period = result.response[0].periods[0]
         assert first_period.period_type == "annual"
         assert first_period.fiscal_year == 2024
         assert first_period.metrics is not None
@@ -730,13 +731,13 @@ class TestGetFinancials:
         assert params["source"] == "income-statement"
         assert params["source_type"] == "standardized"
         assert params["period"] == "annual"
-        assert params["fiscal_year"] == 2024
+        assert params["calendar_year"] == 2024
 
     @pytest.mark.asyncio
-    async def test_get_financials_with_fiscal_quarter(
+    async def test_get_financials_with_calendar_quarter(
         self, mock_http_dependencies, equities_api_responses
     ):
-        """Test get_financials with fiscal_quarter parameter."""
+        """Test get_financials with calendar_quarter parameter."""
         # Setup
         mock_http_dependencies["mock_make_request"].return_value = (
             equities_api_responses["get_financials_success"]
@@ -747,8 +748,8 @@ class TestGetFinancials:
             source="balance-sheet",
             source_type="as-reported",
             period="quarterly",
-            fiscal_year=2024,
-            fiscal_quarter=3,
+            calendar_year=2024,
+            calendar_quarter=3,
         )
 
         # Execute
@@ -764,8 +765,8 @@ class TestGetFinancials:
         assert params["source"] == "balance-sheet"
         assert params["source_type"] == "as-reported"
         assert params["period"] == "quarterly"
-        assert params["fiscal_year"] == 2024
-        assert params["fiscal_quarter"] == 3
+        assert params["calendar_year"] == 2024
+        assert params["calendar_quarter"] == 3
 
     @pytest.mark.asyncio
     async def test_get_financials_exclude_instructions(
@@ -782,7 +783,7 @@ class TestGetFinancials:
             source="cash-flow-statement",
             source_type="standardized",
             period="annual",
-            fiscal_year=2024,
+            calendar_year=2024,
             exclude_instructions=True,
         )
 
@@ -799,7 +800,7 @@ class TestGetFinancials:
         # Setup
         empty_response = {
             "instructions": [],
-            "response": {"equity": None, "financials": []},
+            "response": [{"equity": None, "periods": []}],
         }
         mock_http_dependencies["mock_make_request"].return_value = empty_response
 
@@ -808,7 +809,7 @@ class TestGetFinancials:
             source="income-statement",
             source_type="standardized",
             period="annual",
-            fiscal_year=2024,
+            calendar_year=2024,
         )
 
         # Execute
@@ -816,7 +817,7 @@ class TestGetFinancials:
 
         # Verify
         assert isinstance(result, GetFinancialsResponse)
-        assert result.response.financials == []
+        assert result.response[0].periods == []
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -837,7 +838,7 @@ class TestGetFinancials:
             source=source,
             source_type="standardized",
             period="annual",
-            fiscal_year=2024,
+            calendar_year=2024,
         )
 
         # Execute
@@ -867,7 +868,7 @@ class TestGetFinancials:
             source="income-statement",
             source_type="standardized",
             period=period,
-            fiscal_year=2024,
+            calendar_year=2024,
         )
 
         # Execute
