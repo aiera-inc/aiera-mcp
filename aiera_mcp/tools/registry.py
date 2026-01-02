@@ -14,6 +14,7 @@ from .equities import (
     get_sectors_and_subsectors,
     get_index_constituents,
     get_watchlist_constituents,
+    get_financials,
 )
 from .company_docs import (
     find_company_docs,
@@ -41,6 +42,7 @@ from .equities import (
     GetAvailableWatchlistsArgs,
     GetAvailableIndexesArgs,
     GetSectorsAndSubsectorsArgs,
+    GetFinancialsArgs,
 )
 from .company_docs import (
     FindCompanyDocsArgs,
@@ -170,6 +172,15 @@ TOOL_REGISTRY = {
         "input_schema": GetWatchlistConstituentsArgs.model_json_schema(),
         "function": get_watchlist_constituents,
         "args_model": GetWatchlistConstituentsArgs,
+        "category": "equities",
+        "read_only": True,
+        "destructive": False,
+    },
+    "get_financials": {
+        "display_name": "Get Financials",
+        "input_schema": GetFinancialsArgs.model_json_schema(),
+        "function": get_financials,
+        "args_model": GetFinancialsArgs,
         "category": "equities",
         "read_only": True,
         "destructive": False,

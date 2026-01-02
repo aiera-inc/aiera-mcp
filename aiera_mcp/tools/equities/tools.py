@@ -12,6 +12,7 @@ from .models import (
     GetAvailableWatchlistsArgs,
     GetAvailableIndexesArgs,
     GetSectorsAndSubsectorsArgs,
+    GetFinancialsArgs,
     FindEquitiesResponse,
     GetEquitySummariesResponse,
     GetSectorsSubsectorsResponse,
@@ -19,6 +20,7 @@ from .models import (
     GetIndexConstituentsResponse,
     GetAvailableWatchlistsResponse,
     GetWatchlistConstituentsResponse,
+    GetFinancialsResponse,
 )
 from ..base import get_http_client, make_aiera_request
 from ... import get_api_key
@@ -213,6 +215,36 @@ async def get_watchlist_constituents(
 
     # Validate and return the response directly since it matches FindEquitiesResponse structure
     return GetWatchlistConstituentsResponse.model_validate(raw_response)
+
+
+async def get_financials(args: GetFinancialsArgs) -> GetFinancialsResponse:
+    """Retrieve financial data (income statements, balance sheets, cash flow statements) for a company."""
+    logger.info("tool called: get_financials")
+
+    # Get client and API key (no context needed for standard MCP)
+    client = await get_http_client(None)
+    api_key = get_api_key()
+
+    params = args.model_dump(exclude_none=True)
+
+    raw_response = await make_aiera_request(
+        client=client,
+        method="GET",
+        endpoint="/chat-support/get-financials",
+        api_key=api_key,
+        params=params,
+    )
+
+    # Validate and return the structured response
+    try:
+        response = GetFinancialsResponse.model_validate(raw_response)
+        if args.exclude_instructions:
+            response.instructions = []
+        return response
+    except Exception as e:
+        logger.warning(f"Failed to parse API response: {e}")
+        # Return empty response for malformed data
+        return GetFinancialsResponse(instructions=[], response=None, error=str(e))
 
 
 # Legacy registration functions removed - all tools now registered via registry

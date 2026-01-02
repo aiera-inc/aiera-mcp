@@ -10,6 +10,7 @@ from aiera_mcp.tools.equities.models import (
     GetEquitySummariesArgs,
     GetIndexConstituentsArgs,
     GetWatchlistConstituentsArgs,
+    GetFinancialsArgs,
     FindEquitiesResponse,
     GetEquitySummariesResponse,
     GetSectorsSubsectorsResponse,
@@ -17,12 +18,18 @@ from aiera_mcp.tools.equities.models import (
     GetIndexConstituentsResponse,
     GetAvailableWatchlistsResponse,
     GetWatchlistConstituentsResponse,
+    GetFinancialsResponse,
     EquityItem,
     EquityDetails,
     EquitySummary,
     SectorSubsector,
     IndexItem,
     WatchlistItem,
+    FinancialMetricInfo,
+    FinancialMetricItem,
+    FinancialPeriodItem,
+    FinancialEquityInfo,
+    FinancialsResponseData,
 )
 from aiera_mcp.tools.common.models import CitationInfo
 
@@ -675,3 +682,351 @@ class TestEquitiesModelValidation:
         serialized = details.model_dump()
         assert len(serialized["identifiers"]) == 6
         assert serialized["identifiers"]["figi"] == "BBG000B9XRY4"
+
+
+@pytest.mark.unit
+class TestGetFinancialsArgs:
+    """Test GetFinancialsArgs model."""
+
+    def test_valid_get_financials_args(self):
+        """Test valid GetFinancialsArgs creation with all required fields."""
+        args = GetFinancialsArgs(
+            bloomberg_ticker="AAPL:US",
+            source="income-statement",
+            source_type="standardized",
+            period="annual",
+            fiscal_year=2024,
+        )
+
+        assert args.bloomberg_ticker == "AAPL:US"
+        assert args.source == "income-statement"
+        assert args.source_type == "standardized"
+        assert args.period == "annual"
+        assert args.fiscal_year == 2024
+        assert args.fiscal_quarter is None  # Optional, not provided
+        assert args.include_base_instructions is True  # Default value
+        assert args.exclude_instructions is False  # Default value
+
+    def test_get_financials_args_with_optional_fields(self):
+        """Test GetFinancialsArgs with optional fields."""
+        args = GetFinancialsArgs(
+            bloomberg_ticker="MSFT:US",
+            source="balance-sheet",
+            source_type="as-reported",
+            period="quarterly",
+            fiscal_year=2024,
+            fiscal_quarter=3,
+            originating_prompt="Get Q3 2024 balance sheet for Microsoft",
+            self_identification="test-session-123",
+            include_base_instructions=False,
+            exclude_instructions=True,
+        )
+
+        assert args.bloomberg_ticker == "MSFT:US"
+        assert args.source == "balance-sheet"
+        assert args.source_type == "as-reported"
+        assert args.period == "quarterly"
+        assert args.fiscal_year == 2024
+        assert args.fiscal_quarter == 3
+        assert args.originating_prompt == "Get Q3 2024 balance sheet for Microsoft"
+        assert args.self_identification == "test-session-123"
+        assert args.include_base_instructions is False
+        assert args.exclude_instructions is True
+
+    def test_get_financials_args_required_fields(self):
+        """Test that required fields are enforced."""
+        # Missing bloomberg_ticker
+        with pytest.raises(ValidationError) as exc_info:
+            GetFinancialsArgs(
+                source="income-statement",
+                source_type="standardized",
+                period="annual",
+                fiscal_year=2024,
+            )
+        assert "bloomberg_ticker" in str(exc_info.value)
+
+        # Missing source
+        with pytest.raises(ValidationError) as exc_info:
+            GetFinancialsArgs(
+                bloomberg_ticker="AAPL:US",
+                source_type="standardized",
+                period="annual",
+                fiscal_year=2024,
+            )
+        assert "source" in str(exc_info.value)
+
+        # Missing source_type
+        with pytest.raises(ValidationError) as exc_info:
+            GetFinancialsArgs(
+                bloomberg_ticker="AAPL:US",
+                source="income-statement",
+                period="annual",
+                fiscal_year=2024,
+            )
+        assert "source_type" in str(exc_info.value)
+
+        # Missing period
+        with pytest.raises(ValidationError) as exc_info:
+            GetFinancialsArgs(
+                bloomberg_ticker="AAPL:US",
+                source="income-statement",
+                source_type="standardized",
+                fiscal_year=2024,
+            )
+        assert "period" in str(exc_info.value)
+
+        # Missing fiscal_year
+        with pytest.raises(ValidationError) as exc_info:
+            GetFinancialsArgs(
+                bloomberg_ticker="AAPL:US",
+                source="income-statement",
+                source_type="standardized",
+                period="annual",
+            )
+        assert "fiscal_year" in str(exc_info.value)
+
+    @pytest.mark.parametrize(
+        "source",
+        ["income-statement", "balance-sheet", "cash-flow-statement"],
+    )
+    def test_get_financials_args_valid_sources(self, source):
+        """Test all valid source values."""
+        args = GetFinancialsArgs(
+            bloomberg_ticker="AAPL:US",
+            source=source,
+            source_type="standardized",
+            period="annual",
+            fiscal_year=2024,
+        )
+        assert args.source == source
+
+    @pytest.mark.parametrize(
+        "source_type",
+        ["as-reported", "standardized"],
+    )
+    def test_get_financials_args_valid_source_types(self, source_type):
+        """Test all valid source_type values."""
+        args = GetFinancialsArgs(
+            bloomberg_ticker="AAPL:US",
+            source="income-statement",
+            source_type=source_type,
+            period="annual",
+            fiscal_year=2024,
+        )
+        assert args.source_type == source_type
+
+    @pytest.mark.parametrize(
+        "period",
+        ["annual", "quarterly", "semi-annual", "ltm", "ytd", "latest"],
+    )
+    def test_get_financials_args_valid_periods(self, period):
+        """Test all valid period values."""
+        args = GetFinancialsArgs(
+            bloomberg_ticker="AAPL:US",
+            source="income-statement",
+            source_type="standardized",
+            period=period,
+            fiscal_year=2024,
+        )
+        assert args.period == period
+
+    def test_get_financials_args_invalid_source(self):
+        """Test that invalid source values are rejected."""
+        with pytest.raises(ValidationError):
+            GetFinancialsArgs(
+                bloomberg_ticker="AAPL:US",
+                source="invalid-source",
+                source_type="standardized",
+                period="annual",
+                fiscal_year=2024,
+            )
+
+    def test_get_financials_args_invalid_source_type(self):
+        """Test that invalid source_type values are rejected."""
+        with pytest.raises(ValidationError):
+            GetFinancialsArgs(
+                bloomberg_ticker="AAPL:US",
+                source="income-statement",
+                source_type="invalid-type",
+                period="annual",
+                fiscal_year=2024,
+            )
+
+    def test_get_financials_args_invalid_period(self):
+        """Test that invalid period values are rejected."""
+        with pytest.raises(ValidationError):
+            GetFinancialsArgs(
+                bloomberg_ticker="AAPL:US",
+                source="income-statement",
+                source_type="standardized",
+                period="invalid-period",
+                fiscal_year=2024,
+            )
+
+    def test_get_financials_args_json_schema(self):
+        """Test that GetFinancialsArgs generates a valid JSON schema."""
+        schema = GetFinancialsArgs.model_json_schema()
+
+        assert "properties" in schema
+        assert "bloomberg_ticker" in schema["properties"]
+        assert "source" in schema["properties"]
+        assert "source_type" in schema["properties"]
+        assert "period" in schema["properties"]
+        assert "fiscal_year" in schema["properties"]
+        assert "fiscal_quarter" in schema["properties"]
+
+
+@pytest.mark.unit
+class TestFinancialsModels:
+    """Test financial data models."""
+
+    def test_financial_metric_info_creation(self):
+        """Test FinancialMetricInfo model creation."""
+        metric_info = FinancialMetricInfo(
+            metric_name="Total Revenue",
+            metric_format="currency",
+            is_point_in_time=False,
+            is_currency=True,
+            is_per_share=False,
+            is_key_metric=True,
+            is_total=True,
+            headers=["Income Statement", "Revenue"],
+        )
+
+        assert metric_info.metric_name == "Total Revenue"
+        assert metric_info.metric_format == "currency"
+        assert metric_info.is_currency is True
+        assert metric_info.is_key_metric is True
+        assert metric_info.headers == ["Income Statement", "Revenue"]
+
+    def test_financial_metric_info_minimal(self):
+        """Test FinancialMetricInfo with minimal data."""
+        metric_info = FinancialMetricInfo(metric_name="Custom Metric")
+
+        assert metric_info.metric_name == "Custom Metric"
+        assert metric_info.metric_format is None
+        assert metric_info.is_currency is None
+        assert metric_info.headers is None
+
+    def test_financial_metric_item_creation(self):
+        """Test FinancialMetricItem model creation."""
+        metric_item = FinancialMetricItem(
+            metric=FinancialMetricInfo(
+                metric_name="Net Income",
+                is_currency=True,
+                is_key_metric=True,
+            ),
+            metric_value=30425000000,
+            metric_unit="USD",
+            metric_currency="USD",
+            metric_is_calculated=False,
+        )
+
+        assert metric_item.metric.metric_name == "Net Income"
+        assert metric_item.metric_value == 30425000000
+        assert metric_item.metric_currency == "USD"
+        assert metric_item.metric_is_calculated is False
+
+    def test_financial_period_item_creation(self):
+        """Test FinancialPeriodItem model creation."""
+        period_item = FinancialPeriodItem(
+            period_type="annual",
+            report_date="2024-12-31",
+            period_duration="12M",
+            calendar_year=2024,
+            fiscal_year=2024,
+            is_restated=False,
+            metrics=[
+                FinancialMetricItem(
+                    metric=FinancialMetricInfo(metric_name="Revenue"),
+                    metric_value=574785000000,
+                )
+            ],
+        )
+
+        assert period_item.period_type == "annual"
+        assert period_item.fiscal_year == 2024
+        assert len(period_item.metrics) == 1
+        assert period_item.metrics[0].metric.metric_name == "Revenue"
+
+    def test_financial_period_item_date_parsing(self):
+        """Test FinancialPeriodItem date field parsing."""
+        from datetime import date, datetime
+
+        period_item = FinancialPeriodItem(
+            period_type="quarterly",
+            report_date="2024-09-30",
+            earnings_date="2024-10-30T17:00:00",
+            filing_date="2024-11-01T00:00:00",
+            fiscal_year=2024,
+            fiscal_quarter=3,
+        )
+
+        assert period_item.report_date == date(2024, 9, 30)
+        assert isinstance(period_item.earnings_date, datetime)
+        assert isinstance(period_item.filing_date, datetime)
+
+    def test_financial_equity_info_creation(self):
+        """Test FinancialEquityInfo model creation."""
+        equity_info = FinancialEquityInfo(
+            equity_id=1,
+            company_id=1,
+            name="AMAZON COM INC",
+            bloomberg_ticker="AMZN:US",
+            sector_id=1,
+            subsector_id=259,
+        )
+
+        assert equity_info.equity_id == 1
+        assert equity_info.name == "AMAZON COM INC"
+        assert equity_info.bloomberg_ticker == "AMZN:US"
+
+    def test_financials_response_data_creation(self):
+        """Test FinancialsResponseData model creation."""
+        response_data = FinancialsResponseData(
+            equity=FinancialEquityInfo(
+                equity_id=1,
+                name="Test Company",
+                bloomberg_ticker="TEST:US",
+            ),
+            financials=[
+                FinancialPeriodItem(
+                    period_type="annual",
+                    fiscal_year=2024,
+                    metrics=[],
+                )
+            ],
+        )
+
+        assert response_data.equity.bloomberg_ticker == "TEST:US"
+        assert len(response_data.financials) == 1
+        assert response_data.financials[0].fiscal_year == 2024
+
+    def test_get_financials_response_creation(self):
+        """Test GetFinancialsResponse model creation."""
+        response = GetFinancialsResponse(
+            instructions=["Test instruction"],
+            response=FinancialsResponseData(
+                equity=FinancialEquityInfo(
+                    equity_id=1,
+                    name="Test Company",
+                    bloomberg_ticker="TEST:US",
+                ),
+                financials=[],
+            ),
+        )
+
+        assert response.instructions == ["Test instruction"]
+        assert response.response.equity.name == "Test Company"
+        assert response.error is None
+
+    def test_get_financials_response_with_error(self):
+        """Test GetFinancialsResponse with error."""
+        response = GetFinancialsResponse(
+            instructions=[],
+            response=None,
+            error="Failed to retrieve financial data",
+        )
+
+        assert response.error == "Failed to retrieve financial data"
+        assert response.response is None

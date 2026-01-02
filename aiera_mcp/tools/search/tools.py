@@ -121,6 +121,7 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
         "search_pipeline": "hybrid_search_pipeline",
         "include_base_instructions": args.include_base_instructions,
         "originating_prompt": args.originating_prompt,
+        "self_identification": args.self_identification,
     }
 
     # Try ML-inference search...
@@ -192,6 +193,7 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
                 "size": args.max_results,
                 "include_base_instructions": args.include_base_instructions,
                 "originating_prompt": args.originating_prompt,
+                "self_identification": args.self_identification,
             }
 
             raw_response = await make_aiera_request(
@@ -313,6 +315,7 @@ async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
         "search_pipeline": "hybrid_search_pipeline",
         "include_base_instructions": args.include_base_instructions,
         "originating_prompt": args.originating_prompt,
+        "self_identification": args.self_identification,
     }
 
     # Try ML-inference search...
@@ -377,6 +380,7 @@ async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
                 "size": args.max_results,
                 "include_base_instructions": args.include_base_instructions,
                 "originating_prompt": args.originating_prompt,
+                "self_identification": args.self_identification,
             }
 
             raw_response = await make_aiera_request(

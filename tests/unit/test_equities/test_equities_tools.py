@@ -14,6 +14,7 @@ from aiera_mcp.tools.equities.tools import (
     get_index_constituents,
     get_available_watchlists,
     get_watchlist_constituents,
+    get_financials,
 )
 from aiera_mcp.tools.equities.models import (
     FindEquitiesArgs,
@@ -23,6 +24,7 @@ from aiera_mcp.tools.equities.models import (
     GetSectorsAndSubsectorsArgs,
     GetAvailableIndexesArgs,
     GetAvailableWatchlistsArgs,
+    GetFinancialsArgs,
     FindEquitiesResponse,
     GetEquitySummariesResponse,
     GetSectorsSubsectorsResponse,
@@ -30,6 +32,7 @@ from aiera_mcp.tools.equities.models import (
     GetIndexConstituentsResponse,
     GetAvailableWatchlistsResponse,
     GetWatchlistConstituentsResponse,
+    GetFinancialsResponse,
     EquityItem,
     EquityDetails,
     EquitySummary,
@@ -665,3 +668,212 @@ class TestEquitiesToolsErrorHandling:
         # Backward compatibility properties should be None when no subsectors
         assert second_sector.subsector_id is None
         assert second_sector.subsector_name is None
+
+
+@pytest.mark.unit
+class TestGetFinancials:
+    """Test the get_financials tool."""
+
+    @pytest.mark.asyncio
+    async def test_get_financials_success(
+        self, mock_http_dependencies, equities_api_responses
+    ):
+        """Test successful financials retrieval."""
+        # Setup
+        mock_http_dependencies["mock_make_request"].return_value = (
+            equities_api_responses["get_financials_success"]
+        )
+
+        args = GetFinancialsArgs(
+            bloomberg_ticker="AMZN:US",
+            source="income-statement",
+            source_type="standardized",
+            period="annual",
+            fiscal_year=2024,
+        )
+
+        # Execute
+        result = await get_financials(args)
+
+        # Verify
+        assert isinstance(result, GetFinancialsResponse)
+        assert result.response is not None
+        assert result.response.equity is not None
+        assert result.response.equity.bloomberg_ticker == "AMZN:US"
+        assert result.response.equity.name == "AMAZON COM INC"
+        assert result.response.equity.equity_id == 1
+
+        # Check financials data
+        assert result.response.financials is not None
+        assert len(result.response.financials) == 1
+
+        first_period = result.response.financials[0]
+        assert first_period.period_type == "annual"
+        assert first_period.fiscal_year == 2024
+        assert first_period.metrics is not None
+        assert len(first_period.metrics) == 3
+
+        # Check first metric (Total Revenue)
+        revenue_metric = first_period.metrics[0]
+        assert revenue_metric.metric.metric_name == "Total Revenue"
+        assert revenue_metric.metric_value == 574785000000
+        assert revenue_metric.metric_currency == "USD"
+        assert revenue_metric.metric.is_key_metric is True
+
+        # Check API call parameters
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        assert call_args[1]["method"] == "GET"
+        assert call_args[1]["endpoint"] == "/chat-support/get-financials"
+
+        params = call_args[1]["params"]
+        assert params["bloomberg_ticker"] == "AMZN:US"
+        assert params["source"] == "income-statement"
+        assert params["source_type"] == "standardized"
+        assert params["period"] == "annual"
+        assert params["fiscal_year"] == 2024
+
+    @pytest.mark.asyncio
+    async def test_get_financials_with_fiscal_quarter(
+        self, mock_http_dependencies, equities_api_responses
+    ):
+        """Test get_financials with fiscal_quarter parameter."""
+        # Setup
+        mock_http_dependencies["mock_make_request"].return_value = (
+            equities_api_responses["get_financials_success"]
+        )
+
+        args = GetFinancialsArgs(
+            bloomberg_ticker="AAPL:US",
+            source="balance-sheet",
+            source_type="as-reported",
+            period="quarterly",
+            fiscal_year=2024,
+            fiscal_quarter=3,
+        )
+
+        # Execute
+        result = await get_financials(args)
+
+        # Verify
+        assert isinstance(result, GetFinancialsResponse)
+
+        # Check API call parameters
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        params = call_args[1]["params"]
+        assert params["bloomberg_ticker"] == "AAPL:US"
+        assert params["source"] == "balance-sheet"
+        assert params["source_type"] == "as-reported"
+        assert params["period"] == "quarterly"
+        assert params["fiscal_year"] == 2024
+        assert params["fiscal_quarter"] == 3
+
+    @pytest.mark.asyncio
+    async def test_get_financials_exclude_instructions(
+        self, mock_http_dependencies, equities_api_responses
+    ):
+        """Test get_financials with exclude_instructions flag."""
+        # Setup
+        mock_http_dependencies["mock_make_request"].return_value = (
+            equities_api_responses["get_financials_success"]
+        )
+
+        args = GetFinancialsArgs(
+            bloomberg_ticker="AMZN:US",
+            source="cash-flow-statement",
+            source_type="standardized",
+            period="annual",
+            fiscal_year=2024,
+            exclude_instructions=True,
+        )
+
+        # Execute
+        result = await get_financials(args)
+
+        # Verify
+        assert isinstance(result, GetFinancialsResponse)
+        assert result.instructions == []
+
+    @pytest.mark.asyncio
+    async def test_get_financials_empty_response(self, mock_http_dependencies):
+        """Test get_financials with empty response."""
+        # Setup
+        empty_response = {
+            "instructions": [],
+            "response": {"equity": None, "financials": []},
+        }
+        mock_http_dependencies["mock_make_request"].return_value = empty_response
+
+        args = GetFinancialsArgs(
+            bloomberg_ticker="UNKNOWN:US",
+            source="income-statement",
+            source_type="standardized",
+            period="annual",
+            fiscal_year=2024,
+        )
+
+        # Execute
+        result = await get_financials(args)
+
+        # Verify
+        assert isinstance(result, GetFinancialsResponse)
+        assert result.response.financials == []
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "source",
+        ["income-statement", "balance-sheet", "cash-flow-statement"],
+    )
+    async def test_get_financials_different_sources(
+        self, mock_http_dependencies, equities_api_responses, source
+    ):
+        """Test get_financials with different source types."""
+        # Setup
+        mock_http_dependencies["mock_make_request"].return_value = (
+            equities_api_responses["get_financials_success"]
+        )
+
+        args = GetFinancialsArgs(
+            bloomberg_ticker="AMZN:US",
+            source=source,
+            source_type="standardized",
+            period="annual",
+            fiscal_year=2024,
+        )
+
+        # Execute
+        result = await get_financials(args)
+
+        # Verify
+        assert isinstance(result, GetFinancialsResponse)
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        assert call_args[1]["params"]["source"] == source
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "period",
+        ["annual", "quarterly", "semi-annual", "ltm", "ytd", "latest"],
+    )
+    async def test_get_financials_different_periods(
+        self, mock_http_dependencies, equities_api_responses, period
+    ):
+        """Test get_financials with different period types."""
+        # Setup
+        mock_http_dependencies["mock_make_request"].return_value = (
+            equities_api_responses["get_financials_success"]
+        )
+
+        args = GetFinancialsArgs(
+            bloomberg_ticker="AMZN:US",
+            source="income-statement",
+            source_type="standardized",
+            period=period,
+            fiscal_year=2024,
+        )
+
+        # Execute
+        result = await get_financials(args)
+
+        # Verify
+        assert isinstance(result, GetFinancialsResponse)
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        assert call_args[1]["params"]["period"] == period
