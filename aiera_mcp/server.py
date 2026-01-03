@@ -84,6 +84,8 @@ def get_api_documentation() -> str:
 
     **Transcrippets™**: Create, find, and manage curated transcript segments for key insights and memorable quotes.
 
+    **Instructions**: Retrieve guidance for formatting, citations, and domain-specific response generation. Only use `get_instructions` as a final step before generating your response, and only if you need additional help processing or presenting the data you have already gathered.
+
     ## Key Features
 
     - **Comprehensive Coverage**: Access to events, filings, documents, and expert insights across all major markets.

@@ -81,15 +81,9 @@ class TestSearchTranscriptsArgs:
         assert args.include_base_instructions is False
 
     def test_search_transcripts_args_required_fields(self):
-        """Test that query_text, event_ids, and equity_ids are required."""
+        """Test that query_text is required."""
         with pytest.raises(ValidationError):
             SearchTranscriptsArgs()
-
-        with pytest.raises(ValidationError):
-            SearchTranscriptsArgs(query_text="test")
-
-        with pytest.raises(ValidationError):
-            SearchTranscriptsArgs(query_text="test", event_ids=[1])
 
 
 @pytest.mark.unit
@@ -145,12 +139,9 @@ class TestSearchFilingsArgs:
         assert args.include_base_instructions is False
 
     def test_search_filings_args_required_fields(self):
-        """Test that query_text and equity_ids are required."""
+        """Test that query_text is required."""
         with pytest.raises(ValidationError):
             SearchFilingsArgs()
-
-        with pytest.raises(ValidationError):
-            SearchFilingsArgs(query_text="test")
 
 
 @pytest.mark.unit

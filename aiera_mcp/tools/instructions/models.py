@@ -12,8 +12,10 @@ from ..common.models import BaseAieraResponse
 class GetInstructionsArgs(BaseModel):
     """Retrieve instructions of a specific type for use with MCP/AI agents.
 
-    This tool fetches instruction sets that guide AI behavior for specific tasks or contexts.
-    Use this to get standardized instructions for processing events, filings, or other content types.
+    IMPORTANT: Only use this tool as a final step before generating your response, and only if you need
+    additional guidance on how to process or present the data you have already gathered. First use other
+    tools to fetch the relevant data (events, filings, transcripts, etc.), then call this tool if you
+    need help with formatting, citation requirements, or domain-specific guidance for your response.
     """
 
     instruction_type: str = Field(
@@ -28,11 +30,6 @@ class GetInstructionsArgs(BaseModel):
     self_identification: Optional[str] = Field(
         default=None,
         description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
-    )
-
-    include_base_instructions: Optional[bool] = Field(
-        default=True,
-        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
     )
 
 
