@@ -4,6 +4,18 @@ This document defines the possible results and fields from various endpoints of 
 
 ---
 
+## /chat-support/get-instructions/<instruction_type>
+
+```json
+{
+  "response": {
+    "instructions": ["STRING", "STRING", ...]
+  }
+}
+```
+
+---
+
 ## /chat-support/find-equities
 
 ```json
@@ -196,6 +208,8 @@ This document defines the possible results and fields from various endpoints of 
 }
 ```
 
+Note: The `transcripts` array is only included when `include_transcripts=true`. When transcripts are included, the `summary` field will be `null`.
+
 ## /chat-support/estimated-and-upcoming-events
 
 ```json
@@ -293,6 +307,10 @@ This document defines the possible results and fields from various endpoints of 
 }
 ```
 
+## /chat-support/search/<index>
+
+Search endpoint supporting multiple indices: `events`, `transcripts`, `filings`, `filing-chunks`, `attachments`, `company_docs`, `third_bridge`
+
 ### /chat-support/search/transcripts
 
 ```json
@@ -301,12 +319,14 @@ This document defines the possible results and fields from various endpoints of 
   "response": {
     "result": [
       {
-        "_score": FLOAT,
+        "score": FLOAT,
         "date": "ISO_DATETIME",
         "primary_company_id": INTEGER,
         "content_id": INTEGER,
         "transcript_event_id": INTEGER,
         "transcript_section": "STRING_OR_NULL",
+        "speaker_name": "STRING_OR_NULL",
+        "speaker_title": "STRING_OR_NULL",
         "text": "STRING",
         "primary_equity_id": INTEGER,
         "title": "STRING",
@@ -319,6 +339,139 @@ This document defines the possible results and fields from various endpoints of 
             "company_id": INTEGER,
             "event_id": INTEGER,
             "transcript_item_id": INTEGER
+          }
+        }
+      }, ...
+    ]
+  }
+}
+```
+
+### /chat-support/search/events
+
+```json
+{
+  "instructions": ["STRING", "STRING", ... ],
+  "response": {
+    "result": [
+      {
+        "score": FLOAT,
+        "date": "ISO_DATETIME",
+        "primary_company_id": INTEGER,
+        "content_id": INTEGER,
+        "text": "STRING",
+        "primary_equity_id": INTEGER,
+        "title": "STRING",
+        "citation_information": {
+          "title": "STRING",
+          "url": "URL",
+          "metadata": {
+            "type": "STRING",
+            "url_target": "STRING",
+            "company_id": INTEGER,
+            "event_id": INTEGER
+          }
+        }
+      }, ...
+    ]
+  }
+}
+```
+
+### /chat-support/search/filing-chunks
+
+```json
+{
+  "instructions": ["STRING", "STRING", ... ],
+  "response": {
+    "result": [
+      {
+        "score": FLOAT,
+        "date": "ISO_DATE",
+        "primary_company_id": INTEGER,
+        "content_id": INTEGER,
+        "filing_id": INTEGER,
+        "company_common_name": "STRING",
+        "filing_type": "STRING",
+        "primary_equity_id": INTEGER,
+        "text": "STRING",
+        "title": "STRING",
+        "citation_information": {
+          "title": "STRING",
+          "url": "URL",
+          "metadata": {
+            "type": "STRING",
+            "url_target": "STRING",
+            "company_id": INTEGER,
+            "filing_id": INTEGER,
+            "content_id": INTEGER
+          }
+        }
+      }, ...
+    ]
+  }
+}
+```
+
+### /chat-support/search/filings
+
+```json
+{
+  "instructions": ["STRING", "STRING", ... ],
+  "response": {
+    "result": [
+      {
+        "score": FLOAT,
+        "date": "ISO_DATE",
+        "primary_company_id": INTEGER,
+        "content_id": INTEGER,
+        "filing_id": INTEGER,
+        "company_common_name": "STRING",
+        "filing_type": "STRING",
+        "primary_equity_id": INTEGER,
+        "text": "STRING",
+        "title": "STRING",
+        "citation_information": {
+          "title": "STRING",
+          "url": "URL",
+          "metadata": {
+            "type": "STRING",
+            "url_target": "STRING",
+            "company_id": INTEGER,
+            "filing_id": INTEGER,
+            "content_id": INTEGER
+          }
+        }
+      }, ...
+    ]
+  }
+}
+```
+
+### /chat-support/search/attachments
+
+```json
+{
+  "instructions": ["STRING", "STRING", ... ],
+  "response": {
+    "result": [
+      {
+        "score": FLOAT,
+        "date": "ISO_DATETIME",
+        "primary_company_id": INTEGER,
+        "content_id": INTEGER,
+        "event_id": INTEGER,
+        "attachment_type": "STRING",
+        "text": "STRING",
+        "primary_equity_id": INTEGER,
+        "title": "STRING",
+        "citation_information": {
+          "title": "STRING",
+          "url": "URL",
+          "metadata": {
+            "type": "STRING",
+            "url_target": "STRING",
+            "event_id": INTEGER
           }
         }
       }, ...
@@ -398,6 +551,13 @@ This document defines the possible results and fields from various endpoints of 
         "datafiles_synced": BOOLEAN,
         "summary": ["STRING", ...],
         "content_raw": "STRING_OR_NULL",
+        "datafiles": [
+          {
+            "description": "STRING",
+            "file_type": "STRING",
+            "content_raw": "STRING"
+          }, ...
+        ],
         "citation_information": {
           "title": "STRING",
           "url": "URL",
@@ -415,40 +575,7 @@ This document defines the possible results and fields from various endpoints of 
 }
 ```
 
-### /chat-support/search/filing-chunks
-
-```json
-{
-  "instructions": ["STRING", "STRING", ... ],
-  "response": {
-    "result": [
-      {
-        "_score": FLOAT,
-        "date": "ISO_DATE",
-        "primary_company_id": INTEGER,
-        "content_id": INTEGER,
-        "filing_id": INTEGER,
-        "company_common_name": "STRING",
-        "filing_type": "STRING",
-        "primary_equity_id": INTEGER,
-        "text": "STRING",
-        "title": "STRING",
-        "citation_information": {
-          "title": "STRING",
-          "url": "URL",
-          "metadata": {
-            "type": "STRING",
-            "url_target": "STRING",
-            "company_id": INTEGER,
-            "filing_id": INTEGER,
-            "content_id": INTEGER
-          }
-        }
-      }, ...
-    ]
-  }
-}
-```
+Note: `content_raw` and `datafiles` are only included when `include_content=true`.
 
 ## /chat-support/find-company-docs
 
@@ -494,6 +621,8 @@ This document defines the possible results and fields from various endpoints of 
   }
 }
 ```
+
+Note: `content_raw` is only included when `include_content=true`.
 
 ## /chat-support/get-company-doc-categories
 
@@ -583,6 +712,33 @@ This document defines the possible results and fields from various endpoints of 
       }, ...
     ]
   }
+}
+```
+
+Note: `transcripts` array is only included when `include_transcripts=true`. When transcripts are not included, `citation_information` is included at the event level.
+
+## /chat-support/search-company-news
+
+POST endpoint that searches company news from IR websites.
+
+```json
+{
+  "instructions": ["STRING", "STRING", ... ],
+  "response": [
+    {
+      "title": "STRING",
+      "snippet": "STRING",
+      "score": FLOAT,
+      "citation_information": {
+        "title": "STRING",
+        "url": "URL",
+        "metadata": {
+          "type": "STRING",
+          "url_target": "STRING"
+        }
+      }
+    }, ...
+  ]
 }
 ```
 
@@ -694,54 +850,57 @@ This document defines the possible results and fields from various endpoints of 
 {
   "instructions": ["STRING", "STRING", ... ],
   "response": [
-    "equity": {
+    {
+      "equity": {
         "equity_id": INTEGER,
         "company_id": INTEGER,
         "name": "STRING",
         "bloomberg_ticker": "STRING",
         "sector_id": INTEGER,
         "subsector_id": INTEGER
-    },
-    "periods": [
+      },
+      "periods": [
         {
-            "period_type": "STRING",
-            "report_date": DATE,
-            "period_duration": "STRING",
-            "calendar_year": INTEGER,
-            "calendar_quarter": INTEGER,
-            "fiscal_year": INTEGER,
-            "fiscal_quarter": INTEGER,
-            "is_restated": BOOLEAN,
-            "earnings_date": DATETIME,
-            "filing_date": DATETIME,
-            "metrics": [
-                {
-                    "metric": {
-                        "metric_name": "STRING",
-                        "metric_format": "STRING",
-                        "is_point_in_time": BOOLEAN,
-                        "is_currency": BOOLEAN,
-                        "is_per_share": BOOLEAN,
-                        "is_key_metric": BOOLEAN,
-                        "is_total": BOOLEAN,
-                        "headers": LIST/NULL
-                    },
-                    "metric_value": INTEGER,
-                    "metric_unit": "STRING",
-                    "metric_currency": "STRING",
-                    "metric_is_calculated": BOOLEAN,
-                    "citation_information": {
-                      "title": "STRING",
-                      "url": "URL",
-                      "metadata": {
-                        "type": "STRING",
-                        "url_target": "STRING",
-                      }
-                    }
-                }, ...
-            ]
+          "period_type": "STRING",
+          "report_date": "DATE",
+          "period_duration": "STRING",
+          "calendar_year": INTEGER,
+          "calendar_quarter": INTEGER,
+          "fiscal_year": INTEGER,
+          "fiscal_quarter": INTEGER,
+          "is_restated": BOOLEAN,
+          "earnings_date": "DATETIME",
+          "filing_date": "DATETIME",
+          "metrics": [
+            {
+              "metric": {
+                "metric_name": "STRING",
+                "metric_format": "STRING",
+                "is_point_in_time": BOOLEAN,
+                "is_currency": BOOLEAN,
+                "is_per_share": BOOLEAN,
+                "is_key_metric": BOOLEAN,
+                "is_total": BOOLEAN,
+                "headers": "LIST_OR_NULL"
+              },
+              "metric_value": INTEGER,
+              "metric_unit": "STRING",
+              "metric_currency": "STRING",
+              "metric_is_calculated": BOOLEAN,
+              "citation_information": {
+                "title": "STRING",
+                "url": "URL",
+                "metadata": {
+                  "type": "STRING",
+                  "url_target": "STRING"
+                }
+              }
+            }, ...
+          ]
         }, ...
-    ]
+      ]
+    }, ...
+  ]
 }
 ```
 
@@ -751,33 +910,36 @@ This document defines the possible results and fields from various endpoints of 
 {
   "instructions": ["STRING", "STRING", ... ],
   "response": [
-    "equity": {
+    {
+      "equity": {
         "equity_id": INTEGER,
         "company_id": INTEGER,
         "name": "STRING",
         "bloomberg_ticker": "STRING",
         "sector_id": INTEGER,
         "subsector_id": INTEGER
-    },
-    "periods": [
+      },
+      "periods": [
         {
-            "period_type": "STRING",
-            "report_date": DATE,
-            "period_duration": "STRING",
-            "calendar_year": INTEGER,
-            "calendar_quarter": INTEGER,
-            "fiscal_year": INTEGER,
-            "fiscal_quarter": INTEGER,
-            "ratios": [
-                {
-                    "ratio_id": "STRING",
-                    "ratio": "STRING",
-                    "ratio_category": "STRING",
-                    "ratio_value": FLOAT
-                }, ...
-            ]
+          "period_type": "STRING",
+          "report_date": "DATE",
+          "period_duration": "STRING",
+          "calendar_year": INTEGER,
+          "calendar_quarter": INTEGER,
+          "fiscal_year": INTEGER,
+          "fiscal_quarter": INTEGER,
+          "ratios": [
+            {
+              "ratio_id": "STRING",
+              "ratio": "STRING",
+              "ratio_category": "STRING",
+              "ratio_value": FLOAT
+            }, ...
+          ]
         }, ...
-    ]
+      ]
+    }, ...
+  ]
 }
 ```
 
@@ -787,44 +949,47 @@ This document defines the possible results and fields from various endpoints of 
 {
   "instructions": ["STRING", "STRING", ... ],
   "response": [
-    "equity": {
+    {
+      "equity": {
         "equity_id": INTEGER,
         "company_id": INTEGER,
         "name": "STRING",
         "bloomberg_ticker": "STRING",
         "sector_id": INTEGER,
         "subsector_id": INTEGER
-    },
-    "periods": [
+      },
+      "periods": [
         {
-            "period_type": "STRING",
-            "report_date": DATE,
-            "period_duration": "STRING",
-            "calendar_year": INTEGER,
-            "calendar_quarter": INTEGER,
-            "fiscal_year": INTEGER,
-            "fiscal_quarter": INTEGER,
-            "kpi": [
-                {
-                    "metric_id": "STRING",
-                    "metric_name": "STRING",
-                    "metric_format": "STRING",
-                    "is_currency": BOOLEAN,
-                    "is_important": BOOLEAN,
-                    "metric_value": INTEGER
-                }, ...
-            ],
-            "segment": [
-                {
-                    "metric_id": "STRING",
-                    "metric_name": "STRING",
-                    "metric_format": "STRING",
-                    "is_currency": BOOLEAN,
-                    "is_important": BOOLEAN,
-                    "metric_value": INTEGER
-                }, ...
-            ]
+          "period_type": "STRING",
+          "report_date": "DATE",
+          "period_duration": "STRING",
+          "calendar_year": INTEGER,
+          "calendar_quarter": INTEGER,
+          "fiscal_year": INTEGER,
+          "fiscal_quarter": INTEGER,
+          "kpi": [
+            {
+              "metric_id": "STRING",
+              "metric_name": "STRING",
+              "metric_format": "STRING",
+              "is_currency": BOOLEAN,
+              "is_important": BOOLEAN,
+              "metric_value": INTEGER
+            }, ...
+          ],
+          "segment": [
+            {
+              "metric_id": "STRING",
+              "metric_name": "STRING",
+              "metric_format": "STRING",
+              "is_currency": BOOLEAN,
+              "is_important": BOOLEAN,
+              "metric_value": INTEGER
+            }, ...
+          ]
         }, ...
-    ]
+      ]
+    }, ...
+  ]
 }
 ```
