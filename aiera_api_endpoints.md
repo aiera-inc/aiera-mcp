@@ -33,9 +33,6 @@ Retrieves instructions of a specific type for use with MCP/AI agents.
 | `include_base_instructions` | boolean | `true` | Include base instructions |
 | `originating_prompt` | string | - | Original prompt |
 | `self_identification` | string | - | Caller identifier |
-| `search` | string | - | Search term |
-| `page` | integer | `1` | Page number |
-| `page_size` | integer | `50` | Results per page (max 100) |
 
 ---
 
