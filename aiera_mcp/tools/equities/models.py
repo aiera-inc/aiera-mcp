@@ -169,7 +169,7 @@ class GetIndexConstituentsArgs(BaseToolArgs):
     )
 
     index: Union[str, int] = Field(
-        description="Index identifier. Use get_available_indexes to find valid values."
+        description="Index identifier (index_id or short_name). Obtain valid values from get_available_indexes. Example: 1 or 'sp500'"
     )
 
     page: Union[int, str] = Field(
@@ -200,7 +200,7 @@ class GetWatchlistConstituentsArgs(BaseToolArgs):
     )
 
     watchlist_id: Union[str, int] = Field(
-        description="Watchlist identifier. Use get_available_watchlists to find valid values."
+        description="Watchlist identifier (watchlist_id). Obtain valid values from get_available_watchlists. Example: 42"
     )
 
     page: Union[int, str] = Field(
@@ -685,8 +685,15 @@ class GetWatchlistConstituentsResponse(BaseModel):
 
 
 class GetFinancialsArgs(BaseToolArgs, BloombergTickerMixin):
-    """Retrieve financial data (income statements, balance sheets, cash flow statements) for a company.
+    """Retrieve financial statement data for a company.
+
     Use this tool to get detailed financial metrics for a specific company and fiscal period.
+    Available statement types:
+    - Income Statement: Revenue, costs, operating income, net income, EPS
+    - Balance Sheet: Assets, liabilities, equity, cash position, debt
+    - Cash Flow Statement: Operating cash flow, CapEx, free cash flow, financing activities
+
+    WORKFLOW: Use find_equities first to verify the bloomberg_ticker if needed.
     """
 
     originating_prompt: Optional[str] = Field(
@@ -714,7 +721,7 @@ class GetFinancialsArgs(BaseToolArgs, BloombergTickerMixin):
     )
 
     source: Literal["income-statement", "balance-sheet", "cash-flow-statement"] = Field(
-        description="The type of financial statement to retrieve."
+        description="The type of financial statement to retrieve. Options: 'income-statement' (revenue, expenses, profit), 'balance-sheet' (assets, liabilities, equity), 'cash-flow-statement' (operating, investing, financing cash flows)."
     )
 
     source_type: Literal["as-reported", "standardized"] = Field(
@@ -725,7 +732,7 @@ class GetFinancialsArgs(BaseToolArgs, BloombergTickerMixin):
     period: Literal["annual", "quarterly", "semi-annual", "ltm", "ytd", "latest"] = (
         Field(
             default="annual",
-            description="The reporting period type for the financial data.",
+            description="The reporting period type. Options: 'annual' (full fiscal year), 'quarterly' (Q1-Q4, requires calendar_quarter), 'semi-annual' (half year), 'ltm' (last twelve months trailing), 'ytd' (year to date), 'latest' (most recent available).",
         )
     )
 
@@ -916,8 +923,14 @@ class GetFinancialsResponse(BaseModel):
 
 class GetRatiosArgs(BaseToolArgs, BloombergTickerMixin):
     """Retrieve financial ratios for a company.
-    Use this tool to get ratio metrics like profitability, liquidity,
-    and valuation ratios for a specific company and fiscal period.
+
+    Use this tool to get ratio metrics for a specific company and fiscal period, including:
+    - Profitability ratios (ROE, ROA, profit margins)
+    - Liquidity ratios (current ratio, quick ratio)
+    - Valuation ratios (P/E, P/B, EV/EBITDA)
+    - Leverage ratios (debt-to-equity, interest coverage)
+
+    WORKFLOW: Use find_equities first to verify the bloomberg_ticker if needed.
     """
 
     originating_prompt: Optional[str] = Field(
@@ -947,7 +960,7 @@ class GetRatiosArgs(BaseToolArgs, BloombergTickerMixin):
     period: Literal["annual", "quarterly", "semi-annual", "ltm", "ytd", "latest"] = (
         Field(
             default="annual",
-            description="The reporting period type for the ratio data.",
+            description="The reporting period type. Options: 'annual' (full fiscal year), 'quarterly' (Q1-Q4, requires calendar_quarter), 'semi-annual' (half year), 'ltm' (last twelve months trailing), 'ytd' (year to date), 'latest' (most recent available).",
         )
     )
 
@@ -1039,9 +1052,15 @@ class GetRatiosResponse(BaseModel):
 
 
 class GetKpisAndSegmentsArgs(BaseToolArgs, BloombergTickerMixin):
-    """Retrieve KPIs and business segment data for a company.
-    Use this tool to get key performance indicators and segment-level
-    metrics for a specific company and fiscal period.
+    """Retrieve KPIs (Key Performance Indicators) and business segment data for a company.
+
+    Use this tool to get company-specific operational metrics and segment breakdowns, including:
+    - KPIs: Subscriber counts, unit sales, average selling prices, same-store sales, etc.
+    - Segments: Revenue and metrics broken down by business unit, geography, or product line
+
+    These metrics are company-specific and vary by industry. Not all companies report segment data.
+
+    WORKFLOW: Use find_equities first to verify the bloomberg_ticker if needed.
     """
 
     originating_prompt: Optional[str] = Field(
@@ -1071,7 +1090,7 @@ class GetKpisAndSegmentsArgs(BaseToolArgs, BloombergTickerMixin):
     period: Literal["annual", "quarterly", "semi-annual", "ltm", "ytd", "latest"] = (
         Field(
             default="annual",
-            description="The reporting period type for the KPI and segment data.",
+            description="The reporting period type. Options: 'annual' (full fiscal year), 'quarterly' (Q1-Q4, requires calendar_quarter), 'semi-annual' (half year), 'ltm' (last twelve months trailing), 'ytd' (year to date), 'latest' (most recent available).",
         )
     )
 

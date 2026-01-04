@@ -185,7 +185,18 @@ class FindCompanyDocsArgs(BaseToolArgs, BloombergTickerMixin, CategoriesKeywords
 
 
 class GetCompanyDocArgs(BaseToolArgs):
-    """Get detailed information about a specific company document including a summary and other metadata."""
+    """Get detailed information about specific company documents including summary, content, and metadata.
+
+    RESPONSE SIZE WARNING: This tool returns full document content which can be extensive,
+    especially for annual reports and detailed press releases.
+
+    WHEN TO USE:
+    - Use this when you need complete document content and summary
+    - Use this when you need full metadata for specific documents
+    - For browsing documents by type/date, use find_company_docs instead
+
+    WORKFLOW: Use find_company_docs first to obtain valid company_doc_ids.
+    """
 
     originating_prompt: Optional[str] = Field(
         default=None,
@@ -208,7 +219,7 @@ class GetCompanyDocArgs(BaseToolArgs):
     )
 
     company_doc_ids: str = Field(
-        description="Comma separated unique identifiers for the company documents. Obtained from find_company_docs results."
+        description="Unique identifier(s) for the company documents. Obtain doc_id from find_company_docs results. For multiple documents, use comma-separated list. Example: '12345' or '12345,67890'"
     )
 
 
