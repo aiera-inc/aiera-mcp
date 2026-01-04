@@ -192,6 +192,12 @@ class TranscriptSearchItem(BaseModel):
     transcript_section: Optional[str] = Field(
         description="Section of transcript (e.g., 'q_and_a', 'presentation'). Can be null for some transcripts."
     )
+    speaker_name: Optional[str] = Field(
+        None, description="Name of the speaker. Can be null for some transcripts."
+    )
+    speaker_title: Optional[str] = Field(
+        None, description="Title/role of the speaker. Can be null for some transcripts."
+    )
     text: str = Field(description="The matching text content from the transcript")
     primary_equity_id: int = Field(
         description="Primary equity identifier. Can be found using the find_equities tool."

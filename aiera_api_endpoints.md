@@ -8,11 +8,11 @@ This document describes all available endpoints in the Chat Support API (`/chat-
 
 The following parameters are shared across most endpoints:
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `include_base_instructions` | boolean | `true` | Whether to include base instructions in the response |
-| `originating_prompt` | string | - | The original prompt that triggered this request |
-| `self_identification` | string | - | Identifier for the calling system/agent |
+| Parameter                   | Type    | Default  | Description                                          |
+|-----------------------------|---------|----------|------------------------------------------------------|
+| `include_base_instructions` | boolean | `true`   | Whether to include base instructions in the response |
+| `originating_prompt`        | string  | -        | The original prompt that triggered this request      |
+| `self_identification`       | string  | -        | Identifier for the calling system/agent              |
 
 ---
 
@@ -226,8 +226,6 @@ Retrieves financial statement data for the specified company.
 | `source`                    | string  | **required**   | Financial statement type: `income-statement`, `balance-sheet`, `cash-flow-statement` |
 | `source_type`               | string  | `standardized` | Data format: `as-reported`, `standardized`                                           |
 | `period`                    | string  | `annual`       | Period type: `annual`, `quarterly`, `semi-annual`, `ltm`, `ytd`, `latest`            |
-| `fiscal_year`               | string  | -              | Fiscal year                                                                          |
-| `fiscal_quarter`            | string  | -              | Fiscal quarter                                                                       |
 | `calendar_year`             | string  | **required**   | Calendar year (e.g., `2024`)                                                         |
 | `calendar_quarter`          | string  | -              | Calendar quarter (e.g., `Q1`)                                                        |
 | `ratio_id`                  | string  | -              | Specific ratio ID                                                                    |

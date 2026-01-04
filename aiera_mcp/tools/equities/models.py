@@ -718,11 +718,15 @@ class GetFinancialsArgs(BaseToolArgs, BloombergTickerMixin):
     )
 
     source_type: Literal["as-reported", "standardized"] = Field(
-        description="The format type of the financial data: 'as-reported' for original filings or 'standardized' for normalized data."
+        default="standardized",
+        description="The format type of the financial data: 'as-reported' for original filings or 'standardized' for normalized data.",
     )
 
     period: Literal["annual", "quarterly", "semi-annual", "ltm", "ytd", "latest"] = (
-        Field(description="The reporting period type for the financial data.")
+        Field(
+            default="annual",
+            description="The reporting period type for the financial data.",
+        )
     )
 
     calendar_year: int = Field(description="The calendar year for the financial data.")
@@ -730,6 +734,21 @@ class GetFinancialsArgs(BaseToolArgs, BloombergTickerMixin):
     calendar_quarter: Optional[int] = Field(
         default=None,
         description="The calendar quarter for the financial data (1-4). Required for quarterly periods.",
+    )
+
+    ratio_id: Optional[str] = Field(
+        default=None,
+        description="Specific ratio ID to filter.",
+    )
+
+    metric_id: Optional[str] = Field(
+        default=None,
+        description="Specific metric ID to filter.",
+    )
+
+    metric_type: Optional[str] = Field(
+        default=None,
+        description="Metric type filter.",
     )
 
 
@@ -926,7 +945,10 @@ class GetRatiosArgs(BaseToolArgs, BloombergTickerMixin):
     )
 
     period: Literal["annual", "quarterly", "semi-annual", "ltm", "ytd", "latest"] = (
-        Field(description="The reporting period type for the ratio data.")
+        Field(
+            default="annual",
+            description="The reporting period type for the ratio data.",
+        )
     )
 
     calendar_year: int = Field(description="The calendar year for the ratio data.")
@@ -934,6 +956,11 @@ class GetRatiosArgs(BaseToolArgs, BloombergTickerMixin):
     calendar_quarter: Optional[int] = Field(
         default=None,
         description="The calendar quarter for the ratio data (1-4). Required for quarterly periods.",
+    )
+
+    ratio_id: Optional[str] = Field(
+        default=None,
+        description="Specific ratio ID to filter.",
     )
 
 
@@ -1042,7 +1069,10 @@ class GetKpisAndSegmentsArgs(BaseToolArgs, BloombergTickerMixin):
     )
 
     period: Literal["annual", "quarterly", "semi-annual", "ltm", "ytd", "latest"] = (
-        Field(description="The reporting period type for the KPI and segment data.")
+        Field(
+            default="annual",
+            description="The reporting period type for the KPI and segment data.",
+        )
     )
 
     calendar_year: int = Field(
@@ -1052,6 +1082,16 @@ class GetKpisAndSegmentsArgs(BaseToolArgs, BloombergTickerMixin):
     calendar_quarter: Optional[int] = Field(
         default=None,
         description="The calendar quarter for the KPI and segment data (1-4). Required for quarterly periods.",
+    )
+
+    metric_id: Optional[str] = Field(
+        default=None,
+        description="Specific metric ID to filter.",
+    )
+
+    metric_type: Optional[str] = Field(
+        default=None,
+        description="Metric type filter.",
     )
 
 
