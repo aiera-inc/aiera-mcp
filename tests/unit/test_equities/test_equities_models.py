@@ -757,45 +757,24 @@ class TestGetFinancialsArgs:
             )
         assert "bloomberg_ticker" in str(exc_info.value)
 
-        # Missing source
+        # Missing source (still required)
         with pytest.raises(ValidationError) as exc_info:
             GetFinancialsArgs(
                 bloomberg_ticker="AAPL:US",
-                source_type="standardized",
-                period="annual",
                 calendar_year=2024,
             )
         assert "source" in str(exc_info.value)
 
-        # Missing source_type
+        # Missing calendar_year (still required)
         with pytest.raises(ValidationError) as exc_info:
             GetFinancialsArgs(
                 bloomberg_ticker="AAPL:US",
                 source="income-statement",
-                period="annual",
-                calendar_year=2024,
-            )
-        assert "source_type" in str(exc_info.value)
-
-        # Missing period
-        with pytest.raises(ValidationError) as exc_info:
-            GetFinancialsArgs(
-                bloomberg_ticker="AAPL:US",
-                source="income-statement",
-                source_type="standardized",
-                calendar_year=2024,
-            )
-        assert "period" in str(exc_info.value)
-
-        # Missing calendar_year
-        with pytest.raises(ValidationError) as exc_info:
-            GetFinancialsArgs(
-                bloomberg_ticker="AAPL:US",
-                source="income-statement",
-                source_type="standardized",
-                period="annual",
             )
         assert "calendar_year" in str(exc_info.value)
+
+        # source_type and period have defaults per API documentation
+        # so they are no longer required fields
 
     @pytest.mark.parametrize(
         "source",
@@ -1092,26 +1071,19 @@ class TestGetRatiosArgs:
         # Missing bloomberg_ticker
         with pytest.raises(ValidationError) as exc_info:
             GetRatiosArgs(
-                period="annual",
                 calendar_year=2024,
             )
         assert "bloomberg_ticker" in str(exc_info.value)
-
-        # Missing period
-        with pytest.raises(ValidationError) as exc_info:
-            GetRatiosArgs(
-                bloomberg_ticker="AAPL:US",
-                calendar_year=2024,
-            )
-        assert "period" in str(exc_info.value)
 
         # Missing calendar_year
         with pytest.raises(ValidationError) as exc_info:
             GetRatiosArgs(
                 bloomberg_ticker="AAPL:US",
-                period="annual",
             )
         assert "calendar_year" in str(exc_info.value)
+
+        # period has a default per API documentation
+        # so it is no longer a required field
 
     @pytest.mark.parametrize(
         "period",
@@ -1322,26 +1294,19 @@ class TestGetKpisAndSegmentsArgs:
         # Missing bloomberg_ticker
         with pytest.raises(ValidationError) as exc_info:
             GetKpisAndSegmentsArgs(
-                period="annual",
                 calendar_year=2024,
             )
         assert "bloomberg_ticker" in str(exc_info.value)
-
-        # Missing period
-        with pytest.raises(ValidationError) as exc_info:
-            GetKpisAndSegmentsArgs(
-                bloomberg_ticker="AAPL:US",
-                calendar_year=2024,
-            )
-        assert "period" in str(exc_info.value)
 
         # Missing calendar_year
         with pytest.raises(ValidationError) as exc_info:
             GetKpisAndSegmentsArgs(
                 bloomberg_ticker="AAPL:US",
-                period="annual",
             )
         assert "calendar_year" in str(exc_info.value)
+
+        # period has a default per API documentation
+        # so it is no longer a required field
 
     @pytest.mark.parametrize(
         "period",

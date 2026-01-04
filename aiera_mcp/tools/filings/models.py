@@ -127,7 +127,7 @@ class FindFilingsArgs(BaseToolArgs, BloombergTickerMixin):
 
     form_number: Optional[str] = Field(
         default=None,
-        description="SEC form type to filter by (e.g., '10-K', '10-Q', '8-K').",
+        description="SEC form type to filter by. Common values: '10-K' (annual report), '10-Q' (quarterly report), '8-K' (current report/material events), '4' (insider trading), 'DEF 14A' (proxy statement), 'S-1' (IPO registration), '13F' (institutional holdings). Leave empty to include all form types.",
     )
 
     page: Union[int, str] = Field(
@@ -140,7 +140,19 @@ class FindFilingsArgs(BaseToolArgs, BloombergTickerMixin):
 
 
 class GetFilingArgs(BaseToolArgs):
-    """Get detailed information about a specific SEC filing."""
+    """Get detailed information about a specific SEC filing including summary and content.
+
+    RESPONSE SIZE WARNING: This tool returns large text content. SEC filings (especially 10-K and 10-Q)
+    can contain extensive text. Consider using search_filings for targeted content extraction
+    instead of reading full filing content.
+
+    WHEN TO USE:
+    - Use this when you need the complete filing summary and metadata
+    - Use this when you need full filing content for a specific document
+    - For finding specific disclosures or risk factors, prefer search_filings instead
+
+    WORKFLOW: Use find_filings first to obtain valid filing_ids.
+    """
 
     originating_prompt: Optional[str] = Field(
         default=None,
@@ -163,7 +175,7 @@ class GetFilingArgs(BaseToolArgs):
     )
 
     filing_id: str = Field(
-        description="Unique identifier for the SEC filing. Obtained from find_filings results."
+        description="Unique identifier for the SEC filing. Obtain filing_id from find_filings or search_filings results. Example: '98765'"
     )
 
 

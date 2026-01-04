@@ -247,7 +247,23 @@ class FindConferencesArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
 
 
 class GetEventArgs(BaseToolArgs):
-    """Get detailed information about a specific event including transcripts. If you need to retrieve more than one event, make multiple sequential calls. Transcripts are not available for future events."""
+    """Get detailed information about a specific event including the full transcript.
+
+    RESPONSE SIZE WARNING: This tool returns large text content. The transcript field can contain
+    thousands of words for earnings calls and presentations. Consider using search_transcripts
+    for targeted content extraction instead of reading full transcripts.
+
+    WHEN TO USE:
+    - Use this when you need the complete transcript text
+    - Use this when you need full event metadata and summary
+    - For finding specific quotes or topics, prefer search_transcripts instead
+
+    LIMITATIONS:
+    - Transcripts are not available for future events
+    - If you need multiple events, make separate sequential calls (one event_id per call)
+
+    WORKFLOW: Use find_events first to obtain valid event_ids.
+    """
 
     originating_prompt: Optional[str] = Field(
         default=None,
@@ -270,12 +286,12 @@ class GetEventArgs(BaseToolArgs):
     )
 
     event_id: str = Field(
-        description="Unique identifier for the event. Obtained from find_events tool."
+        description="Unique identifier for the event. Obtain event_id from find_events or search_transcripts results. Example: '12345'"
     )
 
     transcript_section: Optional[str] = Field(
         default=None,
-        description="Filter transcripts by section. Only applicable for earnings events. Options: 'presentation', 'q_and_a'.",
+        description="Filter transcripts by section. Only applicable for earnings events. Options: 'presentation' (prepared remarks by management, typically first 15-30 min), 'q_and_a' (analyst questions and management answers). Leave empty to get both sections.",
     )
 
     @field_validator("transcript_section")

@@ -19,10 +19,22 @@ from ..common.models import BaseAieraArgs, BaseAieraResponse
 
 
 class SearchTranscriptsArgs(BaseAieraArgs):
-    """Semantic search within specific transcript events using embedding-based matching.
+    """Semantic search within event transcripts for specific topics, quotes, or discussions.
 
-    Tool for extracting detailed transcript content from events identified
-    in prior searches. Provides speaker attribution and contextual results.
+    WHEN TO USE THIS TOOL:
+    - Use this when you need to find specific content (quotes, topics, discussions) within transcripts
+    - Use find_events FIRST to identify relevant events by date/company, then use this tool to search within their transcript content
+    - Use this for targeted content extraction rather than reading full transcripts
+
+    RETURNS: Relevant transcript segments with speaker attribution, timestamps, and relevance scores.
+    Results are individual chunks, not full transcripts. Use get_event for complete transcripts.
+
+    WORKFLOW EXAMPLE:
+    1. User asks: "What did Apple's CEO say about AI?"
+    2. First call find_events with bloomberg_ticker='AAPL:US' to get recent event IDs
+    3. Then call search_transcripts with query_text='AI artificial intelligence' and the event_ids
+
+    NOTE: This tool uses hybrid semantic + keyword search for high-quality results.
     """
 
     originating_prompt: Optional[str] = Field(
@@ -51,12 +63,12 @@ class SearchTranscriptsArgs(BaseAieraArgs):
 
     event_ids: List[int] = Field(
         default_factory=list,
-        description="Optional list of specific event IDs to search within. Obtained from source identification using find_events.",
+        description="Optional list of specific event IDs to search within. Obtain event_ids from find_events results. Example: [12345, 67890]",
     )
 
     equity_ids: List[int] = Field(
         default_factory=list,
-        description="Optional list of specific equity IDs to filter search. Obtained from source identification using find_equities.",
+        description="Optional list of specific equity IDs to filter search. Obtain equity_ids from find_equities results. Example: [100, 200]",
     )
 
     start_date: str = Field(
@@ -71,7 +83,7 @@ class SearchTranscriptsArgs(BaseAieraArgs):
 
     transcript_section: str = Field(
         default="",
-        description="Optional filter for specific transcript sections. Options: 'presentation' (prepared remarks), 'q_and_a' (Q&A session). If not provided, searches all sections.",
+        description="Optional filter for specific transcript sections. Options: 'presentation' (prepared remarks by management, typically first 15-30 min), 'q_and_a' (analyst questions and management answers). Leave empty to search all sections.",
     )
 
     event_type: str = Field(
@@ -86,10 +98,22 @@ class SearchTranscriptsArgs(BaseAieraArgs):
 
 
 class SearchFilingsArgs(BaseAieraArgs):
-    """Semantic search within SEC filing document chunks using embedding-based matching.
+    """Semantic search within SEC filing content for specific topics, disclosures, or risk factors.
 
-    Extracts relevant filing content chunks filtered by company, date, and filing type
-    with high-quality semantic relevance scoring.
+    WHEN TO USE THIS TOOL:
+    - Use this when you need to find specific content (risk factors, disclosures, financial discussions) within SEC filings
+    - Use find_filings FIRST to identify relevant filings by date/company/form type, then use this tool to search within their content
+    - Use this for targeted content extraction rather than reading full filings
+
+    RETURNS: Relevant filing chunks with context, filing metadata, and relevance scores.
+    Results are individual sections/chunks, not full filings. Use get_filing for complete filing content.
+
+    WORKFLOW EXAMPLE:
+    1. User asks: "What are Tesla's main risk factors?"
+    2. First call find_filings with bloomberg_ticker='TSLA:US' and form_number='10-K' to get recent filing IDs
+    3. Then call search_filings with query_text='risk factors' and the filing_ids
+
+    NOTE: This tool uses hybrid semantic + keyword search for high-quality results.
     """
 
     originating_prompt: Optional[str] = Field(
@@ -118,12 +142,12 @@ class SearchFilingsArgs(BaseAieraArgs):
 
     filing_ids: List[str] = Field(
         default_factory=list,
-        description="Filter for specific filing IDs. Use to search chunks within specific filing documents. Examples: ['AAPL-10Q-2024-Q1', 'AAPL-10K-2023']. Optional.",
+        description="Optional list of specific filing IDs to search within. Obtain filing_ids from find_filings results. Example: [12345, 67890]",
     )
 
     equity_ids: List[int] = Field(
         default_factory=list,
-        description="Optional list of specific equity IDs to filter search. Obtained from source identification using find_equities.",
+        description="Optional list of specific equity IDs to filter search. Obtain equity_ids from find_equities results. Example: [100, 200]",
     )
 
     start_date: str = Field(
@@ -138,7 +162,7 @@ class SearchFilingsArgs(BaseAieraArgs):
 
     filing_type: str = Field(
         default="",
-        description="Filter for specific filing types. Examples: '10-K', '10-Q', '8-K', '4', 'DEF 14A'. Optional if query_text or company_name is provided.",
+        description="Filter for specific filing types. Common values: '10-K' (annual report), '10-Q' (quarterly report), '8-K' (current report/material events), '4' (insider trading), 'DEF 14A' (proxy statement). Leave empty to search all filing types.",
     )
 
     max_results: int = Field(
@@ -191,6 +215,12 @@ class TranscriptSearchItem(BaseModel):
     transcript_event_id: int = Field(description="Event identifier for the transcript")
     transcript_section: Optional[str] = Field(
         description="Section of transcript (e.g., 'q_and_a', 'presentation'). Can be null for some transcripts."
+    )
+    speaker_name: Optional[str] = Field(
+        None, description="Name of the speaker. Can be null for some transcripts."
+    )
+    speaker_title: Optional[str] = Field(
+        None, description="Title/role of the speaker. Can be null for some transcripts."
     )
     text: str = Field(description="The matching text content from the transcript")
     primary_equity_id: int = Field(

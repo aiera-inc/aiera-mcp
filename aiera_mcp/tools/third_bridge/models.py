@@ -67,7 +67,17 @@ class BloombergTickerMixin(BaseModel):
 
 # Parameter models (extracted from params.py)
 class FindThirdBridgeEventsArgs(BaseToolArgs, BloombergTickerMixin):
-    """Find expert insight events from Third Bridge filtered by date range and optional filters. To find events for multiple companies, provide a comma-separated list of bloomberg_tickers. You do not need to make multiple calls."""
+    """Find expert insight events from Third Bridge filtered by date range and optional filters.
+
+    ABOUT THIRD BRIDGE: Third Bridge provides expert network insights - interviews and forums
+    with industry experts, former executives, and specialists who provide unique perspectives
+    on companies, industries, and market trends. These are NOT earnings calls but expert interviews.
+
+    WHEN TO USE: Use this when you need expert/industry perspectives rather than official company communications.
+    For official company events (earnings calls, presentations), use find_events instead.
+
+    To find events for multiple companies, provide a comma-separated list of bloomberg_tickers in a single call.
+    """
 
     originating_prompt: Optional[str] = Field(
         default=None,
@@ -134,7 +144,25 @@ class FindThirdBridgeEventsArgs(BaseToolArgs, BloombergTickerMixin):
 
 
 class GetThirdBridgeEventArgs(BaseToolArgs):
-    """Get detailed information about a specific Third Bridge expert insight event. If you need to retrieve more than one event, make multiple sequential calls."""
+    """Get detailed information about a specific Third Bridge expert insight event.
+
+    ABOUT THIRD BRIDGE: Third Bridge provides expert network insights - interviews and forums
+    with industry experts, former executives, and specialists who provide unique perspectives
+    on companies, industries, and market trends.
+
+    RESPONSE SIZE WARNING: This tool returns full transcript content from expert interviews,
+    which can be extensive. The response includes agenda, key insights, and complete transcripts.
+
+    WHEN TO USE:
+    - Use this when you need complete expert interview content
+    - Use this for full context on expert insights and analysis
+    - For finding specific topics across multiple events, use find_third_bridge_events with filtering
+
+    LIMITATIONS:
+    - If you need multiple events, make separate sequential calls (one event_id per call)
+
+    WORKFLOW: Use find_third_bridge_events first to obtain valid thirdbridge_event_ids.
+    """
 
     originating_prompt: Optional[str] = Field(
         default=None,
@@ -158,7 +186,7 @@ class GetThirdBridgeEventArgs(BaseToolArgs):
 
     thirdbridge_event_id: str = Field(
         serialization_alias="event_id",  # Serialize to API as "event_id"
-        description="Unique identifier for the Third Bridge event. Obtained from find_third_bridge_events results.",
+        description="Unique identifier for the Third Bridge event. Obtain from find_third_bridge_events results (returned as 'event_id' in the response). Example: 'TB-12345'",
     )
 
 

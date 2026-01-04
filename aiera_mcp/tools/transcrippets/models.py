@@ -75,7 +75,22 @@ class ProvidedIdsMixin(BaseModel):
 
 # Parameter models (extracted from params.py)
 class FindTranscrippetsArgs(BaseToolArgs, ProvidedIdsMixin):
-    """Find Transcrippets™ filtered by various identifiers and date ranges."""
+    """Find saved Transcrippets™ (curated transcript highlights and audio clips).
+
+    WHAT ARE TRANSCRIPPETS: Transcrippets are user-saved segments from event transcripts,
+    useful for capturing and sharing:
+    - Key quotes from executives
+    - Important announcements and guidance
+    - Notable Q&A exchanges
+    - Memorable soundbites with synchronized audio
+
+    WHEN TO USE:
+    - Use this to retrieve previously saved transcript clips
+    - Use this to check if clips exist for specific events, speakers, or companies
+    - Use this to find clips created within a date range
+
+    Each Transcrippet includes a public_url for sharing the clip with others.
+    """
 
     originating_prompt: Optional[str] = Field(
         default=None,
@@ -94,27 +109,27 @@ class FindTranscrippetsArgs(BaseToolArgs, ProvidedIdsMixin):
 
     transcrippet_id: Optional[str] = Field(
         default=None,
-        description="Transcrippet ID(s). For multiple IDs, use comma-separated list without spaces.",
+        description="Filter by specific Transcrippet ID(s). For multiple IDs, use comma-separated list without spaces. Example: '123,456,789'",
     )
 
     event_id: Optional[str] = Field(
         default=None,
-        description="Event ID(s) to filter by. For multiple IDs, use comma-separated list without spaces.",
+        description="Filter by event ID(s) to find Transcrippets from specific events. Obtain event_ids from find_events. For multiple IDs, use comma-separated list. Example: '12345,67890'",
     )
 
     equity_id: Optional[str] = Field(
         default=None,
-        description="Equity ID(s) to filter by. For multiple IDs, use comma-separated list without spaces.",
+        description="Filter by equity ID(s) to find Transcrippets for specific companies. Obtain equity_ids from find_equities. For multiple IDs, use comma-separated list. Example: '100,200'",
     )
 
     speaker_id: Optional[str] = Field(
         default=None,
-        description="Speaker ID(s) to filter by. For multiple IDs, use comma-separated list without spaces.",
+        description="Filter by speaker ID(s) to find Transcrippets featuring specific speakers. For multiple IDs, use comma-separated list. Example: '555,666'",
     )
 
     transcript_item_id: Optional[str] = Field(
         default=None,
-        description="Transcript item ID(s) to filter by. For multiple IDs, use comma-separated list without spaces.",
+        description="Filter by transcript item ID(s). Obtain from get_event transcript results. For multiple IDs, use comma-separated list. Example: '11111,22222'",
     )
 
     created_start_date: Optional[str] = Field(
@@ -131,7 +146,27 @@ class FindTranscrippetsArgs(BaseToolArgs, ProvidedIdsMixin):
 
 
 class CreateTranscrippetArgs(BaseToolArgs):
-    """Create a new Transcrippet™ from an event transcript segment."""
+    """Create a new Transcrippet™ (saved transcript clip) from an event transcript segment.
+
+    WHAT THIS DOES: Creates a shareable audio/text clip from a specific portion of an event
+    transcript. The clip can be shared via a public URL.
+
+    REQUIRED WORKFLOW:
+    1. Use find_events to get the event_id for the event containing the quote
+    2. Use get_event to retrieve the full transcript with transcript_item_ids
+    3. Identify the start and end transcript items and character offsets for your clip
+    4. Call this tool with the precise segment boundaries
+
+    PARAMETERS EXPLAINED:
+    - event_id: The event containing the transcript (from find_events)
+    - transcript_item_id: Starting transcript item ID (from get_event transcripts)
+    - transcript_item_offset: Character position within the starting item where clip begins
+    - transcript_end_item_id: Ending transcript item ID
+    - transcript_end_item_offset: Character position within the ending item where clip ends
+    - transcript: The actual text content being clipped
+
+    The created Transcrippet will include synchronized audio playback.
+    """
 
     originating_prompt: Optional[str] = Field(
         default=None,
@@ -149,32 +184,45 @@ class CreateTranscrippetArgs(BaseToolArgs):
     )
 
     event_id: int = Field(
-        description="Event ID from which to create the transcrippet. Use find_events to obtain valid event IDs."
+        description="Event ID containing the transcript to clip. Obtain from find_events results. Example: 12345"
     )
 
     transcript: str = Field(
-        description="The transcript text content to include in the transcrippet."
+        description="The exact transcript text content to include in the Transcrippet. This should match the text between your start and end positions."
     )
 
     transcript_item_id: int = Field(
-        description="ID of the starting transcript item for the segment."
+        description="ID of the starting transcript item for the segment. Obtain from get_event transcript results (each transcript item has a transcript_item_id). Example: 98765"
     )
 
     transcript_item_offset: int = Field(
-        ge=0, description="Character offset within the starting transcript item."
+        ge=0,
+        description="Character offset (0-indexed) within the starting transcript item where the clip begins. Example: 0 for start of item, 50 to skip first 50 characters.",
     )
 
     transcript_end_item_id: int = Field(
-        description="ID of the ending transcript item for the segment."
+        description="ID of the ending transcript item for the segment. Can be the same as transcript_item_id for clips within a single item. Example: 98766"
     )
 
     transcript_end_item_offset: int = Field(
-        ge=0, description="Character offset within the ending transcript item."
+        ge=0,
+        description="Character offset (0-indexed) within the ending transcript item where the clip ends. Example: 150 to end after 150 characters.",
     )
 
 
 class DeleteTranscrippetArgs(BaseToolArgs):
-    """Delete a Transcrippet™ by its ID."""
+    """Delete a Transcrippet™ by its ID.
+
+    WARNING: This is a DESTRUCTIVE operation that cannot be undone. The Transcrippet
+    and its public sharing URL will be permanently deleted.
+
+    WHEN TO USE:
+    - Use this to remove Transcrippets that are no longer needed
+    - Use this to clean up incorrectly created clips
+
+    WORKFLOW: Use find_transcrippets first to obtain valid transcrippet_ids and verify
+    you are deleting the correct clip.
+    """
 
     originating_prompt: Optional[str] = Field(
         default=None,
