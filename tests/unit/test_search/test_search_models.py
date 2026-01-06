@@ -86,12 +86,12 @@ class TestSearchTranscriptsArgs:
         with pytest.raises(ValidationError):
             SearchTranscriptsArgs()
 
-        # event_ids and equity_ids have default values (empty list)
+        # event_ids and equity_ids have default values (None)
         # so providing only query_text is valid
         args = SearchTranscriptsArgs(query_text="test")
         assert args.query_text == "test"
-        assert args.event_ids == []
-        assert args.equity_ids == []
+        assert args.event_ids is None
+        assert args.equity_ids is None
 
 
 @pytest.mark.unit
@@ -125,7 +125,7 @@ class TestSearchFilingsArgs:
             equity_ids=[1],
         )
 
-        assert args.filing_ids == []
+        assert args.filing_ids is None
         assert args.start_date == ""
         assert args.end_date == ""
         assert args.filing_type == ""
@@ -152,11 +152,12 @@ class TestSearchFilingsArgs:
         with pytest.raises(ValidationError):
             SearchFilingsArgs()
 
-        # equity_ids has a default value (empty list)
+        # filing_ids and equity_ids have default values (None)
         # so providing only query_text is valid
         args = SearchFilingsArgs(query_text="test")
         assert args.query_text == "test"
-        assert args.equity_ids == []
+        assert args.filing_ids is None
+        assert args.equity_ids is None
 
 
 @pytest.mark.unit

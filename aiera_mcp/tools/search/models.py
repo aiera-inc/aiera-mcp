@@ -61,13 +61,13 @@ class SearchTranscriptsArgs(BaseAieraArgs):
         description="Search query for semantic matching within transcripts. Examples: 'earnings guidance', 'regulatory concerns', 'revenue growth'"
     )
 
-    event_ids: List[int] = Field(
-        default_factory=list,
+    event_ids: Optional[List[int]] = Field(
+        default=None,
         description="Optional list of specific event IDs to search within. Obtain event_ids from find_events results. Example: [12345, 67890]",
     )
 
-    equity_ids: List[int] = Field(
-        default_factory=list,
+    equity_ids: Optional[List[int]] = Field(
+        default=None,
         description="Optional list of specific equity IDs to filter search. Obtain equity_ids from find_equities results. Example: [100, 200]",
     )
 
@@ -140,13 +140,13 @@ class SearchFilingsArgs(BaseAieraArgs):
         description="Search query for semantic matching within filing chunks. Examples: 'revenue guidance', 'risk factors', 'acquisition strategy'. Optional if company_name or filing_type is provided.",
     )
 
-    filing_ids: List[str] = Field(
-        default_factory=list,
+    filing_ids: Optional[List[str]] = Field(
+        default=None,
         description="Optional list of specific filing IDs to search within. Obtain filing_ids from find_filings results. Example: [12345, 67890]",
     )
 
-    equity_ids: List[int] = Field(
-        default_factory=list,
+    equity_ids: Optional[List[int]] = Field(
+        default=None,
         description="Optional list of specific equity IDs to filter search. Obtain equity_ids from find_equities results. Example: [100, 200]",
     )
 
