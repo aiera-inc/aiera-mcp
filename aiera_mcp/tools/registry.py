@@ -26,7 +26,7 @@ from .company_docs import (
 )
 from .third_bridge import find_third_bridge_events, get_third_bridge_event
 from .transcrippets import find_transcrippets, create_transcrippet, delete_transcrippet
-from .search import search_transcripts, search_filings
+from .search import search_transcripts, search_filings, search_research
 
 # Import all parameter model classes from domain modules
 from .events import (
@@ -60,7 +60,7 @@ from .transcrippets import (
     CreateTranscrippetArgs,
     DeleteTranscrippetArgs,
 )
-from .search import SearchTranscriptsArgs, SearchFilingsArgs
+from .search import SearchTranscriptsArgs, SearchFilingsArgs, SearchResearchArgs
 
 TOOL_REGISTRY = {
     "find_events": {
@@ -302,6 +302,15 @@ TOOL_REGISTRY = {
         "input_schema": SearchFilingsArgs.model_json_schema(),
         "function": search_filings,
         "args_model": SearchFilingsArgs,
+        "category": "search",
+        "read_only": True,
+        "destructive": False,
+    },
+    "search_research": {
+        "display_name": "Search Research",
+        "input_schema": SearchResearchArgs.model_json_schema(),
+        "function": search_research,
+        "args_model": SearchResearchArgs,
         "category": "search",
         "read_only": True,
         "destructive": False,
