@@ -983,7 +983,7 @@ class RatioItem(BaseModel):
     ratio_id: Optional[str] = Field(None, description="Unique ratio identifier")
     ratio: Optional[str] = Field(None, description="Ratio name")
     ratio_category: Optional[str] = Field(None, description="Ratio category")
-    ratio_value: Optional[float] = Field(None, description="Ratio value")
+    ratio_value: Optional[Union[int, float]] = Field(None, description="Ratio value")
 
 
 class RatioPeriodItem(BaseModel):
@@ -1126,7 +1126,7 @@ class KpiSegmentMetricItem(BaseModel):
     is_important: Optional[bool] = Field(
         None, description="Whether metric is important"
     )
-    metric_value: Optional[int] = Field(None, description="Metric value")
+    metric_value: Optional[Union[int, float]] = Field(None, description="Metric value")
 
 
 class KpiSegmentPeriodItem(BaseModel):
