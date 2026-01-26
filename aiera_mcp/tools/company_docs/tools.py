@@ -30,6 +30,8 @@ async def find_company_docs(args: FindCompanyDocsArgs) -> FindCompanyDocsRespons
 
     IMPORTANT: When users request specific document types (e.g., 'press releases', 'annual reports'), ALWAYS use the 'categories' parameter to filter by document type.
     Example: 'Find all press releases from Apple in Q1 2024' should use categories='press_release' with bloomberg_ticker='AAPL:US'.
+
+    RECOMMENDED: It is highly recommended to include at least one parameter that identifies equity(s), such as bloomberg_ticker, watchlist_id, index_id, sector_id, or subsector_id.
     """
     logger.info("tool called: find_company_docs")
 
