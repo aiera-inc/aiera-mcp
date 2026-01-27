@@ -95,7 +95,10 @@ async def get_sectors_and_subsectors(
 async def get_equity_summaries(
     args: GetEquitySummariesArgs,
 ) -> GetEquitySummariesResponse:
-    """Retrieve detailed summary information about one or more equities, filtered by ticker(s)."""
+    """Retrieve detailed summary information about one or more equities, filtered by ticker(s).
+
+    REQUIRED: Must include at least one parameter that identifies equity(s), such as bloomberg_ticker.
+    """
     logger.info("tool called: get_equity_summaries")
 
     # Get client and API key (no context needed for standard MCP)
@@ -222,7 +225,10 @@ async def get_watchlist_constituents(
 
 
 async def get_financials(args: GetFinancialsArgs) -> GetFinancialsResponse:
-    """Retrieve financial data (income statements, balance sheets, cash flow statements) for a company."""
+    """Retrieve financial data (income statements, balance sheets, cash flow statements) for a company.
+
+    REQUIRED: Must include at least one parameter that identifies equity(s), such as bloomberg_ticker.
+    """
     logger.info("tool called: get_financials")
 
     # Get client and API key (no context needed for standard MCP)
@@ -247,7 +253,10 @@ async def get_financials(args: GetFinancialsArgs) -> GetFinancialsResponse:
 
 
 async def get_ratios(args: GetRatiosArgs) -> GetRatiosResponse:
-    """Retrieve financial ratios for a company."""
+    """Retrieve financial ratios for a company.
+
+    REQUIRED: Must include at least one parameter that identifies equity(s), such as bloomberg_ticker.
+    """
     logger.info("tool called: get_ratios")
 
     # Get client and API key (no context needed for standard MCP)
@@ -274,7 +283,10 @@ async def get_ratios(args: GetRatiosArgs) -> GetRatiosResponse:
 async def get_kpis_and_segments(
     args: GetKpisAndSegmentsArgs,
 ) -> GetKpisAndSegmentsResponse:
-    """Retrieve KPIs and segment information for a company."""
+    """Retrieve KPIs and segment information for a company.
+
+    REQUIRED: Must include at least one parameter that identifies equity(s), such as bloomberg_ticker.
+    """
     logger.info("tool called: get_kpis_and_segments")
 
     # Get client and API key (no context needed for standard MCP)

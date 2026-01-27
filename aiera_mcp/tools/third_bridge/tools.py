@@ -23,7 +23,10 @@ logger = logging.getLogger(__name__)
 async def find_third_bridge_events(
     args: FindThirdBridgeEventsArgs,
 ) -> FindThirdBridgeEventsResponse:
-    """Find expert insight events from Third Bridge, filtering by a date range and (optionally) by ticker, index, watchlist, sector, or subsector."""
+    """Find expert insight events from Third Bridge, filtering by a date range and (optionally) by ticker, index, watchlist, sector, or subsector.
+
+    RECOMMENDED: It is highly recommended to include at least one parameter that identifies equity(s), such as bloomberg_ticker, watchlist_id, index_id, sector_id, or subsector_id.
+    """
     logger.info("tool called: find_third_bridge_events")
 
     # Get client and API key (no context needed for standard MCP)
