@@ -24,7 +24,10 @@ logger = logging.getLogger(__name__)
 
 
 async def find_filings(args: FindFilingsArgs) -> FindFilingsResponse:
-    """Find SEC filings, filtered by a date range, and one of the following: ticker(s), watchlist, index, sector, or subsector; and (optionally) by a form number."""
+    """Find SEC filings, filtered by a date range, and one of the following: ticker(s), watchlist, index, sector, or subsector; and (optionally) by a form number.
+
+    RECOMMENDED: It is highly recommended to include at least one parameter that identifies equity(s), such as bloomberg_ticker, watchlist_id, index_id, sector_id, or subsector_id.
+    """
     logger.info("tool called: find_filings")
 
     # Get client and API key (no context needed for standard MCP)

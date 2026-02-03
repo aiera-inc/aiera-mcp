@@ -25,7 +25,10 @@ logger = logging.getLogger(__name__)
 
 
 async def find_events(args: FindEventsArgs) -> FindEventsResponse:
-    """Find events, filtered by a date range, and (optionally) ticker(s), watchlist, index, sector, or subsector; or event type(s)."""
+    """Find events, filtered by a date range, and (optionally) ticker(s), watchlist, index, sector, or subsector; or event type(s).
+
+    RECOMMENDED: It is highly recommended to include at least one parameter that identifies equity(s), such as bloomberg_ticker, watchlist_id, index_id, sector_id, or subsector_id.
+    """
     logger.info("tool called: find_events")
 
     # Get client and API key (no context needed for standard MCP)
