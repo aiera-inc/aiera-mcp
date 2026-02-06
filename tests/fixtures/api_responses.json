@@ -127,7 +127,9 @@
             },
             "summary": {
               "title": "Amazon's Q2 2025: Strong Revenue Growth",
-              "summary": ["Amazon reported Q2 2025 revenue of $167.7 billion, up 12% year-over-year."]
+              "summary": [
+                "Amazon reported Q2 2025 revenue of $167.7 billion, up 12% year-over-year."
+              ]
             },
             "citation_information": {
               "title": "Q2 2025 Amazon.com Inc Earnings Call",
@@ -349,7 +351,9 @@
             "pulled_date": "2025-12-23T20:02:53",
             "json_synced": false,
             "datafiles_synced": false,
-            "summary": ["Summary of the filing content"],
+            "summary": [
+              "Summary of the filing content"
+            ],
             "citation_information": {
               "title": "AMAZON COM INC - 4",
               "url": "https://dashboard.aiera.com/companies/1/activity/filings?tabs[0]=fl%7C28259872",
@@ -366,7 +370,9 @@
       }
     },
     "get_filing_success": {
-      "instructions": ["Filing content retrieved successfully"],
+      "instructions": [
+        "Filing content retrieved successfully"
+      ],
       "response": {
         "pagination": {
           "total_count": 1,
@@ -397,7 +403,9 @@
             "pulled_date": "2025-12-23T20:02:53",
             "json_synced": false,
             "datafiles_synced": false,
-            "summary": ["Summary of the filing content"],
+            "summary": [
+              "Summary of the filing content"
+            ],
             "citation_information": {
               "title": "AMAZON COM INC - 4",
               "url": "https://dashboard.aiera.com/companies/1/activity/filings?tabs[0]=fl%7C28259872",
@@ -485,7 +493,12 @@
               "last_event_date": "2025-10-30T17:00:00"
             }
           ],
-          "indices": ["S&P 100", "S&P 500", "Russell 3000", "Russell 1000"],
+          "indices": [
+            "S&P 100",
+            "S&P 500",
+            "Russell 3000",
+            "Russell 1000"
+          ],
           "confirmed_events": {
             "past": [
               {
@@ -500,7 +513,9 @@
                 "has_audio": true,
                 "summary": {
                   "title": "Amazon's Future: Andrew Jassy on Capacity Expansion, AI Innovations...",
-                  "content": ["Detailed summary content here"]
+                  "content": [
+                    "Detailed summary content here"
+                  ]
                 },
                 "citation_information": {
                   "title": "Q3 2025 Amazon.com Inc Earnings Call",
@@ -708,7 +723,10 @@
                     "is_per_share": false,
                     "is_key_metric": true,
                     "is_total": true,
-                    "headers": ["Income Statement", "Revenue"]
+                    "headers": [
+                      "Income Statement",
+                      "Revenue"
+                    ]
                   },
                   "metric_value": 574785000000,
                   "metric_unit": "USD",
@@ -732,7 +750,10 @@
                     "is_per_share": false,
                     "is_key_metric": true,
                     "is_total": true,
-                    "headers": ["Income Statement", "Net Income"]
+                    "headers": [
+                      "Income Statement",
+                      "Net Income"
+                    ]
                   },
                   "metric_value": 30425000000,
                   "metric_unit": "USD",
@@ -756,9 +777,12 @@
                     "is_per_share": true,
                     "is_key_metric": true,
                     "is_total": false,
-                    "headers": ["Income Statement", "EPS"]
+                    "headers": [
+                      "Income Statement",
+                      "EPS"
+                    ]
                   },
-                  "metric_value": 2.90,
+                  "metric_value": 2.9,
                   "metric_unit": "USD",
                   "metric_currency": "USD",
                   "metric_is_calculated": true,
@@ -946,7 +970,9 @@
       }
     },
     "get_company_doc_success": {
-      "instructions": ["Company document retrieved successfully"],
+      "instructions": [
+        "Company document retrieved successfully"
+      ],
       "response": {
         "pagination": {
           "total_count": 1,
@@ -1127,6 +1153,46 @@
           }
         ]
       }
+    },
+    "search_research_chunks_success": {
+      "instructions": [
+        "This data is provided for institutional finance professionals...",
+        "The current date is **Monday, December 22, 2025**, and the current time is **11:04 AM**..."
+      ],
+      "response": {
+        "pagination": {
+          "total_count": {
+            "value": 500,
+            "relation": "gte"
+          },
+          "from": 0,
+          "size": 100
+        },
+        "result": [
+          {
+            "_score": 11.234567,
+            "date": "2024-06-15",
+            "primary_company_id": 1,
+            "content_id": 30001234,
+            "research_id": 8001234,
+            "company_common_name": "Amazon",
+            "primary_equity_id": 1,
+            "text": "The company continues to demonstrate strong growth in cloud computing services, with AWS revenue increasing 25% year-over-year. Market analysts expect continued momentum driven by enterprise AI adoption.",
+            "title": "Amazon.com Inc - Research Report",
+            "citation_information": {
+              "title": "Amazon.com Inc - Research Report",
+              "url": "https://dashboard.aiera.com/companies/1/activity/research?tabs[0]=rs%7C30001234",
+              "metadata": {
+                "type": "research",
+                "url_target": "aiera",
+                "company_id": 1,
+                "content_id": 30001234,
+                "research_id": 8001234
+              }
+            }
+          }
+        ]
+      }
     }
   },
   "third_bridge": {
@@ -1192,7 +1258,9 @@
               "Over 10 years' experience in sales, operations and supply chain planning...",
               "Expertise in the evolution of the robotic delivery ecosystem..."
             ],
-            "insights": ["Key insight about robotic delivery market trends"],
+            "insights": [
+              "Key insight about robotic delivery market trends"
+            ],
             "transcripts": [
               {
                 "start_ms": 155000,
@@ -1228,7 +1296,9 @@
   },
   "transcrippets": {
     "find_transcrippets_success": {
-      "instructions": ["Transcrippet found successfully"],
+      "instructions": [
+        "Transcrippet found successfully"
+      ],
       "response": [
         {
           "transcrippet_id": 123,
@@ -1252,12 +1322,23 @@
           "transcrippet_guid": "guid-123-456",
           "transcription_audio_offset_seconds": 30,
           "trimmed_audio_url": "https://example.com/audio/trans123_trimmed.mp3",
-          "word_durations_ms": [500, 300, 400, 600, 350, 800, 200, 450]
+          "word_durations_ms": [
+            500,
+            300,
+            400,
+            600,
+            350,
+            800,
+            200,
+            450
+          ]
         }
       ]
     },
     "create_transcrippet_success": {
-      "instructions": ["Transcrippet created successfully"],
+      "instructions": [
+        "Transcrippet created successfully"
+      ],
       "response": {
         "transcrippet_id": 456,
         "company_id": 789,
@@ -1280,7 +1361,16 @@
         "transcrippet_guid": "guid-456-789",
         "transcription_audio_offset_seconds": 45,
         "trimmed_audio_url": "https://example.com/audio/trans456_trimmed.mp3",
-        "word_durations_ms": [600, 400, 500, 700, 350, 900, 250, 550],
+        "word_durations_ms": [
+          600,
+          400,
+          500,
+          700,
+          350,
+          900,
+          250,
+          550
+        ],
         "speaker_name": "Tim Cook",
         "speaker_title": "Chief Executive Officer"
       }
@@ -1298,6 +1388,100 @@
     "api_error_500": {
       "error": "Internal Server Error",
       "message": "An unexpected error occurred"
+    }
+  },
+  "research": {
+    "find_research_success": {
+      "instructions": [
+        "This data is provided for institutional finance professionals...",
+        "The current date is **Monday, December 22, 2025**, and the current time is **11:04 AM**..."
+      ],
+      "response": {
+        "pagination": {
+          "total_count": 25,
+          "current_page": 1,
+          "total_pages": 1,
+          "page_size": 50
+        },
+        "data": [
+          {
+            "research_id": 8001234,
+            "title": "Amazon Web Services: Cloud Computing Growth Outlook",
+            "publish_date": "2024-06-15T00:00:00",
+            "author": {
+              "person_id": 5001,
+              "name": "Jane Smith"
+            },
+            "organization_name": "Goldman Sachs",
+            "region_type": "North America",
+            "summary": [
+              "AWS revenue continues strong growth trajectory driven by enterprise AI adoption."
+            ],
+            "citation_information": {
+              "title": "Amazon Web Services: Cloud Computing Growth Outlook",
+              "url": "https://dashboard.aiera.com/research/8001234",
+              "metadata": {
+                "type": "research",
+                "url_target": "aiera",
+                "research_id": 8001234
+              }
+            }
+          },
+          {
+            "research_id": 8001235,
+            "title": "Tech Sector: AI Infrastructure Investment Trends",
+            "publish_date": "2024-06-10T00:00:00",
+            "author": {
+              "person_id": 5002,
+              "name": "John Doe"
+            },
+            "organization_name": "Morgan Stanley",
+            "region_type": "Global",
+            "summary": [
+              "AI infrastructure spending expected to accelerate through 2025."
+            ],
+            "citation_information": {
+              "title": "Tech Sector: AI Infrastructure Investment Trends",
+              "url": "https://dashboard.aiera.com/research/8001235",
+              "metadata": {
+                "type": "research",
+                "url_target": "aiera",
+                "research_id": 8001235
+              }
+            }
+          }
+        ]
+      }
+    },
+    "get_research_success": {
+      "instructions": [
+        "This data is provided for institutional finance professionals...",
+        "The current date is **Monday, December 22, 2025**, and the current time is **11:04 AM**..."
+      ],
+      "response": {
+        "research_id": 8001234,
+        "title": "Amazon Web Services: Cloud Computing Growth Outlook",
+        "publish_date": "2024-06-15T00:00:00",
+        "author": {
+          "person_id": 5001,
+          "name": "Jane Smith"
+        },
+        "organization_name": "Goldman Sachs",
+        "region_type": "North America",
+        "summary": [
+          "AWS revenue continues strong growth trajectory driven by enterprise AI adoption."
+        ],
+        "content_raw": "Full research report content discussing AWS growth, competitive positioning, and market outlook...",
+        "citation_information": {
+          "title": "Amazon Web Services: Cloud Computing Growth Outlook",
+          "url": "https://dashboard.aiera.com/research/8001234",
+          "metadata": {
+            "type": "research",
+            "url_target": "aiera",
+            "research_id": 8001234
+          }
+        }
+      }
     }
   }
 }

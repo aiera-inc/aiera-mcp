@@ -26,7 +26,8 @@ from .company_docs import (
 )
 from .third_bridge import find_third_bridge_events, get_third_bridge_event
 from .transcrippets import find_transcrippets, create_transcrippet, delete_transcrippet
-from .search import search_transcripts, search_filings
+from .research import find_research, get_research
+from .search import search_transcripts, search_filings, search_research
 
 # Import all parameter model classes from domain modules
 from .events import (
@@ -60,7 +61,8 @@ from .transcrippets import (
     CreateTranscrippetArgs,
     DeleteTranscrippetArgs,
 )
-from .search import SearchTranscriptsArgs, SearchFilingsArgs
+from .research import FindResearchArgs, GetResearchArgs
+from .search import SearchTranscriptsArgs, SearchFilingsArgs, SearchResearchArgs
 
 TOOL_REGISTRY = {
     "find_events": {
@@ -288,6 +290,24 @@ TOOL_REGISTRY = {
         "read_only": False,
         "destructive": True,
     },
+    "find_research": {
+        "display_name": "Find Research",
+        "input_schema": FindResearchArgs.model_json_schema(),
+        "function": find_research,
+        "args_model": FindResearchArgs,
+        "category": "research",
+        "read_only": True,
+        "destructive": False,
+    },
+    "get_research": {
+        "display_name": "Get Research",
+        "input_schema": GetResearchArgs.model_json_schema(),
+        "function": get_research,
+        "args_model": GetResearchArgs,
+        "category": "research",
+        "read_only": True,
+        "destructive": False,
+    },
     "search_transcripts": {
         "display_name": "Search Transcripts",
         "input_schema": SearchTranscriptsArgs.model_json_schema(),
@@ -302,6 +322,15 @@ TOOL_REGISTRY = {
         "input_schema": SearchFilingsArgs.model_json_schema(),
         "function": search_filings,
         "args_model": SearchFilingsArgs,
+        "category": "search",
+        "read_only": True,
+        "destructive": False,
+    },
+    "search_research": {
+        "display_name": "Search Research",
+        "input_schema": SearchResearchArgs.model_json_schema(),
+        "function": search_research,
+        "args_model": SearchResearchArgs,
         "category": "search",
         "read_only": True,
         "destructive": False,

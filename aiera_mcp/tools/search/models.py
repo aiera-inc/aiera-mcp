@@ -171,6 +171,69 @@ class SearchFilingsArgs(BaseAieraArgs):
     )
 
 
+class SearchResearchArgs(BaseAieraArgs):
+    """Semantic search within research content for specific topics, analyses, or insights.
+
+    WHEN TO USE THIS TOOL:
+    - Use this when you need to find specific content (analyses, insights, recommendations) within research documents
+    - Use this for targeted content extraction from research reports
+
+    RETURNS: Relevant research chunks with context, metadata, and relevance scores.
+    Results are individual sections/chunks, not full research documents.
+
+    NOTE: This tool uses hybrid semantic + keyword search for high-quality results.
+    """
+
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
+    )
+
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
+    query_text: str = Field(
+        description="Search query for semantic matching within research chunks. Examples: 'earnings outlook', 'competitive analysis', 'market trends'.",
+    )
+
+    research_ids: Optional[List[str]] = Field(
+        default=None,
+        description="Optional list of specific research IDs to search within. Example: [12345, 67890]",
+    )
+
+    equity_ids: Optional[List[int]] = Field(
+        default=None,
+        description="Optional list of specific equity IDs to filter search. Obtain equity_ids from find_equities results. Example: [100, 200]",
+    )
+
+    start_date: str = Field(
+        default="",
+        description="Start date for research chunks search in YYYY-MM-DD format. Example: '2024-01-01'.",
+    )
+
+    end_date: str = Field(
+        default="",
+        description="End date for research chunks search in YYYY-MM-DD format. Example: '2024-12-31'.",
+    )
+
+    max_results: int = Field(
+        default=20,
+        description="Maximum number of research chunks to return (10-50 recommended for optimal performance)",
+    )
+
+
 # Search result item models
 class TranscriptSearchCitationMetadata(BaseModel):
     """Metadata for transcript search citation."""
@@ -361,6 +424,14 @@ class FilingSearchItem(BaseModel):
 
 class SearchFilingsResponse(BaseAieraResponse):
     """Response for search_filings tool - matches actual API structure."""
+
+    response: Optional[SearchResponseData] = Field(
+        None, description="Response data container"
+    )
+
+
+class SearchResearchResponse(BaseAieraResponse):
+    """Response for search_research tool - matches actual API structure."""
 
     response: Optional[SearchResponseData] = Field(
         None, description="Response data container"

@@ -10,8 +10,10 @@ from pydantic import ValidationError
 from aiera_mcp.tools.search.models import (
     SearchTranscriptsArgs,
     SearchFilingsArgs,
+    SearchResearchArgs,
     SearchTranscriptsResponse,
     SearchFilingsResponse,
+    SearchResearchResponse,
     TranscriptSearchItem,
     TranscriptSearchCitation,
     TranscriptSearchCitationMetadata,
@@ -157,6 +159,71 @@ class TestSearchFilingsArgs:
         args = SearchFilingsArgs(query_text="test")
         assert args.query_text == "test"
         assert args.filing_ids is None
+        assert args.equity_ids is None
+
+
+@pytest.mark.unit
+class TestSearchResearchArgs:
+    """Test SearchResearchArgs model."""
+
+    def test_valid_search_research_args(self):
+        """Test valid SearchResearchArgs creation."""
+        args = SearchResearchArgs(
+            query_text="market trends",
+            equity_ids=[100, 200],
+            research_ids=["research123", "research456"],
+            start_date="2024-01-01",
+            end_date="2024-12-31",
+            max_results=30,
+        )
+
+        assert args.query_text == "market trends"
+        assert args.equity_ids == [100, 200]
+        assert args.research_ids == ["research123", "research456"]
+        assert args.start_date == "2024-01-01"
+        assert args.end_date == "2024-12-31"
+        assert args.max_results == 30
+
+    def test_search_research_args_defaults(self):
+        """Test SearchResearchArgs default values."""
+        args = SearchResearchArgs(
+            query_text="test query",
+            equity_ids=[1],
+        )
+
+        assert args.research_ids is None
+        assert args.start_date == ""
+        assert args.end_date == ""
+        assert args.max_results == 20
+        assert args.originating_prompt is None
+        assert args.include_base_instructions is True
+        assert args.exclude_instructions is False
+
+    def test_search_research_args_with_originating_prompt(self):
+        """Test SearchResearchArgs with originating_prompt field."""
+        args = SearchResearchArgs(
+            query_text="cloud computing",
+            equity_ids=[1],
+            originating_prompt="What are the latest research insights on AWS?",
+            include_base_instructions=False,
+        )
+
+        assert (
+            args.originating_prompt == "What are the latest research insights on AWS?"
+        )
+        assert args.include_base_instructions is False
+
+    def test_search_research_args_required_fields(self):
+        """Test that query_text is required."""
+        # query_text is required
+        with pytest.raises(ValidationError):
+            SearchResearchArgs()
+
+        # research_ids and equity_ids have default values (None)
+        # so providing only query_text is valid
+        args = SearchResearchArgs(query_text="test")
+        assert args.query_text == "test"
+        assert args.research_ids is None
         assert args.equity_ids is None
 
 
@@ -397,6 +464,16 @@ class TestSearchResponses:
         )
         assert filing_response.response.result == []
 
+    def test_search_research_response(self):
+        """Test SearchResearchResponse model."""
+        response = SearchResearchResponse(
+            instructions=["Test instruction"],
+            response=SearchResponseData(result=[{"test": "data"}]),
+        )
+
+        assert len(response.response.result) == 1
+        assert response.instructions == ["Test instruction"]
+
     def test_search_response_null_response(self):
         """Test search responses with null response."""
         transcript_response = SearchTranscriptsResponse(
@@ -410,6 +487,12 @@ class TestSearchResponses:
             response=None,
         )
         assert filing_response.response is None
+
+        research_response = SearchResearchResponse(
+            instructions=[],
+            response=None,
+        )
+        assert research_response.response is None
 
 
 @pytest.mark.unit
@@ -508,6 +591,16 @@ class TestSearchModelSerialization:
         assert "query_text" in schema["properties"]
         assert "equity_ids" in schema["properties"]
         assert "filing_type" in schema["properties"]
+
+    def test_search_research_args_json_schema(self):
+        """Test that SearchResearchArgs generates valid JSON schema."""
+        schema = SearchResearchArgs.model_json_schema()
+
+        assert "properties" in schema
+        assert "query_text" in schema["properties"]
+        assert "equity_ids" in schema["properties"]
+        assert "research_ids" in schema["properties"]
+        assert "filing_type" not in schema["properties"]
 
     def test_transcript_search_item_roundtrip(self):
         """Test TranscriptSearchItem serialization roundtrip."""
