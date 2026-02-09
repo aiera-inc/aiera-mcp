@@ -213,11 +213,6 @@ class SearchResearchArgs(BaseAieraArgs):
         description="Optional list of specific research IDs to search within. Example: [12345, 67890]",
     )
 
-    equity_ids: Optional[List[int]] = Field(
-        default=None,
-        description="Optional list of specific equity IDs to filter search. Obtain equity_ids from find_equities results. Example: [100, 200]",
-    )
-
     start_date: str = Field(
         default="",
         description="Start date for research chunks search in YYYY-MM-DD format. Example: '2024-01-01'.",

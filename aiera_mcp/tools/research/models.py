@@ -44,21 +44,6 @@ class FindResearchArgs(BaseAieraArgs):
         description="Search term to filter research reports. Searches within relevant text fields.",
     )
 
-    author_person_ids: Optional[str] = Field(
-        default=None,
-        description="Comma-separated list of author person IDs to filter by specific authors. Example: '123,456'.",
-    )
-
-    organization_names: Optional[str] = Field(
-        default=None,
-        description="Comma-separated list of organization names to filter by. Example: 'Goldman Sachs,Morgan Stanley'.",
-    )
-
-    region_types: Optional[str] = Field(
-        default=None,
-        description="Comma-separated list of region types to filter by. Example: 'North America,Europe'.",
-    )
-
     start_date: Optional[str] = Field(
         default=None,
         description="Start date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET).",
@@ -105,7 +90,7 @@ class GetResearchArgs(BaseAieraArgs):
     )
 
     research_id: str = Field(
-        description="Unique identifier for the research report. Obtain research_id from find_research results. Example: '98765'"
+        description="Unique identifier for the research report. Obtain research_id from find_research or search_research results."
     )
 
 

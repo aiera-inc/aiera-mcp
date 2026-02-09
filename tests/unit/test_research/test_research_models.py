@@ -21,17 +21,11 @@ class TestFindResearchArgs:
         """Test valid FindResearchArgs creation with all fields."""
         args = FindResearchArgs(
             search="cloud computing",
-            author_person_ids="5001,5002",
-            organization_names="Goldman Sachs,Morgan Stanley",
-            region_types="North America,Europe",
             start_date="2024-01-01",
             end_date="2024-12-31",
         )
 
         assert args.search == "cloud computing"
-        assert args.author_person_ids == "5001,5002"
-        assert args.organization_names == "Goldman Sachs,Morgan Stanley"
-        assert args.region_types == "North America,Europe"
         assert args.start_date == "2024-01-01"
         assert args.end_date == "2024-12-31"
 
@@ -40,9 +34,6 @@ class TestFindResearchArgs:
         args = FindResearchArgs()
 
         assert args.search is None
-        assert args.author_person_ids is None
-        assert args.organization_names is None
-        assert args.region_types is None
         assert args.start_date is None
         assert args.end_date is None
         assert args.originating_prompt is None
@@ -63,15 +54,11 @@ class TestFindResearchArgs:
     def test_find_research_args_partial_filters(self):
         """Test FindResearchArgs with only some filters set."""
         args = FindResearchArgs(
-            organization_names="Goldman Sachs",
             start_date="2024-06-01",
         )
 
-        assert args.organization_names == "Goldman Sachs"
         assert args.start_date == "2024-06-01"
         assert args.search is None
-        assert args.author_person_ids is None
-        assert args.region_types is None
         assert args.end_date is None
 
 
@@ -163,11 +150,11 @@ class TestResearchModelSerialization:
 
         assert "properties" in schema
         assert "search" in schema["properties"]
-        assert "author_person_ids" in schema["properties"]
-        assert "organization_names" in schema["properties"]
-        assert "region_types" in schema["properties"]
         assert "start_date" in schema["properties"]
         assert "end_date" in schema["properties"]
+        assert "author_person_ids" not in schema["properties"]
+        assert "organization_names" not in schema["properties"]
+        assert "region_types" not in schema["properties"]
 
     def test_get_research_args_json_schema(self):
         """Test that GetResearchArgs generates valid JSON schema."""
@@ -182,8 +169,5 @@ class TestResearchModelSerialization:
         dumped = args.model_dump(exclude_none=True)
 
         assert "search" in dumped
-        assert "author_person_ids" not in dumped
-        assert "organization_names" not in dumped
-        assert "region_types" not in dumped
         assert "start_date" not in dumped
         assert "end_date" not in dumped

@@ -174,7 +174,10 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
                         "should": [
                             {
                                 "match": {
-                                    "text": {"query": args.query_text, "boost": 2.0}
+                                    "text": {
+                                        "query": args.query_text,
+                                        "boost": 2.0,
+                                    }
                                 }
                             },
                             {
@@ -365,7 +368,10 @@ async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
                         "should": [
                             {
                                 "match": {
-                                    "text": {"query": args.query_text, "boost": 2.0}
+                                    "text": {
+                                        "query": args.query_text,
+                                        "boost": 2.0,
+                                    }
                                 }
                             },
                             {
@@ -432,16 +438,6 @@ async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
             {
                 "terms": {
                     "research_id": args.research_ids,
-                }
-            }
-        )
-
-    # add equity ID filter...
-    if args.equity_ids:
-        must_clauses.append(
-            {
-                "terms": {
-                    "primary_equity_id": args.equity_ids,
                 }
             }
         )
@@ -542,7 +538,10 @@ async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
                         "should": [
                             {
                                 "match": {
-                                    "text": {"query": args.query_text, "boost": 2.0}
+                                    "text": {
+                                        "query": args.query_text,
+                                        "boost": 2.0,
+                                    }
                                 }
                             },
                             {

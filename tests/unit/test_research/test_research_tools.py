@@ -5,6 +5,7 @@
 import pytest
 import pytest_asyncio
 from unittest.mock import AsyncMock, patch
+import asyncio
 
 from aiera_mcp.tools.research.tools import find_research, get_research
 from aiera_mcp.tools.research.models import (
@@ -24,9 +25,9 @@ class TestFindResearch:
         self, mock_http_dependencies, sample_api_responses
     ):
         """Test successful research search."""
-        research_responses = sample_api_responses.get("research", {})
-        mock_http_dependencies["mock_make_request"].return_value = research_responses[
-            "find_research_success"
+        search_responses = sample_api_responses.get("search", {})
+        mock_http_dependencies["mock_make_request"].return_value = search_responses[
+            "search_research_chunks_success"
         ]
 
         args = FindResearchArgs(
@@ -39,32 +40,31 @@ class TestFindResearch:
 
         assert isinstance(result, FindResearchResponse)
         assert result.response is not None
-        assert len(result.response["data"]) == 2
-        assert (
-            result.response["data"][0]["title"]
-            == "Amazon Web Services: Cloud Computing Growth Outlook"
-        )
+        assert len(result.response["result"]) == 1
 
-        mock_http_dependencies["mock_make_request"].assert_called_once()
+        # Check first result
+        first_result = result.response["result"][0]
+        assert first_result["_score"] > 0
+        assert first_result["title"] == "Amazon.com Inc - Research Report"
+
+        # Check API call was made correctly
+        mock_http_dependencies["mock_make_request"].assert_called()
         call_args = mock_http_dependencies["mock_make_request"].call_args
-        assert call_args[1]["method"] == "GET"
-        assert call_args[1]["endpoint"] == "/chat-support/find-research"
+        assert call_args[1]["method"] == "POST"
+        assert call_args[1]["endpoint"] == "/chat-support/search/research"
 
     @pytest.mark.asyncio
     async def test_find_research_with_all_filters(
         self, mock_http_dependencies, sample_api_responses
     ):
         """Test find_research with all filter parameters."""
-        research_responses = sample_api_responses.get("research", {})
-        mock_http_dependencies["mock_make_request"].return_value = research_responses[
-            "find_research_success"
+        search_responses = sample_api_responses.get("search", {})
+        mock_http_dependencies["mock_make_request"].return_value = search_responses[
+            "search_research_chunks_success"
         ]
 
         args = FindResearchArgs(
             search="AI",
-            author_person_ids="5001,5002",
-            organization_names="Goldman Sachs,Morgan Stanley",
-            region_types="North America",
             start_date="2024-01-01",
             end_date="2024-12-31",
         )
@@ -73,22 +73,22 @@ class TestFindResearch:
 
         assert isinstance(result, FindResearchResponse)
         call_args = mock_http_dependencies["mock_make_request"].call_args
-        params = call_args[1]["params"]
-        assert params["search"] == "AI"
-        assert params["author_person_ids"] == "5001,5002"
-        assert params["organization_names"] == "Goldman Sachs,Morgan Stanley"
-        assert params["region_types"] == "North America"
-        assert params["start_date"] == "2024-01-01"
-        assert params["end_date"] == "2024-12-31"
+        data = call_args[1]["data"]
+        # The search text should be in the hybrid query
+        assert "hybrid" in str(data["query"])
+        # The date range filter should be in must clauses
+        must_clauses = data["post_filter"]["bool"]["must"]
+        date_filter = [c for c in must_clauses if "range" in str(c)]
+        assert len(date_filter) > 0
 
     @pytest.mark.asyncio
     async def test_find_research_no_filters(
         self, mock_http_dependencies, sample_api_responses
     ):
         """Test find_research with no filters."""
-        research_responses = sample_api_responses.get("research", {})
-        mock_http_dependencies["mock_make_request"].return_value = research_responses[
-            "find_research_success"
+        search_responses = sample_api_responses.get("search", {})
+        mock_http_dependencies["mock_make_request"].return_value = search_responses[
+            "search_research_chunks_success"
         ]
 
         args = FindResearchArgs()
@@ -97,23 +97,19 @@ class TestFindResearch:
 
         assert isinstance(result, FindResearchResponse)
         call_args = mock_http_dependencies["mock_make_request"].call_args
-        params = call_args[1]["params"]
-        # None fields should be excluded
-        assert "search" not in params
-        assert "author_person_ids" not in params
-        assert "organization_names" not in params
-        assert "region_types" not in params
-        assert "start_date" not in params
-        assert "end_date" not in params
+        data = call_args[1]["data"]
+        # No must clauses when no filters provided
+        must_clauses = data["post_filter"]["bool"]["must"]
+        assert len(must_clauses) == 0
 
     @pytest.mark.asyncio
     async def test_find_research_exclude_instructions(
         self, mock_http_dependencies, sample_api_responses
     ):
         """Test find_research with exclude_instructions."""
-        research_responses = sample_api_responses.get("research", {})
-        mock_http_dependencies["mock_make_request"].return_value = research_responses[
-            "find_research_success"
+        search_responses = sample_api_responses.get("search", {})
+        mock_http_dependencies["mock_make_request"].return_value = search_responses[
+            "search_research_chunks_success"
         ]
 
         args = FindResearchArgs(
@@ -130,15 +126,7 @@ class TestFindResearch:
         """Test find_research with no results."""
         empty_response = {
             "instructions": [],
-            "response": {
-                "pagination": {
-                    "total_count": 0,
-                    "current_page": 1,
-                    "total_pages": 0,
-                    "page_size": 50,
-                },
-                "data": [],
-            },
+            "response": {"result": []},
         }
         mock_http_dependencies["mock_make_request"].return_value = empty_response
 
@@ -148,7 +136,54 @@ class TestFindResearch:
 
         assert isinstance(result, FindResearchResponse)
         assert result.response is not None
-        assert len(result.response["data"]) == 0
+        assert len(result.response["result"]) == 0
+
+    @pytest.mark.asyncio
+    async def test_find_research_fallback_on_timeout(self, mock_http_dependencies):
+        """Test that find_research falls back to standard search on timeout."""
+        # Setup - first call times out, second succeeds
+        fallback_response = {
+            "instructions": [],
+            "response": {"result": []},
+        }
+        mock_http_dependencies["mock_make_request"].side_effect = [
+            asyncio.TimeoutError("ML inference timed out"),
+            fallback_response,
+        ]
+
+        args = FindResearchArgs(
+            search="test query",
+        )
+
+        # Execute
+        result = await find_research(args)
+
+        # Verify fallback was used (2 calls made)
+        assert mock_http_dependencies["mock_make_request"].call_count == 2
+        assert isinstance(result, FindResearchResponse)
+
+    @pytest.mark.asyncio
+    async def test_find_research_fallback_uses_correct_endpoint(
+        self, mock_http_dependencies
+    ):
+        """Test that find_research fallback uses the correct research endpoint."""
+        # Setup - first call returns empty, triggering fallback
+        mock_http_dependencies["mock_make_request"].side_effect = [
+            {"response": {}},  # Empty response triggers fallback
+            {"instructions": [], "response": {"result": []}},
+        ]
+
+        args = FindResearchArgs(
+            search="test query",
+        )
+
+        # Execute
+        result = await find_research(args)
+
+        # Verify both calls used the research endpoint
+        assert mock_http_dependencies["mock_make_request"].call_count == 2
+        for call in mock_http_dependencies["mock_make_request"].call_args_list:
+            assert call[1]["endpoint"] == "/chat-support/search/research"
 
 
 @pytest.mark.unit
@@ -246,13 +281,15 @@ class TestResearchToolsErrorHandling:
     """Test error handling for research tools."""
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        "exception_type", [ConnectionError, ValueError, TimeoutError]
-    )
+    @pytest.mark.parametrize("exception_type", [ConnectionError, ValueError])
     async def test_find_research_network_errors_propagate(
         self, mock_http_dependencies, exception_type
     ):
-        """Test that network errors are properly propagated from find_research."""
+        """Test that network errors are properly propagated from find_research.
+
+        Note: TimeoutError is handled specially - find_research catches it and
+        falls back to standard search, so it's not tested here.
+        """
         mock_http_dependencies["mock_make_request"].side_effect = exception_type(
             "Test error"
         )

@@ -170,7 +170,6 @@ class TestSearchResearchArgs:
         """Test valid SearchResearchArgs creation."""
         args = SearchResearchArgs(
             query_text="market trends",
-            equity_ids=[100, 200],
             research_ids=["research123", "research456"],
             start_date="2024-01-01",
             end_date="2024-12-31",
@@ -178,7 +177,6 @@ class TestSearchResearchArgs:
         )
 
         assert args.query_text == "market trends"
-        assert args.equity_ids == [100, 200]
         assert args.research_ids == ["research123", "research456"]
         assert args.start_date == "2024-01-01"
         assert args.end_date == "2024-12-31"
@@ -188,7 +186,6 @@ class TestSearchResearchArgs:
         """Test SearchResearchArgs default values."""
         args = SearchResearchArgs(
             query_text="test query",
-            equity_ids=[1],
         )
 
         assert args.research_ids is None
@@ -203,7 +200,6 @@ class TestSearchResearchArgs:
         """Test SearchResearchArgs with originating_prompt field."""
         args = SearchResearchArgs(
             query_text="cloud computing",
-            equity_ids=[1],
             originating_prompt="What are the latest research insights on AWS?",
             include_base_instructions=False,
         )
@@ -219,12 +215,11 @@ class TestSearchResearchArgs:
         with pytest.raises(ValidationError):
             SearchResearchArgs()
 
-        # research_ids and equity_ids have default values (None)
+        # research_ids has a default value (None)
         # so providing only query_text is valid
         args = SearchResearchArgs(query_text="test")
         assert args.query_text == "test"
         assert args.research_ids is None
-        assert args.equity_ids is None
 
 
 @pytest.mark.unit
@@ -598,8 +593,8 @@ class TestSearchModelSerialization:
 
         assert "properties" in schema
         assert "query_text" in schema["properties"]
-        assert "equity_ids" in schema["properties"]
         assert "research_ids" in schema["properties"]
+        assert "equity_ids" not in schema["properties"]
         assert "filing_type" not in schema["properties"]
 
     def test_transcript_search_item_roundtrip(self):

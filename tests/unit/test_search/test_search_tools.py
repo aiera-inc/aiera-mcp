@@ -430,7 +430,6 @@ class TestSearchResearch:
 
         args = SearchResearchArgs(
             query_text="cloud computing growth",
-            equity_ids=[1],
             start_date="2024-01-01",
             end_date="2024-12-31",
             max_results=20,
@@ -467,7 +466,6 @@ class TestSearchResearch:
 
         args = SearchResearchArgs(
             query_text="nonexistent xyz123",
-            equity_ids=[999999],
             max_results=20,
         )
 
@@ -492,7 +490,6 @@ class TestSearchResearch:
 
         args = SearchResearchArgs(
             query_text="revenue",
-            equity_ids=[1],
             start_date="2024-01-01",
             end_date="2024-12-31",
             max_results=20,
@@ -550,7 +547,6 @@ class TestSearchResearch:
 
         args = SearchResearchArgs(
             query_text="cloud computing",
-            equity_ids=[1],
             exclude_instructions=True,
             max_results=20,
         )
@@ -576,7 +572,6 @@ class TestSearchResearch:
 
         args = SearchResearchArgs(
             query_text="test query",
-            equity_ids=[1],
             max_results=20,
         )
 
@@ -600,7 +595,6 @@ class TestSearchResearch:
 
         args = SearchResearchArgs(
             query_text="test query",
-            equity_ids=[1],
             max_results=20,
         )
 
