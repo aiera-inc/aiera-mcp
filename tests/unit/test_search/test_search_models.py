@@ -173,6 +173,10 @@ class TestSearchResearchArgs:
             research_ids=["research123", "research456"],
             start_date="2024-01-01",
             end_date="2024-12-31",
+            asset_classes=["FixedIncome"],
+            asset_types=["CorporateHighYieldCredit"],
+            author="Neha Khoda",
+            aiera_provider_id="krypton",
             max_results=30,
         )
 
@@ -180,6 +184,10 @@ class TestSearchResearchArgs:
         assert args.research_ids == ["research123", "research456"]
         assert args.start_date == "2024-01-01"
         assert args.end_date == "2024-12-31"
+        assert args.asset_classes == ["FixedIncome"]
+        assert args.asset_types == ["CorporateHighYieldCredit"]
+        assert args.author == "Neha Khoda"
+        assert args.aiera_provider_id == "krypton"
         assert args.max_results == 30
 
     def test_search_research_args_defaults(self):
@@ -191,6 +199,10 @@ class TestSearchResearchArgs:
         assert args.research_ids is None
         assert args.start_date == ""
         assert args.end_date == ""
+        assert args.asset_classes is None
+        assert args.asset_types is None
+        assert args.author is None
+        assert args.aiera_provider_id is None
         assert args.max_results == 20
         assert args.originating_prompt is None
         assert args.include_base_instructions is True
@@ -594,6 +606,10 @@ class TestSearchModelSerialization:
         assert "properties" in schema
         assert "query_text" in schema["properties"]
         assert "research_ids" in schema["properties"]
+        assert "asset_classes" in schema["properties"]
+        assert "asset_types" in schema["properties"]
+        assert "author" in schema["properties"]
+        assert "aiera_provider_id" in schema["properties"]
         assert "equity_ids" not in schema["properties"]
         assert "filing_type" not in schema["properties"]
 

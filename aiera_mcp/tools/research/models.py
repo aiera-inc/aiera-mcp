@@ -3,7 +3,7 @@
 """Research domain models for Aiera MCP."""
 
 from pydantic import BaseModel, Field
-from typing import Optional, Any
+from typing import List, Optional, Any
 
 from ..common.models import BaseAieraArgs, BaseAieraResponse
 
@@ -52,6 +52,26 @@ class FindResearchArgs(BaseAieraArgs):
     end_date: Optional[str] = Field(
         default=None,
         description="End date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET).",
+    )
+
+    asset_classes: Optional[List[str]] = Field(
+        default=None,
+        description="Filter by one or more asset classes. Example: ['FixedIncome', 'Equity'].",
+    )
+
+    asset_types: Optional[List[str]] = Field(
+        default=None,
+        description="Filter by one or more asset types. Example: ['CorporateHighYieldCredit', 'CorporateInvestmentGradeCredit'].",
+    )
+
+    author: Optional[str] = Field(
+        default=None,
+        description="Filter by author name. Matches against the author's display_name field. Example: 'Neha Khoda'.",
+    )
+
+    aiera_provider_id: Optional[str] = Field(
+        default=None,
+        description="Filter by Aiera provider ID. Example: 'krypton', 'krypton-test'.",
     )
 
 

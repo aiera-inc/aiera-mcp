@@ -23,11 +23,22 @@ class TestFindResearchArgs:
             search="cloud computing",
             start_date="2024-01-01",
             end_date="2024-12-31",
+            asset_classes=["FixedIncome"],
+            asset_types=["CorporateHighYieldCredit", "CorporateInvestmentGradeCredit"],
+            author="Neha Khoda",
+            aiera_provider_id="krypton",
         )
 
         assert args.search == "cloud computing"
         assert args.start_date == "2024-01-01"
         assert args.end_date == "2024-12-31"
+        assert args.asset_classes == ["FixedIncome"]
+        assert args.asset_types == [
+            "CorporateHighYieldCredit",
+            "CorporateInvestmentGradeCredit",
+        ]
+        assert args.author == "Neha Khoda"
+        assert args.aiera_provider_id == "krypton"
 
     def test_find_research_args_all_optional(self):
         """Test that all FindResearchArgs fields are optional."""
@@ -36,6 +47,10 @@ class TestFindResearchArgs:
         assert args.search is None
         assert args.start_date is None
         assert args.end_date is None
+        assert args.asset_classes is None
+        assert args.asset_types is None
+        assert args.author is None
+        assert args.aiera_provider_id is None
         assert args.originating_prompt is None
         assert args.include_base_instructions is True
         assert args.exclude_instructions is False
@@ -152,9 +167,10 @@ class TestResearchModelSerialization:
         assert "search" in schema["properties"]
         assert "start_date" in schema["properties"]
         assert "end_date" in schema["properties"]
-        assert "author_person_ids" not in schema["properties"]
-        assert "organization_names" not in schema["properties"]
-        assert "region_types" not in schema["properties"]
+        assert "asset_classes" in schema["properties"]
+        assert "asset_types" in schema["properties"]
+        assert "author" in schema["properties"]
+        assert "aiera_provider_id" in schema["properties"]
 
     def test_get_research_args_json_schema(self):
         """Test that GetResearchArgs generates valid JSON schema."""

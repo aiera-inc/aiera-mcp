@@ -67,6 +67,10 @@ class TestFindResearch:
             search="AI",
             start_date="2024-01-01",
             end_date="2024-12-31",
+            asset_classes=["FixedIncome"],
+            asset_types=["CorporateHighYieldCredit"],
+            author="Neha Khoda",
+            aiera_provider_id="krypton",
         )
 
         result = await find_research(args)
@@ -80,6 +84,66 @@ class TestFindResearch:
         must_clauses = data["post_filter"]["bool"]["must"]
         date_filter = [c for c in must_clauses if "range" in str(c)]
         assert len(date_filter) > 0
+        # The asset_classes filter should be in must clauses
+        asset_class_filter = [c for c in must_clauses if "asset_classes" in str(c)]
+        assert len(asset_class_filter) > 0
+        # The asset_types filter should be in must clauses
+        asset_type_filter = [c for c in must_clauses if "asset_types" in str(c)]
+        assert len(asset_type_filter) > 0
+        # The author filter should be in must clauses
+        author_filter = [c for c in must_clauses if "authors.display_name" in str(c)]
+        assert len(author_filter) > 0
+        # The aiera_provider_id filter should be in must clauses
+        provider_filter = [c for c in must_clauses if "aiera_provider_id" in str(c)]
+        assert len(provider_filter) > 0
+
+    @pytest.mark.asyncio
+    async def test_find_research_with_asset_classes(
+        self, mock_http_dependencies, sample_api_responses
+    ):
+        """Test find_research with asset_classes filter."""
+        search_responses = sample_api_responses.get("search", {})
+        mock_http_dependencies["mock_make_request"].return_value = search_responses[
+            "search_research_chunks_success"
+        ]
+
+        args = FindResearchArgs(
+            asset_classes=["FixedIncome", "Equity"],
+        )
+
+        result = await find_research(args)
+
+        assert isinstance(result, FindResearchResponse)
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        data = call_args[1]["data"]
+        must_clauses = data["post_filter"]["bool"]["must"]
+        asset_filter = [c for c in must_clauses if "asset_classes" in str(c)]
+        assert len(asset_filter) == 1
+        assert asset_filter[0]["terms"]["asset_classes"] == ["FixedIncome", "Equity"]
+
+    @pytest.mark.asyncio
+    async def test_find_research_with_author(
+        self, mock_http_dependencies, sample_api_responses
+    ):
+        """Test find_research with author filter."""
+        search_responses = sample_api_responses.get("search", {})
+        mock_http_dependencies["mock_make_request"].return_value = search_responses[
+            "search_research_chunks_success"
+        ]
+
+        args = FindResearchArgs(
+            author="Jim Reid",
+        )
+
+        result = await find_research(args)
+
+        assert isinstance(result, FindResearchResponse)
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        data = call_args[1]["data"]
+        must_clauses = data["post_filter"]["bool"]["must"]
+        author_filter = [c for c in must_clauses if "authors.display_name" in str(c)]
+        assert len(author_filter) == 1
+        assert author_filter[0]["match"]["authors.display_name"] == "Jim Reid"
 
     @pytest.mark.asyncio
     async def test_find_research_no_filters(

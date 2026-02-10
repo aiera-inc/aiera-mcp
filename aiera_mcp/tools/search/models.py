@@ -223,6 +223,26 @@ class SearchResearchArgs(BaseAieraArgs):
         description="End date for research chunks search in YYYY-MM-DD format. Example: '2024-12-31'.",
     )
 
+    asset_classes: Optional[List[str]] = Field(
+        default=None,
+        description="Filter by one or more asset classes. Example: ['FixedIncome', 'Equity'].",
+    )
+
+    asset_types: Optional[List[str]] = Field(
+        default=None,
+        description="Filter by one or more asset types. Example: ['CorporateHighYieldCredit', 'CorporateInvestmentGradeCredit'].",
+    )
+
+    author: Optional[str] = Field(
+        default=None,
+        description="Filter by author name. Matches against the author's display_name field. Example: 'Neha Khoda'.",
+    )
+
+    aiera_provider_id: Optional[str] = Field(
+        default=None,
+        description="Filter by Aiera provider ID. Example: 'krypton', 'krypton-test'.",
+    )
+
     max_results: int = Field(
         default=20,
         description="Maximum number of research chunks to return (10-50 recommended for optimal performance)",

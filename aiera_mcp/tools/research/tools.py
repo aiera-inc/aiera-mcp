@@ -42,6 +42,22 @@ async def find_research(args: FindResearchArgs) -> FindResearchResponse:
 
         must_clauses.append({"range": {"date": range}})
 
+    # add asset classes filter...
+    if args.asset_classes:
+        must_clauses.append({"terms": {"asset_classes": args.asset_classes}})
+
+    # add asset types filter...
+    if args.asset_types:
+        must_clauses.append({"terms": {"asset_types": args.asset_types}})
+
+    # add author filter...
+    if args.author:
+        must_clauses.append({"match": {"authors.display_name": args.author}})
+
+    # add aiera provider ID filter...
+    if args.aiera_provider_id:
+        must_clauses.append({"term": {"aiera_provider_id": args.aiera_provider_id}})
+
     k_value = 40
     if must_clauses:
         k_value = 400  # Increased for filters
