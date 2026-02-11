@@ -24,7 +24,7 @@ Executes a raw OpenSearch query against the specified index.
 
 | Parameter  | Type   | Description                                                                                                                       |
 |------------|--------|-----------------------------------------------------------------------------------------------------------------------------------|
-| `index`    | string | Index to search. Valid values: `events`, `transcripts`, `filings`, `filing-chunks`, `attachments`, `company_docs`, `third_bridge` |
+| `index`    | string | Index to search. Valid values: `events`, `transcripts`, `filings`, `filing-chunks`, `attachments`, `company_docs`, `third_bridge`, `research`, `research-chunks` |
 
 **Request Body (JSON):**
 
@@ -205,6 +205,187 @@ Response varies by index type:
         }
       }, ...
     ]
+  }
+}
+```
+
+### /search/research
+
+```json
+{
+  "instructions": ["STRING", "STRING", ... ],
+  "response": {
+    "result": [
+      {
+        "score": FLOAT,
+        "subjects": ["STRING", ...],
+        "description": "STRING",
+        "language": "STRING",
+        "organization_name": "STRING",
+        "synopsis": "STRING",
+        "product_focus": "STRING",
+        "countries": [
+          {
+            "code": "STRING",
+            "primary_indicator": BOOLEAN
+          }, ...
+        ],
+        "title": "STRING",
+        "asset_classes": ["STRING", ...],
+        "asset_types": ["STRING", ...],
+        "research_id": "STRING",
+        "published_datetime": "ISO_DATETIME",
+        "organization_type": "STRING",
+        "product_category": "STRING",
+        "aiera_provider_id": "STRING",
+        "authors": [
+          {
+            "sequence": INTEGER,
+            "job_role": "STRING_OR_NULL",
+            "display_name": "STRING",
+            "given_name": "STRING",
+            "family_name": "STRING",
+            "email": "STRING",
+            "person_id": "STRING",
+            "primary_indicator": BOOLEAN_OR_NULL
+          }, ...
+        ],
+        "citation_information": {
+          "title": "STRING",
+          "url": "URL",
+          "metadata": {
+            "type": "research",
+            "url_target": "STRING",
+            "research_id": "STRING"
+          }
+        }
+      }, ...
+    ]
+  }
+}
+```
+
+### /search/research-chunks
+
+```json
+{
+  "instructions": ["STRING", "STRING", ... ],
+  "response": {
+    "result": [
+      {
+        "score": FLOAT,
+        "subjects": ["STRING", ...],
+        "description": "STRING",
+        "language": "STRING",
+        "organization_name": "STRING",
+        "product_focus": "STRING",
+        "countries": [
+          {
+            "code": "STRING",
+            "primary_indicator": BOOLEAN
+          }, ...
+        ],
+        "title": "STRING",
+        "asset_classes": ["STRING", ...],
+        "asset_types": ["STRING", ...],
+        "research_id": "STRING",
+        "published_datetime": "ISO_DATETIME",
+        "organization_type": "STRING",
+        "text": "STRING",
+        "page": INTEGER,
+        "product_category": "STRING",
+        "aiera_provider_id": "STRING",
+        "authors": [
+          {
+            "sequence": INTEGER,
+            "job_role": "STRING_OR_NULL",
+            "display_name": "STRING",
+            "given_name": "STRING",
+            "family_name": "STRING",
+            "email": "STRING",
+            "person_id": "STRING",
+            "primary_indicator": BOOLEAN_OR_NULL
+          }, ...
+        ],
+        "citation_information": {
+          "title": "STRING",
+          "url": "URL",
+          "metadata": {
+            "type": "research",
+            "url_target": "STRING",
+            "research_id": "STRING"
+          }
+        }
+      }, ...
+    ]
+  }
+}
+```
+
+---
+
+## GET /get-research
+
+Retrieves detailed information about a specific research report, including metadata, authors, and content.
+
+**Query Parameters:**
+
+| Parameter                   | Type    | Default  | Description               |
+|-----------------------------|---------|----------|---------------------------|
+| `include_base_instructions` | boolean | `true`   | Include base instructions |
+| `originating_prompt`        | string  | -        | Original prompt           |
+| `self_identification`       | string  | -        | Caller identifier         |
+| `research_id`               | string  | -        | The research report ID    |
+
+**Response:**
+
+```json
+{
+  "instructions": ["STRING", "STRING", ... ],
+  "response": {
+    "result_type": "research",
+    "research_id": "STRING",
+    "product_id": "STRING",
+    "aiera_provider_id": "STRING",
+    "title": "STRING",
+    "synopsis": "STRING_OR_NULL",
+    "abstract": "STRING_OR_NULL",
+    "subtitle": "STRING_OR_NULL",
+    "description": "STRING",
+    "published_datetime": "ISO_DATETIME",
+    "create_datetime": "ISO_DATETIME",
+    "status_datetime": "ISO_DATETIME",
+    "organization_name": "STRING",
+    "organization_type": "STRING",
+    "is_pdf": BOOLEAN,
+    "content_url": "URL",
+    "resource_url": "URL",
+    "mime_type": "STRING",
+    "product_category": "STRING",
+    "product_focus": "STRING",
+    "subjects": ["STRING", ...],
+    "asset_classes": ["STRING", ...],
+    "asset_types": ["STRING", ...],
+    "authors": [
+      {
+        "person_id": "STRING",
+        "display_name": "STRING",
+        "family_name": "STRING",
+        "given_name": "STRING",
+        "job_role": "STRING_OR_NULL",
+        "email": "STRING",
+        "sequence": INTEGER,
+        "primary_indicator": BOOLEAN_OR_NULL
+      }, ...
+    ],
+    "regions": [],
+    "countries": [
+      {
+        "code": "STRING",
+        "primary_indicator": BOOLEAN
+      }, ...
+    ],
+    "content": "STRING"
   }
 }
 ```
