@@ -605,21 +605,21 @@ class TestSearchResearch:
 
         args = SearchResearchArgs(
             query_text="macro strategy",
-            author_id="12345",
+            author_ids=["12345"],
             max_results=20,
         )
 
         # Execute
         result = await search_research(args)
 
-        # Verify the call included the author_id filter
+        # Verify the call included the author_ids filter
         assert isinstance(result, SearchResearchResponse)
         call_args = mock_http_dependencies["mock_make_request"].call_args
         data = call_args[1]["data"]
         must_clauses = data["post_filter"]["bool"]["must"]
         author_filter = [c for c in must_clauses if "authors.person_id" in str(c)]
         assert len(author_filter) == 1
-        assert author_filter[0]["term"]["authors.person_id"] == "12345"
+        assert author_filter[0]["terms"]["authors.person_id"] == ["12345"]
 
     @pytest.mark.asyncio
     async def test_search_research_with_all_filters(
@@ -639,8 +639,8 @@ class TestSearchResearch:
             end_date="2024-12-31",
             asset_classes=["FixedIncome"],
             asset_types=["CorporateHighYieldCredit"],
-            author_id="12345",
-            aiera_provider_id="krypton",
+            author_ids=["12345"],
+            aiera_provider_ids=["krypton"],
             max_results=20,
         )
 

@@ -233,14 +233,14 @@ class SearchResearchArgs(BaseAieraArgs):
         description="Filter by one or more asset types. Example: ['CorporateHighYieldCredit', 'CorporateInvestmentGradeCredit'].",
     )
 
-    author_id: Optional[str] = Field(
+    author_ids: Optional[List[str]] = Field(
         default=None,
-        description="Filter by author person ID. Matches against the author's person_id field. Example: '12345'.",
+        description="Filter by one or more author person IDs. Matches against the author's person_id field. Example: ['12345', '67890'].",
     )
 
-    aiera_provider_id: Optional[str] = Field(
+    aiera_provider_ids: Optional[List[str]] = Field(
         default=None,
-        description="Filter by Aiera provider ID. Example: 'krypton', 'krypton-test'.",
+        description="Filter by one or more Aiera provider IDs. Example: ['krypton', 'krypton-test'].",
     )
 
     max_results: int = Field(

@@ -69,8 +69,8 @@ class TestFindResearch:
             end_date="2024-12-31",
             asset_classes=["FixedIncome"],
             asset_types=["CorporateHighYieldCredit"],
-            author_id="12345",
-            aiera_provider_id="krypton",
+            author_ids=["12345"],
+            aiera_provider_ids=["krypton"],
         )
 
         result = await find_research(args)
@@ -132,7 +132,7 @@ class TestFindResearch:
         ]
 
         args = FindResearchArgs(
-            author_id="12345",
+            author_ids=["12345"],
         )
 
         result = await find_research(args)
@@ -143,7 +143,7 @@ class TestFindResearch:
         must_clauses = data["post_filter"]["bool"]["must"]
         author_filter = [c for c in must_clauses if "authors.person_id" in str(c)]
         assert len(author_filter) == 1
-        assert author_filter[0]["term"]["authors.person_id"] == "12345"
+        assert author_filter[0]["terms"]["authors.person_id"] == ["12345"]
 
     @pytest.mark.asyncio
     async def test_find_research_no_filters(

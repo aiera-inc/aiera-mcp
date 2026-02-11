@@ -25,8 +25,8 @@ class TestFindResearchArgs:
             end_date="2024-12-31",
             asset_classes=["FixedIncome"],
             asset_types=["CorporateHighYieldCredit", "CorporateInvestmentGradeCredit"],
-            author="Neha Khoda",
-            aiera_provider_id="krypton",
+            author_ids=["12345"],
+            aiera_provider_ids=["krypton"],
         )
 
         assert args.search == "cloud computing"
@@ -37,8 +37,8 @@ class TestFindResearchArgs:
             "CorporateHighYieldCredit",
             "CorporateInvestmentGradeCredit",
         ]
-        assert args.author == "Neha Khoda"
-        assert args.aiera_provider_id == "krypton"
+        assert args.author_ids == ["12345"]
+        assert args.aiera_provider_ids == ["krypton"]
 
     def test_find_research_args_all_optional(self):
         """Test that all FindResearchArgs fields are optional."""
@@ -49,8 +49,8 @@ class TestFindResearchArgs:
         assert args.end_date is None
         assert args.asset_classes is None
         assert args.asset_types is None
-        assert args.author is None
-        assert args.aiera_provider_id is None
+        assert args.author_ids is None
+        assert args.aiera_provider_ids is None
         assert args.originating_prompt is None
         assert args.include_base_instructions is True
         assert args.exclude_instructions is False
@@ -169,8 +169,8 @@ class TestResearchModelSerialization:
         assert "end_date" in schema["properties"]
         assert "asset_classes" in schema["properties"]
         assert "asset_types" in schema["properties"]
-        assert "author" in schema["properties"]
-        assert "aiera_provider_id" in schema["properties"]
+        assert "author_ids" in schema["properties"]
+        assert "aiera_provider_ids" in schema["properties"]
 
     def test_get_research_args_json_schema(self):
         """Test that GetResearchArgs generates valid JSON schema."""

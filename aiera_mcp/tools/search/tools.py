@@ -459,12 +459,12 @@ async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
         must_clauses.append({"terms": {"asset_types": args.asset_types}})
 
     # add author filter...
-    if args.author_id:
-        must_clauses.append({"term": {"authors.person_id": args.author_id}})
+    if args.author_ids:
+        must_clauses.append({"terms": {"authors.person_id": args.author_ids}})
 
     # add aiera provider ID filter...
-    if args.aiera_provider_id:
-        must_clauses.append({"term": {"aiera_provider_id": args.aiera_provider_id}})
+    if args.aiera_provider_ids:
+        must_clauses.append({"terms": {"aiera_provider_id": args.aiera_provider_ids}})
 
     k_value = args.max_results * 2
     if must_clauses:
