@@ -459,8 +459,8 @@ async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
         must_clauses.append({"terms": {"asset_types": args.asset_types}})
 
     # add author filter...
-    if args.author:
-        must_clauses.append({"match": {"authors.display_name": args.author}})
+    if args.author_id:
+        must_clauses.append({"term": {"authors.person_id": args.author_id}})
 
     # add aiera provider ID filter...
     if args.aiera_provider_id:

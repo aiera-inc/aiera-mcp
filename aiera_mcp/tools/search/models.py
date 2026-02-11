@@ -233,9 +233,9 @@ class SearchResearchArgs(BaseAieraArgs):
         description="Filter by one or more asset types. Example: ['CorporateHighYieldCredit', 'CorporateInvestmentGradeCredit'].",
     )
 
-    author: Optional[str] = Field(
+    author_id: Optional[str] = Field(
         default=None,
-        description="Filter by author name. Matches against the author's display_name field. Example: 'Neha Khoda'.",
+        description="Filter by author person ID. Matches against the author's person_id field. Example: '12345'.",
     )
 
     aiera_provider_id: Optional[str] = Field(

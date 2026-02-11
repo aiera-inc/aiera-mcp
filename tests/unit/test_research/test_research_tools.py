@@ -69,7 +69,7 @@ class TestFindResearch:
             end_date="2024-12-31",
             asset_classes=["FixedIncome"],
             asset_types=["CorporateHighYieldCredit"],
-            author="Neha Khoda",
+            author_id="12345",
             aiera_provider_id="krypton",
         )
 
@@ -91,7 +91,7 @@ class TestFindResearch:
         asset_type_filter = [c for c in must_clauses if "asset_types" in str(c)]
         assert len(asset_type_filter) > 0
         # The author filter should be in must clauses
-        author_filter = [c for c in must_clauses if "authors.display_name" in str(c)]
+        author_filter = [c for c in must_clauses if "authors.person_id" in str(c)]
         assert len(author_filter) > 0
         # The aiera_provider_id filter should be in must clauses
         provider_filter = [c for c in must_clauses if "aiera_provider_id" in str(c)]
@@ -122,17 +122,17 @@ class TestFindResearch:
         assert asset_filter[0]["terms"]["asset_classes"] == ["FixedIncome", "Equity"]
 
     @pytest.mark.asyncio
-    async def test_find_research_with_author(
+    async def test_find_research_with_author_id(
         self, mock_http_dependencies, sample_api_responses
     ):
-        """Test find_research with author filter."""
+        """Test find_research with author_id filter."""
         search_responses = sample_api_responses.get("search", {})
         mock_http_dependencies["mock_make_request"].return_value = search_responses[
             "search_research_chunks_success"
         ]
 
         args = FindResearchArgs(
-            author="Jim Reid",
+            author_id="12345",
         )
 
         result = await find_research(args)
@@ -141,9 +141,9 @@ class TestFindResearch:
         call_args = mock_http_dependencies["mock_make_request"].call_args
         data = call_args[1]["data"]
         must_clauses = data["post_filter"]["bool"]["must"]
-        author_filter = [c for c in must_clauses if "authors.display_name" in str(c)]
+        author_filter = [c for c in must_clauses if "authors.person_id" in str(c)]
         assert len(author_filter) == 1
-        assert author_filter[0]["match"]["authors.display_name"] == "Jim Reid"
+        assert author_filter[0]["term"]["authors.person_id"] == "12345"
 
     @pytest.mark.asyncio
     async def test_find_research_no_filters(

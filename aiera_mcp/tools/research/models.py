@@ -9,11 +9,11 @@ from ..common.models import BaseAieraArgs, BaseAieraResponse
 
 
 class FindResearchArgs(BaseAieraArgs):
-    """Find research reports filtered by optional search terms, authors, organizations, regions, and date range.
+    """Find research reports filtered by optional search terms, author IDs, organizations, regions, and date range.
 
     WHEN TO USE:
     - Use this to browse and discover research reports
-    - Use this to find research by specific authors, organizations, or regions
+    - Use this to find research by specific author IDs, organizations, or regions
     - Use this to find research within a date range
 
     MULTIPLE FILTERS: All filter parameters are optional. Combine them to narrow results.
@@ -64,9 +64,9 @@ class FindResearchArgs(BaseAieraArgs):
         description="Filter by one or more asset types. Example: ['CorporateHighYieldCredit', 'CorporateInvestmentGradeCredit'].",
     )
 
-    author: Optional[str] = Field(
+    author_id: Optional[str] = Field(
         default=None,
-        description="Filter by author name. Matches against the author's display_name field. Example: 'Neha Khoda'.",
+        description="Filter by author person ID. Matches against the author's person_id field. Example: '12345'.",
     )
 
     aiera_provider_id: Optional[str] = Field(
