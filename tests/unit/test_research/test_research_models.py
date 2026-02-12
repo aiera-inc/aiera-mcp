@@ -20,45 +20,58 @@ class TestFindResearchArgs:
     def test_valid_find_research_args_all_fields(self):
         """Test valid FindResearchArgs creation with all fields."""
         args = FindResearchArgs(
-            search="cloud computing",
             start_date="2024-01-01",
             end_date="2024-12-31",
-            asset_classes=["FixedIncome"],
-            asset_types=["CorporateHighYieldCredit", "CorporateInvestmentGradeCredit"],
+            bloomberg_ticker="AMZN:US",
             author_ids=["12345"],
             aiera_provider_ids=["krypton"],
+            regions=["Americas"],
+            countries=["US", "GB"],
+            index_id=1,
+            watchlist_id=2,
+            sector_id=3,
+            subsector_id=4,
+            page=1,
+            page_size=25,
         )
 
-        assert args.search == "cloud computing"
         assert args.start_date == "2024-01-01"
         assert args.end_date == "2024-12-31"
-        assert args.asset_classes == ["FixedIncome"]
-        assert args.asset_types == [
-            "CorporateHighYieldCredit",
-            "CorporateInvestmentGradeCredit",
-        ]
+        assert args.bloomberg_ticker == "AMZN:US"
         assert args.author_ids == ["12345"]
         assert args.aiera_provider_ids == ["krypton"]
+        assert args.regions == ["Americas"]
+        assert args.countries == ["US", "GB"]
+        assert args.index_id == 1
+        assert args.watchlist_id == 2
+        assert args.sector_id == 3
+        assert args.subsector_id == 4
 
     def test_find_research_args_all_optional(self):
         """Test that all FindResearchArgs fields are optional."""
         args = FindResearchArgs()
 
-        assert args.search is None
         assert args.start_date is None
         assert args.end_date is None
-        assert args.asset_classes is None
-        assert args.asset_types is None
+        assert args.bloomberg_ticker is None
         assert args.author_ids is None
         assert args.aiera_provider_ids is None
+        assert args.regions is None
+        assert args.countries is None
+        assert args.index_id is None
+        assert args.watchlist_id is None
+        assert args.sector_id is None
+        assert args.subsector_id is None
         assert args.originating_prompt is None
+        assert args.self_identification is None
         assert args.include_base_instructions is True
         assert args.exclude_instructions is False
+        assert args.page == 1
+        assert args.page_size == 50
 
     def test_find_research_args_with_originating_prompt(self):
         """Test FindResearchArgs with originating_prompt field."""
         args = FindResearchArgs(
-            search="AI trends",
             originating_prompt="Find recent research on AI trends",
             include_base_instructions=False,
         )
@@ -73,8 +86,33 @@ class TestFindResearchArgs:
         )
 
         assert args.start_date == "2024-06-01"
-        assert args.search is None
         assert args.end_date is None
+
+    def test_find_research_args_numeric_string_coercion(self):
+        """Test that numeric fields accept string values."""
+        args = FindResearchArgs(
+            index_id="5",
+            watchlist_id="10",
+            sector_id="3",
+            subsector_id="7",
+            page="2",
+            page_size="25",
+        )
+
+        assert args.index_id == 5
+        assert args.watchlist_id == 10
+        assert args.sector_id == 3
+        assert args.subsector_id == 7
+        assert args.page == 2
+        assert args.page_size == 25
+
+    def test_find_research_args_bloomberg_ticker_correction(self):
+        """Test that bloomberg_ticker format is automatically corrected."""
+        # This test depends on the correct_bloomberg_ticker utility
+        args = FindResearchArgs(
+            bloomberg_ticker="AMZN:US",
+        )
+        assert args.bloomberg_ticker is not None
 
 
 @pytest.mark.unit
@@ -122,17 +160,18 @@ class TestResearchResponses:
         """Test FindResearchResponse model."""
         response = FindResearchResponse(
             instructions=["Test instruction"],
-            response={"data": [{"research_id": 123}]},
+            response=[{"research_id": "123", "title": "Test Report"}],
         )
 
         assert response.instructions == ["Test instruction"]
         assert response.response is not None
+        assert len(response.response) == 1
 
     def test_get_research_response(self):
         """Test GetResearchResponse model."""
         response = GetResearchResponse(
             instructions=["Test instruction"],
-            response={"research_id": 123, "title": "Test Report"},
+            response=[{"research_id": "123", "title": "Test Report"}],
         )
 
         assert response.instructions == ["Test instruction"]
@@ -164,13 +203,19 @@ class TestResearchModelSerialization:
         schema = FindResearchArgs.model_json_schema()
 
         assert "properties" in schema
-        assert "search" in schema["properties"]
         assert "start_date" in schema["properties"]
         assert "end_date" in schema["properties"]
-        assert "asset_classes" in schema["properties"]
-        assert "asset_types" in schema["properties"]
+        assert "bloomberg_ticker" in schema["properties"]
         assert "author_ids" in schema["properties"]
         assert "aiera_provider_ids" in schema["properties"]
+        assert "regions" in schema["properties"]
+        assert "countries" in schema["properties"]
+        assert "index_id" in schema["properties"]
+        assert "watchlist_id" in schema["properties"]
+        assert "sector_id" in schema["properties"]
+        assert "subsector_id" in schema["properties"]
+        assert "page" in schema["properties"]
+        assert "page_size" in schema["properties"]
 
     def test_get_research_args_json_schema(self):
         """Test that GetResearchArgs generates valid JSON schema."""
@@ -181,9 +226,10 @@ class TestResearchModelSerialization:
 
     def test_find_research_args_excludes_none(self):
         """Test that model_dump excludes None fields."""
-        args = FindResearchArgs(search="test")
+        args = FindResearchArgs(start_date="2024-01-01")
         dumped = args.model_dump(exclude_none=True)
 
-        assert "search" in dumped
-        assert "start_date" not in dumped
+        assert "start_date" in dumped
         assert "end_date" not in dumped
+        assert "bloomberg_ticker" not in dumped
+        assert "index_id" not in dumped

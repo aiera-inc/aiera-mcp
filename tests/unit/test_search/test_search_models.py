@@ -173,8 +173,6 @@ class TestSearchResearchArgs:
             research_ids=["research123", "research456"],
             start_date="2024-01-01",
             end_date="2024-12-31",
-            asset_classes=["FixedIncome"],
-            asset_types=["CorporateHighYieldCredit"],
             author_ids=["12345"],
             aiera_provider_ids=["krypton"],
             max_results=30,
@@ -184,8 +182,6 @@ class TestSearchResearchArgs:
         assert args.research_ids == ["research123", "research456"]
         assert args.start_date == "2024-01-01"
         assert args.end_date == "2024-12-31"
-        assert args.asset_classes == ["FixedIncome"]
-        assert args.asset_types == ["CorporateHighYieldCredit"]
         assert args.author_ids == ["12345"]
         assert args.aiera_provider_ids == ["krypton"]
         assert args.max_results == 30
@@ -199,12 +195,11 @@ class TestSearchResearchArgs:
         assert args.research_ids is None
         assert args.start_date == ""
         assert args.end_date == ""
-        assert args.asset_classes is None
-        assert args.asset_types is None
         assert args.author_ids is None
         assert args.aiera_provider_ids is None
         assert args.max_results == 20
         assert args.originating_prompt is None
+        assert args.self_identification is None
         assert args.include_base_instructions is True
         assert args.exclude_instructions is False
 
@@ -606,10 +601,11 @@ class TestSearchModelSerialization:
         assert "properties" in schema
         assert "query_text" in schema["properties"]
         assert "research_ids" in schema["properties"]
-        assert "asset_classes" in schema["properties"]
-        assert "asset_types" in schema["properties"]
+        assert "start_date" in schema["properties"]
+        assert "end_date" in schema["properties"]
         assert "author_ids" in schema["properties"]
         assert "aiera_provider_ids" in schema["properties"]
+        assert "max_results" in schema["properties"]
         assert "equity_ids" not in schema["properties"]
         assert "filing_type" not in schema["properties"]
 

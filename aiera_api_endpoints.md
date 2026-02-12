@@ -324,69 +324,87 @@ Response varies by index type:
 
 ---
 
-## GET /get-research
+## GET /find-research
 
-Retrieves detailed information about a specific research report, including metadata, authors, and content.
+Finds and retrieves research reports. Can fetch a specific report by ID or search/filter across reports by author, provider, region, company, date range, and more. Supports pagination.
 
 **Query Parameters:**
 
-| Parameter                   | Type    | Default  | Description               |
-|-----------------------------|---------|----------|---------------------------|
-| `include_base_instructions` | boolean | `true`   | Include base instructions |
-| `originating_prompt`        | string  | -        | Original prompt           |
-| `self_identification`       | string  | -        | Caller identifier         |
-| `research_id`               | string  | -        | The research report ID    |
+| Parameter                   | Type    | Default              | Description                                                      |
+|-----------------------------|---------|----------------------|------------------------------------------------------------------|
+| `include_base_instructions` | boolean | `true`               | Include base instructions                                        |
+| `originating_prompt`        | string  | -                    | Original prompt                                                  |
+| `self_identification`       | string  | -                    | Caller identifier                                                |
+| `include_content`           | boolean | `false`              | Whether to include full report content (only for single results) |
+| `research_id`               | string  | -                    | Fetch a specific research report by ID                           |
+| `author_person_ids`         | string  | -                    | Filter by author person IDs (comma-seperated list)               |
+| `provider_ids`              | string  | -                    | Filter by provider IDs (comma-seperated list)                    |
+| `regions`                   | string  | -                    | Filter by regions (comma-seperated list)                         |
+| `countries`                 | string  | -                    | Filter by countries (comma-seperated list)                       |
+| `start_date`                | string  | 52 weeks ago         | Start date for date range filter (ISO datetime)                  |
+| `end_date`                  | string  | now                  | End date for date range filter (ISO datetime)                    |
+| `bloomberg_ticker`          | string  | -                    | Bloomberg ticker symbol to filter by company                     |
+| `isin`                      | string  | -                    | ISIN identifier to filter by company                             |
+| `permid`                    | string  | -                    | PermID identifier to filter by company                           |
+| `ric`                       | string  | -                    | RIC identifier to filter by company                              |
+| `ticker`                    | string  | -                    | Ticker symbol to filter by company                               |
+| `index_id`                  | integer | -                    | Filter by index ID                                               |
+| `watchlist_id`              | integer | -                    | Filter by watchlist ID                                           |
+| `sector_id`                 | integer | -                    | Filter by sector ID                                              |
+| `subsector_id`              | integer | -                    | Filter by subsector ID                                           |
+| `page`                      | integer | `1`                  | Page number for pagination                                       |
+| `page_size`                 | integer | `50`                 | Number of results per page (capped at max page size)             |
 
 **Response:**
 
 ```json
 {
   "instructions": ["STRING", "STRING", ... ],
-  "response": {
-    "result_type": "research",
-    "research_id": "STRING",
-    "product_id": "STRING",
-    "aiera_provider_id": "STRING",
-    "title": "STRING",
-    "synopsis": "STRING_OR_NULL",
-    "abstract": "STRING_OR_NULL",
-    "subtitle": "STRING_OR_NULL",
-    "description": "STRING",
-    "published_datetime": "ISO_DATETIME",
-    "create_datetime": "ISO_DATETIME",
-    "status_datetime": "ISO_DATETIME",
-    "organization_name": "STRING",
-    "organization_type": "STRING",
-    "is_pdf": BOOLEAN,
-    "content_url": "URL",
-    "resource_url": "URL",
-    "mime_type": "STRING",
-    "product_category": "STRING",
-    "product_focus": "STRING",
-    "subjects": ["STRING", ...],
-    "asset_classes": ["STRING", ...],
-    "asset_types": ["STRING", ...],
-    "authors": [
-      {
-        "person_id": "STRING",
-        "display_name": "STRING",
-        "family_name": "STRING",
-        "given_name": "STRING",
-        "job_role": "STRING_OR_NULL",
-        "email": "STRING",
-        "sequence": INTEGER,
-        "primary_indicator": BOOLEAN_OR_NULL
-      }, ...
-    ],
-    "regions": [],
-    "countries": [
-      {
-        "code": "STRING",
-        "primary_indicator": BOOLEAN
-      }, ...
-    ],
-    "content": "STRING"
-  }
+  "response": [
+    {
+      "research_id": "STRING",
+      "product_id": "STRING",
+      "aiera_provider_id": "STRING",
+      "title": "STRING",
+      "synopsis": "STRING_OR_NULL",
+      "abstract": "STRING_OR_NULL",
+      "subtitle": "STRING_OR_NULL",
+      "description": "STRING",
+      "published_datetime": "ISO_DATETIME",
+      "create_datetime": "ISO_DATETIME",
+      "status_datetime": "ISO_DATETIME",
+      "organization_name": "STRING",
+      "organization_type": "STRING",
+      "is_pdf": BOOLEAN,
+      "content_url": "URL",
+      "resource_url": "URL",
+      "mime_type": "STRING",
+      "product_category": "STRING",
+      "product_focus": "STRING",
+      "subjects": ["STRING", ...],
+      "asset_classes": ["STRING", ...],
+      "asset_types": ["STRING", ...],
+      "authors": [
+        {
+          "person_id": "STRING",
+          "display_name": "STRING",
+          "family_name": "STRING",
+          "given_name": "STRING",
+          "job_role": "STRING_OR_NULL",
+          "email": "STRING",
+          "sequence": INTEGER,
+          "primary_indicator": BOOLEAN_OR_NULL
+        }, ...
+      ],
+      "regions": [],
+      "countries": [
+        {
+          "code": "STRING",
+          "primary_indicator": BOOLEAN
+        }, ...
+      ]
+    }, ...
+  ]
 }
 ```
 

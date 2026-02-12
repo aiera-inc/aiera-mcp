@@ -450,14 +450,6 @@ async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
 
         must_clauses.append({"range": {"date": range}})
 
-    # add asset classes filter...
-    if args.asset_classes:
-        must_clauses.append({"terms": {"asset_classes": args.asset_classes}})
-
-    # add asset types filter...
-    if args.asset_types:
-        must_clauses.append({"terms": {"asset_types": args.asset_types}})
-
     # add author filter...
     if args.author_ids:
         must_clauses.append({"terms": {"authors.person_id": args.author_ids}})

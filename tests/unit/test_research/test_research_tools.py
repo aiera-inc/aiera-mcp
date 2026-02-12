@@ -5,7 +5,6 @@
 import pytest
 import pytest_asyncio
 from unittest.mock import AsyncMock, patch
-import asyncio
 
 from aiera_mcp.tools.research.tools import find_research, get_research
 from aiera_mcp.tools.research.models import (
@@ -16,22 +15,66 @@ from aiera_mcp.tools.research.models import (
 )
 
 
+# Sample response matching the /find-research endpoint format
+FIND_RESEARCH_RESPONSE = {
+    "instructions": [
+        "This data is provided for institutional finance professionals...",
+    ],
+    "response": [
+        {
+            "research_id": "8001234",
+            "product_id": "P001",
+            "aiera_provider_id": "krypton",
+            "title": "Amazon.com Inc - Research Report",
+            "synopsis": "Cloud computing growth outlook",
+            "abstract": None,
+            "subtitle": None,
+            "description": "Detailed analysis of AWS revenue growth",
+            "published_datetime": "2024-06-15T00:00:00",
+            "create_datetime": "2024-06-15T10:00:00",
+            "status_datetime": "2024-06-15T10:00:00",
+            "organization_name": "Goldman Sachs",
+            "organization_type": "Broker",
+            "is_pdf": True,
+            "content_url": "https://example.com/content",
+            "resource_url": "https://example.com/resource",
+            "mime_type": "application/pdf",
+            "product_category": "Research",
+            "product_focus": "Equity",
+            "subjects": ["Technology"],
+            "asset_classes": ["Equity"],
+            "asset_types": [],
+            "authors": [
+                {
+                    "person_id": "5001",
+                    "display_name": "Jane Smith",
+                    "family_name": "Smith",
+                    "given_name": "Jane",
+                    "job_role": "Analyst",
+                    "email": "jane@example.com",
+                    "sequence": 1,
+                    "primary_indicator": True,
+                }
+            ],
+            "regions": [],
+            "countries": [{"code": "US", "primary_indicator": True}],
+        }
+    ],
+}
+
+
 @pytest.mark.unit
 class TestFindResearch:
     """Test the find_research tool."""
 
     @pytest.mark.asyncio
-    async def test_find_research_success(
-        self, mock_http_dependencies, sample_api_responses
-    ):
+    async def test_find_research_success(self, mock_http_dependencies):
         """Test successful research search."""
-        search_responses = sample_api_responses.get("search", {})
-        mock_http_dependencies["mock_make_request"].return_value = search_responses[
-            "search_research_chunks_success"
-        ]
+        mock_http_dependencies["mock_make_request"].return_value = (
+            FIND_RESEARCH_RESPONSE
+        )
 
         args = FindResearchArgs(
-            search="cloud computing",
             start_date="2024-01-01",
             end_date="2024-12-31",
         )
@@ -40,120 +83,145 @@ class TestFindResearch:
 
         assert isinstance(result, FindResearchResponse)
         assert result.response is not None
-        assert len(result.response["result"]) == 1
+        assert len(result.response) == 1
 
         # Check first result
-        first_result = result.response["result"][0]
-        assert first_result["_score"] > 0
+        first_result = result.response[0]
         assert first_result["title"] == "Amazon.com Inc - Research Report"
+        assert first_result["research_id"] == "8001234"
 
         # Check API call was made correctly
-        mock_http_dependencies["mock_make_request"].assert_called()
+        mock_http_dependencies["mock_make_request"].assert_called_once()
         call_args = mock_http_dependencies["mock_make_request"].call_args
-        assert call_args[1]["method"] == "POST"
-        assert call_args[1]["endpoint"] == "/chat-support/search/research"
+        assert call_args[1]["method"] == "GET"
+        assert call_args[1]["endpoint"] == "/chat-support/find-research"
 
     @pytest.mark.asyncio
-    async def test_find_research_with_all_filters(
-        self, mock_http_dependencies, sample_api_responses
-    ):
-        """Test find_research with all filter parameters."""
-        search_responses = sample_api_responses.get("search", {})
-        mock_http_dependencies["mock_make_request"].return_value = search_responses[
-            "search_research_chunks_success"
-        ]
+    async def test_find_research_with_author_ids(self, mock_http_dependencies):
+        """Test find_research maps author_ids to author_person_ids."""
+        mock_http_dependencies["mock_make_request"].return_value = (
+            FIND_RESEARCH_RESPONSE
+        )
 
         args = FindResearchArgs(
-            search="AI",
+            author_ids=["12345", "67890"],
+        )
+
+        result = await find_research(args)
+
+        assert isinstance(result, FindResearchResponse)
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        params = call_args[1]["params"]
+        # Should be mapped to author_person_ids as comma-separated string
+        assert "author_person_ids" in params
+        assert params["author_person_ids"] == "12345,67890"
+        # Original key should be removed
+        assert "author_ids" not in params
+
+    @pytest.mark.asyncio
+    async def test_find_research_with_provider_ids(self, mock_http_dependencies):
+        """Test find_research maps aiera_provider_ids to provider_ids."""
+        mock_http_dependencies["mock_make_request"].return_value = (
+            FIND_RESEARCH_RESPONSE
+        )
+
+        args = FindResearchArgs(
+            aiera_provider_ids=["krypton", "krypton-test"],
+        )
+
+        result = await find_research(args)
+
+        assert isinstance(result, FindResearchResponse)
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        params = call_args[1]["params"]
+        # Should be mapped to provider_ids as comma-separated string
+        assert "provider_ids" in params
+        assert params["provider_ids"] == "krypton,krypton-test"
+        # Original key should be removed
+        assert "aiera_provider_ids" not in params
+
+    @pytest.mark.asyncio
+    async def test_find_research_with_regions_and_countries(
+        self, mock_http_dependencies
+    ):
+        """Test find_research maps regions and countries to comma-separated strings."""
+        mock_http_dependencies["mock_make_request"].return_value = (
+            FIND_RESEARCH_RESPONSE
+        )
+
+        args = FindResearchArgs(
+            regions=["Americas", "EMEA"],
+            countries=["US", "GB"],
+        )
+
+        result = await find_research(args)
+
+        assert isinstance(result, FindResearchResponse)
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        params = call_args[1]["params"]
+        assert params["regions"] == "Americas,EMEA"
+        assert params["countries"] == "US,GB"
+
+    @pytest.mark.asyncio
+    async def test_find_research_with_bloomberg_ticker(self, mock_http_dependencies):
+        """Test find_research with bloomberg_ticker filter."""
+        mock_http_dependencies["mock_make_request"].return_value = (
+            FIND_RESEARCH_RESPONSE
+        )
+
+        args = FindResearchArgs(
+            bloomberg_ticker="AMZN:US",
+        )
+
+        result = await find_research(args)
+
+        assert isinstance(result, FindResearchResponse)
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        params = call_args[1]["params"]
+        assert params["bloomberg_ticker"] == "AMZN:US"
+
+    @pytest.mark.asyncio
+    async def test_find_research_with_all_filters(self, mock_http_dependencies):
+        """Test find_research with all filter parameters."""
+        mock_http_dependencies["mock_make_request"].return_value = (
+            FIND_RESEARCH_RESPONSE
+        )
+
+        args = FindResearchArgs(
             start_date="2024-01-01",
             end_date="2024-12-31",
-            asset_classes=["FixedIncome"],
-            asset_types=["CorporateHighYieldCredit"],
+            bloomberg_ticker="AMZN:US",
             author_ids=["12345"],
             aiera_provider_ids=["krypton"],
+            regions=["Americas"],
+            countries=["US"],
+            index_id=1,
+            watchlist_id=2,
+            sector_id=3,
+            subsector_id=4,
+            page=1,
+            page_size=25,
         )
 
         result = await find_research(args)
 
         assert isinstance(result, FindResearchResponse)
         call_args = mock_http_dependencies["mock_make_request"].call_args
-        data = call_args[1]["data"]
-        # The search text should be in the hybrid query
-        assert "hybrid" in str(data["query"])
-        # The date range filter should be in must clauses
-        must_clauses = data["post_filter"]["bool"]["must"]
-        date_filter = [c for c in must_clauses if "range" in str(c)]
-        assert len(date_filter) > 0
-        # The asset_classes filter should be in must clauses
-        asset_class_filter = [c for c in must_clauses if "asset_classes" in str(c)]
-        assert len(asset_class_filter) > 0
-        # The asset_types filter should be in must clauses
-        asset_type_filter = [c for c in must_clauses if "asset_types" in str(c)]
-        assert len(asset_type_filter) > 0
-        # The author filter should be in must clauses
-        author_filter = [c for c in must_clauses if "authors.person_id" in str(c)]
-        assert len(author_filter) > 0
-        # The aiera_provider_id filter should be in must clauses
-        provider_filter = [c for c in must_clauses if "aiera_provider_id" in str(c)]
-        assert len(provider_filter) > 0
+        params = call_args[1]["params"]
+        assert params["start_date"] == "2024-01-01"
+        assert params["end_date"] == "2024-12-31"
+        assert params["bloomberg_ticker"] == "AMZN:US"
+        assert params["author_person_ids"] == "12345"
+        assert params["provider_ids"] == "krypton"
+        assert params["regions"] == "Americas"
+        assert params["countries"] == "US"
 
     @pytest.mark.asyncio
-    async def test_find_research_with_asset_classes(
-        self, mock_http_dependencies, sample_api_responses
-    ):
-        """Test find_research with asset_classes filter."""
-        search_responses = sample_api_responses.get("search", {})
-        mock_http_dependencies["mock_make_request"].return_value = search_responses[
-            "search_research_chunks_success"
-        ]
-
-        args = FindResearchArgs(
-            asset_classes=["FixedIncome", "Equity"],
-        )
-
-        result = await find_research(args)
-
-        assert isinstance(result, FindResearchResponse)
-        call_args = mock_http_dependencies["mock_make_request"].call_args
-        data = call_args[1]["data"]
-        must_clauses = data["post_filter"]["bool"]["must"]
-        asset_filter = [c for c in must_clauses if "asset_classes" in str(c)]
-        assert len(asset_filter) == 1
-        assert asset_filter[0]["terms"]["asset_classes"] == ["FixedIncome", "Equity"]
-
-    @pytest.mark.asyncio
-    async def test_find_research_with_author_id(
-        self, mock_http_dependencies, sample_api_responses
-    ):
-        """Test find_research with author_id filter."""
-        search_responses = sample_api_responses.get("search", {})
-        mock_http_dependencies["mock_make_request"].return_value = search_responses[
-            "search_research_chunks_success"
-        ]
-
-        args = FindResearchArgs(
-            author_ids=["12345"],
-        )
-
-        result = await find_research(args)
-
-        assert isinstance(result, FindResearchResponse)
-        call_args = mock_http_dependencies["mock_make_request"].call_args
-        data = call_args[1]["data"]
-        must_clauses = data["post_filter"]["bool"]["must"]
-        author_filter = [c for c in must_clauses if "authors.person_id" in str(c)]
-        assert len(author_filter) == 1
-        assert author_filter[0]["terms"]["authors.person_id"] == ["12345"]
-
-    @pytest.mark.asyncio
-    async def test_find_research_no_filters(
-        self, mock_http_dependencies, sample_api_responses
-    ):
+    async def test_find_research_no_filters(self, mock_http_dependencies):
         """Test find_research with no filters."""
-        search_responses = sample_api_responses.get("search", {})
-        mock_http_dependencies["mock_make_request"].return_value = search_responses[
-            "search_research_chunks_success"
-        ]
+        mock_http_dependencies["mock_make_request"].return_value = (
+            FIND_RESEARCH_RESPONSE
+        )
 
         args = FindResearchArgs()
 
@@ -161,23 +229,20 @@ class TestFindResearch:
 
         assert isinstance(result, FindResearchResponse)
         call_args = mock_http_dependencies["mock_make_request"].call_args
-        data = call_args[1]["data"]
-        # No must clauses when no filters provided
-        must_clauses = data["post_filter"]["bool"]["must"]
-        assert len(must_clauses) == 0
+        params = call_args[1]["params"]
+        # Should only have defaults (page, page_size, include_base_instructions)
+        assert "start_date" not in params
+        assert "bloomberg_ticker" not in params
 
     @pytest.mark.asyncio
-    async def test_find_research_exclude_instructions(
-        self, mock_http_dependencies, sample_api_responses
-    ):
+    async def test_find_research_exclude_instructions(self, mock_http_dependencies):
         """Test find_research with exclude_instructions."""
-        search_responses = sample_api_responses.get("search", {})
-        mock_http_dependencies["mock_make_request"].return_value = search_responses[
-            "search_research_chunks_success"
-        ]
+        mock_http_dependencies["mock_make_request"].return_value = (
+            FIND_RESEARCH_RESPONSE
+        )
 
         args = FindResearchArgs(
-            search="test",
+            start_date="2024-01-01",
             exclude_instructions=True,
         )
 
@@ -190,64 +255,17 @@ class TestFindResearch:
         """Test find_research with no results."""
         empty_response = {
             "instructions": [],
-            "response": {"result": []},
+            "response": [],
         }
         mock_http_dependencies["mock_make_request"].return_value = empty_response
 
-        args = FindResearchArgs(search="nonexistent xyz123")
+        args = FindResearchArgs(start_date="2024-01-01")
 
         result = await find_research(args)
 
         assert isinstance(result, FindResearchResponse)
         assert result.response is not None
-        assert len(result.response["result"]) == 0
-
-    @pytest.mark.asyncio
-    async def test_find_research_fallback_on_timeout(self, mock_http_dependencies):
-        """Test that find_research falls back to standard search on timeout."""
-        # Setup - first call times out, second succeeds
-        fallback_response = {
-            "instructions": [],
-            "response": {"result": []},
-        }
-        mock_http_dependencies["mock_make_request"].side_effect = [
-            asyncio.TimeoutError("ML inference timed out"),
-            fallback_response,
-        ]
-
-        args = FindResearchArgs(
-            search="test query",
-        )
-
-        # Execute
-        result = await find_research(args)
-
-        # Verify fallback was used (2 calls made)
-        assert mock_http_dependencies["mock_make_request"].call_count == 2
-        assert isinstance(result, FindResearchResponse)
-
-    @pytest.mark.asyncio
-    async def test_find_research_fallback_uses_correct_endpoint(
-        self, mock_http_dependencies
-    ):
-        """Test that find_research fallback uses the correct research endpoint."""
-        # Setup - first call returns empty, triggering fallback
-        mock_http_dependencies["mock_make_request"].side_effect = [
-            {"response": {}},  # Empty response triggers fallback
-            {"instructions": [], "response": {"result": []}},
-        ]
-
-        args = FindResearchArgs(
-            search="test query",
-        )
-
-        # Execute
-        result = await find_research(args)
-
-        # Verify both calls used the research endpoint
-        assert mock_http_dependencies["mock_make_request"].call_count == 2
-        for call in mock_http_dependencies["mock_make_request"].call_args_list:
-            assert call[1]["endpoint"] == "/chat-support/search/research"
+        assert len(result.response) == 0
 
 
 @pytest.mark.unit
@@ -270,22 +288,17 @@ class TestGetResearch:
 
         assert isinstance(result, GetResearchResponse)
         assert result.response is not None
-        assert result.response["research_id"] == 8001234
-        assert (
-            result.response["title"]
-            == "Amazon Web Services: Cloud Computing Growth Outlook"
-        )
 
         mock_http_dependencies["mock_make_request"].assert_called_once()
         call_args = mock_http_dependencies["mock_make_request"].call_args
         assert call_args[1]["method"] == "GET"
-        assert call_args[1]["endpoint"] == "/chat-support/get-research"
+        assert call_args[1]["endpoint"] == "/chat-support/find-research"
 
     @pytest.mark.asyncio
-    async def test_get_research_passes_research_id(
+    async def test_get_research_passes_research_id_and_include_content(
         self, mock_http_dependencies, sample_api_responses
     ):
-        """Test that get_research passes research_id in params."""
+        """Test that get_research passes research_id and include_content in params."""
         research_responses = sample_api_responses.get("research", {})
         mock_http_dependencies["mock_make_request"].return_value = research_responses[
             "get_research_success"
@@ -298,6 +311,7 @@ class TestGetResearch:
         call_args = mock_http_dependencies["mock_make_request"].call_args
         params = call_args[1]["params"]
         assert params["research_id"] == "8001234"
+        assert params["include_content"] == "true"
 
     @pytest.mark.asyncio
     async def test_get_research_exclude_instructions(
@@ -345,20 +359,18 @@ class TestResearchToolsErrorHandling:
     """Test error handling for research tools."""
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("exception_type", [ConnectionError, ValueError])
+    @pytest.mark.parametrize(
+        "exception_type", [ConnectionError, ValueError, TimeoutError]
+    )
     async def test_find_research_network_errors_propagate(
         self, mock_http_dependencies, exception_type
     ):
-        """Test that network errors are properly propagated from find_research.
-
-        Note: TimeoutError is handled specially - find_research catches it and
-        falls back to standard search, so it's not tested here.
-        """
+        """Test that network errors are properly propagated from find_research."""
         mock_http_dependencies["mock_make_request"].side_effect = exception_type(
             "Test error"
         )
 
-        args = FindResearchArgs(search="test")
+        args = FindResearchArgs(start_date="2024-01-01")
 
         with pytest.raises(exception_type):
             await find_research(args)

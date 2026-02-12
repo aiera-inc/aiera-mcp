@@ -2,13 +2,70 @@
 
 """Research domain models for Aiera MCP."""
 
-from pydantic import BaseModel, Field
-from typing import List, Optional, Any
+from pydantic import BaseModel, Field, field_validator, field_serializer
+from typing import List, Optional, Any, Union
 
 from ..common.models import BaseAieraArgs, BaseAieraResponse
 
 
-class FindResearchArgs(BaseAieraArgs):
+# Mixins for validation (same pattern as events/filings domains)
+class BaseToolArgs(BaseModel):
+    """Base class for all Aiera MCP tool arguments with common serializers."""
+
+    @field_validator(
+        "watchlist_id",
+        "index_id",
+        "sector_id",
+        "subsector_id",
+        "page",
+        "page_size",
+        mode="before",
+        check_fields=False,
+    )
+    @classmethod
+    def validate_numeric_fields(cls, v):
+        """Accept both integers and string representations of integers."""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                return int(v)
+            except ValueError:
+                raise ValueError(f"Cannot convert '{v}' to integer")
+        return v
+
+    @field_serializer(
+        "watchlist_id",
+        "index_id",
+        "sector_id",
+        "subsector_id",
+        "page",
+        "page_size",
+        when_used="always",
+        check_fields=False,
+    )
+    def serialize_numeric_fields(self, value: Any) -> str:
+        """Convert numeric fields to strings for API requests."""
+        if value is None:
+            return None
+        return str(value)
+
+
+class BloombergTickerMixin(BaseModel):
+    """Mixin for models with bloomberg_ticker field."""
+
+    @field_validator("bloomberg_ticker", mode="before", check_fields=False)
+    @classmethod
+    def validate_bloomberg_ticker(cls, v):
+        """Automatically correct Bloomberg ticker format."""
+        if v is None:
+            return v
+        from ..utils import correct_bloomberg_ticker
+
+        return correct_bloomberg_ticker(v)
+
+
+class FindResearchArgs(BaseToolArgs, BloombergTickerMixin):
     """Find research reports filtered by optional search terms, author IDs, organizations, regions, and date range.
 
     WHEN TO USE:
@@ -39,29 +96,14 @@ class FindResearchArgs(BaseAieraArgs):
         description="Whether to exclude all instructions from the tool response.",
     )
 
-    search: Optional[str] = Field(
-        default=None,
-        description="Search term to filter research reports. Searches within relevant text fields.",
-    )
-
     start_date: Optional[str] = Field(
         default=None,
-        description="Start date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET).",
+        description="Start date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET). Defaults to 52 weeks ago on the server.",
     )
 
     end_date: Optional[str] = Field(
         default=None,
-        description="End date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET).",
-    )
-
-    asset_classes: Optional[List[str]] = Field(
-        default=None,
-        description="Filter by one or more asset classes. Example: ['FixedIncome', 'Equity'].",
-    )
-
-    asset_types: Optional[List[str]] = Field(
-        default=None,
-        description="Filter by one or more asset types. Example: ['CorporateHighYieldCredit', 'CorporateInvestmentGradeCredit'].",
+        description="End date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET). Defaults to now on the server.",
     )
 
     author_ids: Optional[List[str]] = Field(
@@ -72,6 +114,49 @@ class FindResearchArgs(BaseAieraArgs):
     aiera_provider_ids: Optional[List[str]] = Field(
         default=None,
         description="Filter by one or more Aiera provider IDs. Example: ['krypton', 'krypton-test'].",
+    )
+
+    regions: Optional[List[str]] = Field(
+        default=None,
+        description="Filter by one or more regions. Example: ['Americas', 'EMEA'].",
+    )
+
+    countries: Optional[List[str]] = Field(
+        default=None,
+        description="Filter by one or more country codes. Example: ['US', 'GB'].",
+    )
+
+    bloomberg_ticker: Optional[str] = Field(
+        default=None,
+        description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces.",
+    )
+
+    index_id: Optional[Union[int, str]] = Field(
+        default=None,
+        description="ID of a specific index. Use get_available_indexes to find valid IDs.",
+    )
+
+    watchlist_id: Optional[Union[int, str]] = Field(
+        default=None,
+        description="ID of a specific watchlist. Use get_available_watchlists to find valid IDs.",
+    )
+
+    sector_id: Optional[Union[int, str]] = Field(
+        default=None,
+        description="ID of a specific sector. Use get_sectors_and_subsectors to find valid IDs.",
+    )
+
+    subsector_id: Optional[Union[int, str]] = Field(
+        default=None,
+        description="ID of a specific subsector. Use get_sectors_and_subsectors to find valid IDs.",
+    )
+
+    page: Union[int, str] = Field(
+        default=1, ge=1, description="Page number for pagination (1-based)."
+    )
+
+    page_size: Union[int, str] = Field(
+        default=50, ge=1, le=100, description="Number of items per page (1-100)."
     )
 
 

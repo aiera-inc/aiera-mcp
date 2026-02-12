@@ -1147,18 +1147,25 @@ Get detailed information about a specific Third Bridge expert insight event.
 
 ### find_research
 
-Find research reports filtered by optional search terms, author IDs, organizations, regions, and date range.
+Find research reports filtered by optional search terms, author IDs, organizations, tickers, date range, and more. Uses the `/find-research` endpoint for filter-based discovery.
 
 **Input Parameters:**
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | search | string | no | null | Free-text search term |
-| start_date | string | no | null | Start date (YYYY-MM-DD) |
-| end_date | string | no | null | End date (YYYY-MM-DD) |
+| start_date | string | no | null | Start date (YYYY-MM-DD). Defaults to 52 weeks ago on the server |
+| end_date | string | no | null | End date (YYYY-MM-DD). Defaults to now on the server |
+| bloomberg_ticker | string | no | null | Bloomberg ticker(s) (e.g., 'AAPL:US'). Comma-separated for multiple |
 | author_ids | array[string] | no | null | List of author person IDs to filter by |
 | aiera_provider_ids | array[string] | no | null | List of Aiera provider IDs to filter by |
 | asset_classes | array[string] | no | null | List of asset classes to filter by |
 | asset_types | array[string] | no | null | List of asset types to filter by |
+| index_id | integer/string | no | null | Filter by market index ID |
+| watchlist_id | integer/string | no | null | Filter by user watchlist ID |
+| sector_id | integer/string | no | null | Filter by GICS sector ID |
+| subsector_id | integer/string | no | null | Filter by GICS subsector ID |
+| page | integer/string | no | 1 | Page number for pagination |
+| page_size | integer/string | no | 50 | Number of items per page (1-100) |
 | include_base_instructions | boolean | no | true | Include base instructions |
 | exclude_instructions | boolean | no | false | Exclude all instructions in response |
 | originating_prompt | string | no | null | Original user prompt for context |
@@ -1168,54 +1175,51 @@ Find research reports filtered by optional search terms, author IDs, organizatio
 ```json
 {
   "instructions": ["STRING", ...],
-  "response": {
-    "result": [
-      {
-        "score": FLOAT,
-        "subjects": ["STRING", ...],
-        "description": "STRING",
-        "language": "STRING",
-        "organization_name": "STRING",
-        "synopsis": "STRING",
-        "product_focus": "STRING",
-        "countries": [
-          {
-            "code": "STRING",
-            "primary_indicator": BOOLEAN
-          }
-        ],
-        "title": "STRING",
-        "asset_classes": ["STRING", ...],
-        "asset_types": ["STRING", ...],
-        "research_id": "STRING",
-        "published_datetime": "DATETIME_STRING",
-        "organization_type": "STRING",
-        "product_category": "STRING",
-        "aiera_provider_id": "STRING",
-        "authors": [
-          {
-            "sequence": INTEGER,
-            "job_role": STRING | null,
-            "display_name": "STRING",
-            "given_name": "STRING",
-            "family_name": "STRING",
-            "email": "STRING",
-            "person_id": "STRING",
-            "primary_indicator": BOOLEAN | null
-          }
-        ],
-        "citation_information": {
-          "title": "STRING",
-          "url": "STRING",
-          "metadata": {
-            "type": "research",
-            "url_target": "STRING",
-            "research_id": "STRING"
-          }
+  "response": [
+    {
+      "research_id": "STRING",
+      "product_id": "STRING",
+      "aiera_provider_id": "STRING",
+      "title": "STRING",
+      "synopsis": STRING | null,
+      "abstract": STRING | null,
+      "subtitle": STRING | null,
+      "description": "STRING",
+      "published_datetime": "DATETIME_STRING",
+      "create_datetime": "DATETIME_STRING",
+      "status_datetime": "DATETIME_STRING",
+      "organization_name": "STRING",
+      "organization_type": "STRING",
+      "is_pdf": BOOLEAN,
+      "content_url": "STRING",
+      "resource_url": "STRING",
+      "mime_type": "STRING",
+      "product_category": "STRING",
+      "product_focus": "STRING",
+      "subjects": ["STRING", ...],
+      "asset_classes": ["STRING", ...],
+      "asset_types": ["STRING", ...],
+      "authors": [
+        {
+          "person_id": "STRING",
+          "display_name": "STRING",
+          "family_name": "STRING",
+          "given_name": "STRING",
+          "job_role": STRING | null,
+          "email": "STRING",
+          "sequence": INTEGER,
+          "primary_indicator": BOOLEAN | null
         }
-      }
-    ]
-  },
+      ],
+      "regions": [],
+      "countries": [
+        {
+          "code": "STRING",
+          "primary_indicator": BOOLEAN
+        }
+      ]
+    }
+  ],
   "error": STRING | null
 }
 ```
@@ -1224,7 +1228,7 @@ Find research reports filtered by optional search terms, author IDs, organizatio
 
 ### get_research
 
-Get detailed information about a specific research report including summary, metadata, authors, and content.
+Get detailed information about a specific research report including summary, metadata, authors, and content. Uses the `/find-research` endpoint with `research_id` and `include_content=true`.
 
 **Input Parameters:**
 | Parameter | Type | Required | Default | Description |
@@ -1239,51 +1243,51 @@ Get detailed information about a specific research report including summary, met
 ```json
 {
   "instructions": ["STRING", ...],
-  "response": {
-    "result_type": "research",
-    "research_id": "STRING",
-    "product_id": "STRING",
-    "aiera_provider_id": "STRING",
-    "title": "STRING",
-    "synopsis": STRING | null,
-    "abstract": STRING | null,
-    "subtitle": STRING | null,
-    "description": "STRING",
-    "published_datetime": "DATETIME_STRING",
-    "create_datetime": "DATETIME_STRING",
-    "status_datetime": "DATETIME_STRING",
-    "organization_name": "STRING",
-    "organization_type": "STRING",
-    "is_pdf": BOOLEAN,
-    "content_url": "STRING",
-    "resource_url": "STRING",
-    "mime_type": "STRING",
-    "product_category": "STRING",
-    "product_focus": "STRING",
-    "subjects": ["STRING", ...],
-    "asset_classes": ["STRING", ...],
-    "asset_types": ["STRING", ...],
-    "authors": [
-      {
-        "person_id": "STRING",
-        "display_name": "STRING",
-        "family_name": "STRING",
-        "given_name": "STRING",
-        "job_role": STRING | null,
-        "email": "STRING",
-        "sequence": INTEGER,
-        "primary_indicator": BOOLEAN | null
-      }
-    ],
-    "regions": [],
-    "countries": [
-      {
-        "code": "STRING",
-        "primary_indicator": BOOLEAN
-      }
-    ],
-    "content": "STRING"
-  },
+  "response": [
+    {
+      "research_id": "STRING",
+      "product_id": "STRING",
+      "aiera_provider_id": "STRING",
+      "title": "STRING",
+      "synopsis": STRING | null,
+      "abstract": STRING | null,
+      "subtitle": STRING | null,
+      "description": "STRING",
+      "published_datetime": "DATETIME_STRING",
+      "create_datetime": "DATETIME_STRING",
+      "status_datetime": "DATETIME_STRING",
+      "organization_name": "STRING",
+      "organization_type": "STRING",
+      "is_pdf": BOOLEAN,
+      "content_url": "STRING",
+      "resource_url": "STRING",
+      "mime_type": "STRING",
+      "product_category": "STRING",
+      "product_focus": "STRING",
+      "subjects": ["STRING", ...],
+      "asset_classes": ["STRING", ...],
+      "asset_types": ["STRING", ...],
+      "authors": [
+        {
+          "person_id": "STRING",
+          "display_name": "STRING",
+          "family_name": "STRING",
+          "given_name": "STRING",
+          "job_role": STRING | null,
+          "email": "STRING",
+          "sequence": INTEGER,
+          "primary_indicator": BOOLEAN | null
+        }
+      ],
+      "regions": [],
+      "countries": [
+        {
+          "code": "STRING",
+          "primary_indicator": BOOLEAN
+        }
+      ]
+    }
+  ],
   "error": STRING | null
 }
 ```

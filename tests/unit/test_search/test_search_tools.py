@@ -535,64 +535,6 @@ class TestSearchResearch:
         assert len(research_id_filter) > 0
 
     @pytest.mark.asyncio
-    async def test_search_research_with_asset_classes(
-        self, mock_http_dependencies, sample_api_responses
-    ):
-        """Test search_research with asset_classes filter."""
-        # Setup
-        search_responses = sample_api_responses.get("search", {})
-        mock_http_dependencies["mock_make_request"].return_value = search_responses[
-            "search_research_chunks_success"
-        ]
-
-        args = SearchResearchArgs(
-            query_text="market outlook",
-            asset_classes=["FixedIncome", "Equity"],
-            max_results=20,
-        )
-
-        # Execute
-        result = await search_research(args)
-
-        # Verify the call included the asset_classes filter
-        assert isinstance(result, SearchResearchResponse)
-        call_args = mock_http_dependencies["mock_make_request"].call_args
-        data = call_args[1]["data"]
-        must_clauses = data["post_filter"]["bool"]["must"]
-        asset_filter = [c for c in must_clauses if "asset_classes" in str(c)]
-        assert len(asset_filter) == 1
-        assert asset_filter[0]["terms"]["asset_classes"] == ["FixedIncome", "Equity"]
-
-    @pytest.mark.asyncio
-    async def test_search_research_with_asset_types(
-        self, mock_http_dependencies, sample_api_responses
-    ):
-        """Test search_research with asset_types filter."""
-        # Setup
-        search_responses = sample_api_responses.get("search", {})
-        mock_http_dependencies["mock_make_request"].return_value = search_responses[
-            "search_research_chunks_success"
-        ]
-
-        args = SearchResearchArgs(
-            query_text="high yield",
-            asset_types=["CorporateHighYieldCredit"],
-            max_results=20,
-        )
-
-        # Execute
-        result = await search_research(args)
-
-        # Verify the call included the asset_types filter
-        assert isinstance(result, SearchResearchResponse)
-        call_args = mock_http_dependencies["mock_make_request"].call_args
-        data = call_args[1]["data"]
-        must_clauses = data["post_filter"]["bool"]["must"]
-        type_filter = [c for c in must_clauses if "asset_types" in str(c)]
-        assert len(type_filter) == 1
-        assert type_filter[0]["terms"]["asset_types"] == ["CorporateHighYieldCredit"]
-
-    @pytest.mark.asyncio
     async def test_search_research_with_author_id(
         self, mock_http_dependencies, sample_api_responses
     ):
@@ -637,8 +579,6 @@ class TestSearchResearch:
             research_ids=["8001234"],
             start_date="2024-01-01",
             end_date="2024-12-31",
-            asset_classes=["FixedIncome"],
-            asset_types=["CorporateHighYieldCredit"],
             author_ids=["12345"],
             aiera_provider_ids=["krypton"],
             max_results=20,
@@ -652,8 +592,8 @@ class TestSearchResearch:
         call_args = mock_http_dependencies["mock_make_request"].call_args
         data = call_args[1]["data"]
         must_clauses = data["post_filter"]["bool"]["must"]
-        # Should have 6 filters: research_id, date range, asset_classes, asset_types, author, aiera_provider_id
-        assert len(must_clauses) == 6
+        # Should have 4 filters: research_id, date range, author, aiera_provider_id
+        assert len(must_clauses) == 4
 
     @pytest.mark.asyncio
     async def test_search_research_exclude_instructions(
