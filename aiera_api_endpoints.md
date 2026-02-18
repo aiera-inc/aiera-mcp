@@ -1584,23 +1584,19 @@ Note: `transcripts` array is only included when `include_transcripts=true`. When
 
 ---
 
-## POST /search-company-news
+## GET /trusted-web
 
-Searches company investor relations news pages using external search.
+Searches the web using only trusted/approved domains. If no `allowed_domains` are provided, the endpoint uses Aiera-approved domains, including: cnbc.com, bloomberg.com, reuters.com, wsj.com, apnews.com, etc.
 
 **Query Parameters:**
 
-| Parameter                   | Type    | Default      | Description               |
-|-----------------------------|---------|--------------|---------------------------|
-| `include_base_instructions` | boolean | `true`       | Include base instructions |
-| `originating_prompt`        | string  | -            | Original prompt           |
-| `self_identification`       | string  | -            | Caller identifier         |
-| `search`                    | string  | **required** | Search query for news     |
-| `bloomberg_ticker`          | string  | -            | Bloomberg ticker symbol   |
-| `sector_id`                 | integer | -            | Filter by GICS sector     |
-| `subsector_id`              | integer | -            | Filter by GICS subsector  |
-| `index_id`                  | integer | -            | Filter by market index    |
-| `watchlist_id`              | integer | -            | Filter by user watchlist  |
+| Parameter                   | Type    | Default      | Description                                                                                 |
+|-----------------------------|---------|--------------|---------------------------------------------------------------------------------------------|
+| `include_base_instructions` | boolean | `true`       | Include base instructions                                                                   |
+| `originating_prompt`        | string  | -            | Original prompt                                                                             |
+| `self_identification`       | string  | -            | Caller identifier                                                                           |
+| `search`                    | string  | **required** | Search query                                                                                |
+| `allowed_domains`           | string  | -            | Comma-separated list of allowed domains. If omitted, uses trusted domains from the database |
 
 **Response:**
 
@@ -1616,8 +1612,8 @@ Searches company investor relations news pages using external search.
         "title": "STRING",
         "url": "URL",
         "metadata": {
-          "type": "STRING",
-          "url_target": "STRING"
+          "type": "web_result",
+          "url_target": "external"
         }
       }
     }, ...

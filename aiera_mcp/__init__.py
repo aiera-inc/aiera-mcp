@@ -111,6 +111,8 @@ AVAILABLE_TOOLS = [
     # Search Tools
     "search_transcripts",
     "search_filings",
+    # Web Tools
+    "trusted_web_search",
 ]
 
 # Convenience tool groups for common use cases
@@ -130,6 +132,7 @@ COMPANY_DOC_TOOLS = [
     "get_company_doc_keywords",
 ]
 THIRD_BRIDGE_TOOLS = ["find_third_bridge_events", "get_third_bridge_event"]
+WEB_TOOLS = ["trusted_web_search"]
 EMBEDDING_SEARCH_PIPELINE = "embedding_pipeline"
 HYBRID_SEARCH_PIPELINE = "hybrid_search_pipeline"
 
@@ -158,6 +161,7 @@ from .tools.transcrippets import (
     delete_transcrippet,
 )
 from .tools.search import search_transcripts, search_filings
+from .tools.web import trusted_web_search
 
 # Import configuration
 from .config import get_settings, reload_settings, AieraSettings
@@ -214,6 +218,7 @@ __all__ = [
     "delete_transcrippet",
     "search_transcripts",
     "search_filings",
+    "trusted_web_search",
     # Utilities
     "make_aiera_request",
     "correct_bloomberg_ticker",
@@ -251,4 +256,5 @@ __all__ = [
     "INDEX_WATCHLIST_TOOLS",
     "COMPANY_DOC_TOOLS",
     "THIRD_BRIDGE_TOOLS",
+    "WEB_TOOLS",
 ]

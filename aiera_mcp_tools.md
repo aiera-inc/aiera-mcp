@@ -35,7 +35,9 @@ This document provides comprehensive documentation for all Aiera MCP (Model Cont
    - [find_research](#find_research)
    - [get_research](#get_research)
    - [search_research](#search_research)
-9. [Reference Data Tools](#reference-data-tools)
+9. [Web Search Tools](#web-search-tools)
+   - [trusted_web_search](#trusted_web_search)
+10. [Reference Data Tools](#reference-data-tools)
    - [get_available_indexes](#get_available_indexes)
    - [get_index_constituents](#get_index_constituents)
    - [get_available_watchlists](#get_available_watchlists)
@@ -1368,6 +1370,47 @@ Semantic search within research content for specific topics, analyses, or insigh
       }
     ]
   },
+  "error": STRING | null
+}
+```
+
+---
+
+## Web Search Tools
+
+### trusted_web_search
+
+Search the web using only trusted/approved domains relevant to financial professionals. By default, searches across trusted sources including cnbc.com, bloomberg.com, reuters.com, wsj.com, apnews.com, and other Aiera-approved domains.
+
+**Input Parameters:**
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| search | string | **yes** | - | The search query to find relevant news and articles from trusted financial sources |
+| allowed_domains | string | no | null | Comma-separated list of allowed domains to restrict search results (e.g., 'cnbc.com,reuters.com'). If omitted, will use Aiera's curated list of trusted domains |
+| include_base_instructions | boolean | no | true | Include base instructions |
+| exclude_instructions | boolean | no | false | Exclude all instructions in response |
+| originating_prompt | string | no | null | Original user prompt for context |
+| self_identification | string | no | null | Self-identified information about the user/server/session, used for tracking purposes |
+
+**Output Structure:**
+```json
+{
+  "instructions": ["STRING", ...],
+  "response": [
+    {
+      "title": "STRING",
+      "snippet": "STRING",
+      "score": FLOAT,
+      "citation_information": {
+        "title": "STRING",
+        "url": "STRING",
+        "metadata": {
+          "type": "web_result",
+          "url_target": "external"
+        }
+      }
+    }
+  ],
   "error": STRING | null
 }
 ```

@@ -27,6 +27,7 @@ from .company_docs import (
 from .third_bridge import find_third_bridge_events, get_third_bridge_event
 from .transcrippets import find_transcrippets, create_transcrippet, delete_transcrippet
 from .research import find_research, get_research
+from .web import trusted_web_search
 from .search import search_transcripts, search_filings, search_research
 
 # Import all parameter model classes from domain modules
@@ -62,6 +63,7 @@ from .transcrippets import (
     DeleteTranscrippetArgs,
 )
 from .research import FindResearchArgs, GetResearchArgs
+from .web import TrustedWebSearchArgs
 from .search import SearchTranscriptsArgs, SearchFilingsArgs, SearchResearchArgs
 
 TOOL_REGISTRY = {
@@ -332,6 +334,15 @@ TOOL_REGISTRY = {
         "function": search_research,
         "args_model": SearchResearchArgs,
         "category": "search",
+        "read_only": True,
+        "destructive": False,
+    },
+    "trusted_web_search": {
+        "display_name": "Trusted Web Search",
+        "input_schema": TrustedWebSearchArgs.model_json_schema(),
+        "function": trusted_web_search,
+        "args_model": TrustedWebSearchArgs,
+        "category": "web",
         "read_only": True,
         "destructive": False,
     },
