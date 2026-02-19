@@ -162,43 +162,12 @@ class TestToolSerializationComprehensive:
                             "page_size": 50,
                         },
                     }
-                elif "CreateTranscrippet" in model_class.__name__:
-                    sample_data["response"] = {
-                        "transcrippet_id": 123,
-                        "company_id": 456,  # Still returned by API
-                        "equity_id": 789,  # Still returned by API
-                        "event_id": 101,
-                        "transcript_item_id": 202,
-                        "user_id": 303,
-                        "audio_url": "https://example.com/audio.mp3",
-                        "company_logo_url": "https://example.com/logo.png",
-                        "company_name": "Test Corp",
-                        "company_ticker": "TEST:US",
-                        "created": "2024-01-15T10:30:00Z",
-                        "end_ms": 60000,
-                        "event_date": "2024-01-15",
-                        "event_title": "Test Event",
-                        "event_type": "earnings",
-                        "modified": "2024-01-15T10:30:00Z",
-                        "start_ms": 0,
-                        "transcript": "Test transcript",
-                        "transcrippet_guid": "test-guid-123",
-                        "transcription_audio_offset_seconds": 0,
-                        "trimmed_audio_url": "https://example.com/trimmed.mp3",
-                        "word_durations_ms": [100, 200, 150],
-                        "transcript_text": "Test transcript text",
-                        "speaker_name": "Test Speaker",
-                        "start_time": "00:00:00",
-                        "end_time": "00:01:00",
-                    }
                 elif (
                     "GetEvent" in model_class.__name__
                     and "Upcoming" not in model_class.__name__
                 ):
                     # GetEventResponse expects {"data": []}
                     sample_data["response"] = {"data": []}
-                elif "FindTranscrippets" in model_class.__name__:
-                    sample_data["response"] = []
                 elif "Search" in model_class.__name__:
                     sample_data["response"] = {
                         "pagination": {

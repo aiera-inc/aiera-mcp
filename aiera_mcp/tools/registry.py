@@ -25,7 +25,6 @@ from .company_docs import (
     get_company_doc_keywords,
 )
 from .third_bridge import find_third_bridge_events, get_third_bridge_event
-from .transcrippets import find_transcrippets, create_transcrippet, delete_transcrippet
 from .research import find_research, get_research
 from .web import trusted_web_search
 from .search import search_transcripts, search_filings, search_research
@@ -57,11 +56,6 @@ from .company_docs import (
     GetCompanyDocKeywordsArgs,
 )
 from .third_bridge import FindThirdBridgeEventsArgs, GetThirdBridgeEventArgs
-from .transcrippets import (
-    FindTranscrippetsArgs,
-    CreateTranscrippetArgs,
-    DeleteTranscrippetArgs,
-)
 from .research import FindResearchArgs, GetResearchArgs
 from .web import TrustedWebSearchArgs
 from .search import SearchTranscriptsArgs, SearchFilingsArgs, SearchResearchArgs
@@ -264,33 +258,6 @@ TOOL_REGISTRY = {
         "category": "third_bridge",
         "read_only": True,
         "destructive": False,
-    },
-    "find_transcrippets": {
-        "display_name": "Find Transcrippets",
-        "input_schema": FindTranscrippetsArgs.model_json_schema(),
-        "function": find_transcrippets,
-        "args_model": FindTranscrippetsArgs,
-        "category": "transcrippets",
-        "read_only": True,
-        "destructive": False,
-    },
-    "create_transcrippet": {
-        "display_name": "Create Transcrippet",
-        "input_schema": CreateTranscrippetArgs.model_json_schema(),
-        "function": create_transcrippet,
-        "args_model": CreateTranscrippetArgs,
-        "category": "transcrippets",
-        "read_only": False,
-        "destructive": False,
-    },
-    "delete_transcrippet": {
-        "display_name": "Delete Transcrippet",
-        "input_schema": DeleteTranscrippetArgs.model_json_schema(),
-        "function": delete_transcrippet,
-        "args_model": DeleteTranscrippetArgs,
-        "category": "transcrippets",
-        "read_only": False,
-        "destructive": True,
     },
     "find_research": {
         "display_name": "Find Research",

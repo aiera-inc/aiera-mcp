@@ -43,11 +43,6 @@ from aiera_mcp.tools.third_bridge.tools import (
     find_third_bridge_events,
     get_third_bridge_event,
 )
-from aiera_mcp.tools.transcrippets.tools import (
-    find_transcrippets,
-    create_transcrippet,
-    delete_transcrippet,
-)
 from aiera_mcp.tools.search.tools import (
     search_transcripts,
     search_filings,
@@ -94,14 +89,6 @@ from aiera_mcp.tools.third_bridge.models import (
     GetThirdBridgeEventArgs,
     FindThirdBridgeEventsResponse,
     GetThirdBridgeEventResponse,
-)
-from aiera_mcp.tools.transcrippets.models import (
-    FindTranscrippetsArgs,
-    FindTranscrippetsResponse,
-    CreateTranscrippetArgs,
-    CreateTranscrippetResponse,
-    DeleteTranscrippetArgs,
-    DeleteTranscrippetResponse,
 )
 from aiera_mcp.tools.search.models import (
     SearchTranscriptsArgs,
@@ -801,45 +788,6 @@ async def run_comprehensive_tests():
                 "include_transcripts": "true",
             },
         },
-        # Transcrippets
-        {
-            "tool_name": "find_transcrippets",
-            "tool_function": find_transcrippets,
-            "args_model": FindTranscrippetsArgs,
-            "response_model": FindTranscrippetsResponse,
-            "endpoint": "/transcrippets/",
-            "params": {
-                "start_date": date_ranges["last_quarter"]["start_date"],
-                "end_date": date_ranges["last_quarter"]["end_date"],
-            },
-        },
-        {
-            "tool_name": "create_transcrippet",
-            "tool_function": create_transcrippet,
-            "args_model": CreateTranscrippetArgs,
-            "response_model": CreateTranscrippetResponse,
-            "endpoint": "/transcrippets/create",
-            "method": "POST",
-            "data": {
-                "event_id": 2662190,
-                "transcript": "Sure, I'll take that one. I think we're a long way from equilibrium. As you say, we're taking up our cash content spend this year estimated from $17 billion to $18 billion. That's in the context of we're small in terms of view share and penetration everywhere around the world or less than 50% penetrated into connected households. You heard from Greg that we're only capturing about 6% of our estimated revenue market. So we have a long way to grow. It's really about where do we put the next $1 billion and then beyond that to work in the most impactful way.",
-                "transcript_item_id": 153833615,
-                "transcript_end_item_id": 153833615,
-                "transcript_item_offset": 0,
-                "transcript_end_item_offset": 536,
-            },
-        },
-        # NOTE: delete_transcrippet is DESTRUCTIVE and should be used with caution
-        # Uncomment the following test to include it in the test suite
-        # {
-        #     "tool_name": "delete_transcrippet",
-        #     "tool_function": delete_transcrippet,
-        #     "args_model": DeleteTranscrippetArgs,
-        #     "response_model": DeleteTranscrippetResponse,
-        #     "endpoint": "/transcrippets/999999/delete",
-        #     "method": "DELETE",
-        #     "params": {},
-        # },
         # Search Tools
         {
             "tool_name": "search_transcripts",
@@ -1204,76 +1152,5 @@ async def run_comprehensive_tests():
     return analyzer
 
 
-async def test_create_transcrippet_manual():
-    """Manual test for create_transcrippet with specific parameters."""
-    logger.info("Starting manual test for create_transcrippet...")
-
-    client = await get_test_http_client()
-    api_key = get_test_api_key()
-
-    # Test parameters as provided
-    test_args = CreateTranscrippetArgs(
-        event_id=2662190,
-        transcript="Sure, I'll take that one. I think we're a long way from equilibrium. As you say, we're taking up our cash content spend this year estimated from $17 billion to $18 billion. That's in the context of we're small in terms of view share and penetration everywhere around the world or less than 50% penetrated into connected households. You heard from Greg that we're only capturing about 6% of our estimated revenue market. So we have a long way to grow. It's really about where do we put the next $1 billion and then beyond that to work in the most impactful way.",
-        transcript_item_id=153833615,
-        transcript_end_item_id=153833615,
-        transcript_item_offset=0,
-        transcript_end_item_offset=536,
-    )
-
-    try:
-        # Test the function directly
-        logger.info("Testing create_transcrippet function directly...")
-        result = await create_transcrippet(test_args)
-
-        logger.info("✅ create_transcrippet succeeded!")
-        logger.info(f"Created transcrippet ID: {result.response.transcrippet_id}")
-        logger.info(f"GUID: {result.response.transcrippet_guid}")
-        logger.info(f"Public URL: {result.response.public_url}")
-        logger.info(
-            f"Company: {result.response.company_name} ({result.response.company_ticker})"
-        )
-        logger.info(f"Event: {result.response.event_title}")
-        logger.info(f"Audio URL: {result.response.audio_url}")
-
-        # Test via raw API call for comparison
-        logger.info("\nTesting raw API call for comparison...")
-        raw_data = test_args.model_dump(exclude_none=True)
-        raw_response = await make_aiera_request(
-            client=client,
-            method="POST",
-            endpoint="/transcrippets/create",
-            api_key=api_key,
-            data=raw_data,
-        )
-
-        logger.info("✅ Raw API call succeeded!")
-        logger.info(f"Raw response keys: {list(raw_response.keys())}")
-        if "response" in raw_response:
-            logger.info(
-                f"Raw response data keys: {list(raw_response['response'].keys())}"
-            )
-            logger.info(
-                f"Raw GUID: {raw_response['response'].get('transcrippet_guid')}"
-            )
-
-    except Exception as e:
-        logger.error(f"❌ create_transcrippet test failed: {e}")
-        import traceback
-
-        logger.error(f"Full traceback: {traceback.format_exc()}")
-
-    finally:
-        await client.aclose()
-
-    logger.info("create_transcrippet manual test completed.")
-
-
 if __name__ == "__main__":
-    # Add option to run just the create transcrippet test
-    import sys
-
-    if len(sys.argv) > 1 and sys.argv[1] == "create_transcrippet":
-        asyncio.run(test_create_transcrippet_manual())
-    else:
-        asyncio.run(run_comprehensive_tests())
+    asyncio.run(run_comprehensive_tests())

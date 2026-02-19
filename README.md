@@ -27,7 +27,6 @@ This package exposes Aiera API endpoints as MCP tools, providing access to compr
 - **Financials**: Income statements, balance sheets, and cash flow statements
 - **Third Bridge**: Expert insight events
 - **Search**: Semantic search within transcripts, SEC filing content, company documents, etc.
-- **Transcrippets**: Create, manage, and retrieve transcript excerpts
 
 ## Installation
 
@@ -168,8 +167,6 @@ from aiera_mcp import find_events, make_aiera_request, correct_bloomberg_ticker
 - **Search**: `search_transcripts`, `search_filings`
 - **Equities**: `find_equities`, `get_equity_summaries`, `get_sectors_and_subsectors`, `get_financials`
 - **Indexes & Watchlists**: `get_available_indexes`, `get_index_constituents`, `get_available_watchlists`, `get_watchlist_constituents`
-- **Transcrippets**: `find_transcrippets`, `create_transcrippet`, `delete_transcrippet`
-
 ### Utilities
 - **API Functions**: `make_aiera_request`
 - **Registration**: `register_aiera_tools` - Configure API key provider and get tool registry
@@ -305,7 +302,6 @@ AIERA_API_KEY=your_api_key_here uv run python scripts/manual_test.py
 # Test specific tool categories
 AIERA_API_KEY=your_api_key_here uv run python scripts/manual_test.py find_events
 AIERA_API_KEY=your_api_key_here uv run python scripts/manual_test.py find_filings
-AIERA_API_KEY=your_api_key_here uv run python scripts/manual_test.py create_transcrippet
 ```
 
 The manual test script:

@@ -104,10 +104,6 @@ AVAILABLE_TOOLS = [
     # Third Bridge Tools
     "find_third_bridge_events",
     "get_third_bridge_event",
-    # Transcrippet Tools
-    "find_transcrippets",
-    "create_transcrippet",
-    "delete_transcrippet",
     # Search Tools
     "search_transcripts",
     "search_filings",
@@ -155,11 +151,6 @@ from .tools.company_docs import (
     get_company_doc_keywords,
 )
 from .tools.third_bridge import find_third_bridge_events, get_third_bridge_event
-from .tools.transcrippets import (
-    find_transcrippets,
-    create_transcrippet,
-    delete_transcrippet,
-)
 from .tools.search import search_transcripts, search_filings
 from .tools.web import trusted_web_search
 
@@ -213,9 +204,6 @@ __all__ = [
     "get_company_doc_keywords",
     "find_third_bridge_events",
     "get_third_bridge_event",
-    "find_transcrippets",
-    "create_transcrippet",
-    "delete_transcrippet",
     "search_transcripts",
     "search_filings",
     "trusted_web_search",

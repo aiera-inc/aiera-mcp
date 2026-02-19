@@ -16,7 +16,6 @@ tests/
 │   ├── test_equities/           # Equities and company metadata tests
 │   ├── test_company_docs/       # Company documents tests
 │   ├── test_third_bridge/       # Third Bridge expert events tests
-│   └── test_transcrippets/      # Transcrippets tests
 ├── integration/                  # Integration tests with real API
 │   ├── conftest.py              # Integration test fixtures
 │   ├── test_events_integration.py
@@ -24,7 +23,6 @@ tests/
 │   ├── test_equities_integration.py
 │   ├── test_company_docs_integration.py
 │   ├── test_third_bridge_integration.py
-│   └── test_transcrippets_integration.py
 └── README.md                    # This file
 ```
 
@@ -309,11 +307,6 @@ This will run linting and formatting checks before each commit.
 - **2 tools**: Expert insight events
 - **Key features**: Expert information, specialized event data
 - **API patterns**: May have sparse data availability
-
-### Transcrippets Domain
-- **3 tools**: Create, read, delete transcript clips
-- **Key features**: Public URL generation, GUID handling
-- **API patterns**: Different response format (array vs response.data)
 
 ## 🛠️ Fixtures and Test Data
 

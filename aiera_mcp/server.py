@@ -82,8 +82,6 @@ def get_api_documentation() -> str:
 
     **Company Data**: Access equity information, sector classifications, index constituents, and watchlists.
 
-    **Transcrippets™**: Create, find, and manage curated transcript segments for key insights and memorable quotes.
-
     ## Key Features
 
     - **Comprehensive Coverage**: Access to events, filings, documents, and expert insights across all major markets.

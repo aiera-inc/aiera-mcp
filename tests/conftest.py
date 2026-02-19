@@ -195,7 +195,6 @@ async def patch_get_api_key(api_key):
         "equities",
         "company_docs",
         "third_bridge",
-        "transcrippets",
     ]
 )
 def domain_name(request):
