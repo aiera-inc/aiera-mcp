@@ -70,17 +70,17 @@ def get_api_documentation() -> str:
 
     ## Tool Categories
 
-    **Research**: Find, retrieve, and search through sell-side research content, including analyst reports, research notes, and market analysis.
+    **Research**: Find, retrieve, and search within sell-side research content (analyst reports, research notes, market analysis, etc.)
 
-    **Events & Transcripts**: Find, retrieve, and search through corporate events (earnings calls, conferences, meetings, etc.) with full transcripts and metadata.
+    **Events & Transcripts**: Find, retrieve, and search within corporate events (earnings calls, conferences, M&A announcements, etc.).
 
-    **SEC Filings**: Find, retrieve, and search through SEC filings (10-K, 10-Q, 8-K, etc.) with summaries and full content.
+    **SEC Filings**: Find, retrieve, and search within SEC filings (10-K, 10-Q, 8-K, etc.).
 
-    **Company Documents**: Find company publications, including press releases, regulatory filings, announcements, and more.
+    **Company Documents**: Find and retrieve company publications (press releases, regulatory filings, announcements, etc.).
 
-    **Expert Insights**: Access Third Bridge expert interview events and insights.
+    **Expert Insights**: Find and retrieve Third Bridge expert interview events and insights.
 
-    **Company Data**: Access financials and KPIs, equity information, sector classifications, index constituents, and watchlists.
+    **Company Data**: Access company financials and KPIs, sector classifications, index constituents, and watchlists.
 
     ## Key Features
 
