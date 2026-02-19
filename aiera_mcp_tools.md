@@ -35,6 +35,7 @@ This document provides comprehensive documentation for all Aiera MCP (Model Cont
    - [find_research](#find_research)
    - [get_research](#get_research)
    - [search_research](#search_research)
+   - [get_research_providers](#get_research_providers)
 9. [Web Search Tools](#web-search-tools)
    - [trusted_web_search](#trusted_web_search)
 10. [Reference Data Tools](#reference-data-tools)
@@ -43,6 +44,7 @@ This document provides comprehensive documentation for all Aiera MCP (Model Cont
    - [get_available_watchlists](#get_available_watchlists)
    - [get_watchlist_constituents](#get_watchlist_constituents)
    - [get_sectors_and_subsectors](#get_sectors_and_subsectors)
+   - [get_countries_and_regions](#get_countries_and_regions)
 
 ---
 
@@ -1376,6 +1378,34 @@ Semantic search within research content for specific topics, analyses, or insigh
 
 ---
 
+### get_research_providers
+
+Retrieve all available research providers with their IDs, names, and descriptions. Used to find valid provider IDs for filtering research tools.
+
+**Input Parameters:**
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| originating_prompt | string | no | null | Original user prompt for context |
+| self_identification | string | no | null | Self-identified information about the user/server/session, used for tracking purposes |
+| exclude_instructions | boolean | no | false | Exclude all instructions in response |
+
+**Output Structure:**
+```json
+{
+  "instructions": ["STRING", ...],
+  "response": [
+    {
+      "aiera_provider_id": "STRING",
+      "name": "STRING",
+      "description": "STRING"
+    }
+  ],
+  "error": STRING | null
+}
+```
+
+---
+
 ## Web Search Tools
 
 ### trusted_web_search
@@ -1570,6 +1600,36 @@ Retrieve all available sectors and subsectors with their IDs.
           "name": "STRING",
           "gics_code": "STRING",
           "gics_industry_code": "STRING"
+        }
+      ]
+    }
+  ]
+}
+```
+
+---
+
+### get_countries_and_regions
+
+Retrieve all available countries grouped by subregion. Used to find valid country and region values for filtering research and other tools.
+
+**Input Parameters:**
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| originating_prompt | string | no | null | Original user prompt for context |
+| self_identification | string | no | null | Self-identified information about the user/server/session, used for tracking purposes |
+| exclude_instructions | boolean | no | false | Exclude all instructions in response |
+
+**Output Structure:**
+```json
+{
+  "response": [
+    {
+      "subregion": "STRING",
+      "countries": [
+        {
+          "code": "STRING",
+          "name": "STRING"
         }
       ]
     }
