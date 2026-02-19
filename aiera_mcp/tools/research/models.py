@@ -113,7 +113,7 @@ class FindResearchArgs(BaseToolArgs, BloombergTickerMixin):
 
     aiera_provider_ids: Optional[List[str]] = Field(
         default=None,
-        description="Filter by one or more Aiera provider IDs. Example: ['krypton', 'krypton-test'].",
+        description="Filter by one or more Aiera provider IDs. Obtain provider IDs from get_research_providers results. Example: ['krypton', 'krypton-test'].",
     )
 
     regions: Optional[List[str]] = Field(
@@ -199,6 +199,25 @@ class GetResearchArgs(BaseAieraArgs):
     )
 
 
+class GetResearchProvidersArgs(BaseAieraArgs):
+    """Retrieve all available research providers with their IDs, names, and descriptions. Used to find valid provider IDs for filtering research tools."""
+
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
+    )
+
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
+
 # Response models
 class FindResearchResponse(BaseAieraResponse):
     """Response for find_research tool - passes through the API response structure."""
@@ -208,5 +227,11 @@ class FindResearchResponse(BaseAieraResponse):
 
 class GetResearchResponse(BaseAieraResponse):
     """Response for get_research tool - passes through the API response structure."""
+
+    response: Optional[Any] = Field(None, description="Response data from the API")
+
+
+class GetResearchProvidersResponse(BaseAieraResponse):
+    """Response for get_research_providers tool - passes through the API response structure."""
 
     response: Optional[Any] = Field(None, description="Response data from the API")

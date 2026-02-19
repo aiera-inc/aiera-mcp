@@ -410,6 +410,65 @@ Finds and retrieves research reports. Can fetch a specific report by ID or searc
 
 ---
 
+## GET /get-research-providers
+
+Returns a list of available research providers. Requires research API access.
+
+**Query Parameters:**
+
+| Parameter                   | Type    | Default | Description               |
+|-----------------------------|---------|---------|---------------------------|
+| `include_base_instructions` | boolean | `true`  | Include base instructions |
+| `originating_prompt`        | string  | -       | Original prompt           |
+| `self_identification`       | string  | -       | Caller identifier         |
+
+**Response:**
+
+```json
+{
+  "response": [
+    {
+      "aiera_provider_id": "STRING",
+      "name": "STRING"
+    }, ...
+  ]
+}
+```
+
+---
+
+## GET /get-countries-and-regions
+
+Returns a list of countries grouped by subregion. Requires research API access.
+
+**Query Parameters:**
+
+| Parameter                   | Type    | Default | Description               |
+|-----------------------------|---------|---------|---------------------------|
+| `include_base_instructions` | boolean | `true`  | Include base instructions |
+| `originating_prompt`        | string  | -       | Original prompt           |
+| `self_identification`       | string  | -       | Caller identifier         |
+
+**Response:**
+
+```json
+{
+  "response": [
+    {
+      "subregion": "STRING",
+      "countries": [
+        {
+          "code": "STRING",
+          "name": "STRING"
+        }, ...
+      ]
+    }, ...
+  ]
+}
+```
+
+---
+
 ## GET /get-financials
 
 Retrieves financial statement data for the specified company.

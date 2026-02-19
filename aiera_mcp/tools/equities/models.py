@@ -212,6 +212,25 @@ class GetWatchlistConstituentsArgs(BaseToolArgs):
     )
 
 
+class GetCountriesAndRegionsArgs(BaseToolArgs):
+    """Retrieve all available countries grouped by subregion. Used to find valid country and region values for filtering research and other tools."""
+
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
+    )
+
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
+
 class GetAvailableWatchlistsArgs(BaseToolArgs):
     """Retrieve all available watchlists with their IDs, names, and descriptions. Used to find valid watchlist IDs for filtering other tools."""
 
@@ -673,6 +692,12 @@ class GetAvailableWatchlistsResponse(BaseModel):
         None, description="List of available watchlists"
     )
     error: Optional[str] = Field(None, description="Error message if request failed")
+
+
+class GetCountriesAndRegionsResponse(BaseModel):
+    """Response for get_countries_and_regions tool."""
+
+    response: Optional[Any] = Field(None, description="Response data from the API")
 
 
 class GetWatchlistConstituentsResponse(BaseModel):

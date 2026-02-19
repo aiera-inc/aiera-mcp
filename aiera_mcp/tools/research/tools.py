@@ -9,8 +9,10 @@ from ... import get_api_key
 from .models import (
     FindResearchArgs,
     GetResearchArgs,
+    GetResearchProvidersArgs,
     FindResearchResponse,
     GetResearchResponse,
+    GetResearchProvidersResponse,
 )
 
 # Setup logging
@@ -52,6 +54,32 @@ async def find_research(args: FindResearchArgs) -> FindResearchResponse:
     )
 
     response = FindResearchResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
+
+
+async def get_research_providers(
+    args: GetResearchProvidersArgs,
+) -> GetResearchProvidersResponse:
+    """Retrieve all available research providers."""
+    logger.info("tool called: get_research_providers")
+
+    # Get client and API key (no context needed for standard MCP)
+    client = await get_http_client(None)
+    api_key = get_api_key()
+
+    params = args.model_dump(exclude_none=True)
+
+    raw_response = await make_aiera_request(
+        client=client,
+        method="GET",
+        endpoint="/chat-support/get-research-providers",
+        api_key=api_key,
+        params=params,
+    )
+
+    response = GetResearchProvidersResponse.model_validate(raw_response)
     if args.exclude_instructions:
         response.instructions = []
     return response

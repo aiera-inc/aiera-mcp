@@ -91,6 +91,7 @@ AVAILABLE_TOOLS = [
     "find_equities",
     "get_equity_summaries",
     "get_sectors_and_subsectors",
+    "get_countries_and_regions",
     # Index/Watchlist Tools
     "get_available_indexes",
     "get_index_constituents",
@@ -104,6 +105,10 @@ AVAILABLE_TOOLS = [
     # Third Bridge Tools
     "find_third_bridge_events",
     "get_third_bridge_event",
+    # Research Tools
+    "find_research",
+    "get_research",
+    "get_research_providers",
     # Search Tools
     "search_transcripts",
     "search_filings",
@@ -114,7 +119,12 @@ AVAILABLE_TOOLS = [
 # Convenience tool groups for common use cases
 EVENT_TOOLS = ["find_events", "find_conferences", "get_event", "get_upcoming_events"]
 FILING_TOOLS = ["find_filings", "get_filing"]
-EQUITY_TOOLS = ["find_equities", "get_equity_summaries", "get_sectors_and_subsectors"]
+EQUITY_TOOLS = [
+    "find_equities",
+    "get_equity_summaries",
+    "get_sectors_and_subsectors",
+    "get_countries_and_regions",
+]
 INDEX_WATCHLIST_TOOLS = [
     "get_available_indexes",
     "get_index_constituents",
@@ -128,6 +138,7 @@ COMPANY_DOC_TOOLS = [
     "get_company_doc_keywords",
 ]
 THIRD_BRIDGE_TOOLS = ["find_third_bridge_events", "get_third_bridge_event"]
+RESEARCH_TOOLS = ["find_research", "get_research", "get_research_providers"]
 WEB_TOOLS = ["trusted_web_search"]
 EMBEDDING_SEARCH_PIPELINE = "embedding_pipeline"
 HYBRID_SEARCH_PIPELINE = "hybrid_search_pipeline"
@@ -139,6 +150,7 @@ from .tools.equities import (
     find_equities,
     get_equity_summaries,
     get_sectors_and_subsectors,
+    get_countries_and_regions,
     get_available_indexes,
     get_index_constituents,
     get_available_watchlists,
@@ -151,6 +163,7 @@ from .tools.company_docs import (
     get_company_doc_keywords,
 )
 from .tools.third_bridge import find_third_bridge_events, get_third_bridge_event
+from .tools.research import find_research, get_research, get_research_providers
 from .tools.search import search_transcripts, search_filings
 from .tools.web import trusted_web_search
 
@@ -194,6 +207,7 @@ __all__ = [
     "find_equities",
     "get_equity_summaries",
     "get_sectors_and_subsectors",
+    "get_countries_and_regions",
     "get_available_indexes",
     "get_index_constituents",
     "get_available_watchlists",
@@ -204,6 +218,9 @@ __all__ = [
     "get_company_doc_keywords",
     "find_third_bridge_events",
     "get_third_bridge_event",
+    "find_research",
+    "get_research",
+    "get_research_providers",
     "search_transcripts",
     "search_filings",
     "trusted_web_search",
@@ -244,5 +261,6 @@ __all__ = [
     "INDEX_WATCHLIST_TOOLS",
     "COMPANY_DOC_TOOLS",
     "THIRD_BRIDGE_TOOLS",
+    "RESEARCH_TOOLS",
     "WEB_TOOLS",
 ]

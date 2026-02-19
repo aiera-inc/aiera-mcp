@@ -6,12 +6,18 @@ import pytest
 import pytest_asyncio
 from unittest.mock import AsyncMock, patch
 
-from aiera_mcp.tools.research.tools import find_research, get_research
+from aiera_mcp.tools.research.tools import (
+    find_research,
+    get_research,
+    get_research_providers,
+)
 from aiera_mcp.tools.research.models import (
     FindResearchArgs,
     GetResearchArgs,
+    GetResearchProvidersArgs,
     FindResearchResponse,
     GetResearchResponse,
+    GetResearchProvidersResponse,
 )
 
 
@@ -391,3 +397,101 @@ class TestResearchToolsErrorHandling:
 
         with pytest.raises(exception_type):
             await get_research(args)
+
+
+@pytest.mark.unit
+class TestGetResearchProviders:
+    """Test the get_research_providers tool."""
+
+    @pytest.mark.asyncio
+    async def test_get_research_providers_success(self, mock_http_dependencies):
+        """Test successful research providers retrieval."""
+        providers_response = {
+            "instructions": [
+                "This data is provided for institutional finance professionals...",
+            ],
+            "response": [
+                {
+                    "provider_id": "krypton",
+                    "name": "Krypton Research",
+                    "description": "Independent research provider",
+                },
+                {
+                    "provider_id": "acme",
+                    "name": "Acme Analytics",
+                    "description": "Global equity research",
+                },
+            ],
+        }
+        mock_http_dependencies["mock_make_request"].return_value = providers_response
+
+        args = GetResearchProvidersArgs()
+
+        result = await get_research_providers(args)
+
+        assert isinstance(result, GetResearchProvidersResponse)
+        assert result.response is not None
+        assert len(result.response) == 2
+        assert result.response[0]["provider_id"] == "krypton"
+        assert result.response[1]["name"] == "Acme Analytics"
+
+        # Check API call was made correctly
+        mock_http_dependencies["mock_make_request"].assert_called_once()
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        assert call_args[1]["method"] == "GET"
+        assert call_args[1]["endpoint"] == "/chat-support/get-research-providers"
+
+    @pytest.mark.asyncio
+    async def test_get_research_providers_exclude_instructions(
+        self, mock_http_dependencies
+    ):
+        """Test get_research_providers with exclude_instructions."""
+        providers_response = {
+            "instructions": [
+                "This data is provided for institutional finance professionals...",
+            ],
+            "response": [],
+        }
+        mock_http_dependencies["mock_make_request"].return_value = providers_response
+
+        args = GetResearchProvidersArgs(exclude_instructions=True)
+
+        result = await get_research_providers(args)
+
+        assert isinstance(result, GetResearchProvidersResponse)
+        assert result.instructions == []
+
+    @pytest.mark.asyncio
+    async def test_get_research_providers_with_originating_prompt(
+        self, mock_http_dependencies
+    ):
+        """Test get_research_providers passes originating_prompt."""
+        mock_http_dependencies["mock_make_request"].return_value = {
+            "instructions": [],
+            "response": [],
+        }
+
+        args = GetResearchProvidersArgs(
+            originating_prompt="What research providers are available?"
+        )
+
+        await get_research_providers(args)
+
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        params = call_args[1]["params"]
+        assert params["originating_prompt"] == "What research providers are available?"
+
+    @pytest.mark.asyncio
+    async def test_get_research_providers_empty_response(self, mock_http_dependencies):
+        """Test get_research_providers with empty response."""
+        mock_http_dependencies["mock_make_request"].return_value = {
+            "instructions": [],
+            "response": [],
+        }
+
+        args = GetResearchProvidersArgs()
+
+        result = await get_research_providers(args)
+
+        assert isinstance(result, GetResearchProvidersResponse)
+        assert result.response == []

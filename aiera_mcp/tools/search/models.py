@@ -230,7 +230,7 @@ class SearchResearchArgs(BaseAieraArgs):
 
     aiera_provider_ids: Optional[List[str]] = Field(
         default=None,
-        description="Filter by one or more Aiera provider IDs. Example: ['krypton', 'krypton-test'].",
+        description="Filter by one or more Aiera provider IDs. Obtain provider IDs from get_research_providers results. Example: ['krypton', 'krypton-test'].",
     )
 
     max_results: int = Field(

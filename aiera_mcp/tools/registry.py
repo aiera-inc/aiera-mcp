@@ -12,6 +12,7 @@ from .equities import (
     get_available_watchlists,
     get_available_indexes,
     get_sectors_and_subsectors,
+    get_countries_and_regions,
     get_index_constituents,
     get_watchlist_constituents,
     get_financials,
@@ -25,7 +26,7 @@ from .company_docs import (
     get_company_doc_keywords,
 )
 from .third_bridge import find_third_bridge_events, get_third_bridge_event
-from .research import find_research, get_research
+from .research import find_research, get_research, get_research_providers
 from .web import trusted_web_search
 from .search import search_transcripts, search_filings, search_research
 
@@ -45,6 +46,7 @@ from .equities import (
     GetAvailableWatchlistsArgs,
     GetAvailableIndexesArgs,
     GetSectorsAndSubsectorsArgs,
+    GetCountriesAndRegionsArgs,
     GetFinancialsArgs,
     GetRatiosArgs,
     GetKpisAndSegmentsArgs,
@@ -56,7 +58,7 @@ from .company_docs import (
     GetCompanyDocKeywordsArgs,
 )
 from .third_bridge import FindThirdBridgeEventsArgs, GetThirdBridgeEventArgs
-from .research import FindResearchArgs, GetResearchArgs
+from .research import FindResearchArgs, GetResearchArgs, GetResearchProvidersArgs
 from .web import TrustedWebSearchArgs
 from .search import SearchTranscriptsArgs, SearchFilingsArgs, SearchResearchArgs
 
@@ -156,6 +158,15 @@ TOOL_REGISTRY = {
         "input_schema": GetSectorsAndSubsectorsArgs.model_json_schema(),
         "function": get_sectors_and_subsectors,
         "args_model": GetSectorsAndSubsectorsArgs,
+        "category": "equities",
+        "read_only": True,
+        "destructive": False,
+    },
+    "get_countries_and_regions": {
+        "display_name": "Get Countries and Regions",
+        "input_schema": GetCountriesAndRegionsArgs.model_json_schema(),
+        "function": get_countries_and_regions,
+        "args_model": GetCountriesAndRegionsArgs,
         "category": "equities",
         "read_only": True,
         "destructive": False,
@@ -273,6 +284,15 @@ TOOL_REGISTRY = {
         "input_schema": GetResearchArgs.model_json_schema(),
         "function": get_research,
         "args_model": GetResearchArgs,
+        "category": "research",
+        "read_only": True,
+        "destructive": False,
+    },
+    "get_research_providers": {
+        "display_name": "Get Research Providers",
+        "input_schema": GetResearchProvidersArgs.model_json_schema(),
+        "function": get_research_providers,
+        "args_model": GetResearchProvidersArgs,
         "category": "research",
         "read_only": True,
         "destructive": False,
