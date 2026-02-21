@@ -448,7 +448,7 @@ async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
         if args.end_date:
             range["lte"] = args.end_date
 
-        must_clauses.append({"range": {"date": range}})
+        must_clauses.append({"range": {"published_datetime": range}})
 
     # add author filter...
     if args.author_ids:
