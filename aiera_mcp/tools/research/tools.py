@@ -10,9 +10,11 @@ from .models import (
     FindResearchArgs,
     GetResearchArgs,
     GetResearchProvidersArgs,
+    FindResearchAuthorsArgs,
     FindResearchResponse,
     GetResearchResponse,
     GetResearchProvidersResponse,
+    FindResearchAuthorsResponse,
 )
 
 # Setup logging
@@ -80,6 +82,32 @@ async def get_research_providers(
     )
 
     response = GetResearchProvidersResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
+
+
+async def find_research_authors(
+    args: FindResearchAuthorsArgs,
+) -> FindResearchAuthorsResponse:
+    """Search for research authors by name or provider. Returns author IDs and display names."""
+    logger.info("tool called: find_research_authors")
+
+    # Get client and API key (no context needed for standard MCP)
+    client = await get_http_client(None)
+    api_key = get_api_key()
+
+    params = args.model_dump(exclude_none=True)
+
+    raw_response = await make_aiera_request(
+        client=client,
+        method="GET",
+        endpoint="/chat-support/find-research-authors",
+        api_key=api_key,
+        params=params,
+    )
+
+    response = FindResearchAuthorsResponse.model_validate(raw_response)
     if args.exclude_instructions:
         response.instructions = []
     return response

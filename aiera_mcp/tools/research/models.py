@@ -218,6 +218,55 @@ class GetResearchProvidersArgs(BaseAieraArgs):
     )
 
 
+class FindResearchAuthorsArgs(BaseToolArgs):
+    """Search for research authors by name or provider. Returns author IDs and display names. Used to find valid author_ids for filtering find_research and search_research tools.
+
+    WHEN TO USE:
+    - Use this to look up author IDs before filtering research by author
+    - Use this to discover authors associated with a specific research provider
+
+    WORKFLOW: Use this tool to obtain author_ids, then pass them to find_research or search_research.
+    """
+
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
+    )
+
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
+    search: Optional[str] = Field(
+        default=None,
+        description="Search term to filter authors by display name.",
+    )
+
+    provider_id: Optional[str] = Field(
+        default=None,
+        description="Filter authors by Aiera provider ID. Obtain provider IDs from get_research_providers results.",
+    )
+
+    page: Union[int, str] = Field(
+        default=1, ge=1, description="Page number for pagination (1-based)."
+    )
+
+    page_size: Union[int, str] = Field(
+        default=50, ge=1, le=100, description="Number of items per page (1-100)."
+    )
+
+
 # Response models
 class FindResearchResponse(BaseAieraResponse):
     """Response for find_research tool - passes through the API response structure."""
@@ -235,3 +284,12 @@ class GetResearchProvidersResponse(BaseAieraResponse):
     """Response for get_research_providers tool - passes through the API response structure."""
 
     response: Optional[Any] = Field(None, description="Response data from the API")
+
+
+class FindResearchAuthorsResponse(BaseAieraResponse):
+    """Response for find_research_authors tool - passes through the API response structure."""
+
+    pagination: Optional[Any] = Field(
+        None, description="Pagination metadata from the API"
+    )
+    data: Optional[Any] = Field(None, description="Response data from the API")

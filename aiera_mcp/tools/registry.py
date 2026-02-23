@@ -26,7 +26,12 @@ from .company_docs import (
     get_company_doc_keywords,
 )
 from .third_bridge import find_third_bridge_events, get_third_bridge_event
-from .research import find_research, get_research, get_research_providers
+from .research import (
+    find_research,
+    get_research,
+    get_research_providers,
+    find_research_authors,
+)
 from .web import trusted_web_search
 from .search import search_transcripts, search_filings, search_research
 
@@ -58,7 +63,12 @@ from .company_docs import (
     GetCompanyDocKeywordsArgs,
 )
 from .third_bridge import FindThirdBridgeEventsArgs, GetThirdBridgeEventArgs
-from .research import FindResearchArgs, GetResearchArgs, GetResearchProvidersArgs
+from .research import (
+    FindResearchArgs,
+    GetResearchArgs,
+    GetResearchProvidersArgs,
+    FindResearchAuthorsArgs,
+)
 from .web import TrustedWebSearchArgs
 from .search import SearchTranscriptsArgs, SearchFilingsArgs, SearchResearchArgs
 
@@ -293,6 +303,15 @@ TOOL_REGISTRY = {
         "input_schema": GetResearchProvidersArgs.model_json_schema(),
         "function": get_research_providers,
         "args_model": GetResearchProvidersArgs,
+        "category": "research",
+        "read_only": True,
+        "destructive": False,
+    },
+    "find_research_authors": {
+        "display_name": "Find Research Authors",
+        "input_schema": FindResearchAuthorsArgs.model_json_schema(),
+        "function": find_research_authors,
+        "args_model": FindResearchAuthorsArgs,
         "category": "research",
         "read_only": True,
         "destructive": False,
