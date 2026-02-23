@@ -241,14 +241,8 @@ Response varies by index type:
         "aiera_provider_id": "STRING",
         "authors": [
           {
-            "sequence": INTEGER,
-            "job_role": "STRING_OR_NULL",
-            "display_name": "STRING",
-            "given_name": "STRING",
-            "family_name": "STRING",
-            "email": "STRING",
-            "person_id": "STRING",
-            "primary_indicator": BOOLEAN_OR_NULL
+            "name": "STRING",
+            "author_id": "STRING"
           }, ...
         ],
         "citation_information": {
@@ -275,39 +269,19 @@ Response varies by index type:
     "result": [
       {
         "score": FLOAT,
-        "subjects": ["STRING", ...],
-        "description": "STRING",
-        "language": "STRING",
         "organization_name": "STRING",
-        "product_focus": "STRING",
-        "countries": [
-          {
-            "code": "STRING",
-            "primary_indicator": BOOLEAN
-          }, ...
-        ],
         "title": "STRING",
-        "asset_classes": ["STRING", ...],
-        "asset_types": ["STRING", ...],
         "research_id": "STRING",
         "document_id": "STRING",
         "chunk_id": "STRING",
         "published_datetime": "ISO_DATETIME",
-        "organization_type": "STRING",
         "text": "STRING",
         "page": INTEGER,
-        "product_category": "STRING",
         "aiera_provider_id": "STRING",
         "authors": [
           {
-            "sequence": INTEGER,
-            "job_role": "STRING_OR_NULL",
-            "display_name": "STRING",
-            "given_name": "STRING",
-            "family_name": "STRING",
-            "email": "STRING",
-            "person_id": "STRING",
-            "primary_indicator": BOOLEAN_OR_NULL
+            "name": "STRING",
+            "author_id": "STRING"
           }, ...
         ],
         "citation_information": {
@@ -404,22 +378,15 @@ Finds and retrieves research reports. Can fetch a specific report by ID or searc
   "response": [
     {
       "research_id": "STRING",
-      "product_id": "STRING",
+      "document_id": "STRING",
       "aiera_provider_id": "STRING",
       "title": "STRING",
-      "synopsis": "STRING_OR_NULL",
       "abstract": "STRING_OR_NULL",
-      "subtitle": "STRING_OR_NULL",
-      "description": "STRING",
       "published_datetime": "ISO_DATETIME",
       "create_datetime": "ISO_DATETIME",
       "status_datetime": "ISO_DATETIME",
       "organization_name": "STRING",
       "organization_type": "STRING",
-      "is_pdf": BOOLEAN,
-      "content_url": "URL",
-      "resource_url": "URL",
-      "mime_type": "STRING",
       "product_category": "STRING",
       "product_focus": "STRING",
       "subjects": ["STRING", ...],
@@ -427,14 +394,8 @@ Finds and retrieves research reports. Can fetch a specific report by ID or searc
       "asset_types": ["STRING", ...],
       "authors": [
         {
-          "person_id": "STRING",
-          "display_name": "STRING",
-          "family_name": "STRING",
-          "given_name": "STRING",
-          "job_role": "STRING_OR_NULL",
-          "email": "STRING",
-          "sequence": INTEGER,
-          "primary_indicator": BOOLEAN_OR_NULL
+          "name": "STRING",
+          "author_id": "STRING"
         }, ...
       ],
       "regions": [],

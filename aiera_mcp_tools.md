@@ -1184,22 +1184,14 @@ Find research reports filtered by optional search terms, author IDs, organizatio
     {
       "research_id": "STRING",
       "document_id": "STRING",
-      "product_id": "STRING",
       "aiera_provider_id": "STRING",
       "title": "STRING",
-      "synopsis": STRING | null,
       "abstract": STRING | null,
-      "subtitle": STRING | null,
-      "description": "STRING",
       "published_datetime": "DATETIME_STRING",
       "create_datetime": "DATETIME_STRING",
       "status_datetime": "DATETIME_STRING",
       "organization_name": "STRING",
       "organization_type": "STRING",
-      "is_pdf": BOOLEAN,
-      "content_url": "STRING",
-      "resource_url": "STRING",
-      "mime_type": "STRING",
       "product_category": "STRING",
       "product_focus": "STRING",
       "subjects": ["STRING", ...],
@@ -1207,14 +1199,8 @@ Find research reports filtered by optional search terms, author IDs, organizatio
       "asset_types": ["STRING", ...],
       "authors": [
         {
-          "person_id": "STRING",
-          "display_name": "STRING",
-          "family_name": "STRING",
-          "given_name": "STRING",
-          "job_role": STRING | null,
-          "email": "STRING",
-          "sequence": INTEGER,
-          "primary_indicator": BOOLEAN | null
+          "name": "STRING",
+          "author_id": "STRING"
         }
       ],
       "regions": [],
@@ -1261,22 +1247,15 @@ Get detailed information about a specific research report including summary, met
   "response": [
     {
       "research_id": "STRING",
-      "product_id": "STRING",
+      "document_id": "STRING",
       "aiera_provider_id": "STRING",
       "title": "STRING",
-      "synopsis": STRING | null,
       "abstract": STRING | null,
-      "subtitle": STRING | null,
-      "description": "STRING",
       "published_datetime": "DATETIME_STRING",
       "create_datetime": "DATETIME_STRING",
       "status_datetime": "DATETIME_STRING",
       "organization_name": "STRING",
       "organization_type": "STRING",
-      "is_pdf": BOOLEAN,
-      "content_url": "STRING",
-      "resource_url": "STRING",
-      "mime_type": "STRING",
       "product_category": "STRING",
       "product_focus": "STRING",
       "subjects": ["STRING", ...],
@@ -1284,14 +1263,8 @@ Get detailed information about a specific research report including summary, met
       "asset_types": ["STRING", ...],
       "authors": [
         {
-          "person_id": "STRING",
-          "display_name": "STRING",
-          "family_name": "STRING",
-          "given_name": "STRING",
-          "job_role": STRING | null,
-          "email": "STRING",
-          "sequence": INTEGER,
-          "primary_indicator": BOOLEAN | null
+          "name": "STRING",
+          "author_id": "STRING"
         }
       ],
       "regions": [],
@@ -1347,39 +1320,19 @@ Semantic search within research content for specific topics, analyses, or insigh
     "result": [
       {
         "score": FLOAT,
-        "subjects": ["STRING", ...],
-        "description": "STRING",
-        "language": "STRING",
         "organization_name": "STRING",
-        "product_focus": "STRING",
-        "countries": [
-          {
-            "code": "STRING",
-            "primary_indicator": BOOLEAN
-          }
-        ],
         "title": "STRING",
-        "asset_classes": ["STRING", ...],
-        "asset_types": ["STRING", ...],
         "research_id": "STRING",
         "document_id": "STRING",
         "chunk_id": "STRING",
         "published_datetime": "DATETIME_STRING",
-        "organization_type": "STRING",
         "text": "STRING",
         "page": INTEGER,
-        "product_category": "STRING",
         "aiera_provider_id": "STRING",
         "authors": [
           {
-            "sequence": INTEGER,
-            "job_role": STRING | null,
-            "display_name": "STRING",
-            "given_name": "STRING",
-            "family_name": "STRING",
-            "email": "STRING",
-            "person_id": "STRING",
-            "primary_indicator": BOOLEAN | null
+            "name": "STRING",
+            "author_id": "STRING"
           }
         ],
         "citation_information": {
