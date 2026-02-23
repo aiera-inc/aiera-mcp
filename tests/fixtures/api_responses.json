@@ -1175,6 +1175,8 @@
             "primary_company_id": 1,
             "content_id": 30001234,
             "research_id": 8001234,
+            "document_id": "doc_8001234",
+            "chunk_id": "chunk_30001234",
             "company_common_name": "Amazon",
             "primary_equity_id": 1,
             "text": "The company continues to demonstrate strong growth in cloud computing services, with AWS revenue increasing 25% year-over-year. Market analysts expect continued momentum driven by enterprise AI adoption.",
@@ -1187,7 +1189,8 @@
                 "url_target": "aiera",
                 "company_id": 1,
                 "content_id": 30001234,
-                "research_id": 8001234
+                "research_id": 8001234,
+                "page": 1
               }
             }
           }
@@ -1324,6 +1327,7 @@
         "data": [
           {
             "research_id": 8001234,
+            "document_id": "doc_8001234",
             "title": "Amazon Web Services: Cloud Computing Growth Outlook",
             "publish_date": "2024-06-15T00:00:00",
             "author": {
@@ -1347,6 +1351,7 @@
           },
           {
             "research_id": 8001235,
+            "document_id": "doc_8001235",
             "title": "Tech Sector: AI Infrastructure Investment Trends",
             "publish_date": "2024-06-10T00:00:00",
             "author": {

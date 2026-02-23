@@ -1183,6 +1183,7 @@ Find research reports filtered by optional search terms, author IDs, organizatio
   "response": [
     {
       "research_id": "STRING",
+      "document_id": "STRING",
       "product_id": "STRING",
       "aiera_provider_id": "STRING",
       "title": "STRING",
@@ -1290,7 +1291,16 @@ Get detailed information about a specific research report including summary, met
           "code": "STRING",
           "primary_indicator": BOOLEAN
         }
-      ]
+      ],
+      "citation_information": {
+        "title": "STRING",
+        "url": "STRING",
+        "metadata": {
+          "type": "research",
+          "url_target": "aiera",
+          "research_id": "STRING"
+        }
+      }
     }
   ],
   "error": STRING | null
@@ -1343,6 +1353,8 @@ Semantic search within research content for specific topics, analyses, or insigh
         "asset_classes": ["STRING", ...],
         "asset_types": ["STRING", ...],
         "research_id": "STRING",
+        "document_id": "STRING",
+        "chunk_id": "STRING",
         "published_datetime": "DATETIME_STRING",
         "organization_type": "STRING",
         "text": "STRING",
@@ -1367,7 +1379,8 @@ Semantic search within research content for specific topics, analyses, or insigh
           "metadata": {
             "type": "research",
             "url_target": "STRING",
-            "research_id": "STRING"
+            "research_id": "STRING",
+            "page": INTEGER
           }
         }
       }

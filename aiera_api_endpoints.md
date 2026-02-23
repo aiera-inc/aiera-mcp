@@ -234,6 +234,7 @@ Response varies by index type:
         "asset_classes": ["STRING", ...],
         "asset_types": ["STRING", ...],
         "research_id": "STRING",
+        "document_id": "STRING",
         "published_datetime": "ISO_DATETIME",
         "organization_type": "STRING",
         "product_category": "STRING",
@@ -289,6 +290,8 @@ Response varies by index type:
         "asset_classes": ["STRING", ...],
         "asset_types": ["STRING", ...],
         "research_id": "STRING",
+        "document_id": "STRING",
+        "chunk_id": "STRING",
         "published_datetime": "ISO_DATETIME",
         "organization_type": "STRING",
         "text": "STRING",
@@ -313,7 +316,8 @@ Response varies by index type:
           "metadata": {
             "type": "research",
             "url_target": "STRING",
-            "research_id": "STRING"
+            "research_id": "STRING",
+            "page": INTEGER
           }
         }
       }, ...
@@ -439,7 +443,16 @@ Finds and retrieves research reports. Can fetch a specific report by ID or searc
           "code": "STRING",
           "primary_indicator": BOOLEAN
         }, ...
-      ]
+      ],
+      "citation_information": {
+        "title": "STRING",
+        "url": "URL",
+        "metadata": {
+          "type": "research",
+          "url_target": "aiera",
+          "research_id": "STRING"
+        }
+      }
     }, ...
   ]
 }
