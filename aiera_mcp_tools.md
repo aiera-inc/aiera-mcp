@@ -1223,7 +1223,16 @@ Find research reports filtered by optional search terms, author IDs, organizatio
           "code": "STRING",
           "primary_indicator": BOOLEAN
         }
-      ]
+      ],
+      "citation_information": {
+        "title": "STRING",
+        "url": "STRING",
+        "metadata": {
+          "type": "research",
+          "url_target": "aiera",
+          "research_id": "STRING"
+        }
+      }
     }
   ],
   "error": STRING | null
