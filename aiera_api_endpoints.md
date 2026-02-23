@@ -324,6 +324,43 @@ Response varies by index type:
 
 ---
 
+## GET /find-research-authors
+
+Searches for research authors by name or provider. Returns a paginated list of authors with their IDs and display names. Requires research API access.
+
+**Query Parameters:**
+
+| Parameter                   | Type    | Default  | Description                                   |
+|-----------------------------|---------|----------|-----------------------------------------------|
+| `include_base_instructions` | boolean | `true`   | Include base instructions                     |
+| `originating_prompt`        | string  | -        | Original prompt                               |
+| `self_identification`       | string  | -        | Caller identifier                             |
+| `search`                    | string  | -        | Search term to filter authors by display name |
+| `provider_id`               | string  | -        | Filter authors by Aiera provider ID           |
+| `page`                      | integer | `1`      | Page number                                   |
+| `page_size`                 | integer | `50`     | Results per page (max 100)                    |
+
+**Response:**
+
+```json
+{
+  "pagination": {
+    "total_count": INTEGER,
+    "current_page": INTEGER,
+    "total_pages": INTEGER,
+    "page_size": INTEGER
+  },
+  "data": [
+    {
+      "author_id": "STRING",
+      "name": "STRING"
+    }, ...
+  ]
+}
+```
+
+---
+
 ## GET /find-research
 
 Finds and retrieves research reports. Can fetch a specific report by ID or search/filter across reports by author, provider, region, company, date range, and more. Supports pagination.
