@@ -251,7 +251,7 @@ Response varies by index type:
           "metadata": {
             "type": "research",
             "url_target": "STRING",
-            "research_id": "STRING"
+            "document_id": "STRING"
           }
         }
       }, ...
@@ -290,7 +290,7 @@ Response varies by index type:
           "metadata": {
             "type": "research",
             "url_target": "STRING",
-            "research_id": "STRING",
+            "document_id": "STRING",
             "page": INTEGER
           }
         }
@@ -411,7 +411,7 @@ Finds and retrieves research reports. Can fetch a specific report by ID or searc
         "metadata": {
           "type": "research",
           "url_target": "aiera",
-          "research_id": "STRING"
+          "document_id": "STRING"
         }
       }
     }, ...

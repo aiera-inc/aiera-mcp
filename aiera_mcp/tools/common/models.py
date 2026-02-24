@@ -16,7 +16,7 @@ class CitationMetadata(BaseModel):
     """Metadata for citation information."""
 
     type: str = Field(
-        description="The type of citation ('event', 'filing', 'company_doc', 'conference', or 'company')"
+        description="The type of citation ('event', 'filing', 'company_doc', 'conference', 'company', 'research', or 'web_result')"
     )
     url_target: Optional[str] = Field(
         None,
@@ -34,6 +34,10 @@ class CitationMetadata(BaseModel):
         None, description="Company document identifier"
     )
     conference_id: Optional[int] = Field(None, description="Conference identifier")
+    document_id: Optional[str] = Field(None, description="Research document identifier")
+    page: Optional[int] = Field(
+        None, description="Page number within a research document"
+    )
 
 
 class CitationInfo(BaseModel):

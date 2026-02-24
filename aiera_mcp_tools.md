@@ -1216,7 +1216,7 @@ Find research reports filtered by optional search terms, author IDs, organizatio
         "metadata": {
           "type": "research",
           "url_target": "aiera",
-          "research_id": "STRING"
+          "document_id": "STRING"
         }
       }
     }
@@ -1280,7 +1280,7 @@ Get detailed information about a specific research report including summary, met
         "metadata": {
           "type": "research",
           "url_target": "aiera",
-          "research_id": "STRING"
+          "document_id": "STRING"
         }
       }
     }
@@ -1341,7 +1341,7 @@ Semantic search within research content for specific topics, analyses, or insigh
           "metadata": {
             "type": "research",
             "url_target": "STRING",
-            "research_id": "STRING",
+            "document_id": "STRING",
             "page": INTEGER
           }
         }
