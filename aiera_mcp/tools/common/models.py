@@ -34,10 +34,8 @@ class CitationMetadata(BaseModel):
         None, description="Company document identifier"
     )
     conference_id: Optional[int] = Field(None, description="Conference identifier")
-    document_id: Optional[str] = Field(None, description="Research document identifier")
-    page: Optional[int] = Field(
-        None, description="Page number within a research document"
-    )
+    document_id: Optional[str] = Field(None, description="Document identifier")
+    page: Optional[int] = Field(None, description="Page number within a document")
 
 
 class CitationInfo(BaseModel):
