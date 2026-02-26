@@ -734,7 +734,13 @@ Semantic search within specific transcript events using embedding-based matching
           }
         }
       }
-    ]
+    ],
+    "pagination": {
+      "total": INTEGER,
+      "page_size": INTEGER,
+      "has_next_page": BOOLEAN,
+      "next_search_after": [FLOAT, INTEGER] | null
+    }
   }
 }
 ```
@@ -900,7 +906,13 @@ Semantic search within SEC filing document chunks using embedding-based matching
         "title": "STRING",
         "citation_information": {...}
       }
-    ]
+    ],
+    "pagination": {
+      "total": INTEGER,
+      "page_size": INTEGER,
+      "has_next_page": BOOLEAN,
+      "next_search_after": [FLOAT, INTEGER] | null
+    }
   }
 }
 ```
@@ -1349,7 +1361,13 @@ Semantic search within research content for specific topics, analyses, or insigh
           }
         }
       }
-    ]
+    ],
+    "pagination": {
+      "total": INTEGER,
+      "page_size": INTEGER,
+      "has_next_page": BOOLEAN,
+      "next_search_after": [FLOAT, "STRING"] | null
+    }
   },
   "error": STRING | null
 }
