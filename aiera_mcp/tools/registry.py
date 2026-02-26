@@ -31,6 +31,8 @@ from .research import (
     get_research,
     get_research_providers,
     find_research_authors,
+    find_research_asset_classes,
+    find_research_asset_types,
 )
 from .web import trusted_web_search
 from .search import search_transcripts, search_filings, search_research
@@ -68,6 +70,8 @@ from .research import (
     GetResearchArgs,
     GetResearchProvidersArgs,
     FindResearchAuthorsArgs,
+    FindResearchAssetClassesArgs,
+    FindResearchAssetTypesArgs,
 )
 from .web import TrustedWebSearchArgs
 from .search import SearchTranscriptsArgs, SearchFilingsArgs, SearchResearchArgs
@@ -312,6 +316,24 @@ TOOL_REGISTRY = {
         "input_schema": FindResearchAuthorsArgs.model_json_schema(),
         "function": find_research_authors,
         "args_model": FindResearchAuthorsArgs,
+        "category": "research",
+        "read_only": True,
+        "destructive": False,
+    },
+    "find_research_asset_classes": {
+        "display_name": "Find Research Asset Classes",
+        "input_schema": FindResearchAssetClassesArgs.model_json_schema(),
+        "function": find_research_asset_classes,
+        "args_model": FindResearchAssetClassesArgs,
+        "category": "research",
+        "read_only": True,
+        "destructive": False,
+    },
+    "find_research_asset_types": {
+        "display_name": "Find Research Asset Types",
+        "input_schema": FindResearchAssetTypesArgs.model_json_schema(),
+        "function": find_research_asset_types,
+        "args_model": FindResearchAssetTypesArgs,
         "category": "research",
         "read_only": True,
         "destructive": False,

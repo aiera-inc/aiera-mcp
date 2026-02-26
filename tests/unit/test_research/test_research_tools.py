@@ -21,51 +21,55 @@ from aiera_mcp.tools.research.models import (
 )
 
 
-# Sample response matching the /find-research endpoint format
+# Sample response matching the /find-research endpoint format (cursor-based pagination)
 FIND_RESEARCH_RESPONSE = {
     "instructions": [
         "This data is provided for institutional finance professionals...",
     ],
-    "response": [
-        {
-            "research_id": "8001234",
-            "product_id": "P001",
-            "aiera_provider_id": "krypton",
-            "title": "Amazon.com Inc - Research Report",
-            "synopsis": "Cloud computing growth outlook",
-            "abstract": None,
-            "subtitle": None,
-            "description": "Detailed analysis of AWS revenue growth",
-            "published_datetime": "2024-06-15T00:00:00",
-            "create_datetime": "2024-06-15T10:00:00",
-            "status_datetime": "2024-06-15T10:00:00",
-            "organization_name": "Goldman Sachs",
-            "organization_type": "Broker",
-            "is_pdf": True,
-            "content_url": "https://example.com/content",
-            "resource_url": "https://example.com/resource",
-            "mime_type": "application/pdf",
-            "product_category": "Research",
-            "product_focus": "Equity",
-            "subjects": ["Technology"],
-            "asset_classes": ["Equity"],
-            "asset_types": [],
-            "authors": [
-                {
-                    "person_id": "5001",
-                    "display_name": "Jane Smith",
-                    "family_name": "Smith",
-                    "given_name": "Jane",
-                    "job_role": "Analyst",
-                    "email": "jane@example.com",
-                    "sequence": 1,
-                    "primary_indicator": True,
-                }
-            ],
-            "regions": [],
-            "countries": [{"code": "US", "primary_indicator": True}],
-        }
-    ],
+    "response": {
+        "result": [
+            {
+                "research_id": "8001234",
+                "document_id": "D001",
+                "aiera_provider_id": "krypton",
+                "title": "Amazon.com Inc - Research Report",
+                "abstract": None,
+                "published_datetime": "2024-06-15T00:00:00",
+                "organization_name": "Goldman Sachs",
+                "organization_type": "Broker",
+                "product_category": "Research",
+                "product_focus": "Equity",
+                "language": "English",
+                "page_count": 12,
+                "subjects": ["Technology"],
+                "asset_classes": ["Equity"],
+                "asset_types": [],
+                "authors": [
+                    {
+                        "name": "Jane Smith",
+                        "author_id": "5001",
+                    }
+                ],
+                "regions": [],
+                "countries": [{"code": "US", "primary_indicator": True}],
+                "citation_information": {
+                    "title": "Amazon.com Inc - Research Report",
+                    "url": "https://example.com/research/8001234",
+                    "metadata": {
+                        "type": "research",
+                        "url_target": "aiera",
+                        "document_id": "D001",
+                    },
+                },
+            }
+        ],
+        "pagination": {
+            "total": 1,
+            "page_size": 50,
+            "has_next_page": False,
+            "next_search_after": None,
+        },
+    },
 }
 
 
@@ -89,10 +93,10 @@ class TestFindResearch:
 
         assert isinstance(result, FindResearchResponse)
         assert result.response is not None
-        assert len(result.response) == 1
+        assert len(result.response["result"]) == 1
 
         # Check first result
-        first_result = result.response[0]
+        first_result = result.response["result"][0]
         assert first_result["title"] == "Amazon.com Inc - Research Report"
         assert first_result["research_id"] == "8001234"
 
@@ -169,14 +173,14 @@ class TestFindResearch:
         assert params["countries"] == "US,GB"
 
     @pytest.mark.asyncio
-    async def test_find_research_with_bloomberg_ticker(self, mock_http_dependencies):
-        """Test find_research with bloomberg_ticker filter."""
+    async def test_find_research_with_search_after(self, mock_http_dependencies):
+        """Test find_research with search_after cursor pagination."""
         mock_http_dependencies["mock_make_request"].return_value = (
             FIND_RESEARCH_RESPONSE
         )
 
         args = FindResearchArgs(
-            bloomberg_ticker="AMZN:US",
+            search_after=["1234567890", "abc123"],
         )
 
         result = await find_research(args)
@@ -184,7 +188,7 @@ class TestFindResearch:
         assert isinstance(result, FindResearchResponse)
         call_args = mock_http_dependencies["mock_make_request"].call_args
         params = call_args[1]["params"]
-        assert params["bloomberg_ticker"] == "AMZN:US"
+        assert params["search_after"] == "1234567890,abc123"
 
     @pytest.mark.asyncio
     async def test_find_research_with_all_filters(self, mock_http_dependencies):
@@ -196,16 +200,10 @@ class TestFindResearch:
         args = FindResearchArgs(
             start_date="2024-01-01",
             end_date="2024-12-31",
-            bloomberg_ticker="AMZN:US",
             author_ids=["12345"],
             aiera_provider_ids=["krypton"],
             regions=["Americas"],
             countries=["US"],
-            index_id=1,
-            watchlist_id=2,
-            sector_id=3,
-            subsector_id=4,
-            page=1,
             page_size=25,
         )
 
@@ -216,7 +214,6 @@ class TestFindResearch:
         params = call_args[1]["params"]
         assert params["start_date"] == "2024-01-01"
         assert params["end_date"] == "2024-12-31"
-        assert params["bloomberg_ticker"] == "AMZN:US"
         assert params["author_person_ids"] == "12345"
         assert params["provider_ids"] == "krypton"
         assert params["regions"] == "Americas"
@@ -236,9 +233,9 @@ class TestFindResearch:
         assert isinstance(result, FindResearchResponse)
         call_args = mock_http_dependencies["mock_make_request"].call_args
         params = call_args[1]["params"]
-        # Should only have defaults (page, page_size, include_base_instructions)
+        # Should only have defaults (page_size, include_base_instructions)
         assert "start_date" not in params
-        assert "bloomberg_ticker" not in params
+        assert "search_after" not in params
 
     @pytest.mark.asyncio
     async def test_find_research_exclude_instructions(self, mock_http_dependencies):
@@ -261,7 +258,15 @@ class TestFindResearch:
         """Test find_research with no results."""
         empty_response = {
             "instructions": [],
-            "response": [],
+            "response": {
+                "result": [],
+                "pagination": {
+                    "total": 0,
+                    "page_size": 50,
+                    "has_next_page": False,
+                    "next_search_after": None,
+                },
+            },
         }
         mock_http_dependencies["mock_make_request"].return_value = empty_response
 
@@ -271,7 +276,7 @@ class TestFindResearch:
 
         assert isinstance(result, FindResearchResponse)
         assert result.response is not None
-        assert len(result.response) == 0
+        assert len(result.response["result"]) == 0
 
 
 @pytest.mark.unit

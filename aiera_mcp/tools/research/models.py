@@ -65,7 +65,7 @@ class BloombergTickerMixin(BaseModel):
         return correct_bloomberg_ticker(v)
 
 
-class FindResearchArgs(BaseToolArgs, BloombergTickerMixin):
+class FindResearchArgs(BaseToolArgs):
     """Find research reports filtered by optional search terms, author IDs, organizations, regions, and date range.
 
     WHEN TO USE:
@@ -126,33 +126,9 @@ class FindResearchArgs(BaseToolArgs, BloombergTickerMixin):
         description="Filter by one or more country codes. Example: ['US', 'GB'].",
     )
 
-    bloomberg_ticker: Optional[str] = Field(
+    search_after: Optional[List[Any]] = Field(
         default=None,
-        description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces.",
-    )
-
-    index_id: Optional[Union[int, str]] = Field(
-        default=None,
-        description="ID of a specific index. Use get_available_indexes to find valid IDs.",
-    )
-
-    watchlist_id: Optional[Union[int, str]] = Field(
-        default=None,
-        description="ID of a specific watchlist. Use get_available_watchlists to find valid IDs.",
-    )
-
-    sector_id: Optional[Union[int, str]] = Field(
-        default=None,
-        description="ID of a specific sector. Use get_sectors_and_subsectors to find valid IDs.",
-    )
-
-    subsector_id: Optional[Union[int, str]] = Field(
-        default=None,
-        description="ID of a specific subsector. Use get_sectors_and_subsectors to find valid IDs.",
-    )
-
-    page: Union[int, str] = Field(
-        default=1, ge=1, description="Page number for pagination (1-based)."
+        description="Cursor for pagination. Pass the next_search_after value from a previous response to fetch the next page of results. Omit for the first page.",
     )
 
     page_size: Union[int, str] = Field(
@@ -267,6 +243,94 @@ class FindResearchAuthorsArgs(BaseToolArgs):
     )
 
 
+class FindResearchAssetClassesArgs(BaseToolArgs):
+    """Retrieve all available research asset classes with their names and document counts. Used to find valid asset class values for filtering research tools.
+
+    WHEN TO USE:
+    - Use this to discover available asset classes (e.g. "Equity", "Fixed Income") before filtering research
+    - Use this to understand the distribution of research across asset classes
+
+    WORKFLOW: Use this tool to obtain asset class names, then pass them to find_research or search_research.
+    """
+
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
+    )
+
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
+    search: Optional[str] = Field(
+        default=None,
+        description="Search term to filter asset classes by name.",
+    )
+
+    page: Union[int, str] = Field(
+        default=1, ge=1, description="Page number for pagination (1-based)."
+    )
+
+    page_size: Union[int, str] = Field(
+        default=50, ge=1, le=100, description="Number of items per page (1-100)."
+    )
+
+
+class FindResearchAssetTypesArgs(BaseToolArgs):
+    """Retrieve all available research asset types with their names and document counts. Used to find valid asset type values for filtering research tools.
+
+    WHEN TO USE:
+    - Use this to discover available asset types (e.g. "Common Stock", "Corporate Bond") before filtering research
+    - Use this to understand the distribution of research across asset types
+
+    WORKFLOW: Use this tool to obtain asset type names, then pass them to find_research or search_research.
+    """
+
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
+    )
+
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
+    search: Optional[str] = Field(
+        default=None,
+        description="Search term to filter asset types by name.",
+    )
+
+    page: Union[int, str] = Field(
+        default=1, ge=1, description="Page number for pagination (1-based)."
+    )
+
+    page_size: Union[int, str] = Field(
+        default=50, ge=1, le=100, description="Number of items per page (1-100)."
+    )
+
+
 # Response models
 class FindResearchResponse(BaseAieraResponse):
     """Response for find_research tool - passes through the API response structure."""
@@ -288,6 +352,24 @@ class GetResearchProvidersResponse(BaseAieraResponse):
 
 class FindResearchAuthorsResponse(BaseAieraResponse):
     """Response for find_research_authors tool - passes through the API response structure."""
+
+    pagination: Optional[Any] = Field(
+        None, description="Pagination metadata from the API"
+    )
+    data: Optional[Any] = Field(None, description="Response data from the API")
+
+
+class FindResearchAssetClassesResponse(BaseAieraResponse):
+    """Response for find_research_asset_classes tool - passes through the API response structure."""
+
+    pagination: Optional[Any] = Field(
+        None, description="Pagination metadata from the API"
+    )
+    data: Optional[Any] = Field(None, description="Response data from the API")
+
+
+class FindResearchAssetTypesResponse(BaseAieraResponse):
+    """Response for find_research_asset_types tool - passes through the API response structure."""
 
     pagination: Optional[Any] = Field(
         None, description="Pagination metadata from the API"

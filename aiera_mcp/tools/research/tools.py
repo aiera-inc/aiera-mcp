@@ -11,10 +11,14 @@ from .models import (
     GetResearchArgs,
     GetResearchProvidersArgs,
     FindResearchAuthorsArgs,
+    FindResearchAssetClassesArgs,
+    FindResearchAssetTypesArgs,
     FindResearchResponse,
     GetResearchResponse,
     GetResearchProvidersResponse,
     FindResearchAuthorsResponse,
+    FindResearchAssetClassesResponse,
+    FindResearchAssetTypesResponse,
 )
 
 # Setup logging
@@ -24,7 +28,8 @@ logger = logging.getLogger(__name__)
 async def find_research(args: FindResearchArgs) -> FindResearchResponse:
     """Find research reports using the find-research endpoint with filter-based discovery.
 
-    Supports filtering by author, provider, ticker, date range, sector, index, watchlist, etc.
+    Supports filtering by author, provider, date range, region, and country.
+    Uses cursor-based pagination via search_after.
     """
     logger.info("tool called: find_research")
 
@@ -42,10 +47,14 @@ async def find_research(args: FindResearchArgs) -> FindResearchResponse:
         params["provider_ids"] = ",".join(params.pop("aiera_provider_ids"))
 
     if "regions" in params:
-        params["regions"] = ",".join(params.pop("regions"))
+        params["regions"] = ",".join(params["regions"])
 
     if "countries" in params:
-        params["countries"] = ",".join(params.pop("countries"))
+        params["countries"] = ",".join(params["countries"])
+
+    # Convert search_after array to comma-separated string for the GET endpoint
+    if "search_after" in params:
+        params["search_after"] = ",".join(str(v) for v in params["search_after"])
 
     raw_response = await make_aiera_request(
         client=client,
@@ -108,6 +117,58 @@ async def find_research_authors(
     )
 
     response = FindResearchAuthorsResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
+
+
+async def find_research_asset_classes(
+    args: FindResearchAssetClassesArgs,
+) -> FindResearchAssetClassesResponse:
+    """Retrieve all available research asset classes."""
+    logger.info("tool called: find_research_asset_classes")
+
+    # Get client and API key (no context needed for standard MCP)
+    client = await get_http_client(None)
+    api_key = get_api_key()
+
+    params = args.model_dump(exclude_none=True)
+
+    raw_response = await make_aiera_request(
+        client=client,
+        method="GET",
+        endpoint="/chat-support/find-research-asset-classes",
+        api_key=api_key,
+        params=params,
+    )
+
+    response = FindResearchAssetClassesResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
+
+
+async def find_research_asset_types(
+    args: FindResearchAssetTypesArgs,
+) -> FindResearchAssetTypesResponse:
+    """Retrieve all available research asset types."""
+    logger.info("tool called: find_research_asset_types")
+
+    # Get client and API key (no context needed for standard MCP)
+    client = await get_http_client(None)
+    api_key = get_api_key()
+
+    params = args.model_dump(exclude_none=True)
+
+    raw_response = await make_aiera_request(
+        client=client,
+        method="GET",
+        endpoint="/chat-support/find-research-asset-types",
+        api_key=api_key,
+        params=params,
+    )
+
+    response = FindResearchAssetTypesResponse.model_validate(raw_response)
     if args.exclude_instructions:
         response.instructions = []
     return response

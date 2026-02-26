@@ -22,30 +22,21 @@ class TestFindResearchArgs:
         args = FindResearchArgs(
             start_date="2024-01-01",
             end_date="2024-12-31",
-            bloomberg_ticker="AMZN:US",
             author_ids=["12345"],
             aiera_provider_ids=["krypton"],
             regions=["Americas"],
             countries=["US", "GB"],
-            index_id=1,
-            watchlist_id=2,
-            sector_id=3,
-            subsector_id=4,
-            page=1,
+            search_after=["score1", "id1"],
             page_size=25,
         )
 
         assert args.start_date == "2024-01-01"
         assert args.end_date == "2024-12-31"
-        assert args.bloomberg_ticker == "AMZN:US"
         assert args.author_ids == ["12345"]
         assert args.aiera_provider_ids == ["krypton"]
         assert args.regions == ["Americas"]
         assert args.countries == ["US", "GB"]
-        assert args.index_id == 1
-        assert args.watchlist_id == 2
-        assert args.sector_id == 3
-        assert args.subsector_id == 4
+        assert args.search_after == ["score1", "id1"]
 
     def test_find_research_args_all_optional(self):
         """Test that all FindResearchArgs fields are optional."""
@@ -53,20 +44,15 @@ class TestFindResearchArgs:
 
         assert args.start_date is None
         assert args.end_date is None
-        assert args.bloomberg_ticker is None
         assert args.author_ids is None
         assert args.aiera_provider_ids is None
         assert args.regions is None
         assert args.countries is None
-        assert args.index_id is None
-        assert args.watchlist_id is None
-        assert args.sector_id is None
-        assert args.subsector_id is None
+        assert args.search_after is None
         assert args.originating_prompt is None
         assert args.self_identification is None
         assert args.include_base_instructions is True
         assert args.exclude_instructions is False
-        assert args.page == 1
         assert args.page_size == 50
 
     def test_find_research_args_with_originating_prompt(self):
@@ -91,28 +77,17 @@ class TestFindResearchArgs:
     def test_find_research_args_numeric_string_coercion(self):
         """Test that numeric fields accept string values."""
         args = FindResearchArgs(
-            index_id="5",
-            watchlist_id="10",
-            sector_id="3",
-            subsector_id="7",
-            page="2",
             page_size="25",
         )
 
-        assert args.index_id == 5
-        assert args.watchlist_id == 10
-        assert args.sector_id == 3
-        assert args.subsector_id == 7
-        assert args.page == 2
         assert args.page_size == 25
 
-    def test_find_research_args_bloomberg_ticker_correction(self):
-        """Test that bloomberg_ticker format is automatically corrected."""
-        # This test depends on the correct_bloomberg_ticker utility
+    def test_find_research_args_search_after(self):
+        """Test that search_after accepts array values for cursor-based pagination."""
         args = FindResearchArgs(
-            bloomberg_ticker="AMZN:US",
+            search_after=["1234567890", "abc123"],
         )
-        assert args.bloomberg_ticker is not None
+        assert args.search_after == ["1234567890", "abc123"]
 
 
 @pytest.mark.unit
@@ -205,17 +180,19 @@ class TestResearchModelSerialization:
         assert "properties" in schema
         assert "start_date" in schema["properties"]
         assert "end_date" in schema["properties"]
-        assert "bloomberg_ticker" in schema["properties"]
         assert "author_ids" in schema["properties"]
         assert "aiera_provider_ids" in schema["properties"]
         assert "regions" in schema["properties"]
         assert "countries" in schema["properties"]
-        assert "index_id" in schema["properties"]
-        assert "watchlist_id" in schema["properties"]
-        assert "sector_id" in schema["properties"]
-        assert "subsector_id" in schema["properties"]
-        assert "page" in schema["properties"]
+        assert "search_after" in schema["properties"]
         assert "page_size" in schema["properties"]
+        # Removed fields should not be present
+        assert "bloomberg_ticker" not in schema["properties"]
+        assert "index_id" not in schema["properties"]
+        assert "watchlist_id" not in schema["properties"]
+        assert "sector_id" not in schema["properties"]
+        assert "subsector_id" not in schema["properties"]
+        assert "page" not in schema["properties"]
 
     def test_get_research_args_json_schema(self):
         """Test that GetResearchArgs generates valid JSON schema."""
@@ -231,5 +208,5 @@ class TestResearchModelSerialization:
 
         assert "start_date" in dumped
         assert "end_date" not in dumped
-        assert "bloomberg_ticker" not in dumped
-        assert "index_id" not in dumped
+        assert "search_after" not in dumped
+        assert "author_ids" not in dumped

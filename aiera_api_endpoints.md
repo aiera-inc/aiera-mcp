@@ -400,9 +400,81 @@ Searches for research authors by name or provider. Returns a paginated list of a
 
 ---
 
+## GET /find-research-asset-classes
+
+Returns a paginated list of all available research asset classes (e.g. "Equity", "Fixed Income"). Aggregated from the research index filtered by the user's entitlements. Requires research API access.
+
+**Query Parameters:**
+
+| Parameter                   | Type    | Default | Description                                    |
+|-----------------------------|---------|---------|------------------------------------------------|
+| `include_base_instructions` | boolean | `true`  | Include base instructions                      |
+| `originating_prompt`        | string  | -       | Original prompt                                |
+| `self_identification`       | string  | -       | Caller identifier                              |
+| `search`                    | string  | -       | Search term to filter asset classes by name    |
+| `page`                      | integer | `1`     | Page number                                    |
+| `page_size`                 | integer | `50`    | Results per page (max 100)                     |
+
+**Response:**
+
+```json
+{
+  "pagination": {
+    "total_count": INTEGER,
+    "current_page": INTEGER,
+    "total_pages": INTEGER,
+    "page_size": INTEGER
+  },
+  "data": [
+    {
+      "asset_class": "STRING",
+      "doc_count": INTEGER
+    }, ...
+  ]
+}
+```
+
+---
+
+## GET /find-research-asset-types
+
+Returns a paginated list of all available research asset types (e.g. "Common Stock", "Corporate Bond"). Aggregated from the research index filtered by the user's entitlements. Requires research API access.
+
+**Query Parameters:**
+
+| Parameter                   | Type    | Default | Description                                   |
+|-----------------------------|---------|---------|-----------------------------------------------|
+| `include_base_instructions` | boolean | `true`  | Include base instructions                     |
+| `originating_prompt`        | string  | -       | Original prompt                               |
+| `self_identification`       | string  | -       | Caller identifier                             |
+| `search`                    | string  | -       | Search term to filter asset types by name     |
+| `page`                      | integer | `1`     | Page number                                   |
+| `page_size`                 | integer | `50`    | Results per page (max 100)                    |
+
+**Response:**
+
+```json
+{
+  "pagination": {
+    "total_count": INTEGER,
+    "current_page": INTEGER,
+    "total_pages": INTEGER,
+    "page_size": INTEGER
+  },
+  "data": [
+    {
+      "asset_type": "STRING",
+      "doc_count": INTEGER
+    }, ...
+  ]
+}
+```
+
+---
+
 ## GET /find-research
 
-Finds and retrieves research reports. Can fetch a specific report by ID or search/filter across reports by author, provider, region, company, date range, and more. Supports pagination.
+Finds and retrieves research reports. Can fetch a specific report by ID or search/filter across reports by author, provider, region, date range, and more. Supports cursor-based pagination.
 
 **Query Parameters:**
 
@@ -413,70 +485,121 @@ Finds and retrieves research reports. Can fetch a specific report by ID or searc
 | `self_identification`       | string  | -                    | Caller identifier                                                |
 | `include_content`           | boolean | `false`              | Whether to include full report content (only for single results) |
 | `research_id`               | string  | -                    | Fetch a specific research report by ID                           |
-| `author_person_ids`         | string  | -                    | Filter by author person IDs (comma-seperated list)               |
-| `provider_ids`              | string  | -                    | Filter by provider IDs (comma-seperated list)                    |
-| `regions`                   | string  | -                    | Filter by regions (comma-seperated list)                         |
-| `countries`                 | string  | -                    | Filter by countries (comma-seperated list)                       |
+| `author_person_ids`         | string  | -                    | Filter by author person IDs (comma-separated list)               |
+| `provider_ids`              | string  | -                    | Filter by provider IDs (comma-separated list)                    |
+| `regions`                   | string  | -                    | Filter by regions (comma-separated list)                         |
+| `countries`                 | string  | -                    | Filter by countries (comma-separated list)                       |
 | `start_date`                | string  | 52 weeks ago         | Start date for date range filter (ISO datetime)                  |
 | `end_date`                  | string  | now                  | End date for date range filter (ISO datetime)                    |
-| `bloomberg_ticker`          | string  | -                    | Bloomberg ticker symbol to filter by company                     |
-| `isin`                      | string  | -                    | ISIN identifier to filter by company                             |
-| `permid`                    | string  | -                    | PermID identifier to filter by company                           |
-| `ric`                       | string  | -                    | RIC identifier to filter by company                              |
-| `ticker`                    | string  | -                    | Ticker symbol to filter by company                               |
-| `index_id`                  | integer | -                    | Filter by index ID                                               |
-| `watchlist_id`              | integer | -                    | Filter by watchlist ID                                           |
-| `sector_id`                 | integer | -                    | Filter by sector ID                                              |
-| `subsector_id`              | integer | -                    | Filter by subsector ID                                           |
-| `page`                      | integer | `1`                  | Page number for pagination                                       |
+| `search_after`              | string  | -                    | Cursor for pagination (comma-separated sort values from previous response) |
 | `page_size`                 | integer | `50`                 | Number of results per page (capped at max page size)             |
 
-**Response:**
+**Response (searching):**
 
 ```json
 {
   "instructions": ["STRING", "STRING", ... ],
-  "response": [
-    {
-      "research_id": "STRING",
-      "document_id": "STRING",
-      "aiera_provider_id": "STRING",
-      "title": "STRING",
-      "abstract": "STRING_OR_NULL",
-      "published_datetime": "ISO_DATETIME",
-      "create_datetime": "ISO_DATETIME",
-      "status_datetime": "ISO_DATETIME",
-      "organization_name": "STRING",
-      "organization_type": "STRING",
-      "product_category": "STRING",
-      "product_focus": "STRING",
-      "subjects": ["STRING", ...],
-      "asset_classes": ["STRING", ...],
-      "asset_types": ["STRING", ...],
-      "authors": [
-        {
-          "name": "STRING",
-          "author_id": "STRING"
-        }, ...
-      ],
-      "regions": [],
-      "countries": [
-        {
-          "code": "STRING",
-          "primary_indicator": BOOLEAN
-        }, ...
-      ],
-      "citation_information": {
+  "response": {
+    "result": [
+      {
+        "research_id": "STRING",
+        "document_id": "STRING",
+        "aiera_provider_id": "STRING",
         "title": "STRING",
-        "url": "URL",
-        "metadata": {
-          "type": "research",
-          "url_target": "aiera",
-          "document_id": "STRING"
+        "abstract": "STRING_OR_NULL",
+        "published_datetime": "ISO_DATETIME",
+        "organization_name": "STRING",
+        "organization_type": "STRING",
+        "product_category": "STRING",
+        "product_focus": "STRING",
+        "language": "STRING",
+        "page_count": INTEGER,
+        "subjects": ["STRING", ...],
+        "asset_classes": ["STRING", ...],
+        "asset_types": ["STRING", ...],
+        "authors": [
+          {
+            "name": "STRING",
+            "author_id": "STRING"
+          }, ...
+        ],
+        "regions": [],
+        "countries": [
+          {
+            "code": "STRING",
+            "primary_indicator": BOOLEAN
+          }, ...
+        ],
+        "citation_information": {
+          "title": "STRING",
+          "url": "URL",
+          "metadata": {
+            "type": "research",
+            "url_target": "aiera",
+            "document_id": "STRING"
+          }
+        }
+      }, ...
+    ],
+    "pagination": {
+      "total": INTEGER,
+      "page_size": INTEGER,
+      "has_next_page": BOOLEAN,
+      "next_search_after": [STRING, STRING] | null
+    }
+  }
+}
+```
+
+**Response (single research_id):**
+
+```json
+{
+  "instructions": ["STRING", "STRING", ... ],
+  "response": {
+    "result": [
+      {
+        "research_id": "STRING",
+        "document_id": "STRING",
+        "aiera_provider_id": "STRING",
+        "title": "STRING",
+        "abstract": "STRING_OR_NULL",
+        "published_datetime": "ISO_DATETIME",
+        "organization_name": "STRING",
+        "organization_type": "STRING",
+        "product_category": "STRING",
+        "product_focus": "STRING",
+        "language": "STRING",
+        "page_count": INTEGER,
+        "subjects": ["STRING", ...],
+        "asset_classes": ["STRING", ...],
+        "asset_types": ["STRING", ...],
+        "authors": [
+          {
+            "name": "STRING",
+            "author_id": "STRING"
+          }, ...
+        ],
+        "regions": [],
+        "countries": [
+          {
+            "code": "STRING",
+            "primary_indicator": BOOLEAN
+          }, ...
+        ],
+        "content": ["STRING", ...] | null,
+        "citation_information": {
+          "title": "STRING",
+          "url": "URL",
+          "metadata": {
+            "type": "research",
+            "url_target": "aiera",
+            "document_id": "STRING"
+          }
         }
       }
-    }, ...
-  ]
+    ]
+  }
 }
 ```
 

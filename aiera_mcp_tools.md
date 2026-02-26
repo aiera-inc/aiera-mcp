@@ -37,6 +37,8 @@ This document provides comprehensive documentation for all Aiera MCP (Model Cont
    - [search_research](#search_research)
    - [get_research_providers](#get_research_providers)
    - [find_research_authors](#find_research_authors)
+   - [find_research_asset_classes](#find_research_asset_classes)
+   - [find_research_asset_types](#find_research_asset_types)
 9. [Web Search Tools](#web-search-tools)
    - [trusted_web_search](#trusted_web_search)
 10. [Reference Data Tools](#reference-data-tools)
@@ -1166,24 +1168,18 @@ Get detailed information about a specific Third Bridge expert insight event.
 
 ### find_research
 
-Find research reports filtered by optional search terms, author IDs, organizations, tickers, date range, and more. Uses the `/find-research` endpoint for filter-based discovery.
+Find research reports filtered by optional author IDs, provider IDs, regions, countries, and date range. Uses the `/find-research` endpoint with cursor-based pagination.
 
 **Input Parameters:**
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| search | string | no | null | Free-text search term |
 | start_date | string | no | null | Start date (YYYY-MM-DD). Defaults to 52 weeks ago on the server |
 | end_date | string | no | null | End date (YYYY-MM-DD). Defaults to now on the server |
-| bloomberg_ticker | string | no | null | Bloomberg ticker(s) (e.g., 'AAPL:US'). Comma-separated for multiple |
 | author_ids | array[string] | no | null | List of author person IDs to filter by |
 | aiera_provider_ids | array[string] | no | null | List of Aiera provider IDs to filter by |
-| asset_classes | array[string] | no | null | List of asset classes to filter by |
-| asset_types | array[string] | no | null | List of asset types to filter by |
-| index_id | integer/string | no | null | Filter by market index ID |
-| watchlist_id | integer/string | no | null | Filter by user watchlist ID |
-| sector_id | integer/string | no | null | Filter by GICS sector ID |
-| subsector_id | integer/string | no | null | Filter by GICS subsector ID |
-| page | integer/string | no | 1 | Page number for pagination |
+| regions | array[string] | no | null | List of regions to filter by (e.g., ['Americas', 'EMEA']) |
+| countries | array[string] | no | null | List of country codes to filter by (e.g., ['US', 'GB']) |
+| search_after | array | no | null | Cursor for pagination. Pass `next_search_after` from a previous response to fetch the next page |
 | page_size | integer/string | no | 50 | Number of items per page (1-100) |
 | include_base_instructions | boolean | no | true | Include base instructions |
 | exclude_instructions | boolean | no | false | Exclude all instructions in response |
@@ -1194,47 +1190,55 @@ Find research reports filtered by optional search terms, author IDs, organizatio
 ```json
 {
   "instructions": ["STRING", ...],
-  "response": [
-    {
-      "research_id": "STRING",
-      "document_id": "STRING",
-      "aiera_provider_id": "STRING",
-      "title": "STRING",
-      "abstract": STRING | null,
-      "published_datetime": "DATETIME_STRING",
-      "create_datetime": "DATETIME_STRING",
-      "status_datetime": "DATETIME_STRING",
-      "organization_name": "STRING",
-      "organization_type": "STRING",
-      "product_category": "STRING",
-      "product_focus": "STRING",
-      "subjects": ["STRING", ...],
-      "asset_classes": ["STRING", ...],
-      "asset_types": ["STRING", ...],
-      "authors": [
-        {
-          "name": "STRING",
-          "author_id": "STRING"
-        }
-      ],
-      "regions": [],
-      "countries": [
-        {
-          "code": "STRING",
-          "primary_indicator": BOOLEAN
-        }
-      ],
-      "citation_information": {
+  "response": {
+    "result": [
+      {
+        "research_id": "STRING",
+        "document_id": "STRING",
+        "aiera_provider_id": "STRING",
         "title": "STRING",
-        "url": "STRING",
-        "metadata": {
-          "type": "research",
-          "url_target": "aiera",
-          "document_id": "STRING"
+        "abstract": STRING | null,
+        "published_datetime": "DATETIME_STRING",
+        "organization_name": "STRING",
+        "organization_type": "STRING",
+        "product_category": "STRING",
+        "product_focus": "STRING",
+        "language": "STRING",
+        "page_count": INTEGER,
+        "subjects": ["STRING", ...],
+        "asset_classes": ["STRING", ...],
+        "asset_types": ["STRING", ...],
+        "authors": [
+          {
+            "name": "STRING",
+            "author_id": "STRING"
+          }
+        ],
+        "regions": [],
+        "countries": [
+          {
+            "code": "STRING",
+            "primary_indicator": BOOLEAN
+          }
+        ],
+        "citation_information": {
+          "title": "STRING",
+          "url": "STRING",
+          "metadata": {
+            "type": "research",
+            "url_target": "aiera",
+            "document_id": "STRING"
+          }
         }
       }
+    ],
+    "pagination": {
+      "total": INTEGER,
+      "page_size": INTEGER,
+      "has_next_page": BOOLEAN,
+      "next_search_after": [STRING, STRING] | null
     }
-  ],
+  },
   "error": STRING | null
 }
 ```
@@ -1258,47 +1262,50 @@ Get detailed information about a specific research report including summary, met
 ```json
 {
   "instructions": ["STRING", ...],
-  "response": [
-    {
-      "research_id": "STRING",
-      "document_id": "STRING",
-      "aiera_provider_id": "STRING",
-      "title": "STRING",
-      "abstract": STRING | null,
-      "published_datetime": "DATETIME_STRING",
-      "create_datetime": "DATETIME_STRING",
-      "status_datetime": "DATETIME_STRING",
-      "organization_name": "STRING",
-      "organization_type": "STRING",
-      "product_category": "STRING",
-      "product_focus": "STRING",
-      "subjects": ["STRING", ...],
-      "asset_classes": ["STRING", ...],
-      "asset_types": ["STRING", ...],
-      "authors": [
-        {
-          "name": "STRING",
-          "author_id": "STRING"
-        }
-      ],
-      "regions": [],
-      "countries": [
-        {
-          "code": "STRING",
-          "primary_indicator": BOOLEAN
-        }
-      ],
-      "citation_information": {
+  "response": {
+    "result": [
+      {
+        "research_id": "STRING",
+        "document_id": "STRING",
+        "aiera_provider_id": "STRING",
         "title": "STRING",
-        "url": "STRING",
-        "metadata": {
-          "type": "research",
-          "url_target": "aiera",
-          "document_id": "STRING"
+        "abstract": STRING | null,
+        "published_datetime": "DATETIME_STRING",
+        "organization_name": "STRING",
+        "organization_type": "STRING",
+        "product_category": "STRING",
+        "product_focus": "STRING",
+        "language": "STRING",
+        "page_count": INTEGER,
+        "subjects": ["STRING", ...],
+        "asset_classes": ["STRING", ...],
+        "asset_types": ["STRING", ...],
+        "authors": [
+          {
+            "name": "STRING",
+            "author_id": "STRING"
+          }
+        ],
+        "regions": [],
+        "countries": [
+          {
+            "code": "STRING",
+            "primary_indicator": BOOLEAN
+          }
+        ],
+        "content": ["STRING", ...] | null,
+        "citation_information": {
+          "title": "STRING",
+          "url": "STRING",
+          "metadata": {
+            "type": "research",
+            "url_target": "aiera",
+            "document_id": "STRING"
+          }
         }
       }
-    }
-  ],
+    ]
+  },
   "error": STRING | null
 }
 ```
@@ -1433,6 +1440,80 @@ Search for research authors by name or provider. Returns author IDs and display 
     {
       "author_id": "STRING",
       "name": "STRING"
+    }
+  ],
+  "error": STRING | null
+}
+```
+
+---
+
+### find_research_asset_classes
+
+Retrieve all available research asset classes with their names and document counts. Used to find valid asset class values for filtering research tools.
+
+**Input Parameters:**
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| search | string | no | null | Search term to filter asset classes by name |
+| page | integer/string | no | 1 | Page number for pagination |
+| page_size | integer/string | no | 50 | Results per page (1-100) |
+| include_base_instructions | boolean | no | true | Include base instructions |
+| exclude_instructions | boolean | no | false | Exclude all instructions in response |
+| originating_prompt | string | no | null | Original user prompt for context |
+| self_identification | string | no | null | Self-identified information about the user/server/session, used for tracking purposes |
+
+**Output Structure:**
+```json
+{
+  "instructions": ["STRING", ...],
+  "pagination": {
+    "total_count": INTEGER,
+    "current_page": INTEGER,
+    "total_pages": INTEGER,
+    "page_size": INTEGER
+  },
+  "data": [
+    {
+      "asset_class": "STRING",
+      "doc_count": INTEGER
+    }
+  ],
+  "error": STRING | null
+}
+```
+
+---
+
+### find_research_asset_types
+
+Retrieve all available research asset types with their names and document counts. Used to find valid asset type values for filtering research tools.
+
+**Input Parameters:**
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| search | string | no | null | Search term to filter asset types by name |
+| page | integer/string | no | 1 | Page number for pagination |
+| page_size | integer/string | no | 50 | Results per page (1-100) |
+| include_base_instructions | boolean | no | true | Include base instructions |
+| exclude_instructions | boolean | no | false | Exclude all instructions in response |
+| originating_prompt | string | no | null | Original user prompt for context |
+| self_identification | string | no | null | Self-identified information about the user/server/session, used for tracking purposes |
+
+**Output Structure:**
+```json
+{
+  "instructions": ["STRING", ...],
+  "pagination": {
+    "total_count": INTEGER,
+    "current_page": INTEGER,
+    "total_pages": INTEGER,
+    "page_size": INTEGER
+  },
+  "data": [
+    {
+      "asset_type": "STRING",
+      "doc_count": INTEGER
     }
   ],
   "error": STRING | null
