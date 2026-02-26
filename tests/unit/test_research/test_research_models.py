@@ -96,30 +96,30 @@ class TestGetResearchArgs:
 
     def test_valid_get_research_args(self):
         """Test valid GetResearchArgs creation."""
-        args = GetResearchArgs(research_id="8001234")
+        args = GetResearchArgs(document_id="8001234")
 
-        assert args.research_id == "8001234"
+        assert args.document_id == "8001234"
 
     def test_get_research_args_required_field(self):
-        """Test that research_id is required."""
+        """Test that document_id is required."""
         with pytest.raises(ValidationError):
             GetResearchArgs()
 
     def test_get_research_args_with_originating_prompt(self):
         """Test GetResearchArgs with originating_prompt field."""
         args = GetResearchArgs(
-            research_id="8001234",
+            document_id="8001234",
             originating_prompt="Get details on this research report",
             include_base_instructions=False,
         )
 
-        assert args.research_id == "8001234"
+        assert args.document_id == "8001234"
         assert args.originating_prompt == "Get details on this research report"
         assert args.include_base_instructions is False
 
     def test_get_research_args_defaults(self):
         """Test GetResearchArgs default values."""
-        args = GetResearchArgs(research_id="123")
+        args = GetResearchArgs(document_id="123")
 
         assert args.originating_prompt is None
         assert args.self_identification is None
@@ -199,7 +199,7 @@ class TestResearchModelSerialization:
         schema = GetResearchArgs.model_json_schema()
 
         assert "properties" in schema
-        assert "research_id" in schema["properties"]
+        assert "document_id" in schema["properties"]
 
     def test_find_research_args_excludes_none(self):
         """Test that model_dump excludes None fields."""

@@ -293,7 +293,7 @@ class TestGetResearch:
             "get_research_success"
         ]
 
-        args = GetResearchArgs(research_id="8001234")
+        args = GetResearchArgs(document_id="8001234")
 
         result = await get_research(args)
 
@@ -306,22 +306,22 @@ class TestGetResearch:
         assert call_args[1]["endpoint"] == "/chat-support/find-research"
 
     @pytest.mark.asyncio
-    async def test_get_research_passes_research_id_and_include_content(
+    async def test_get_research_passes_document_id_and_include_content(
         self, mock_http_dependencies, sample_api_responses
     ):
-        """Test that get_research passes research_id and include_content in params."""
+        """Test that get_research passes document_id and include_content in params."""
         research_responses = sample_api_responses.get("research", {})
         mock_http_dependencies["mock_make_request"].return_value = research_responses[
             "get_research_success"
         ]
 
-        args = GetResearchArgs(research_id="8001234")
+        args = GetResearchArgs(document_id="8001234")
 
         await get_research(args)
 
         call_args = mock_http_dependencies["mock_make_request"].call_args
         params = call_args[1]["params"]
-        assert params["research_id"] == "8001234"
+        assert params["document_id"] == "8001234"
         assert params["include_content"] == "true"
 
     @pytest.mark.asyncio
@@ -335,7 +335,7 @@ class TestGetResearch:
         ]
 
         args = GetResearchArgs(
-            research_id="8001234",
+            document_id="8001234",
             exclude_instructions=True,
         )
 
@@ -354,7 +354,7 @@ class TestGetResearch:
         ]
 
         args = GetResearchArgs(
-            research_id="8001234",
+            document_id="8001234",
             originating_prompt="What does this research report say?",
         )
 
@@ -398,7 +398,7 @@ class TestResearchToolsErrorHandling:
             "Test error"
         )
 
-        args = GetResearchArgs(research_id="123")
+        args = GetResearchArgs(document_id="123")
 
         with pytest.raises(exception_type):
             await get_research(args)

@@ -174,7 +174,7 @@ class TestSearchResearchArgs:
         """Test valid SearchResearchArgs creation."""
         args = SearchResearchArgs(
             query_text="market trends",
-            research_ids=["research123", "research456"],
+            document_ids=["research123", "research456"],
             start_date="2024-01-01",
             end_date="2024-12-31",
             author_ids=["12345"],
@@ -183,7 +183,7 @@ class TestSearchResearchArgs:
         )
 
         assert args.query_text == "market trends"
-        assert args.research_ids == ["research123", "research456"]
+        assert args.document_ids == ["research123", "research456"]
         assert args.start_date == "2024-01-01"
         assert args.end_date == "2024-12-31"
         assert args.author_ids == ["12345"]
@@ -197,7 +197,7 @@ class TestSearchResearchArgs:
             query_text="test query",
         )
 
-        assert args.research_ids is None
+        assert args.document_ids is None
         assert args.start_date == ""
         assert args.end_date == ""
         assert args.author_ids is None
@@ -228,11 +228,11 @@ class TestSearchResearchArgs:
         with pytest.raises(ValidationError):
             SearchResearchArgs()
 
-        # research_ids has a default value (None)
+        # document_ids has a default value (None)
         # so providing only query_text is valid
         args = SearchResearchArgs(query_text="test")
         assert args.query_text == "test"
-        assert args.research_ids is None
+        assert args.document_ids is None
 
 
 @pytest.mark.unit
@@ -607,7 +607,7 @@ class TestSearchModelSerialization:
 
         assert "properties" in schema
         assert "query_text" in schema["properties"]
-        assert "research_ids" in schema["properties"]
+        assert "document_ids" in schema["properties"]
         assert "start_date" in schema["properties"]
         assert "end_date" in schema["properties"]
         assert "author_ids" in schema["properties"]

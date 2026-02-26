@@ -218,9 +218,9 @@ class SearchResearchArgs(BaseAieraArgs):
         description="Search query for semantic matching within research chunks. Examples: 'earnings outlook', 'competitive analysis', 'market trends'.",
     )
 
-    research_ids: Optional[List[str]] = Field(
+    document_ids: Optional[List[str]] = Field(
         default=None,
-        description="Optional list of specific research IDs to search within. Example: [12345, 67890]",
+        description="Optional list of specific document IDs to search within. Obtain document_ids from find_research or search_research results. Example: ['doc123', 'doc456']",
     )
 
     start_date: str = Field(

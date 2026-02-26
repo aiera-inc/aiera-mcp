@@ -507,10 +507,10 @@ class TestSearchResearch:
         assert len(date_filter) > 0
 
     @pytest.mark.asyncio
-    async def test_search_research_with_research_ids(
+    async def test_search_research_with_document_ids(
         self, mock_http_dependencies, sample_api_responses
     ):
-        """Test search_research with research_ids filter."""
+        """Test search_research with document_ids filter."""
         # Setup
         search_responses = sample_api_responses.get("search", {})
         mock_http_dependencies["mock_make_request"].return_value = search_responses[
@@ -519,20 +519,20 @@ class TestSearchResearch:
 
         args = SearchResearchArgs(
             query_text="market analysis",
-            research_ids=["8001234", "8001235"],
+            document_ids=["8001234", "8001235"],
             size=20,
         )
 
         # Execute
         result = await search_research(args)
 
-        # Verify the call included the research_ids filter
+        # Verify the call included the document_ids filter
         assert isinstance(result, SearchResearchResponse)
         call_args = mock_http_dependencies["mock_make_request"].call_args
         data = call_args[1]["data"]
         must_clauses = data["post_filter"]["bool"]["must"]
-        research_id_filter = [c for c in must_clauses if "research_id" in str(c)]
-        assert len(research_id_filter) > 0
+        document_id_filter = [c for c in must_clauses if "parent_research_id" in str(c)]
+        assert len(document_id_filter) > 0
 
     @pytest.mark.asyncio
     async def test_search_research_with_author_id(
@@ -576,7 +576,7 @@ class TestSearchResearch:
 
         args = SearchResearchArgs(
             query_text="credit outlook",
-            research_ids=["8001234"],
+            document_ids=["8001234"],
             start_date="2024-01-01",
             end_date="2024-12-31",
             author_ids=["12345"],
@@ -592,7 +592,7 @@ class TestSearchResearch:
         call_args = mock_http_dependencies["mock_make_request"].call_args
         data = call_args[1]["data"]
         must_clauses = data["post_filter"]["bool"]["must"]
-        # Should have 4 filters: research_id, date range, author, aiera_provider_id
+        # Should have 4 filters: parent_research_id, date range, author, aiera_provider_id
         assert len(must_clauses) == 4
 
     @pytest.mark.asyncio

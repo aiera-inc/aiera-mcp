@@ -444,12 +444,12 @@ async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
 
     must_clauses = []
 
-    # add research ID filter...
-    if args.research_ids:
+    # add document ID filter...
+    if args.document_ids:
         must_clauses.append(
             {
                 "terms": {
-                    "research_id": args.research_ids,
+                    "parent_research_id": args.document_ids,
                 }
             }
         )

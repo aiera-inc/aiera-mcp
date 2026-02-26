@@ -484,7 +484,7 @@ Finds and retrieves research reports. Can fetch a specific report by ID or searc
 | `originating_prompt`        | string  | -                    | Original prompt                                                  |
 | `self_identification`       | string  | -                    | Caller identifier                                                |
 | `include_content`           | boolean | `false`              | Whether to include full report content (only for single results) |
-| `research_id`               | string  | -                    | Fetch a specific research report by ID                           |
+| `document_id`               | string  | -                    | Fetch a specific research report by ID                           |
 | `author_person_ids`         | string  | -                    | Filter by author person IDs (comma-separated list)               |
 | `provider_ids`              | string  | -                    | Filter by provider IDs (comma-separated list)                    |
 | `regions`                   | string  | -                    | Filter by regions (comma-separated list)                         |
@@ -551,7 +551,7 @@ Finds and retrieves research reports. Can fetch a specific report by ID or searc
 }
 ```
 
-**Response (single research_id):**
+**Response (single document_id):**
 
 ```json
 {
@@ -559,8 +559,8 @@ Finds and retrieves research reports. Can fetch a specific report by ID or searc
   "response": {
     "result": [
       {
-        "research_id": "STRING",
         "document_id": "STRING",
+        "research_id": "STRING",
         "aiera_provider_id": "STRING",
         "title": "STRING",
         "abstract": "STRING_OR_NULL",

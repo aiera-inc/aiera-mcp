@@ -147,7 +147,7 @@ class GetResearchArgs(BaseAieraArgs):
     - Use this when you need full metadata for a specific research report
     - For finding specific topics across research, prefer search_research instead
 
-    WORKFLOW: Use find_research first to obtain valid research_ids.
+    WORKFLOW: Use find_research first to obtain valid document_ids.
     """
 
     originating_prompt: Optional[str] = Field(
@@ -170,8 +170,8 @@ class GetResearchArgs(BaseAieraArgs):
         description="Whether to exclude all instructions from the tool response.",
     )
 
-    research_id: str = Field(
-        description="Unique identifier for the research report. Obtain research_id from find_research or search_research results."
+    document_id: str = Field(
+        description="Unique identifier for the research report. Obtain document_id from find_research or search_research results."
     )
 
 
