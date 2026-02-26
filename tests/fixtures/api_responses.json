@@ -1110,7 +1110,13 @@
               }
             }
           }
-        ]
+        ],
+        "pagination": {
+          "total": 2,
+          "page_size": 20,
+          "has_next_page": false,
+          "next_search_after": null
+        }
       }
     },
     "search_filing_chunks_success": {
@@ -1120,12 +1126,10 @@
       ],
       "response": {
         "pagination": {
-          "total_count": {
-            "value": 10000,
-            "relation": "gte"
-          },
-          "from": 0,
-          "size": 100
+          "total": 10000,
+          "page_size": 20,
+          "has_next_page": true,
+          "next_search_after": [12.584471, 21687400]
         },
         "result": [
           {
@@ -1161,12 +1165,10 @@
       ],
       "response": {
         "pagination": {
-          "total_count": {
-            "value": 500,
-            "relation": "gte"
-          },
-          "from": 0,
-          "size": 100
+          "total": 500,
+          "page_size": 20,
+          "has_next_page": true,
+          "next_search_after": [11.234567, "doc_8001234"]
         },
         "result": [
           {

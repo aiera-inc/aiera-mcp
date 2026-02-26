@@ -91,9 +91,14 @@ class SearchTranscriptsArgs(BaseAieraArgs):
         description="Type of event to include within search. ONLY ONE type per call - to search multiple types, make separate calls. Options: 'earnings' (quarterly earnings calls with Q&A), 'presentation' (investor conferences, company presentations at events - use this for conferences), 'investor_meeting' (investor day events, one-on-one meetings - use this for investor meetings), 'shareholder_meeting' (annual/special shareholder meetings), 'special_situation' (M&A announcements, other corporate actions). Example: for 'conference calls AND meetings', make TWO calls: one with event_type='presentation' and one with event_type='investor_meeting'. Defaults to 'earnings'.",
     )
 
-    max_results: int = Field(
+    size: int = Field(
         default=20,
-        description="Maximum number of transcript segments to return across all events (10-50 recommended for optimal performance)",
+        description="Number of transcript segments to return per page (max 250, 10-50 recommended for optimal performance)",
+    )
+
+    search_after: Optional[List[Any]] = Field(
+        default=None,
+        description="Cursor for pagination. Pass the next_search_after value from a previous response to fetch the next page of results. Omit for the first page.",
     )
 
 
@@ -165,9 +170,14 @@ class SearchFilingsArgs(BaseAieraArgs):
         description="Filter for specific filing types. Common values: '10-K' (annual report), '10-Q' (quarterly report), '8-K' (current report/material events), '4' (insider trading), 'DEF 14A' (proxy statement). Leave empty to search all filing types.",
     )
 
-    max_results: int = Field(
+    size: int = Field(
         default=20,
-        description="Maximum number of filing chunks to return (10-50 recommended for optimal performance)",
+        description="Number of filing chunks to return per page (max 250, 10-50 recommended for optimal performance)",
+    )
+
+    search_after: Optional[List[Any]] = Field(
+        default=None,
+        description="Cursor for pagination. Pass the next_search_after value from a previous response to fetch the next page of results. Omit for the first page.",
     )
 
 
@@ -233,9 +243,14 @@ class SearchResearchArgs(BaseAieraArgs):
         description="Filter by one or more Aiera provider IDs. Obtain provider IDs from get_research_providers results. Example: ['krypton', 'krypton-test'].",
     )
 
-    max_results: int = Field(
+    size: int = Field(
         default=20,
-        description="Maximum number of research chunks to return (10-50 recommended for optimal performance)",
+        description="Number of research chunks to return per page (max 250, 10-50 recommended for optimal performance)",
+    )
+
+    search_after: Optional[List[Any]] = Field(
+        default=None,
+        description="Cursor for pagination. Pass the next_search_after value from a previous response to fetch the next page of results. Omit for the first page.",
     )
 
 
@@ -327,6 +342,18 @@ class TranscriptSearchResult(BaseModel):
 
 
 # Search response pagination structure
+class SearchPagination(BaseModel):
+    """Cursor-based pagination metadata for search results."""
+
+    total: int = Field(description="Total number of matching documents")
+    page_size: int = Field(description="Number of results requested for this page")
+    has_next_page: bool = Field(description="Whether more results are available")
+    next_search_after: Optional[List[Any]] = Field(
+        None,
+        description="Cursor to pass as search_after in the next request, or null if no more pages",
+    )
+
+
 class SearchTotalCount(BaseModel):
     """Total count structure from search API."""
 
@@ -338,6 +365,9 @@ class SearchResponseData(BaseModel):
     """Search response data container."""
 
     result: Optional[List[Any]] = Field(description="Search results (can be null)")
+    pagination: Optional[SearchPagination] = Field(
+        None, description="Cursor-based pagination metadata"
+    )
 
 
 class TranscriptSearchResponseData(BaseModel):
@@ -345,6 +375,9 @@ class TranscriptSearchResponseData(BaseModel):
 
     result: Optional[List[TranscriptSearchItem]] = Field(
         description="Transcript search results (can be null)"
+    )
+    pagination: Optional[SearchPagination] = Field(
+        None, description="Cursor-based pagination metadata"
     )
 
 

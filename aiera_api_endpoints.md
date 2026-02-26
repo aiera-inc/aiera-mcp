@@ -30,11 +30,30 @@ Executes a raw OpenSearch query against the specified index.
 
 The request body should contain a valid OpenSearch query object. Special parameters can be included at the top level:
 
-| Parameter                   | Type    | Default  | Description                   |
-|-----------------------------|---------|----------|-------------------------------|
-| `include_base_instructions` | boolean | `true`   | Include base instructions     |
-| `originating_prompt`        | string  | -        | Original prompt               |
-| `self_identification`       | string  | -        | Caller identifier             |
+| Parameter                   | Type    | Default  | Description                                                                                          |
+|-----------------------------|---------|----------|------------------------------------------------------------------------------------------------------|
+| `include_base_instructions` | boolean | `true`   | Include base instructions                                                                            |
+| `originating_prompt`        | string  | -        | Original prompt                                                                                      |
+| `self_identification`       | string  | -        | Caller identifier                                                                                    |
+| `size`                      | integer | `100`    | Number of results per page (max 250)                                                                 |
+| `search_after`              | array   | -        | Cursor for pagination. Pass `next_search_after` from a previous response to fetch the next page.     |
+
+**Pagination:**
+
+This endpoint uses cursor-based pagination via OpenSearch's `search_after`. Do **not** use `from`/offset — it will be ignored.
+
+- To get the **first page**, omit `search_after` from the request body.
+- To get the **next page**, pass the `next_search_after` value from the previous response as `search_after`.
+- Results are sorted by relevance score (descending) with a deterministic tie-breaker field per index.
+
+The response includes a `pagination` object:
+
+| Field              | Type         | Description                                                              |
+|--------------------|--------------|--------------------------------------------------------------------------|
+| `total`            | integer      | Total number of matching documents                                       |
+| `page_size`        | integer      | Number of results requested for this page                                |
+| `has_next_page`    | boolean      | Whether more results are available                                       |
+| `next_search_after`| array\|null  | Cursor to pass as `search_after` in the next request, or null if no more |
 
 **Response:**
 
@@ -71,7 +90,13 @@ Response varies by index type:
           }
         }
       }, ...
-    ]
+    ],
+    "pagination": {
+      "total": INTEGER,
+      "page_size": INTEGER,
+      "has_next_page": BOOLEAN,
+      "next_search_after": [FLOAT, INTEGER] | null
+    }
   }
 }
 ```
@@ -102,7 +127,13 @@ Response varies by index type:
           }
         }
       }, ...
-    ]
+    ],
+    "pagination": {
+      "total": INTEGER,
+      "page_size": INTEGER,
+      "has_next_page": BOOLEAN,
+      "next_search_after": [FLOAT, INTEGER] | null
+    }
   }
 }
 ```
@@ -137,7 +168,13 @@ Response varies by index type:
           }
         }
       }, ...
-    ]
+    ],
+    "pagination": {
+      "total": INTEGER,
+      "page_size": INTEGER,
+      "has_next_page": BOOLEAN,
+      "next_search_after": [FLOAT, INTEGER] | null
+    }
   }
 }
 ```
@@ -172,7 +209,13 @@ Response varies by index type:
           }
         }
       }, ...
-    ]
+    ],
+    "pagination": {
+      "total": INTEGER,
+      "page_size": INTEGER,
+      "has_next_page": BOOLEAN,
+      "next_search_after": [FLOAT, INTEGER] | null
+    }
   }
 }
 ```
@@ -204,7 +247,13 @@ Response varies by index type:
           }
         }
       }, ...
-    ]
+    ],
+    "pagination": {
+      "total": INTEGER,
+      "page_size": INTEGER,
+      "has_next_page": BOOLEAN,
+      "next_search_after": [FLOAT, INTEGER] | null
+    }
   }
 }
 ```
@@ -255,7 +304,13 @@ Response varies by index type:
           }
         }
       }, ...
-    ]
+    ],
+    "pagination": {
+      "total": INTEGER,
+      "page_size": INTEGER,
+      "has_next_page": BOOLEAN,
+      "next_search_after": [FLOAT, "STRING"] | null
+    }
   }
 }
 ```
@@ -295,7 +350,13 @@ Response varies by index type:
           }
         }
       }, ...
-    ]
+    ],
+    "pagination": {
+      "total": INTEGER,
+      "page_size": INTEGER,
+      "has_next_page": BOOLEAN,
+      "next_search_after": [FLOAT, "STRING"] | null
+    }
   }
 }
 ```

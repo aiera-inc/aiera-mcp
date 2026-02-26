@@ -82,9 +82,9 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
     ]:
         must_clauses.append({"term": {"transcript_section": args.transcript_section}})
 
-    k_value = args.max_results * 2
+    k_value = args.size * 2
     if must_clauses:
-        k_value = args.max_results * 20  # Increased for filters
+        k_value = args.size * 20  # Increased for filters
 
     if k_value > 10000:
         k_value = 10000
@@ -119,12 +119,15 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
                 "must_not": [{"term": {"transcript_event_source": "thirdbridge"}}],
             }
         },
-        "size": args.max_results,
+        "size": args.size,
         "search_pipeline": "hybrid_search_pipeline",
         "include_base_instructions": args.include_base_instructions,
         "originating_prompt": args.originating_prompt,
         "self_identification": args.self_identification,
     }
+
+    if args.search_after is not None:
+        query["search_after"] = args.search_after
 
     # Try ML-inference search...
     try:
@@ -195,11 +198,14 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
                         ],
                     }
                 },
-                "size": args.max_results,
+                "size": args.size,
                 "include_base_instructions": args.include_base_instructions,
                 "originating_prompt": args.originating_prompt,
                 "self_identification": args.self_identification,
             }
+
+            if args.search_after is not None:
+                query["search_after"] = args.search_after
 
             raw_response = await make_aiera_request(
                 client=client,
@@ -223,7 +229,7 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
             )
 
     # if failed, send empty response...
-    return _get_empty_transcripts_response(args.max_results)
+    return _get_empty_transcripts_response()
 
 
 async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
@@ -280,9 +286,9 @@ async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
             }
         )
 
-    k_value = args.max_results * 2
+    k_value = args.size * 2
     if must_clauses:
-        k_value = args.max_results * 20  # Increased for filters
+        k_value = args.size * 20  # Increased for filters
 
     if k_value > 10000:
         k_value = 10000
@@ -316,12 +322,15 @@ async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
                 "must": must_clauses,
             }
         },
-        "size": args.max_results,
+        "size": args.size,
         "search_pipeline": "hybrid_search_pipeline",
         "include_base_instructions": args.include_base_instructions,
         "originating_prompt": args.originating_prompt,
         "self_identification": args.self_identification,
     }
+
+    if args.search_after is not None:
+        query["search_after"] = args.search_after
 
     # Try ML-inference search...
     try:
@@ -385,11 +394,14 @@ async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
                         ],
                     }
                 },
-                "size": args.max_results,
+                "size": args.size,
                 "include_base_instructions": args.include_base_instructions,
                 "originating_prompt": args.originating_prompt,
                 "self_identification": args.self_identification,
             }
+
+            if args.search_after is not None:
+                query["search_after"] = args.search_after
 
             raw_response = await make_aiera_request(
                 client=client,
@@ -413,7 +425,7 @@ async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
             )
 
     # if failed, send empty response...
-    return _get_empty_filings_response(args.max_results)
+    return _get_empty_filings_response()
 
 
 async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
@@ -458,9 +470,9 @@ async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
     if args.aiera_provider_ids:
         must_clauses.append({"terms": {"aiera_provider_id": args.aiera_provider_ids}})
 
-    k_value = args.max_results * 2
+    k_value = args.size * 2
     if must_clauses:
-        k_value = args.max_results * 20  # Increased for filters
+        k_value = args.size * 20  # Increased for filters
 
     if k_value > 10000:
         k_value = 10000
@@ -494,12 +506,15 @@ async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
                 "must": must_clauses,
             }
         },
-        "size": args.max_results,
+        "size": args.size,
         "search_pipeline": "hybrid_search_pipeline",
         "include_base_instructions": args.include_base_instructions,
         "originating_prompt": args.originating_prompt,
         "self_identification": args.self_identification,
     }
+
+    if args.search_after is not None:
+        query["search_after"] = args.search_after
 
     # Try ML-inference search...
     try:
@@ -563,11 +578,14 @@ async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
                         ],
                     }
                 },
-                "size": args.max_results,
+                "size": args.size,
                 "include_base_instructions": args.include_base_instructions,
                 "originating_prompt": args.originating_prompt,
                 "self_identification": args.self_identification,
             }
+
+            if args.search_after is not None:
+                query["search_after"] = args.search_after
 
             raw_response = await make_aiera_request(
                 client=client,
@@ -591,10 +609,10 @@ async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
             )
 
     # if failed, send empty response...
-    return _get_empty_research_response(args.max_results)
+    return _get_empty_research_response()
 
 
-def _get_empty_filings_response(max_results: int) -> SearchFilingsResponse:
+def _get_empty_filings_response() -> SearchFilingsResponse:
     """Return empty response structure for filing chunks search."""
     return SearchFilingsResponse(
         instructions=[],
@@ -604,7 +622,7 @@ def _get_empty_filings_response(max_results: int) -> SearchFilingsResponse:
     )
 
 
-def _get_empty_transcripts_response(max_results: int) -> SearchTranscriptsResponse:
+def _get_empty_transcripts_response() -> SearchTranscriptsResponse:
     """Return empty response structure for transcript search."""
     return SearchTranscriptsResponse(
         instructions=[],
@@ -614,7 +632,7 @@ def _get_empty_transcripts_response(max_results: int) -> SearchTranscriptsRespon
     )
 
 
-def _get_empty_research_response(max_results: int) -> SearchResearchResponse:
+def _get_empty_research_response() -> SearchResearchResponse:
     """Return empty response structure for research chunks search."""
     return SearchResearchResponse(
         instructions=[],

@@ -44,7 +44,7 @@ class TestSearchTranscripts:
             equity_ids=[1],
             start_date="2022-01-01",
             end_date="2022-12-31",
-            max_results=20,
+            size=20,
         )
 
         # Execute
@@ -82,7 +82,7 @@ class TestSearchTranscripts:
             query_text="nonexistent query term xyz123",
             event_ids=[999999],
             equity_ids=[1],
-            max_results=20,
+            size=20,
         )
 
         # Execute
@@ -109,7 +109,7 @@ class TestSearchTranscripts:
             event_ids=[2108591],
             equity_ids=[1],
             transcript_section="q_and_a",
-            max_results=10,
+            size=10,
         )
 
         # Execute
@@ -141,7 +141,7 @@ class TestSearchTranscripts:
             event_ids=[2108591],
             equity_ids=[1],
             event_type="presentation",
-            max_results=20,
+            size=20,
         )
 
         # Execute
@@ -173,7 +173,7 @@ class TestSearchTranscripts:
             event_ids=[2108591],
             equity_ids=[1],
             exclude_instructions=True,
-            max_results=20,
+            size=20,
         )
 
         # Execute
@@ -199,7 +199,7 @@ class TestSearchTranscripts:
             query_text="test query",
             event_ids=[1],
             equity_ids=[1],
-            max_results=20,
+            size=20,
         )
 
         # Execute
@@ -231,7 +231,7 @@ class TestSearchFilings:
             filing_type="DEF14A",
             start_date="2023-01-01",
             end_date="2023-12-31",
-            max_results=20,
+            size=20,
         )
 
         # Execute
@@ -266,7 +266,7 @@ class TestSearchFilings:
         args = SearchFilingsArgs(
             query_text="nonexistent xyz123",
             equity_ids=[999999],
-            max_results=20,
+            size=20,
         )
 
         # Execute
@@ -292,7 +292,7 @@ class TestSearchFilings:
             query_text="risk factors",
             equity_ids=[1],
             filing_type="10-K",
-            max_results=20,
+            size=20,
         )
 
         # Execute
@@ -323,7 +323,7 @@ class TestSearchFilings:
             equity_ids=[1],
             start_date="2023-01-01",
             end_date="2023-12-31",
-            max_results=20,
+            size=20,
         )
 
         # Execute
@@ -352,7 +352,7 @@ class TestSearchFilings:
             query_text="compensation",
             equity_ids=[1],
             exclude_instructions=True,
-            max_results=20,
+            size=20,
         )
 
         # Execute
@@ -377,7 +377,7 @@ class TestSearchFilings:
         args = SearchFilingsArgs(
             query_text="test query",
             equity_ids=[1],
-            max_results=20,
+            size=20,
         )
 
         # Execute
@@ -401,7 +401,7 @@ class TestSearchFilings:
         args = SearchFilingsArgs(
             query_text="test query",
             equity_ids=[1],
-            max_results=20,
+            size=20,
         )
 
         # Execute
@@ -432,7 +432,7 @@ class TestSearchResearch:
             query_text="cloud computing growth",
             start_date="2024-01-01",
             end_date="2024-12-31",
-            max_results=20,
+            size=20,
         )
 
         # Execute
@@ -466,7 +466,7 @@ class TestSearchResearch:
 
         args = SearchResearchArgs(
             query_text="nonexistent xyz123",
-            max_results=20,
+            size=20,
         )
 
         # Execute
@@ -492,7 +492,7 @@ class TestSearchResearch:
             query_text="revenue",
             start_date="2024-01-01",
             end_date="2024-12-31",
-            max_results=20,
+            size=20,
         )
 
         # Execute
@@ -520,7 +520,7 @@ class TestSearchResearch:
         args = SearchResearchArgs(
             query_text="market analysis",
             research_ids=["8001234", "8001235"],
-            max_results=20,
+            size=20,
         )
 
         # Execute
@@ -548,7 +548,7 @@ class TestSearchResearch:
         args = SearchResearchArgs(
             query_text="macro strategy",
             author_ids=["12345"],
-            max_results=20,
+            size=20,
         )
 
         # Execute
@@ -581,7 +581,7 @@ class TestSearchResearch:
             end_date="2024-12-31",
             author_ids=["12345"],
             aiera_provider_ids=["krypton"],
-            max_results=20,
+            size=20,
         )
 
         # Execute
@@ -609,7 +609,7 @@ class TestSearchResearch:
         args = SearchResearchArgs(
             query_text="cloud computing",
             exclude_instructions=True,
-            max_results=20,
+            size=20,
         )
 
         # Execute
@@ -633,7 +633,7 @@ class TestSearchResearch:
 
         args = SearchResearchArgs(
             query_text="test query",
-            max_results=20,
+            size=20,
         )
 
         # Execute
@@ -656,7 +656,7 @@ class TestSearchResearch:
 
         args = SearchResearchArgs(
             query_text="test query",
-            max_results=20,
+            size=20,
         )
 
         # Execute
@@ -691,7 +691,7 @@ class TestSearchToolsErrorHandling:
             query_text="test",
             event_ids=[1],
             equity_ids=[1],
-            max_results=20,
+            size=20,
         )
 
         # Execute & Verify
@@ -716,7 +716,7 @@ class TestSearchToolsErrorHandling:
         args = SearchFilingsArgs(
             query_text="test",
             equity_ids=[1],
-            max_results=20,
+            size=20,
         )
 
         # Execute & Verify
@@ -724,11 +724,11 @@ class TestSearchToolsErrorHandling:
             await search_filings(args)
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("max_results", [10, 50, 100])
-    async def test_search_transcripts_respects_max_results(
-        self, mock_http_dependencies, sample_api_responses, max_results
+    @pytest.mark.parametrize("size", [10, 50, 100])
+    async def test_search_transcripts_respects_size(
+        self, mock_http_dependencies, sample_api_responses, size
     ):
-        """Test that search_transcripts respects max_results parameter."""
+        """Test that search_transcripts respects size parameter."""
         # Setup
         search_responses = sample_api_responses.get("search", {})
         mock_http_dependencies["mock_make_request"].return_value = search_responses[
@@ -739,13 +739,13 @@ class TestSearchToolsErrorHandling:
             query_text="test",
             event_ids=[1],
             equity_ids=[1],
-            max_results=max_results,
+            size=size,
         )
 
         # Execute
         await search_transcripts(args)
 
-        # Verify max_results was passed in query
+        # Verify size was passed in query
         call_args = mock_http_dependencies["mock_make_request"].call_args
         data = call_args[1]["data"]
-        assert data["size"] == max_results
+        assert data["size"] == size

@@ -698,7 +698,8 @@ Semantic search within specific transcript events using embedding-based matching
 | transcript_section | string | no | "" | Filter by section: `presentation` or `q_and_a` |
 | start_date | string | no | "" | Start date filter (YYYY-MM-DD) |
 | end_date | string | no | "" | End date filter (YYYY-MM-DD) |
-| max_results | integer | no | 20 | Maximum results to return |
+| size | integer | no | 20 | Number of results per page (max 250) |
+| search_after | array | no | null | Cursor for pagination. Pass `next_search_after` from a previous response to fetch the next page. |
 | include_base_instructions | boolean | no | true | Include base instructions |
 | exclude_instructions | boolean | no | false | Exclude all instructions in response |
 | originating_prompt | string | no | null | Original user prompt |
@@ -868,7 +869,8 @@ Semantic search within SEC filing document chunks using embedding-based matching
 | filing_type | string | no | "" | Filter by filing type |
 | start_date | string | no | "" | Start date filter |
 | end_date | string | no | "" | End date filter |
-| max_results | integer | no | 20 | Maximum results |
+| size | integer | no | 20 | Number of results per page (max 250) |
+| search_after | array | no | null | Cursor for pagination. Pass `next_search_after` from a previous response to fetch the next page. |
 | include_base_instructions | boolean | no | true | Include base instructions |
 | exclude_instructions | boolean | no | false | Exclude all instructions in response |
 | originating_prompt | string | no | null | Original user prompt |
@@ -1306,7 +1308,8 @@ Semantic search within research content for specific topics, analyses, or insigh
 | asset_types | array[string] | no | null | List of asset types to filter by |
 | start_date | string | no | "" | Start date filter (YYYY-MM-DD) |
 | end_date | string | no | "" | End date filter (YYYY-MM-DD) |
-| max_results | integer | no | 20 | Maximum results to return |
+| size | integer | no | 20 | Number of results per page (max 250) |
+| search_after | array | no | null | Cursor for pagination. Pass `next_search_after` from a previous response to fetch the next page. |
 | include_base_instructions | boolean | no | true | Include base instructions |
 | exclude_instructions | boolean | no | false | Exclude all instructions in response |
 | originating_prompt | string | no | null | Original user prompt for context |

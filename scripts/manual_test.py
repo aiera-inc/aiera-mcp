@@ -513,7 +513,7 @@ async def test_tool_with_comparison(
                     args_instance = SearchTranscriptsArgs(
                         event_ids=[2250284, 2190837, 2083130, 2006972],
                         query_text="revenue",
-                        max_results=15,
+                        size=15,
                     )
                 elif args_model == SearchFilingsArgs:
                     # Use the new argument structure
@@ -522,7 +522,7 @@ async def test_tool_with_comparison(
                         start_date="2024-01-01",
                         end_date="2024-12-31",
                         document_types=["10-K"],
-                        max_results=5,
+                        size=5,
                     )
                 elif args_model == SearchFilingsArgs:
                     # Use the new argument structure
@@ -530,7 +530,7 @@ async def test_tool_with_comparison(
                         query_text="revenue guidance",
                         company_name="Apple Inc",
                         filing_type="10-K",
-                        max_results=10,
+                        size=10,
                     )
                 else:
                     args_instance = args_model(**valid_args)

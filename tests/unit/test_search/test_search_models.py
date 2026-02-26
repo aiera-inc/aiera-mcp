@@ -40,7 +40,7 @@ class TestSearchTranscriptsArgs:
             end_date="2024-12-31",
             transcript_section="q_and_a",
             event_type="earnings",
-            max_results=20,
+            size=20,
         )
 
         assert args.query_text == "earnings guidance"
@@ -50,7 +50,8 @@ class TestSearchTranscriptsArgs:
         assert args.end_date == "2024-12-31"
         assert args.transcript_section == "q_and_a"
         assert args.event_type == "earnings"
-        assert args.max_results == 20
+        assert args.size == 20
+        assert args.search_after is None
 
     def test_search_transcripts_args_defaults(self):
         """Test SearchTranscriptsArgs default values."""
@@ -64,7 +65,8 @@ class TestSearchTranscriptsArgs:
         assert args.end_date == ""
         assert args.transcript_section == ""
         assert args.event_type == "earnings"
-        assert args.max_results == 20
+        assert args.size == 20
+        assert args.search_after is None
         assert args.originating_prompt is None
         assert args.include_base_instructions is True
         assert args.exclude_instructions is False
@@ -109,7 +111,7 @@ class TestSearchFilingsArgs:
             start_date="2024-01-01",
             end_date="2024-12-31",
             filing_type="10-K",
-            max_results=30,
+            size=30,
         )
 
         assert args.query_text == "risk factors"
@@ -118,7 +120,8 @@ class TestSearchFilingsArgs:
         assert args.start_date == "2024-01-01"
         assert args.end_date == "2024-12-31"
         assert args.filing_type == "10-K"
-        assert args.max_results == 30
+        assert args.size == 30
+        assert args.search_after is None
 
     def test_search_filings_args_defaults(self):
         """Test SearchFilingsArgs default values."""
@@ -131,7 +134,8 @@ class TestSearchFilingsArgs:
         assert args.start_date == ""
         assert args.end_date == ""
         assert args.filing_type == ""
-        assert args.max_results == 20
+        assert args.size == 20
+        assert args.search_after is None
         assert args.originating_prompt is None
         assert args.include_base_instructions is True
         assert args.exclude_instructions is False
@@ -175,7 +179,7 @@ class TestSearchResearchArgs:
             end_date="2024-12-31",
             author_ids=["12345"],
             aiera_provider_ids=["krypton"],
-            max_results=30,
+            size=30,
         )
 
         assert args.query_text == "market trends"
@@ -184,7 +188,8 @@ class TestSearchResearchArgs:
         assert args.end_date == "2024-12-31"
         assert args.author_ids == ["12345"]
         assert args.aiera_provider_ids == ["krypton"]
-        assert args.max_results == 30
+        assert args.size == 30
+        assert args.search_after is None
 
     def test_search_research_args_defaults(self):
         """Test SearchResearchArgs default values."""
@@ -197,7 +202,8 @@ class TestSearchResearchArgs:
         assert args.end_date == ""
         assert args.author_ids is None
         assert args.aiera_provider_ids is None
-        assert args.max_results == 20
+        assert args.size == 20
+        assert args.search_after is None
         assert args.originating_prompt is None
         assert args.self_identification is None
         assert args.include_base_instructions is True
@@ -583,7 +589,8 @@ class TestSearchModelSerialization:
         assert "query_text" in schema["properties"]
         assert "event_ids" in schema["properties"]
         assert "equity_ids" in schema["properties"]
-        assert "max_results" in schema["properties"]
+        assert "size" in schema["properties"]
+        assert "search_after" in schema["properties"]
 
     def test_search_filings_args_json_schema(self):
         """Test that SearchFilingsArgs generates valid JSON schema."""
@@ -605,7 +612,8 @@ class TestSearchModelSerialization:
         assert "end_date" in schema["properties"]
         assert "author_ids" in schema["properties"]
         assert "aiera_provider_ids" in schema["properties"]
-        assert "max_results" in schema["properties"]
+        assert "size" in schema["properties"]
+        assert "search_after" in schema["properties"]
         assert "equity_ids" not in schema["properties"]
         assert "filing_type" not in schema["properties"]
 
