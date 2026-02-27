@@ -39,9 +39,13 @@ This document provides comprehensive documentation for all Aiera MCP (Model Cont
    - [find_research_authors](#find_research_authors)
    - [find_research_asset_classes](#find_research_asset_classes)
    - [find_research_asset_types](#find_research_asset_types)
-9. [Web Search Tools](#web-search-tools)
+9. [Financial Data Tools](#financial-data-tools)
+   - [get_financials](#get_financials)
+   - [get_ratios](#get_ratios)
+   - [get_kpis_and_segments](#get_kpis_and_segments)
+10. [Web Search Tools](#web-search-tools)
    - [trusted_web_search](#trusted_web_search)
-10. [Reference Data Tools](#reference-data-tools)
+11. [Reference Data Tools](#reference-data-tools)
    - [get_available_indexes](#get_available_indexes)
    - [get_index_constituents](#get_index_constituents)
    - [get_available_watchlists](#get_available_watchlists)
@@ -241,200 +245,7 @@ Retrieve detailed summaries about one or more equities.
 
 ---
 
-### get_financials
-
-Retrieve financial data (income statements, balance sheets, cash flow statements) for a company.
-
-**Input Parameters:**
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| bloomberg_ticker | string | no | null | Bloomberg ticker (comma-separated for multiple) |
-| source | string | yes | none | The type of financial statement to retrieve: income-statement, balance-sheet, or cash-flow-statement |
-| source_type | string | yes | none | The format type of the financial data: 'as-reported' for original filings or 'standardized' for normalized data. |
-| period | string | yes | none | The reporting period type for the financial data: annual, quarterly, semi-annual, ltm, ytd, or latest |
-| calendar_year | int | yes | none | The calendar year for the financial data |
-| calendar_quarter | int | no | null | The calendar quarter for the financial data (1-4). Required for quarterly periods. |
-| originating_prompt | string | no | null | Original user prompt for context |
-| self_identification | string | no | null | Self-identied information about the user/server/session, used for tracking purposes |
-| include_base_instructions | boolean | no | true | Include base instructions |
-| exclude_instructions | boolean | no | false | Exclude all instructions in response |
-
-**Output Structure:**
-```json
-{
-  "instructions": ["STRING", ... ],
-  "response": [
-    "equity": {
-        "equity_id": INTEGER,
-        "company_id": INTEGER,
-        "name": "STRING",
-        "bloomberg_ticker": "STRING",
-        "sector_id": INTEGER,
-        "subsector_id": INTEGER
-    },
-    "periods": [
-        {
-            "period_type": "STRING",
-            "report_date": DATE,
-            "period_duration": "STRING",
-            "calendar_year": INTEGER,
-            "calendar_quarter": INTEGER,
-            "fiscal_year": INTEGER,
-            "fiscal_quarter": INTEGER,
-            "is_restated": BOOLEAN,
-            "earnings_date": DATETIME,
-            "filing_date": DATETIME,
-            "metrics": [
-                {
-                    "metric": {
-                        "metric_name": "STRING",
-                        "metric_format": "STRING",
-                        "is_point_in_time": BOOLEAN,
-                        "is_currency": BOOLEAN,
-                        "is_per_share": BOOLEAN,
-                        "is_key_metric": BOOLEAN,
-                        "is_total": BOOLEAN,
-                        "headers": LIST/NULL
-                    },
-                    "metric_value": INTEGER,
-                    "metric_unit": "STRING",
-                    "metric_currency": "STRING",
-                    "metric_is_calculated": BOOLEAN,
-                    "citation_information": {
-                      "title": "STRING",
-                      "url": "URL",
-                      "metadata": {
-                        "type": "STRING",
-                        "url_target": "STRING",
-                      }
-                    }
-                }, ...
-            ]
-        }, ...
-   ],
-   "error": STRING | null
-}
-```
-
----
-
-### get_ratios
-
-Use this tool to get ratio metrics like profitability, liquidity, and valuation ratios for a specific company and fiscal period.
-
-**Input Parameters:**
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| bloomberg_ticker | string | no | null | Bloomberg ticker (comma-separated for multiple) |
-| period | string | yes | none | The reporting period type for the financial data: annual, quarterly, semi-annual, ltm, ytd, or latest |
-| calendar_year | int | yes | none | The calendar year for the financial data |
-| calendar_quarter | int | no | null | The calendar quarter for the financial data (1-4). Required for quarterly periods. |
-| originating_prompt | string | no | null | Original user prompt for context |
-| self_identification | string | no | null | Self-identied information about the user/server/session, used for tracking purposes |
-| include_base_instructions | boolean | no | true | Include base instructions |
-| exclude_instructions | boolean | no | false | Exclude all instructions in response |
-
-**Output Structure:**
-```json
-{
-  "instructions": ["STRING", ... ],
-  "response": [
-    "equity": {
-        "equity_id": INTEGER,
-        "company_id": INTEGER,
-        "name": "STRING",
-        "bloomberg_ticker": "STRING",
-        "sector_id": INTEGER,
-        "subsector_id": INTEGER
-    },
-    "periods": [
-        {
-            "period_type": "STRING",
-            "report_date": DATE,
-            "period_duration": "STRING",
-            "calendar_year": INTEGER,
-            "calendar_quarter": INTEGER,
-            "fiscal_year": INTEGER,
-            "fiscal_quarter": INTEGER,
-            "ratios": [
-                {
-                    "ratio_id": "STRING",
-                    "ratio": "STRING",
-                    "ratio_category": "STRING",
-                    "ratio_value": FLOAT
-                }, ...
-            ]
-        }, ...
-   ],
-   "error": STRING | null
-}
-```
-
----
-
-### get_kpis_and_segments
-
-Use this tool to get key performance indicators and segment-level metrics for a specific company and fiscal period.
-
-**Input Parameters:**
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| bloomberg_ticker | string | no | null | Bloomberg ticker (comma-separated for multiple) |
-| period | string | yes | none | The reporting period type for the financial data: annual, quarterly, semi-annual, ltm, ytd, or latest |
-| calendar_year | int | yes | none | The calendar year for the financial data |
-| calendar_quarter | int | no | null | The calendar quarter for the financial data (1-4). Required for quarterly periods. |
-| originating_prompt | string | no | null | Original user prompt for context |
-| self_identification | string | no | null | Self-identied information about the user/server/session, used for tracking purposes |
-| include_base_instructions | boolean | no | true | Include base instructions |
-| exclude_instructions | boolean | no | false | Exclude all instructions in response |
-
-**Output Structure:**
-```json
-{
-  "instructions": ["STRING", ... ],
-  "response": [
-    "equity": {
-        "equity_id": INTEGER,
-        "company_id": INTEGER,
-        "name": "STRING",
-        "bloomberg_ticker": "STRING",
-        "sector_id": INTEGER,
-        "subsector_id": INTEGER
-    },
-    "periods": [
-        {
-            "period_type": "STRING",
-            "report_date": DATE,
-            "period_duration": "STRING",
-            "calendar_year": INTEGER,
-            "calendar_quarter": INTEGER,
-            "fiscal_year": INTEGER,
-            "fiscal_quarter": INTEGER,
-            "kpi": [
-                {
-                    "metric_id": "STRING",
-                    "metric_name": "STRING",
-                    "metric_format": "STRING",
-                    "is_currency": BOOLEAN,
-                    "is_important": BOOLEAN,
-                    "metric_value": INTEGER
-                }, ...
-            ],
-            "segment": [
-                {
-                    "metric_id": "STRING",
-                    "metric_name": "STRING",
-                    "metric_format": "STRING",
-                    "is_currency": BOOLEAN,
-                    "is_important": BOOLEAN,
-                    "metric_value": INTEGER
-                }, ...
-            ]
-        }, ...
-   ],
-   "error": STRING | null
-}
-```
+**Note:** For financial data tools (get_financials, get_ratios, get_kpis_and_segments), see the [Financial Data Tools](#financial-data-tools) section below.
 
 ---
 
@@ -694,8 +505,8 @@ Semantic search within specific transcript events using embedding-based matching
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | query_text | string | **yes** | - | Search query text |
-| equity_ids | array[integer] | **yes** | - | List of equity IDs to search |
-| event_ids | array[integer] | **yes** | - | List of event IDs to search |
+| equity_ids | array[integer] | no | null | List of equity IDs to filter search |
+| event_ids | array[integer] | no | null | List of event IDs to search within |
 | event_type | string | no | "earnings" | Event type filter |
 | transcript_section | string | no | "" | Filter by section: `presentation` or `q_and_a` |
 | start_date | string | no | "" | Start date filter (YYYY-MM-DD) |
@@ -872,8 +683,8 @@ Semantic search within SEC filing document chunks using embedding-based matching
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | query_text | string | **yes** | - | Search query text |
-| equity_ids | array[integer] | **yes** | - | List of equity IDs |
-| filing_ids | array[string] | **yes** | - | List of filing IDs |
+| equity_ids | array[integer] | no | null | List of equity IDs to filter search |
+| filing_ids | array[string] | no | null | List of filing IDs to search within |
 | filing_type | string | no | "" | Filter by filing type |
 | start_date | string | no | "" | Start date filter |
 | end_date | string | no | "" | End date filter |
@@ -1252,7 +1063,7 @@ Get detailed information about a specific research report including summary, met
 **Input Parameters:**
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| research_id | string | **yes** | - | The research report ID to retrieve |
+| document_id | string | **yes** | - | The research report document ID to retrieve. Obtain from find_research or search_research results |
 | include_base_instructions | boolean | no | true | Include base instructions |
 | exclude_instructions | boolean | no | false | Exclude all instructions in response |
 | originating_prompt | string | no | null | Original user prompt for context |
@@ -1320,11 +1131,9 @@ Semantic search within research content for specific topics, analyses, or insigh
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | query_text | string | **yes** | - | Search query text |
-| research_ids | array[string] | no | null | List of research IDs to search within |
+| document_ids | array[string] | no | null | List of document IDs to search within. Obtain from find_research results |
 | author_ids | array[string] | no | null | List of author person IDs to filter by |
 | aiera_provider_ids | array[string] | no | null | List of Aiera provider IDs to filter by |
-| asset_classes | array[string] | no | null | List of asset classes to filter by |
-| asset_types | array[string] | no | null | List of asset types to filter by |
 | start_date | string | no | "" | Start date filter (YYYY-MM-DD) |
 | end_date | string | no | "" | End date filter (YYYY-MM-DD) |
 | size | integer | no | 20 | Number of results per page (max 250) |
@@ -1514,6 +1323,213 @@ Retrieve all available research asset types with their names and document counts
     {
       "asset_type": "STRING",
       "doc_count": INTEGER
+    }
+  ],
+  "error": STRING | null
+}
+```
+
+---
+
+## Financial Data Tools
+
+### get_financials
+
+Retrieve financial statement data for a company. Available statement types include Income Statement (revenue, costs, operating income, net income, EPS), Balance Sheet (assets, liabilities, equity, cash position, debt), and Cash Flow Statement (operating cash flow, CapEx, free cash flow, financing activities).
+
+**Input Parameters:**
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| bloomberg_ticker | string | **yes** | - | Bloomberg ticker in 'TICKER:COUNTRY' format (e.g., 'AAPL:US') |
+| source | string | **yes** | - | Financial statement type: `income-statement`, `balance-sheet`, or `cash-flow-statement` |
+| calendar_year | integer | **yes** | - | Calendar year for the financial data |
+| source_type | string | no | "standardized" | Data format: `as-reported` (original filings) or `standardized` (normalized data) |
+| period | string | no | "annual" | Reporting period: `annual`, `quarterly`, `semi-annual`, `ltm`, `ytd`, `latest` |
+| calendar_quarter | integer | no | null | Calendar quarter (1-4). Required for quarterly periods |
+| ratio_id | string | no | null | Specific ratio ID to filter |
+| metric_id | string | no | null | Specific metric ID to filter |
+| metric_type | string | no | null | Metric type filter |
+| include_base_instructions | boolean | no | true | Include base instructions |
+| exclude_instructions | boolean | no | false | Exclude all instructions in response |
+| originating_prompt | string | no | null | Original user prompt for context |
+| self_identification | string | no | null | Self-identified information about the user/server/session, used for tracking purposes |
+
+**Output Structure:**
+```json
+{
+  "instructions": ["STRING", ...],
+  "response": [
+    {
+      "equity": {
+        "equity_id": INTEGER,
+        "company_id": INTEGER,
+        "name": "STRING",
+        "bloomberg_ticker": "STRING",
+        "sector_id": INTEGER,
+        "subsector_id": INTEGER
+      },
+      "periods": [
+        {
+          "period_type": "STRING",
+          "report_date": "DATE_STRING",
+          "period_duration": "STRING",
+          "calendar_year": INTEGER,
+          "calendar_quarter": INTEGER | null,
+          "fiscal_year": INTEGER,
+          "fiscal_quarter": INTEGER | null,
+          "is_restated": BOOLEAN | null,
+          "earnings_date": "DATETIME_STRING" | null,
+          "filing_date": "DATETIME_STRING" | null,
+          "metrics": [
+            {
+              "metric": {
+                "metric_name": "STRING",
+                "metric_format": "STRING" | null,
+                "is_point_in_time": BOOLEAN | null,
+                "is_currency": BOOLEAN | null,
+                "is_per_share": BOOLEAN | null,
+                "is_key_metric": BOOLEAN | null,
+                "is_total": BOOLEAN | null,
+                "headers": ["STRING", ...]
+              },
+              "metric_value": FLOAT | null,
+              "metric_unit": "STRING" | null,
+              "metric_currency": "STRING" | null,
+              "metric_is_calculated": BOOLEAN | null,
+              "citation_information": {...} | null
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "error": STRING | null
+}
+```
+
+---
+
+### get_ratios
+
+Retrieve financial ratios for a company, including profitability ratios (ROE, ROA, profit margins), liquidity ratios (current ratio, quick ratio), valuation ratios (P/E, P/B, EV/EBITDA), and leverage ratios (debt-to-equity, interest coverage).
+
+**Input Parameters:**
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| bloomberg_ticker | string | **yes** | - | Bloomberg ticker in 'TICKER:COUNTRY' format (e.g., 'AAPL:US') |
+| calendar_year | integer | **yes** | - | Calendar year for the ratio data |
+| period | string | no | "annual" | Reporting period: `annual`, `quarterly`, `semi-annual`, `ltm`, `ytd`, `latest` |
+| calendar_quarter | integer | no | null | Calendar quarter (1-4). Required for quarterly periods |
+| ratio_id | string | no | null | Specific ratio ID to filter |
+| include_base_instructions | boolean | no | true | Include base instructions |
+| exclude_instructions | boolean | no | false | Exclude all instructions in response |
+| originating_prompt | string | no | null | Original user prompt for context |
+| self_identification | string | no | null | Self-identified information about the user/server/session, used for tracking purposes |
+
+**Output Structure:**
+```json
+{
+  "instructions": ["STRING", ...],
+  "response": [
+    {
+      "equity": {
+        "equity_id": INTEGER,
+        "company_id": INTEGER,
+        "name": "STRING",
+        "bloomberg_ticker": "STRING",
+        "sector_id": INTEGER,
+        "subsector_id": INTEGER
+      },
+      "periods": [
+        {
+          "period_type": "STRING",
+          "report_date": "DATE_STRING",
+          "period_duration": "STRING",
+          "calendar_year": INTEGER,
+          "calendar_quarter": INTEGER | null,
+          "fiscal_year": INTEGER,
+          "fiscal_quarter": INTEGER | null,
+          "ratios": [
+            {
+              "ratio_id": "STRING",
+              "ratio": "STRING",
+              "ratio_category": "STRING",
+              "ratio_value": FLOAT | null
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "error": STRING | null
+}
+```
+
+---
+
+### get_kpis_and_segments
+
+Retrieve KPIs (Key Performance Indicators) and business segment data for a company. KPIs include subscriber counts, unit sales, average selling prices, same-store sales, etc. Segments provide revenue and metrics broken down by business unit, geography, or product line. These metrics are company-specific and vary by industry.
+
+**Input Parameters:**
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| bloomberg_ticker | string | **yes** | - | Bloomberg ticker in 'TICKER:COUNTRY' format (e.g., 'AAPL:US') |
+| calendar_year | integer | **yes** | - | Calendar year for the KPI and segment data |
+| period | string | no | "annual" | Reporting period: `annual`, `quarterly`, `semi-annual`, `ltm`, `ytd`, `latest` |
+| calendar_quarter | integer | no | null | Calendar quarter (1-4). Required for quarterly periods |
+| metric_id | string | no | null | Specific metric ID to filter |
+| metric_type | string | no | null | Metric type filter |
+| include_base_instructions | boolean | no | true | Include base instructions |
+| exclude_instructions | boolean | no | false | Exclude all instructions in response |
+| originating_prompt | string | no | null | Original user prompt for context |
+| self_identification | string | no | null | Self-identified information about the user/server/session, used for tracking purposes |
+
+**Output Structure:**
+```json
+{
+  "instructions": ["STRING", ...],
+  "response": [
+    {
+      "equity": {
+        "equity_id": INTEGER,
+        "company_id": INTEGER,
+        "name": "STRING",
+        "bloomberg_ticker": "STRING",
+        "sector_id": INTEGER,
+        "subsector_id": INTEGER
+      },
+      "periods": [
+        {
+          "period_type": "STRING",
+          "report_date": "DATE_STRING",
+          "period_duration": "STRING",
+          "calendar_year": INTEGER,
+          "calendar_quarter": INTEGER | null,
+          "fiscal_year": INTEGER,
+          "fiscal_quarter": INTEGER | null,
+          "kpi": [
+            {
+              "metric_id": "STRING",
+              "metric_name": "STRING",
+              "metric_format": "STRING" | null,
+              "is_currency": BOOLEAN | null,
+              "is_important": BOOLEAN | null,
+              "metric_value": FLOAT | null
+            }
+          ],
+          "segment": [
+            {
+              "metric_id": "STRING",
+              "metric_name": "STRING",
+              "metric_format": "STRING" | null,
+              "is_currency": BOOLEAN | null,
+              "is_important": BOOLEAN | null,
+              "metric_value": FLOAT | null
+            }
+          ]
+        }
+      ]
     }
   ],
   "error": STRING | null
