@@ -489,6 +489,8 @@ Finds and retrieves research reports. Can fetch a specific report by ID or searc
 | `provider_ids`              | string  | -                    | Filter by provider IDs (comma-separated list)                    |
 | `regions`                   | string  | -                    | Filter by regions (comma-separated list)                         |
 | `countries`                 | string  | -                    | Filter by countries (comma-separated list)                       |
+| `asset_classes`             | string  | -                    | Filter by asset classes (comma-separated list)                   |
+| `asset_types`               | string  | -                    | Filter by asset types (comma-separated list)                     |
 | `start_date`                | string  | 52 weeks ago         | Start date for date range filter (ISO datetime)                  |
 | `end_date`                  | string  | now                  | End date for date range filter (ISO datetime)                    |
 | `search_after`              | string  | -                    | Cursor for pagination (comma-separated sort values from previous response) |

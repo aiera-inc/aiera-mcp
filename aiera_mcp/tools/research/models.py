@@ -126,6 +126,16 @@ class FindResearchArgs(BaseToolArgs):
         description="Filter by one or more country codes. Example: ['US', 'GB'].",
     )
 
+    asset_classes: Optional[List[str]] = Field(
+        default=None,
+        description="Filter by one or more asset classes. Obtain valid values from find_research_asset_classes. Example: ['Equity', 'Fixed Income'].",
+    )
+
+    asset_types: Optional[List[str]] = Field(
+        default=None,
+        description="Filter by one or more asset types. Obtain valid values from find_research_asset_types. Example: ['Common Stock', 'Corporate Bond'].",
+    )
+
     search_after: Optional[List[Any]] = Field(
         default=None,
         description="Cursor for pagination. Pass the next_search_after value from a previous response to fetch the next page of results. Omit for the first page.",

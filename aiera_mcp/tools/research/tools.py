@@ -52,6 +52,12 @@ async def find_research(args: FindResearchArgs) -> FindResearchResponse:
     if "countries" in params:
         params["countries"] = ",".join(params["countries"])
 
+    if "asset_classes" in params:
+        params["asset_classes"] = ",".join(params["asset_classes"])
+
+    if "asset_types" in params:
+        params["asset_types"] = ",".join(params["asset_types"])
+
     # Convert search_after array to comma-separated string for the GET endpoint
     if "search_after" in params:
         params["search_after"] = ",".join(str(v) for v in params["search_after"])
