@@ -179,6 +179,8 @@ class TestSearchResearchArgs:
             end_date="2024-12-31",
             author_ids=["12345"],
             aiera_provider_ids=["krypton"],
+            asset_classes=["Equity"],
+            asset_types=["Common Stock"],
             size=30,
         )
 
@@ -188,6 +190,8 @@ class TestSearchResearchArgs:
         assert args.end_date == "2024-12-31"
         assert args.author_ids == ["12345"]
         assert args.aiera_provider_ids == ["krypton"]
+        assert args.asset_classes == ["Equity"]
+        assert args.asset_types == ["Common Stock"]
         assert args.size == 30
         assert args.search_after is None
 
@@ -202,6 +206,8 @@ class TestSearchResearchArgs:
         assert args.end_date == ""
         assert args.author_ids is None
         assert args.aiera_provider_ids is None
+        assert args.asset_classes is None
+        assert args.asset_types is None
         assert args.size == 20
         assert args.search_after is None
         assert args.originating_prompt is None
@@ -612,6 +618,8 @@ class TestSearchModelSerialization:
         assert "end_date" in schema["properties"]
         assert "author_ids" in schema["properties"]
         assert "aiera_provider_ids" in schema["properties"]
+        assert "asset_classes" in schema["properties"]
+        assert "asset_types" in schema["properties"]
         assert "size" in schema["properties"]
         assert "search_after" in schema["properties"]
         assert "equity_ids" not in schema["properties"]

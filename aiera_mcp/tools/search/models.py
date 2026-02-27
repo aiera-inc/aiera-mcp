@@ -243,6 +243,16 @@ class SearchResearchArgs(BaseAieraArgs):
         description="Filter by one or more Aiera provider IDs. Obtain provider IDs from get_research_providers results. Example: ['krypton', 'krypton-test'].",
     )
 
+    asset_classes: Optional[List[str]] = Field(
+        default=None,
+        description="Filter by one or more asset classes. Obtain valid values from find_research_asset_classes. Example: ['Equity', 'Fixed Income'].",
+    )
+
+    asset_types: Optional[List[str]] = Field(
+        default=None,
+        description="Filter by one or more asset types. Obtain valid values from find_research_asset_types. Example: ['Common Stock', 'Corporate Bond'].",
+    )
+
     size: int = Field(
         default=20,
         description="Number of research chunks to return per page (max 250, 10-50 recommended for optimal performance)",

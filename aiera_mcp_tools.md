@@ -990,6 +990,8 @@ Find research reports filtered by optional author IDs, provider IDs, regions, co
 | aiera_provider_ids | array[string] | no | null | List of Aiera provider IDs to filter by |
 | regions | array[string] | no | null | List of regions to filter by (e.g., ['Americas', 'EMEA']) |
 | countries | array[string] | no | null | List of country codes to filter by (e.g., ['US', 'GB']) |
+| asset_classes | array[string] | no | null | List of asset classes to filter by. Obtain valid values from find_research_asset_classes (e.g., ['Equity', 'Fixed Income']) |
+| asset_types | array[string] | no | null | List of asset types to filter by. Obtain valid values from find_research_asset_types (e.g., ['Common Stock', 'Corporate Bond']) |
 | search_after | array | no | null | Cursor for pagination. Pass `next_search_after` from a previous response to fetch the next page |
 | page_size | integer/string | no | 50 | Number of items per page (1-100) |
 | include_base_instructions | boolean | no | true | Include base instructions |
@@ -1134,6 +1136,8 @@ Semantic search within research content for specific topics, analyses, or insigh
 | document_ids | array[string] | no | null | List of document IDs to search within. Obtain from find_research results |
 | author_ids | array[string] | no | null | List of author person IDs to filter by |
 | aiera_provider_ids | array[string] | no | null | List of Aiera provider IDs to filter by |
+| asset_classes | array[string] | no | null | List of asset classes to filter by. Obtain valid values from find_research_asset_classes (e.g., ['Equity', 'Fixed Income']) |
+| asset_types | array[string] | no | null | List of asset types to filter by. Obtain valid values from find_research_asset_types (e.g., ['Common Stock', 'Corporate Bond']) |
 | start_date | string | no | "" | Start date filter (YYYY-MM-DD) |
 | end_date | string | no | "" | End date filter (YYYY-MM-DD) |
 | size | integer | no | 20 | Number of results per page (max 250) |

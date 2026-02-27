@@ -470,6 +470,14 @@ async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
     if args.aiera_provider_ids:
         must_clauses.append({"terms": {"aiera_provider_id": args.aiera_provider_ids}})
 
+    # add asset classes filter...
+    if args.asset_classes:
+        must_clauses.append({"terms": {"asset_classes": args.asset_classes}})
+
+    # add asset types filter...
+    if args.asset_types:
+        must_clauses.append({"terms": {"asset_types": args.asset_types}})
+
     k_value = args.size * 2
     if must_clauses:
         k_value = args.size * 20  # Increased for filters
