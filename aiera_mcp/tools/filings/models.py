@@ -130,36 +130,6 @@ class FindFilingsArgs(BaseToolArgs, BloombergTickerMixin):
         description="SEC form type to filter by. Common values: '10-K' (annual report), '10-Q' (quarterly report), '8-K' (current report/material events), '4' (insider trading), 'DEF 14A' (proxy statement), 'S-1' (IPO registration), '13F' (institutional holdings). Leave empty to include all form types.",
     )
 
-    search: Optional[str] = Field(
-        default=None,
-        description="Search term to filter filings.",
-    )
-
-    filing_id: Optional[Union[int, str]] = Field(
-        default=None,
-        description="Single filing ID to retrieve a specific filing.",
-    )
-
-    filing_ids: Optional[str] = Field(
-        default=None,
-        description="Comma-separated list of filing IDs to retrieve specific filings. Example: '12345,67890'",
-    )
-
-    include_delisted: Optional[bool] = Field(
-        default=True,
-        description="Include filings from delisted companies.",
-    )
-
-    include_content: Optional[bool] = Field(
-        default=False,
-        description="Include raw filing content in results.",
-    )
-
-    company_rollup: Optional[bool] = Field(
-        default=True,
-        description="Roll up results to company level.",
-    )
-
     page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )

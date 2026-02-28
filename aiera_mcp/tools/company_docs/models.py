@@ -185,31 +185,6 @@ class FindCompanyDocsArgs(BaseToolArgs, BloombergTickerMixin, CategoriesKeywords
         description="Comma-separated keywords to exclude from results.",
     )
 
-    company_doc_id: Optional[Union[int, str]] = Field(
-        default=None,
-        description="Single document ID to retrieve a specific company document.",
-    )
-
-    company_doc_ids: Optional[str] = Field(
-        default=None,
-        description="Comma-separated list of document IDs to retrieve specific documents. Example: '12345,67890'",
-    )
-
-    include_delisted: Optional[bool] = Field(
-        default=True,
-        description="Include documents from delisted companies.",
-    )
-
-    include_content: Optional[bool] = Field(
-        default=False,
-        description="Include raw document content in results.",
-    )
-
-    company_rollup: Optional[bool] = Field(
-        default=True,
-        description="Roll up results to company level.",
-    )
-
     page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )

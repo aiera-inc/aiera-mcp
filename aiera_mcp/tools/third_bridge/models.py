@@ -134,26 +134,6 @@ class FindThirdBridgeEventsArgs(BaseToolArgs, BloombergTickerMixin):
         description="ID of a specific subsector. Use get_sectors_and_subsectors to find valid IDs.",
     )
 
-    search: Optional[str] = Field(
-        default=None,
-        description="Search term to filter Third Bridge content.",
-    )
-
-    event_id: Optional[str] = Field(
-        default=None,
-        description="Single Third Bridge event ID to retrieve.",
-    )
-
-    event_ids: Optional[str] = Field(
-        default=None,
-        description="Comma-separated list of Third Bridge event IDs. Example: 'TB-12345,TB-67890'",
-    )
-
-    include_transcripts: Optional[bool] = Field(
-        default=False,
-        description="Include transcript content in results.",
-    )
-
     content_type: Optional[str] = Field(
         default=None,
         description="Filter by content type. Options: 'FORUM', 'PRIMER', 'COMMUNITY'.",
