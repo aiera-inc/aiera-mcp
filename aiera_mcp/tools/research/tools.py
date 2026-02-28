@@ -13,12 +13,22 @@ from .models import (
     FindResearchAuthorsArgs,
     FindResearchAssetClassesArgs,
     FindResearchAssetTypesArgs,
+    FindResearchSubjectsArgs,
+    FindResearchProductFocusesArgs,
+    FindResearchDisciplineTypesArgs,
+    FindResearchRegionTypesArgs,
+    FindResearchCountryCodesArgs,
     FindResearchResponse,
     GetResearchResponse,
     GetResearchProvidersResponse,
     FindResearchAuthorsResponse,
     FindResearchAssetClassesResponse,
     FindResearchAssetTypesResponse,
+    FindResearchSubjectsResponse,
+    FindResearchProductFocusesResponse,
+    FindResearchDisciplineTypesResponse,
+    FindResearchRegionTypesResponse,
+    FindResearchCountryCodesResponse,
 )
 
 # Setup logging
@@ -57,6 +67,15 @@ async def find_research(args: FindResearchArgs) -> FindResearchResponse:
 
     if "asset_types" in params:
         params["asset_types"] = ",".join(params["asset_types"])
+
+    if "subjects" in params:
+        params["subjects"] = ",".join(params["subjects"])
+
+    if "product_focuses" in params:
+        params["product_focuses"] = ",".join(params["product_focuses"])
+
+    if "discipline_types" in params:
+        params["discipline_types"] = ",".join(params["discipline_types"])
 
     # Convert search_after array to comma-separated string for the GET endpoint
     if "search_after" in params:
@@ -175,6 +194,136 @@ async def find_research_asset_types(
     )
 
     response = FindResearchAssetTypesResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
+
+
+async def find_research_subjects(
+    args: FindResearchSubjectsArgs,
+) -> FindResearchSubjectsResponse:
+    """Retrieve all available research subjects."""
+    logger.info("tool called: find_research_subjects")
+
+    # Get client and API key (no context needed for standard MCP)
+    client = await get_http_client(None)
+    api_key = get_api_key()
+
+    params = args.model_dump(exclude_none=True)
+
+    raw_response = await make_aiera_request(
+        client=client,
+        method="GET",
+        endpoint="/chat-support/find-research-subjects",
+        api_key=api_key,
+        params=params,
+    )
+
+    response = FindResearchSubjectsResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
+
+
+async def find_research_product_focuses(
+    args: FindResearchProductFocusesArgs,
+) -> FindResearchProductFocusesResponse:
+    """Retrieve all available research product focus values."""
+    logger.info("tool called: find_research_product_focuses")
+
+    # Get client and API key (no context needed for standard MCP)
+    client = await get_http_client(None)
+    api_key = get_api_key()
+
+    params = args.model_dump(exclude_none=True)
+
+    raw_response = await make_aiera_request(
+        client=client,
+        method="GET",
+        endpoint="/chat-support/find-research-product-focuses",
+        api_key=api_key,
+        params=params,
+    )
+
+    response = FindResearchProductFocusesResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
+
+
+async def find_research_discipline_types(
+    args: FindResearchDisciplineTypesArgs,
+) -> FindResearchDisciplineTypesResponse:
+    """Retrieve all available research discipline types."""
+    logger.info("tool called: find_research_discipline_types")
+
+    # Get client and API key (no context needed for standard MCP)
+    client = await get_http_client(None)
+    api_key = get_api_key()
+
+    params = args.model_dump(exclude_none=True)
+
+    raw_response = await make_aiera_request(
+        client=client,
+        method="GET",
+        endpoint="/chat-support/find-research-discipline-types",
+        api_key=api_key,
+        params=params,
+    )
+
+    response = FindResearchDisciplineTypesResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
+
+
+async def find_research_region_types(
+    args: FindResearchRegionTypesArgs,
+) -> FindResearchRegionTypesResponse:
+    """Retrieve all available research region types."""
+    logger.info("tool called: find_research_region_types")
+
+    # Get client and API key (no context needed for standard MCP)
+    client = await get_http_client(None)
+    api_key = get_api_key()
+
+    params = args.model_dump(exclude_none=True)
+
+    raw_response = await make_aiera_request(
+        client=client,
+        method="GET",
+        endpoint="/chat-support/find-research-region-types",
+        api_key=api_key,
+        params=params,
+    )
+
+    response = FindResearchRegionTypesResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
+
+
+async def find_research_country_codes(
+    args: FindResearchCountryCodesArgs,
+) -> FindResearchCountryCodesResponse:
+    """Retrieve all available research country codes."""
+    logger.info("tool called: find_research_country_codes")
+
+    # Get client and API key (no context needed for standard MCP)
+    client = await get_http_client(None)
+    api_key = get_api_key()
+
+    params = args.model_dump(exclude_none=True)
+
+    raw_response = await make_aiera_request(
+        client=client,
+        method="GET",
+        endpoint="/chat-support/find-research-country-codes",
+        api_key=api_key,
+        params=params,
+    )
+
+    response = FindResearchCountryCodesResponse.model_validate(raw_response)
     if args.exclude_instructions:
         response.instructions = []
     return response

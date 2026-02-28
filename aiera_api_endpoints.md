@@ -472,6 +472,186 @@ Returns a paginated list of all available research asset types (e.g. "Common Sto
 
 ---
 
+## GET /find-research-subjects
+
+Returns a paginated list of all available research subjects. Aggregated from the research index filtered by the user's entitlements. Requires research API access.
+
+**Query Parameters:**
+
+| Parameter                   | Type    | Default | Description                                   |
+|-----------------------------|---------|---------|-----------------------------------------------|
+| `include_base_instructions` | boolean | `true`  | Include base instructions                     |
+| `originating_prompt`        | string  | -       | Original prompt                               |
+| `self_identification`       | string  | -       | Caller identifier                             |
+| `search`                    | string  | -       | Search term to filter subjects by name        |
+| `page`                      | integer | `1`     | Page number                                   |
+| `page_size`                 | integer | `50`    | Results per page (max 100)                    |
+
+**Response:**
+
+```json
+{
+  "pagination": {
+    "total_count": INTEGER,
+    "current_page": INTEGER,
+    "total_pages": INTEGER,
+    "page_size": INTEGER
+  },
+  "data": [
+    {
+      "subject": "STRING",
+      "doc_count": INTEGER
+    }, ...
+  ]
+}
+```
+
+---
+
+## GET /find-research-product-focuses
+
+Returns a paginated list of all available research product focus values. Aggregated from the research index filtered by the user's entitlements. Requires research API access.
+
+**Query Parameters:**
+
+| Parameter                   | Type    | Default | Description                                      |
+|-----------------------------|---------|---------|--------------------------------------------------|
+| `include_base_instructions` | boolean | `true`  | Include base instructions                        |
+| `originating_prompt`        | string  | -       | Original prompt                                  |
+| `self_identification`       | string  | -       | Caller identifier                                |
+| `search`                    | string  | -       | Search term to filter product focus by name      |
+| `page`                      | integer | `1`     | Page number                                      |
+| `page_size`                 | integer | `50`    | Results per page (max 100)                       |
+
+**Response:**
+
+```json
+{
+  "pagination": {
+    "total_count": INTEGER,
+    "current_page": INTEGER,
+    "total_pages": INTEGER,
+    "page_size": INTEGER
+  },
+  "data": [
+    {
+      "product_focus": "STRING",
+      "doc_count": INTEGER
+    }, ...
+  ]
+}
+```
+
+---
+
+## GET /find-research-discipline-types
+
+Returns a paginated list of all available research discipline types. Aggregated from the research index filtered by the user's entitlements. Requires research API access.
+
+**Query Parameters:**
+
+| Parameter                   | Type    | Default | Description                                      |
+|-----------------------------|---------|---------|--------------------------------------------------|
+| `include_base_instructions` | boolean | `true`  | Include base instructions                        |
+| `originating_prompt`        | string  | -       | Original prompt                                  |
+| `self_identification`       | string  | -       | Caller identifier                                |
+| `search`                    | string  | -       | Search term to filter discipline types by name   |
+| `page`                      | integer | `1`     | Page number                                      |
+| `page_size`                 | integer | `50`    | Results per page (max 100)                       |
+
+**Response:**
+
+```json
+{
+  "pagination": {
+    "total_count": INTEGER,
+    "current_page": INTEGER,
+    "total_pages": INTEGER,
+    "page_size": INTEGER
+  },
+  "data": [
+    {
+      "discipline_type": "STRING",
+      "doc_count": INTEGER
+    }, ...
+  ]
+}
+```
+
+---
+
+## GET /find-research-region-types
+
+Returns a paginated list of all available research region types. Aggregated from the nested `regions` field in the research index, filtered by the user's entitlements. Requires research API access.
+
+**Query Parameters:**
+
+| Parameter                   | Type    | Default | Description                                    |
+|-----------------------------|---------|---------|------------------------------------------------|
+| `include_base_instructions` | boolean | `true`  | Include base instructions                      |
+| `originating_prompt`        | string  | -       | Original prompt                                |
+| `self_identification`       | string  | -       | Caller identifier                              |
+| `search`                    | string  | -       | Search term to filter region types (wildcard)  |
+| `page`                      | integer | `1`     | Page number                                    |
+| `page_size`                 | integer | `50`    | Results per page (max 100)                     |
+
+**Response:**
+
+```json
+{
+  "pagination": {
+    "total_count": INTEGER,
+    "current_page": INTEGER,
+    "total_pages": INTEGER,
+    "page_size": INTEGER
+  },
+  "data": [
+    {
+      "region_type": "STRING",
+      "doc_count": INTEGER
+    }, ...
+  ]
+}
+```
+
+---
+
+## GET /find-research-country-codes
+
+Returns a paginated list of all available research country codes. Aggregated from the nested `countries` field in the research index, filtered by the user's entitlements. Requires research API access.
+
+**Query Parameters:**
+
+| Parameter                   | Type    | Default | Description                                      |
+|-----------------------------|---------|---------|--------------------------------------------------|
+| `include_base_instructions` | boolean | `true`  | Include base instructions                        |
+| `originating_prompt`        | string  | -       | Original prompt                                  |
+| `self_identification`       | string  | -       | Caller identifier                                |
+| `search`                    | string  | -       | Search term to filter country codes (wildcard, uppercased) |
+| `page`                      | integer | `1`     | Page number                                      |
+| `page_size`                 | integer | `50`    | Results per page (max 100)                       |
+
+**Response:**
+
+```json
+{
+  "pagination": {
+    "total_count": INTEGER,
+    "current_page": INTEGER,
+    "total_pages": INTEGER,
+    "page_size": INTEGER
+  },
+  "data": [
+    {
+      "country_code": "STRING",
+      "doc_count": INTEGER
+    }, ...
+  ]
+}
+```
+
+---
+
 ## GET /find-research
 
 Finds and retrieves research reports. Can fetch a specific report by ID or search/filter across reports by author, provider, region, date range, and more. Supports cursor-based pagination.
@@ -491,6 +671,9 @@ Finds and retrieves research reports. Can fetch a specific report by ID or searc
 | `countries`                 | string  | -                    | Filter by countries (comma-separated list)                       |
 | `asset_classes`             | string  | -                    | Filter by asset classes (comma-separated list)                   |
 | `asset_types`               | string  | -                    | Filter by asset types (comma-separated list)                     |
+| `subjects`                  | string  | -                    | Filter by subjects (comma-separated list)                        |
+| `product_focuses`           | string  | -                    | Filter by product focus values (comma-separated list)            |
+| `discipline_types`          | string  | -                    | Filter by discipline types (comma-separated list)                |
 | `start_date`                | string  | 52 weeks ago         | Start date for date range filter (ISO datetime)                  |
 | `end_date`                  | string  | now                  | End date for date range filter (ISO datetime)                    |
 | `search_after`              | string  | -                    | Cursor for pagination (comma-separated sort values from previous response) |
@@ -627,38 +810,6 @@ Returns a list of available research providers. Requires research API access.
     {
       "aiera_provider_id": "STRING",
       "name": "STRING"
-    }, ...
-  ]
-}
-```
-
----
-
-## GET /get-countries-and-regions
-
-Returns a list of countries grouped by subregion. Requires research API access.
-
-**Query Parameters:**
-
-| Parameter                   | Type    | Default | Description               |
-|-----------------------------|---------|---------|---------------------------|
-| `include_base_instructions` | boolean | `true`  | Include base instructions |
-| `originating_prompt`        | string  | -       | Original prompt           |
-| `self_identification`       | string  | -       | Caller identifier         |
-
-**Response:**
-
-```json
-{
-  "response": [
-    {
-      "subregion": "STRING",
-      "countries": [
-        {
-          "code": "STRING",
-          "name": "STRING"
-        }, ...
-      ]
     }, ...
   ]
 }

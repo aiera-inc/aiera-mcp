@@ -136,6 +136,21 @@ class FindResearchArgs(BaseToolArgs):
         description="Filter by one or more asset types. Obtain valid values from find_research_asset_types. Example: ['Common Stock', 'Corporate Bond'].",
     )
 
+    subjects: Optional[List[str]] = Field(
+        default=None,
+        description="Filter by one or more subjects. Obtain valid values from find_research_subjects. Example: ['Technology', 'Healthcare'].",
+    )
+
+    product_focuses: Optional[List[str]] = Field(
+        default=None,
+        description="Filter by one or more product focus values. Obtain valid values from find_research_product_focuses. Example: ['Equity Research', 'Credit Research'].",
+    )
+
+    discipline_types: Optional[List[str]] = Field(
+        default=None,
+        description="Filter by one or more discipline types. Obtain valid values from find_research_discipline_types. Example: ['Fundamental', 'Quantitative'].",
+    )
+
     search_after: Optional[List[Any]] = Field(
         default=None,
         description="Cursor for pagination. Pass the next_search_after value from a previous response to fetch the next page of results. Omit for the first page.",
@@ -341,6 +356,226 @@ class FindResearchAssetTypesArgs(BaseToolArgs):
     )
 
 
+class FindResearchSubjectsArgs(BaseToolArgs):
+    """Retrieve all available research subjects with their names and document counts. Used to find valid subject values for filtering research tools.
+
+    WHEN TO USE:
+    - Use this to discover available research subjects before filtering research
+    - Use this to understand the distribution of research across subjects
+
+    WORKFLOW: Use this tool to obtain subject names, then pass them to find_research or search_research.
+    """
+
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
+    )
+
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
+    search: Optional[str] = Field(
+        default=None,
+        description="Search term to filter subjects by name.",
+    )
+
+    page: Union[int, str] = Field(
+        default=1, ge=1, description="Page number for pagination (1-based)."
+    )
+
+    page_size: Union[int, str] = Field(
+        default=50, ge=1, le=100, description="Number of items per page (1-100)."
+    )
+
+
+class FindResearchProductFocusesArgs(BaseToolArgs):
+    """Retrieve all available research product focus values with their names and document counts. Used to find valid product focus values for filtering research tools.
+
+    WHEN TO USE:
+    - Use this to discover available product focus values before filtering research
+    - Use this to understand the distribution of research across product focuses
+
+    WORKFLOW: Use this tool to obtain product focus names, then pass them to find_research or search_research.
+    """
+
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
+    )
+
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
+    search: Optional[str] = Field(
+        default=None,
+        description="Search term to filter product focuses by name.",
+    )
+
+    page: Union[int, str] = Field(
+        default=1, ge=1, description="Page number for pagination (1-based)."
+    )
+
+    page_size: Union[int, str] = Field(
+        default=50, ge=1, le=100, description="Number of items per page (1-100)."
+    )
+
+
+class FindResearchDisciplineTypesArgs(BaseToolArgs):
+    """Retrieve all available research discipline types with their names and document counts. Used to find valid discipline type values for filtering research tools.
+
+    WHEN TO USE:
+    - Use this to discover available discipline types before filtering research
+    - Use this to understand the distribution of research across discipline types
+
+    WORKFLOW: Use this tool to obtain discipline type names, then pass them to find_research or search_research.
+    """
+
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
+    )
+
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
+    search: Optional[str] = Field(
+        default=None,
+        description="Search term to filter discipline types by name.",
+    )
+
+    page: Union[int, str] = Field(
+        default=1, ge=1, description="Page number for pagination (1-based)."
+    )
+
+    page_size: Union[int, str] = Field(
+        default=50, ge=1, le=100, description="Number of items per page (1-100)."
+    )
+
+
+class FindResearchRegionTypesArgs(BaseToolArgs):
+    """Retrieve all available research region types with their names and document counts. Used to find valid region type values for filtering research tools.
+
+    WHEN TO USE:
+    - Use this to discover available region types before filtering research
+    - Use this to understand the distribution of research across region types
+
+    WORKFLOW: Use this tool to obtain region type names, then pass them to find_research or search_research.
+    """
+
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
+    )
+
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
+    search: Optional[str] = Field(
+        default=None,
+        description="Search term to filter region types by name.",
+    )
+
+    page: Union[int, str] = Field(
+        default=1, ge=1, description="Page number for pagination (1-based)."
+    )
+
+    page_size: Union[int, str] = Field(
+        default=50, ge=1, le=100, description="Number of items per page (1-100)."
+    )
+
+
+class FindResearchCountryCodesArgs(BaseToolArgs):
+    """Retrieve all available research country codes with their names and document counts. Used to find valid country code values for filtering research tools.
+
+    WHEN TO USE:
+    - Use this to discover available country codes before filtering research
+    - Use this to understand the distribution of research across country codes
+
+    WORKFLOW: Use this tool to obtain country code names, then pass them to find_research or search_research.
+    """
+
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
+    )
+
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
+    search: Optional[str] = Field(
+        default=None,
+        description="Search term to filter country codes by name.",
+    )
+
+    page: Union[int, str] = Field(
+        default=1, ge=1, description="Page number for pagination (1-based)."
+    )
+
+    page_size: Union[int, str] = Field(
+        default=50, ge=1, le=100, description="Number of items per page (1-100)."
+    )
+
+
 # Response models
 class FindResearchResponse(BaseAieraResponse):
     """Response for find_research tool - passes through the API response structure."""
@@ -380,6 +615,51 @@ class FindResearchAssetClassesResponse(BaseAieraResponse):
 
 class FindResearchAssetTypesResponse(BaseAieraResponse):
     """Response for find_research_asset_types tool - passes through the API response structure."""
+
+    pagination: Optional[Any] = Field(
+        None, description="Pagination metadata from the API"
+    )
+    data: Optional[Any] = Field(None, description="Response data from the API")
+
+
+class FindResearchSubjectsResponse(BaseAieraResponse):
+    """Response for find_research_subjects tool - passes through the API response structure."""
+
+    pagination: Optional[Any] = Field(
+        None, description="Pagination metadata from the API"
+    )
+    data: Optional[Any] = Field(None, description="Response data from the API")
+
+
+class FindResearchProductFocusesResponse(BaseAieraResponse):
+    """Response for find_research_product_focuses tool - passes through the API response structure."""
+
+    pagination: Optional[Any] = Field(
+        None, description="Pagination metadata from the API"
+    )
+    data: Optional[Any] = Field(None, description="Response data from the API")
+
+
+class FindResearchDisciplineTypesResponse(BaseAieraResponse):
+    """Response for find_research_discipline_types tool - passes through the API response structure."""
+
+    pagination: Optional[Any] = Field(
+        None, description="Pagination metadata from the API"
+    )
+    data: Optional[Any] = Field(None, description="Response data from the API")
+
+
+class FindResearchRegionTypesResponse(BaseAieraResponse):
+    """Response for find_research_region_types tool - passes through the API response structure."""
+
+    pagination: Optional[Any] = Field(
+        None, description="Pagination metadata from the API"
+    )
+    data: Optional[Any] = Field(None, description="Response data from the API")
+
+
+class FindResearchCountryCodesResponse(BaseAieraResponse):
+    """Response for find_research_country_codes tool - passes through the API response structure."""
 
     pagination: Optional[Any] = Field(
         None, description="Pagination metadata from the API"

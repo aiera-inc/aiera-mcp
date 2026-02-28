@@ -9,6 +9,11 @@ from .tools import (
     find_research_authors,
     find_research_asset_classes,
     find_research_asset_types,
+    find_research_subjects,
+    find_research_product_focuses,
+    find_research_discipline_types,
+    find_research_region_types,
+    find_research_country_codes,
 )
 from .models import (
     FindResearchArgs,
@@ -17,12 +22,22 @@ from .models import (
     FindResearchAuthorsArgs,
     FindResearchAssetClassesArgs,
     FindResearchAssetTypesArgs,
+    FindResearchSubjectsArgs,
+    FindResearchProductFocusesArgs,
+    FindResearchDisciplineTypesArgs,
+    FindResearchRegionTypesArgs,
+    FindResearchCountryCodesArgs,
     FindResearchResponse,
     GetResearchResponse,
     GetResearchProvidersResponse,
     FindResearchAuthorsResponse,
     FindResearchAssetClassesResponse,
     FindResearchAssetTypesResponse,
+    FindResearchSubjectsResponse,
+    FindResearchProductFocusesResponse,
+    FindResearchDisciplineTypesResponse,
+    FindResearchRegionTypesResponse,
+    FindResearchCountryCodesResponse,
 )
 
 __all__ = [
@@ -33,6 +48,11 @@ __all__ = [
     "find_research_authors",
     "find_research_asset_classes",
     "find_research_asset_types",
+    "find_research_subjects",
+    "find_research_product_focuses",
+    "find_research_discipline_types",
+    "find_research_region_types",
+    "find_research_country_codes",
     # Parameter models
     "FindResearchArgs",
     "GetResearchArgs",
@@ -40,6 +60,11 @@ __all__ = [
     "FindResearchAuthorsArgs",
     "FindResearchAssetClassesArgs",
     "FindResearchAssetTypesArgs",
+    "FindResearchSubjectsArgs",
+    "FindResearchProductFocusesArgs",
+    "FindResearchDisciplineTypesArgs",
+    "FindResearchRegionTypesArgs",
+    "FindResearchCountryCodesArgs",
     # Response models
     "FindResearchResponse",
     "GetResearchResponse",
@@ -47,4 +72,9 @@ __all__ = [
     "FindResearchAuthorsResponse",
     "FindResearchAssetClassesResponse",
     "FindResearchAssetTypesResponse",
+    "FindResearchSubjectsResponse",
+    "FindResearchProductFocusesResponse",
+    "FindResearchDisciplineTypesResponse",
+    "FindResearchRegionTypesResponse",
+    "FindResearchCountryCodesResponse",
 ]

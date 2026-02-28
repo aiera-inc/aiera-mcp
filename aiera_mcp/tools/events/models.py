@@ -171,6 +171,16 @@ class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
         description="ID of a specific conference. Use find_conferences to find valid IDs.",
     )
 
+    event_ids: Optional[str] = Field(
+        default=None,
+        description="Comma-separated list of event IDs to retrieve specific events. Example: '12345,67890'",
+    )
+
+    event_category: Optional[str] = Field(
+        default=None,
+        description="Filter by event category. Options: 'expert_insights', 'thirdbridge'. Leave empty for standard events.",
+    )
+
     event_type: str = Field(
         default="earnings",
         description="Type of event to search for. ONLY ONE type per call - to search multiple types, make separate calls. Options: 'earnings' (quarterly earnings calls with Q&A), 'presentation' (investor conferences, company presentations at events - use this for 'conference calls'), 'investor_meeting' (investor day events, one-on-one meetings - use this for 'investor meetings'), 'shareholder_meeting' (annual/special shareholder meetings), 'special_situation' (M&A announcements, other corporate actions). Example: for 'conference calls AND meetings', make TWO calls: one with event_type='presentation' and one with event_type='investor_meeting'. Defaults to 'earnings'.",
@@ -363,6 +373,16 @@ class GetUpcomingEventsArgs(BaseToolArgs, BloombergTickerMixin):
     subsector_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific subsector. Use get_sectors_and_subsectors to find valid IDs.",
+    )
+
+    search: Optional[str] = Field(
+        default=None,
+        description="Search term to filter events.",
+    )
+
+    equity_ids: Optional[str] = Field(
+        default=None,
+        description="Comma-separated list of equity IDs. Example: '100,200'",
     )
 
 

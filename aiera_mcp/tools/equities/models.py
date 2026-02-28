@@ -110,6 +110,21 @@ class FindEquitiesArgs(BaseToolArgs, BloombergTickerMixin):
         description="Search term to filter results. Searches within company names or tickers.",
     )
 
+    sector_id: Optional[Union[int, str]] = Field(
+        default=None,
+        description="ID of a specific sector. Use get_sectors_and_subsectors to find valid IDs.",
+    )
+
+    subsector_id: Optional[Union[int, str]] = Field(
+        default=None,
+        description="ID of a specific subsector. Use get_sectors_and_subsectors to find valid IDs.",
+    )
+
+    include_inactive: Optional[bool] = Field(
+        default=False,
+        description="Include inactive/delisted equities in results.",
+    )
+
     page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )
@@ -149,6 +164,21 @@ class GetEquitySummariesArgs(BaseToolArgs, BloombergTickerMixin):
         description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces."
     )
 
+    equity_ids: Optional[str] = Field(
+        default=None,
+        description="Comma-separated list of equity IDs. Example: '100,200'",
+    )
+
+    index_id: Optional[Union[int, str]] = Field(
+        default=None,
+        description="ID of a specific index. Use get_available_indexes to find valid IDs.",
+    )
+
+    watchlist_id: Optional[Union[int, str]] = Field(
+        default=None,
+        description="ID of a specific watchlist. Use get_available_watchlists to find valid IDs.",
+    )
+
 
 class GetIndexConstituentsArgs(BaseToolArgs):
     """Get all equities within a specific stock market index."""
@@ -170,6 +200,11 @@ class GetIndexConstituentsArgs(BaseToolArgs):
 
     index: Union[str, int] = Field(
         description="Index identifier (index_id or short_name). Obtain valid values from get_available_indexes. Example: 1 or 'sp500'"
+    )
+
+    search: Optional[str] = Field(
+        default=None,
+        description="Search term to filter results.",
     )
 
     page: Union[int, str] = Field(
@@ -203,31 +238,17 @@ class GetWatchlistConstituentsArgs(BaseToolArgs):
         description="Watchlist identifier (watchlist_id). Obtain valid values from get_available_watchlists. Example: 42"
     )
 
+    search: Optional[str] = Field(
+        default=None,
+        description="Search term to filter results.",
+    )
+
     page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )
 
     page_size: Union[int, str] = Field(
         default=50, ge=1, le=100, description="Number of items per page (1-100)."
-    )
-
-
-class GetCountriesAndRegionsArgs(BaseToolArgs):
-    """Retrieve all available countries grouped by subregion. Used to find valid country and region values for filtering research and other tools."""
-
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
-
-    self_identification: Optional[str] = Field(
-        default=None,
-        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
-    )
-
-    exclude_instructions: Optional[bool] = Field(
-        default=False,
-        description="Whether to exclude all instructions from the tool response.",
     )
 
 
@@ -249,6 +270,19 @@ class GetAvailableWatchlistsArgs(BaseToolArgs):
         description="Whether to exclude all instructions from the tool response.",
     )
 
+    search: Optional[str] = Field(
+        default=None,
+        description="Search term to filter results.",
+    )
+
+    page: Union[int, str] = Field(
+        default=1, ge=1, description="Page number for pagination (1-based)."
+    )
+
+    page_size: Union[int, str] = Field(
+        default=50, ge=1, le=100, description="Number of items per page (1-100)."
+    )
+
 
 class GetAvailableIndexesArgs(BaseToolArgs):
     """Retrieve all available stock market indices with their IDs, names, and descriptions. Used to find valid index IDs for filtering other tools."""
@@ -266,6 +300,19 @@ class GetAvailableIndexesArgs(BaseToolArgs):
     exclude_instructions: Optional[bool] = Field(
         default=False,
         description="Whether to exclude all instructions from the tool response.",
+    )
+
+    search: Optional[str] = Field(
+        default=None,
+        description="Search term to filter results.",
+    )
+
+    page: Union[int, str] = Field(
+        default=1, ge=1, description="Page number for pagination (1-based)."
+    )
+
+    page_size: Union[int, str] = Field(
+        default=50, ge=1, le=100, description="Number of items per page (1-100)."
     )
 
 
@@ -692,12 +739,6 @@ class GetAvailableWatchlistsResponse(BaseModel):
         None, description="List of available watchlists"
     )
     error: Optional[str] = Field(None, description="Error message if request failed")
-
-
-class GetCountriesAndRegionsResponse(BaseModel):
-    """Response for get_countries_and_regions tool."""
-
-    response: Optional[Any] = Field(None, description="Response data from the API")
 
 
 class GetWatchlistConstituentsResponse(BaseModel):

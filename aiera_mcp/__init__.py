@@ -91,7 +91,6 @@ AVAILABLE_TOOLS = [
     "find_equities",
     "get_equity_summaries",
     "get_sectors_and_subsectors",
-    "get_countries_and_regions",
     # Index/Watchlist Tools
     "get_available_indexes",
     "get_index_constituents",
@@ -109,6 +108,14 @@ AVAILABLE_TOOLS = [
     "find_research",
     "get_research",
     "get_research_providers",
+    "find_research_authors",
+    "find_research_asset_classes",
+    "find_research_asset_types",
+    "find_research_subjects",
+    "find_research_product_focuses",
+    "find_research_discipline_types",
+    "find_research_region_types",
+    "find_research_country_codes",
     # Search Tools
     "search_transcripts",
     "search_filings",
@@ -123,7 +130,6 @@ EQUITY_TOOLS = [
     "find_equities",
     "get_equity_summaries",
     "get_sectors_and_subsectors",
-    "get_countries_and_regions",
 ]
 INDEX_WATCHLIST_TOOLS = [
     "get_available_indexes",
@@ -138,7 +144,19 @@ COMPANY_DOC_TOOLS = [
     "get_company_doc_keywords",
 ]
 THIRD_BRIDGE_TOOLS = ["find_third_bridge_events", "get_third_bridge_event"]
-RESEARCH_TOOLS = ["find_research", "get_research", "get_research_providers"]
+RESEARCH_TOOLS = [
+    "find_research",
+    "get_research",
+    "get_research_providers",
+    "find_research_authors",
+    "find_research_asset_classes",
+    "find_research_asset_types",
+    "find_research_subjects",
+    "find_research_product_focuses",
+    "find_research_discipline_types",
+    "find_research_region_types",
+    "find_research_country_codes",
+]
 WEB_TOOLS = ["trusted_web_search"]
 EMBEDDING_SEARCH_PIPELINE = "embedding_pipeline"
 HYBRID_SEARCH_PIPELINE = "hybrid_search_pipeline"
@@ -150,7 +168,6 @@ from .tools.equities import (
     find_equities,
     get_equity_summaries,
     get_sectors_and_subsectors,
-    get_countries_and_regions,
     get_available_indexes,
     get_index_constituents,
     get_available_watchlists,
@@ -163,7 +180,19 @@ from .tools.company_docs import (
     get_company_doc_keywords,
 )
 from .tools.third_bridge import find_third_bridge_events, get_third_bridge_event
-from .tools.research import find_research, get_research, get_research_providers
+from .tools.research import (
+    find_research,
+    get_research,
+    get_research_providers,
+    find_research_authors,
+    find_research_asset_classes,
+    find_research_asset_types,
+    find_research_subjects,
+    find_research_product_focuses,
+    find_research_discipline_types,
+    find_research_region_types,
+    find_research_country_codes,
+)
 from .tools.search import search_transcripts, search_filings
 from .tools.web import trusted_web_search
 
@@ -207,7 +236,6 @@ __all__ = [
     "find_equities",
     "get_equity_summaries",
     "get_sectors_and_subsectors",
-    "get_countries_and_regions",
     "get_available_indexes",
     "get_index_constituents",
     "get_available_watchlists",
@@ -221,6 +249,14 @@ __all__ = [
     "find_research",
     "get_research",
     "get_research_providers",
+    "find_research_authors",
+    "find_research_asset_classes",
+    "find_research_asset_types",
+    "find_research_subjects",
+    "find_research_product_focuses",
+    "find_research_discipline_types",
+    "find_research_region_types",
+    "find_research_country_codes",
     "search_transcripts",
     "search_filings",
     "trusted_web_search",

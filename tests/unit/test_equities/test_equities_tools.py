@@ -10,7 +10,6 @@ from aiera_mcp.tools.equities.tools import (
     find_equities,
     get_equity_summaries,
     get_sectors_and_subsectors,
-    get_countries_and_regions,
     get_available_indexes,
     get_index_constituents,
     get_available_watchlists,
@@ -27,7 +26,6 @@ from aiera_mcp.tools.equities.models import (
     GetSectorsAndSubsectorsArgs,
     GetAvailableIndexesArgs,
     GetAvailableWatchlistsArgs,
-    GetCountriesAndRegionsArgs,
     GetFinancialsArgs,
     GetRatiosArgs,
     GetKpisAndSegmentsArgs,
@@ -38,7 +36,6 @@ from aiera_mcp.tools.equities.models import (
     GetIndexConstituentsResponse,
     GetAvailableWatchlistsResponse,
     GetWatchlistConstituentsResponse,
-    GetCountriesAndRegionsResponse,
     GetFinancialsResponse,
     GetRatiosResponse,
     GetKpisAndSegmentsResponse,
@@ -1177,86 +1174,3 @@ class TestGetKpisAndSegments:
         assert isinstance(result, GetKpisAndSegmentsResponse)
         call_args = mock_http_dependencies["mock_make_request"].call_args
         assert call_args[1]["params"]["period"] == period
-
-
-@pytest.mark.unit
-class TestGetCountriesAndRegions:
-    """Test the get_countries_and_regions tool."""
-
-    @pytest.mark.asyncio
-    async def test_get_countries_and_regions_success(self, mock_http_dependencies):
-        """Test successful countries and regions retrieval."""
-        # Setup
-        countries_response = {
-            "response": [
-                {
-                    "subregion": "Northern America",
-                    "countries": [
-                        {"code": "US", "name": "United States"},
-                        {"code": "CA", "name": "Canada"},
-                    ],
-                },
-                {
-                    "subregion": "Western Europe",
-                    "countries": [
-                        {"code": "GB", "name": "United Kingdom"},
-                        {"code": "DE", "name": "Germany"},
-                    ],
-                },
-            ],
-        }
-        mock_http_dependencies["mock_make_request"].return_value = countries_response
-
-        args = GetCountriesAndRegionsArgs()
-
-        # Execute
-        result = await get_countries_and_regions(args)
-
-        # Verify
-        assert isinstance(result, GetCountriesAndRegionsResponse)
-        assert result.response is not None
-        assert len(result.response) == 2
-        assert result.response[0]["subregion"] == "Northern America"
-        assert len(result.response[0]["countries"]) == 2
-
-        # Check API call
-        call_args = mock_http_dependencies["mock_make_request"].call_args
-        assert call_args[1]["endpoint"] == "/chat-support/get-countries-and-regions"
-        assert call_args[1]["method"] == "GET"
-
-    @pytest.mark.asyncio
-    async def test_get_countries_and_regions_with_originating_prompt(
-        self, mock_http_dependencies
-    ):
-        """Test get_countries_and_regions passes originating_prompt."""
-        # Setup
-        mock_http_dependencies["mock_make_request"].return_value = {"response": []}
-
-        args = GetCountriesAndRegionsArgs(
-            originating_prompt="What countries are available?"
-        )
-
-        # Execute
-        await get_countries_and_regions(args)
-
-        # Verify
-        call_args = mock_http_dependencies["mock_make_request"].call_args
-        params = call_args[1]["params"]
-        assert params["originating_prompt"] == "What countries are available?"
-
-    @pytest.mark.asyncio
-    async def test_get_countries_and_regions_empty_response(
-        self, mock_http_dependencies
-    ):
-        """Test get_countries_and_regions with empty response."""
-        # Setup
-        mock_http_dependencies["mock_make_request"].return_value = {"response": []}
-
-        args = GetCountriesAndRegionsArgs()
-
-        # Execute
-        result = await get_countries_and_regions(args)
-
-        # Verify
-        assert isinstance(result, GetCountriesAndRegionsResponse)
-        assert result.response == []

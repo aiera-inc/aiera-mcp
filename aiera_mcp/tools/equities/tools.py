@@ -12,7 +12,6 @@ from .models import (
     GetAvailableWatchlistsArgs,
     GetAvailableIndexesArgs,
     GetSectorsAndSubsectorsArgs,
-    GetCountriesAndRegionsArgs,
     GetFinancialsArgs,
     GetRatiosArgs,
     GetKpisAndSegmentsArgs,
@@ -23,7 +22,6 @@ from .models import (
     GetIndexConstituentsResponse,
     GetAvailableWatchlistsResponse,
     GetWatchlistConstituentsResponse,
-    GetCountriesAndRegionsResponse,
     GetFinancialsResponse,
     GetRatiosResponse,
     GetKpisAndSegmentsResponse,
@@ -92,29 +90,6 @@ async def get_sectors_and_subsectors(
     # Return the structured response directly - no transformation needed
     # since GetSectorsSubsectorsResponse model now matches the actual API format
     return GetSectorsSubsectorsResponse.model_validate(raw_response)
-
-
-async def get_countries_and_regions(
-    args: GetCountriesAndRegionsArgs,
-) -> GetCountriesAndRegionsResponse:
-    """Retrieve all available countries grouped by subregion."""
-    logger.info("tool called: get_countries_and_regions")
-
-    # Get client and API key (no context needed for standard MCP)
-    client = await get_http_client(None)
-    api_key = get_api_key()
-
-    params = args.model_dump(exclude_none=True)
-
-    raw_response = await make_aiera_request(
-        client=client,
-        method="GET",
-        endpoint="/chat-support/get-countries-and-regions",
-        api_key=api_key,
-        params=params,
-    )
-
-    return GetCountriesAndRegionsResponse.model_validate(raw_response)
 
 
 async def get_equity_summaries(
