@@ -39,6 +39,11 @@ This document provides comprehensive documentation for all Aiera MCP (Model Cont
    - [find_research_authors](#find_research_authors)
    - [find_research_asset_classes](#find_research_asset_classes)
    - [find_research_asset_types](#find_research_asset_types)
+   - [find_research_subjects](#find_research_subjects)
+   - [find_research_product_focuses](#find_research_product_focuses)
+   - [find_research_discipline_types](#find_research_discipline_types)
+   - [find_research_region_types](#find_research_region_types)
+   - [find_research_country_codes](#find_research_country_codes)
 9. [Financial Data Tools](#financial-data-tools)
    - [get_financials](#get_financials)
    - [get_ratios](#get_ratios)
@@ -51,7 +56,6 @@ This document provides comprehensive documentation for all Aiera MCP (Model Cont
    - [get_available_watchlists](#get_available_watchlists)
    - [get_watchlist_constituents](#get_watchlist_constituents)
    - [get_sectors_and_subsectors](#get_sectors_and_subsectors)
-   - [get_countries_and_regions](#get_countries_and_regions)
 
 ---
 
@@ -124,6 +128,8 @@ Find companies and equities using various identifiers or search terms.
 | isin | string | no | null | ISIN identifier (comma-separated for multiple) |
 | ric | string | no | null | Reuters Instrument Code (comma-separated for multiple) |
 | permid | string | no | null | PermID identifier |
+| sector_id | integer/string | no | null | Filter by sector ID. Use get_sectors_and_subsectors to find valid IDs |
+| subsector_id | integer/string | no | null | Filter by subsector ID. Use get_sectors_and_subsectors to find valid IDs |
 | page | integer/string | no | 1 | Page number for pagination |
 | page_size | integer/string | no | 50 | Results per page |
 | originating_prompt | string | no | null | Original user prompt for context |
@@ -260,7 +266,7 @@ Search for corporate events including earnings calls, investor presentations, an
 |-----------|------|----------|---------|-------------|
 | start_date | string | **yes** | - | Start date (YYYY-MM-DD) |
 | end_date | string | **yes** | - | End date (YYYY-MM-DD) |
-| event_type | string | no | "earnings" | Event type: `earnings`, `presentation`, `investor_meeting`, `shareholder_meeting` |
+| event_type | string | no | "earnings" | Event type: `earnings`, `presentation`, `investor_meeting`, `shareholder_meeting`, `special_situation` |
 | bloomberg_ticker | string | no | null | Bloomberg ticker (comma-separated for multiple) |
 | watchlist_id | integer/string | no | null | Filter by watchlist ID |
 | index_id | integer/string | no | null | Filter by index ID |
@@ -532,6 +538,8 @@ Semantic search within specific transcript events using embedding-based matching
         "transcript_item_id": INTEGER,
         "transcript_event_id": INTEGER,
         "transcript_section": "STRING",
+        "speaker_name": "STRING",
+        "speaker_title": "STRING",
         "text": "STRING",
         "primary_equity_id": INTEGER,
         "title": "STRING",
@@ -746,6 +754,8 @@ Find company-published documents (press releases, annual reports, etc.).
 | bloomberg_ticker | string | no | null | Bloomberg ticker (comma-separated) |
 | categories | string | no | null | Document categories (comma-separated): `press_release`, `annual_report`, `earnings_release`, `slide_presentation`, `compliance`, `disclosure`, etc. |
 | keywords | string | no | null | Keywords to filter by |
+| exclude_categories | string | no | null | Comma-separated category names to exclude from results |
+| exclude_keywords | string | no | null | Comma-separated keywords to exclude from results |
 | watchlist_id | integer/string | no | null | Filter by watchlist ID |
 | index_id | integer/string | no | null | Filter by index ID |
 | sector_id | integer/string | no | null | Filter by sector ID |
@@ -901,6 +911,7 @@ Find expert insight events from Third Bridge.
 | index_id | integer/string | no | null | Filter by index ID |
 | sector_id | integer/string | no | null | Filter by sector ID |
 | subsector_id | integer/string | no | null | Filter by subsector ID |
+| content_type | string | no | null | Filter by content type: `FORUM`, `PRIMER`, or `COMMUNITY` |
 | page | integer/string | no | 1 | Page number |
 | page_size | integer/string | no | 50 | Results per page |
 | include_base_instructions | boolean | no | true | Include base instructions |
@@ -992,6 +1003,9 @@ Find research reports filtered by optional author IDs, provider IDs, regions, co
 | countries | array[string] | no | null | List of country codes to filter by (e.g., ['US', 'GB']) |
 | asset_classes | array[string] | no | null | List of asset classes to filter by. Obtain valid values from find_research_asset_classes (e.g., ['Equity', 'Fixed Income']) |
 | asset_types | array[string] | no | null | List of asset types to filter by. Obtain valid values from find_research_asset_types (e.g., ['Common Stock', 'Corporate Bond']) |
+| subjects | array[string] | no | null | List of subjects to filter by. Obtain valid values from find_research_subjects (e.g., ['Technology', 'Healthcare']) |
+| product_focuses | array[string] | no | null | List of product focus values to filter by. Obtain valid values from find_research_product_focuses (e.g., ['Equity Research', 'Credit Research']) |
+| discipline_types | array[string] | no | null | List of discipline types to filter by. Obtain valid values from find_research_discipline_types (e.g., ['Fundamental', 'Quantitative']) |
 | search_after | array | no | null | Cursor for pagination. Pass `next_search_after` from a previous response to fetch the next page |
 | page_size | integer/string | no | 50 | Number of items per page (1-100) |
 | include_base_instructions | boolean | no | true | Include base instructions |
@@ -1326,6 +1340,191 @@ Retrieve all available research asset types with their names and document counts
   "data": [
     {
       "asset_type": "STRING",
+      "doc_count": INTEGER
+    }
+  ],
+  "error": STRING | null
+}
+```
+
+---
+
+### find_research_subjects
+
+Retrieve all available research subjects with their names and document counts. Used to find valid subject values for filtering research tools.
+
+**Input Parameters:**
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| search | string | no | null | Search term to filter subjects by name |
+| page | integer/string | no | 1 | Page number for pagination |
+| page_size | integer/string | no | 50 | Results per page (1-100) |
+| include_base_instructions | boolean | no | true | Include base instructions |
+| exclude_instructions | boolean | no | false | Exclude all instructions in response |
+| originating_prompt | string | no | null | Original user prompt for context |
+| self_identification | string | no | null | Self-identified information about the user/server/session, used for tracking purposes |
+
+**Output Structure:**
+```json
+{
+  "instructions": ["STRING", ...],
+  "pagination": {
+    "total_count": INTEGER,
+    "current_page": INTEGER,
+    "total_pages": INTEGER,
+    "page_size": INTEGER
+  },
+  "data": [
+    {
+      "subject": "STRING",
+      "doc_count": INTEGER
+    }
+  ],
+  "error": STRING | null
+}
+```
+
+---
+
+### find_research_product_focuses
+
+Retrieve all available research product focus values with their names and document counts. Used to find valid product focus values for filtering research tools.
+
+**Input Parameters:**
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| search | string | no | null | Search term to filter product focuses by name |
+| page | integer/string | no | 1 | Page number for pagination |
+| page_size | integer/string | no | 50 | Results per page (1-100) |
+| include_base_instructions | boolean | no | true | Include base instructions |
+| exclude_instructions | boolean | no | false | Exclude all instructions in response |
+| originating_prompt | string | no | null | Original user prompt for context |
+| self_identification | string | no | null | Self-identified information about the user/server/session, used for tracking purposes |
+
+**Output Structure:**
+```json
+{
+  "instructions": ["STRING", ...],
+  "pagination": {
+    "total_count": INTEGER,
+    "current_page": INTEGER,
+    "total_pages": INTEGER,
+    "page_size": INTEGER
+  },
+  "data": [
+    {
+      "product_focus": "STRING",
+      "doc_count": INTEGER
+    }
+  ],
+  "error": STRING | null
+}
+```
+
+---
+
+### find_research_discipline_types
+
+Retrieve all available research discipline types with their names and document counts. Used to find valid discipline type values for filtering research tools.
+
+**Input Parameters:**
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| search | string | no | null | Search term to filter discipline types by name |
+| page | integer/string | no | 1 | Page number for pagination |
+| page_size | integer/string | no | 50 | Results per page (1-100) |
+| include_base_instructions | boolean | no | true | Include base instructions |
+| exclude_instructions | boolean | no | false | Exclude all instructions in response |
+| originating_prompt | string | no | null | Original user prompt for context |
+| self_identification | string | no | null | Self-identified information about the user/server/session, used for tracking purposes |
+
+**Output Structure:**
+```json
+{
+  "instructions": ["STRING", ...],
+  "pagination": {
+    "total_count": INTEGER,
+    "current_page": INTEGER,
+    "total_pages": INTEGER,
+    "page_size": INTEGER
+  },
+  "data": [
+    {
+      "discipline_type": "STRING",
+      "doc_count": INTEGER
+    }
+  ],
+  "error": STRING | null
+}
+```
+
+---
+
+### find_research_region_types
+
+Retrieve all available research region types with their names and document counts. Used to find valid region type values for filtering research tools.
+
+**Input Parameters:**
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| search | string | no | null | Search term to filter region types by name |
+| page | integer/string | no | 1 | Page number for pagination |
+| page_size | integer/string | no | 50 | Results per page (1-100) |
+| include_base_instructions | boolean | no | true | Include base instructions |
+| exclude_instructions | boolean | no | false | Exclude all instructions in response |
+| originating_prompt | string | no | null | Original user prompt for context |
+| self_identification | string | no | null | Self-identified information about the user/server/session, used for tracking purposes |
+
+**Output Structure:**
+```json
+{
+  "instructions": ["STRING", ...],
+  "pagination": {
+    "total_count": INTEGER,
+    "current_page": INTEGER,
+    "total_pages": INTEGER,
+    "page_size": INTEGER
+  },
+  "data": [
+    {
+      "region": "STRING",
+      "doc_count": INTEGER
+    }
+  ],
+  "error": STRING | null
+}
+```
+
+---
+
+### find_research_country_codes
+
+Retrieve all available research country codes with their names and document counts. Used to find valid country code values for filtering research tools.
+
+**Input Parameters:**
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| search | string | no | null | Search term to filter country codes by name |
+| page | integer/string | no | 1 | Page number for pagination |
+| page_size | integer/string | no | 50 | Results per page (1-100) |
+| include_base_instructions | boolean | no | true | Include base instructions |
+| exclude_instructions | boolean | no | false | Exclude all instructions in response |
+| originating_prompt | string | no | null | Original user prompt for context |
+| self_identification | string | no | null | Self-identified information about the user/server/session, used for tracking purposes |
+
+**Output Structure:**
+```json
+{
+  "instructions": ["STRING", ...],
+  "pagination": {
+    "total_count": INTEGER,
+    "current_page": INTEGER,
+    "total_pages": INTEGER,
+    "page_size": INTEGER
+  },
+  "data": [
+    {
+      "country_code": "STRING",
       "doc_count": INTEGER
     }
   ],
@@ -1745,36 +1944,6 @@ Retrieve all available sectors and subsectors with their IDs.
 
 ---
 
-### get_countries_and_regions
-
-Retrieve all available countries grouped by subregion. Used to find valid country and region values for filtering research and other tools.
-
-**Input Parameters:**
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| originating_prompt | string | no | null | Original user prompt for context |
-| self_identification | string | no | null | Self-identified information about the user/server/session, used for tracking purposes |
-| exclude_instructions | boolean | no | false | Exclude all instructions in response |
-
-**Output Structure:**
-```json
-{
-  "response": [
-    {
-      "subregion": "STRING",
-      "countries": [
-        {
-          "code": "STRING",
-          "name": "STRING"
-        }
-      ]
-    }
-  ]
-}
-```
-
----
-
 ## Common Response Elements
 
 ### Instructions Array
@@ -1830,10 +1999,10 @@ List endpoints return pagination information:
 
 ## Event Types Reference
 
-| event_type            | Description                                 |
-|-----------------------|---------------------------------------------|
-| `earnings`            | Earnings calls and quarterly results        |
-| `presentation`        | Investor presentations and conference calls |
-| `investor_meeting`    | Investor meetings and analyst days          |
-| `shareholder_meeting` | Annual/special shareholder meetings         |
-| `special_situation`   | Special situation events                    |
+| event_type            | Description                                       |
+|-----------------------|---------------------------------------------------|
+| `earnings`            | Earnings calls and quarterly results              |
+| `presentation`        | Investor presentations and conference calls       |
+| `investor_meeting`    | Investor meetings and analyst days                |
+| `shareholder_meeting` | Annual/special shareholder meetings               |
+| `special_situation`   | M&A announcements and other corporate actions     |
