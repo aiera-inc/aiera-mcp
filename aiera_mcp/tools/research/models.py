@@ -151,6 +151,11 @@ class FindResearchArgs(BaseToolArgs):
         description="Filter by one or more discipline types. Obtain valid values from find_research_discipline_types. Example: ['Fundamental', 'Quantitative'].",
     )
 
+    search: Optional[str] = Field(
+        default=None,
+        description="Free-text search term. Matches against title, abstract, and description of research reports.",
+    )
+
     search_after: Optional[List[Any]] = Field(
         default=None,
         description="Cursor for pagination. Pass the next_search_after value from a previous response to fetch the next page of results. Omit for the first page.",

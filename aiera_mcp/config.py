@@ -19,6 +19,7 @@ class AieraSettings(BaseSettings):
     """
 
     # API Configuration
+    # TODO: revert  back to production URL before release
     aiera_base_url: str = "http://graphql-dev.aiera.com/api"
     aiera_api_key: Optional[str] = None
 

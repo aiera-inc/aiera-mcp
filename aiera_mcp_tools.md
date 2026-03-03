@@ -1006,6 +1006,7 @@ Find research reports filtered by optional author IDs, provider IDs, regions, co
 | subjects | array[string] | no | null | List of subjects to filter by. Obtain valid values from find_research_subjects (e.g., ['Technology', 'Healthcare']) |
 | product_focuses | array[string] | no | null | List of product focus values to filter by. Obtain valid values from find_research_product_focuses (e.g., ['Equity Research', 'Credit Research']) |
 | discipline_types | array[string] | no | null | List of discipline types to filter by. Obtain valid values from find_research_discipline_types (e.g., ['Fundamental', 'Quantitative']) |
+| search | string | no | null | Free-text search term. Matches against title, abstract, and description of research reports |
 | search_after | array | no | null | Cursor for pagination. Pass `next_search_after` from a previous response to fetch the next page |
 | page_size | integer/string | no | 50 | Number of items per page (1-100) |
 | include_base_instructions | boolean | no | true | Include base instructions |

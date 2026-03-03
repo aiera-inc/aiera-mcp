@@ -665,6 +665,7 @@ Finds and retrieves research reports. Can fetch a specific report by ID or searc
 | `self_identification`       | string  | -                    | Caller identifier                                                |
 | `include_content`           | boolean | `false`              | Whether to include full report content (only for single results) |
 | `document_id`               | string  | -                    | Fetch a specific research report by ID                           |
+| `search`                    | string  | -                    | Free-text search term (matches against title, abstract, and description) |
 | `author_person_ids`         | string  | -                    | Filter by author person IDs (comma-separated list)               |
 | `provider_ids`              | string  | -                    | Filter by provider IDs (comma-separated list)                    |
 | `regions`                   | string  | -                    | Filter by regions (comma-separated list)                         |
