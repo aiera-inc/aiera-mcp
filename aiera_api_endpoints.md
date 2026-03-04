@@ -810,21 +810,19 @@ Returns a paginated list of available research providers. Requires research API 
 
 ```json
 {
-  "response": {
-    "pagination": {
+   "pagination": {
       "total_count": 0,
       "current_page": 1,
       "total_pages": 1,
       "page_size": 0
-    },
-    "data": [
+   },
+   "data": [
       {
         "provider_id": "STRING",
         "provider_name": "STRING",
         "doc_count": 0
       }, ...
-    ]
-  }
+   ]
 }
 ```
 

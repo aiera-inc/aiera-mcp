@@ -610,7 +610,10 @@ class GetResearchResponse(BaseAieraResponse):
 class GetResearchProvidersResponse(BaseAieraResponse):
     """Response for get_research_providers tool - passes through the API response structure."""
 
-    response: Optional[Any] = Field(None, description="Response data from the API")
+    pagination: Optional[Any] = Field(
+        None, description="Pagination metadata from the API"
+    )
+    data: Optional[Any] = Field(None, description="Response data from the API")
 
 
 class GetResearchAuthorsResponse(BaseAieraResponse):
