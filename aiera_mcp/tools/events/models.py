@@ -141,6 +141,11 @@ class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
         pattern=r"^\d{4}-\d{2}-\d{2}$",
     )
 
+    search: Optional[str] = Field(
+        default=None,
+        description="Search term to filter events by title.",
+    )
+
     bloomberg_ticker: Optional[str] = Field(
         default=None,
         description="Optional: Bloomberg ticker(s) to filter by specific companies in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces (e.g., 'AAPL:US,MSFT:US,GOOGL:US'). Defaults to ':US' if country code omitted. Leave empty to search across all companies.",
@@ -225,6 +230,11 @@ class FindConferencesArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
     exclude_instructions: Optional[bool] = Field(
         default=False,
         description="Whether to exclude all instructions from the tool response.",
+    )
+
+    search: Optional[str] = Field(
+        default=None,
+        description="Search term to filter conferences by title.",
     )
 
     start_date: str = Field(

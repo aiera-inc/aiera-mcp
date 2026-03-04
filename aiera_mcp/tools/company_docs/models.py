@@ -140,6 +140,11 @@ class FindCompanyDocsArgs(BaseToolArgs, BloombergTickerMixin, CategoriesKeywords
         pattern=r"^\d{4}-\d{2}-\d{2}$",
     )
 
+    search: Optional[str] = Field(
+        default=None,
+        description="Search term to filter docs by title or category.",
+    )
+
     bloomberg_ticker: Optional[str] = Field(
         default=None,
         description="Optional: Bloomberg ticker(s) to filter by specific companies in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces (e.g., 'AAPL:US,MSFT:US'). Defaults to ':US' if country code omitted. Leave empty to search across all companies.",

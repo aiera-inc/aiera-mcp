@@ -1321,6 +1321,7 @@ Searches for events with optional transcript inclusion.
 | `include_base_instructions` | boolean  | `true`        | Include base instructions                                  |
 | `originating_prompt`        | string   | -             | Original prompt                                            |
 | `self_identification`       | string   | -             | Caller identifier                                          |
+| `search`                    | string   | -             | Search term to filter events by title                      |
 | `bloomberg_ticker`          | string   | -             | Bloomberg ticker symbol                                    |
 | `sector_id`                 | integer  | -             | Filter by GICS sector                                      |
 | `subsector_id`              | integer  | -             | Filter by GICS subsector                                   |
@@ -1422,15 +1423,16 @@ Searches for investment conferences and event groups.
 
 **Query Parameters:**
 
-| Parameter                   | Type     | Default       | Description                |
-|-----------------------------|----------|---------------|----------------------------|
-| `include_base_instructions` | boolean  | `true`        | Include base instructions  |
-| `originating_prompt`        | string   | -             | Original prompt            |
-| `self_identification`       | string   | -             | Caller identifier          |
-| `start_date`                | datetime | now - 2 weeks | Start of date range        |
-| `end_date`                  | datetime | now + 2 weeks | End of date range          |
-| `page`                      | integer  | `1`           | Page number                |
-| `page_size`                 | integer  | `50`          | Results per page (max 100) |
+| Parameter                   | Type     | Default       | Description                                |
+|-----------------------------|----------|---------------|--------------------------------------------|
+| `include_base_instructions` | boolean  | `true`        | Include base instructions                  |
+| `originating_prompt`        | string   | -             | Original prompt                            |
+| `self_identification`       | string   | -             | Caller identifier                          |
+| `search`                    | string   | -             | Search term to filter conferences by title |
+| `start_date`                | datetime | now - 2 weeks | Start of date range                        |
+| `end_date`                  | datetime | now + 2 weeks | End of date range                          |
+| `page`                      | integer  | `1`           | Page number                                |
+| `page_size`                 | integer  | `50`          | Results per page (max 100)                 |
 
 **Response:**
 
@@ -1587,7 +1589,7 @@ Searches for SEC filings and regulatory documents.
 | `include_base_instructions` | boolean  | `true`         | Include base instructions                         |
 | `originating_prompt`        | string   | -              | Original prompt                                   |
 | `self_identification`       | string   | -              | Caller identifier                                 |
-| `search`                    | string   | -              | Search term to filter filings                     |
+| `search`                    | string   | -              | Search term to filter filings by title            |
 | `bloomberg_ticker`          | string   | -              | Bloomberg ticker symbol                           |
 | `sector_id`                 | integer  | -              | Filter by GICS sector                             |
 | `subsector_id`              | integer  | -              | Filter by GICS subsector                          |
@@ -1675,29 +1677,30 @@ Searches for company documents (investor presentations, annual reports, etc.).
 
 **Query Parameters:**
 
-| Parameter                   | Type     | Default       | Description                               |
-|-----------------------------|----------|---------------|-------------------------------------------|
-| `include_base_instructions` | boolean  | `true`        | Include base instructions                 |
-| `originating_prompt`        | string   | -             | Original prompt                           |
-| `self_identification`       | string   | -             | Caller identifier                         |
-| `start_date`                | datetime | now - 4 weeks | Start of date range                       |
-| `end_date`                  | datetime | now           | End of date range                         |
-| `categories`                | string   | -             | Comma-separated category names to include |
-| `exclude_categories`        | string   | -             | Comma-separated category names to exclude |
-| `keywords`                  | string   | -             | Comma-separated keywords to include       |
-| `exclude_keywords`          | string   | -             | Comma-separated keywords to exclude       |
-| `bloomberg_ticker`          | string   | -             | Bloomberg ticker symbol                   |
-| `sector_id`                 | integer  | -             | Filter by GICS sector                     |
-| `subsector_id`              | integer  | -             | Filter by GICS subsector                  |
-| `watchlist_id`              | integer  | -             | Filter by user watchlist                  |
-| `index_id`                  | integer  | -             | Filter by market index                    |
-| `company_doc_id`            | integer  | -             | Single document ID to retrieve            |
-| `company_doc_ids`           | string   | -             | Comma-separated list of document IDs      |
-| `include_delisted`          | boolean  | `true`        | Include docs from delisted companies      |
-| `include_content`           | boolean  | `false`       | Include raw document content              |
-| `company_rollup`            | boolean  | `true`        | Roll up to company level                  |
-| `page`                      | integer  | `1`           | Page number                               |
-| `page_size`                 | integer  | `50`          | Results per page (max 100)                |
+| Parameter                   | Type     | Default       | Description                                     |
+|-----------------------------|----------|---------------|-------------------------------------------------|
+| `include_base_instructions` | boolean  | `true`        | Include base instructions                       |
+| `originating_prompt`        | string   | -             | Original prompt                                 |
+| `self_identification`       | string   | -             | Caller identifier                               |
+| `search`                    | string   | -             | Search term to filter docs by title or category |
+| `start_date`                | datetime | now - 4 weeks | Start of date range                             |
+| `end_date`                  | datetime | now           | End of date range                               |
+| `categories`                | string   | -             | Comma-separated category names to include       |
+| `exclude_categories`        | string   | -             | Comma-separated category names to exclude       |
+| `keywords`                  | string   | -             | Comma-separated keywords to include             |
+| `exclude_keywords`          | string   | -             | Comma-separated keywords to exclude             |
+| `bloomberg_ticker`          | string   | -             | Bloomberg ticker symbol                         |
+| `sector_id`                 | integer  | -             | Filter by GICS sector                           |
+| `subsector_id`              | integer  | -             | Filter by GICS subsector                        |
+| `watchlist_id`              | integer  | -             | Filter by user watchlist                        |
+| `index_id`                  | integer  | -             | Filter by market index                          |
+| `company_doc_id`            | integer  | -             | Single document ID to retrieve                  |
+| `company_doc_ids`           | string   | -             | Comma-separated list of document IDs            |
+| `include_delisted`          | boolean  | `true`        | Include docs from delisted companies            |
+| `include_content`           | boolean  | `false`       | Include raw document content                    |
+| `company_rollup`            | boolean  | `true`        | Roll up to company level                        |
+| `page`                      | integer  | `1`           | Page number                                     |
+| `page_size`                 | integer  | `50`          | Results per page (max 100)                      |
 
 **Response:**
 

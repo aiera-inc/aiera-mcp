@@ -266,6 +266,7 @@ Search for corporate events including earnings calls, investor presentations, an
 |-----------|------|----------|---------|-------------|
 | start_date | string | **yes** | - | Start date (YYYY-MM-DD) |
 | end_date | string | **yes** | - | End date (YYYY-MM-DD) |
+| search | string | no | null | Search term to filter events by title |
 | event_type | string | no | "earnings" | Event type: `earnings`, `presentation`, `investor_meeting`, `shareholder_meeting`, `special_situation` |
 | bloomberg_ticker | string | no | null | Bloomberg ticker (comma-separated for multiple) |
 | watchlist_id | integer/string | no | null | Filter by watchlist ID |
@@ -463,6 +464,7 @@ Search for conferences by date range.
 |-----------|------|----------|---------|-------------|
 | start_date | string | **yes** | - | Start date (YYYY-MM-DD) |
 | end_date | string | **yes** | - | End date (YYYY-MM-DD) |
+| search | string | no | null | Search term to filter conferences by title |
 | page | integer/string | no | 1 | Page number |
 | page_size | integer/string | no | 50 | Results per page |
 | include_base_instructions | boolean | no | true | Include base instructions |
@@ -579,6 +581,7 @@ Find SEC filings filtered by date range and optional filters.
 |-----------|------|----------|---------|-------------|
 | start_date | string | **yes** | - | Start date (YYYY-MM-DD) |
 | end_date | string | **yes** | - | End date (YYYY-MM-DD) |
+| search | string | no | null | Search term to filter filings |
 | bloomberg_ticker | string | no | null | Bloomberg ticker (comma-separated) |
 | form_number | string | no | null | SEC form number (e.g., "10-K", "8-K", "10-Q") |
 | watchlist_id | integer/string | no | null | Filter by watchlist ID |
@@ -751,6 +754,7 @@ Find company-published documents (press releases, annual reports, etc.).
 |-----------|------|----------|---------|-------------|
 | start_date | string | **yes** | - | Start date (YYYY-MM-DD) |
 | end_date | string | **yes** | - | End date (YYYY-MM-DD) |
+| search | string | no | null | Search term to filter docs by title or category |
 | bloomberg_ticker | string | no | null | Bloomberg ticker (comma-separated) |
 | categories | string | no | null | Document categories (comma-separated): `press_release`, `annual_report`, `earnings_release`, `slide_presentation`, `compliance`, `disclosure`, etc. |
 | keywords | string | no | null | Keywords to filter by |
@@ -906,6 +910,7 @@ Find expert insight events from Third Bridge.
 |-----------|------|----------|---------|-------------|
 | start_date | string | **yes** | - | Start date (YYYY-MM-DD) |
 | end_date | string | **yes** | - | End date (YYYY-MM-DD) |
+| search | string | no | null | Search term to filter content by title or description |
 | bloomberg_ticker | string | no | null | Bloomberg ticker (comma-separated) |
 | watchlist_id | integer/string | no | null | Filter by watchlist ID |
 | index_id | integer/string | no | null | Filter by index ID |

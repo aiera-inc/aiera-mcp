@@ -109,6 +109,11 @@ class FindThirdBridgeEventsArgs(BaseToolArgs, BloombergTickerMixin):
         pattern=r"^\d{4}-\d{2}-\d{2}$",
     )
 
+    search: Optional[str] = Field(
+        default=None,
+        description="Search term to filter by title or description.",
+    )
+
     bloomberg_ticker: Optional[str] = Field(
         default=None,
         description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces.",
