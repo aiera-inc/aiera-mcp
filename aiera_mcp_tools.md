@@ -132,6 +132,7 @@ Find companies and equities using various identifiers or search terms.
 | subsector_id | integer/string | no | null | Filter by subsector ID. Use get_sectors_and_subsectors to find valid IDs |
 | page | integer/string | no | 1 | Page number for pagination |
 | page_size | integer/string | no | 50 | Results per page |
+| exclude_instructions | boolean | no | false | Exclude all instructions in response |
 | originating_prompt | string | no | null | Original user prompt for context |
 | self_identification | string | no | null | Self-identied information about the user/server/session, used for tracking purposes |
 
@@ -853,6 +854,7 @@ Retrieve all available document categories for filtering.
 | search | string | no | null | Search term to filter categories |
 | page | integer/string | no | 1 | Page number |
 | page_size | integer/string | no | 50 | Results per page |
+| exclude_instructions | boolean | no | false | Exclude all instructions in response |
 | originating_prompt | string | no | null | Original user prompt |
 | self_identification | string | no | null | Self-identied information about the user/server/session, used for tracking purposes |
 
@@ -881,6 +883,7 @@ Retrieve all available keywords for filtering company documents.
 | search | string | no | null | Search term to filter keywords |
 | page | integer/string | no | 1 | Page number |
 | page_size | integer/string | no | 50 | Results per page |
+| exclude_instructions | boolean | no | false | Exclude all instructions in response |
 | originating_prompt | string | no | null | Original user prompt |
 | self_identification | string | no | null | Self-identied information about the user/server/session, used for tracking purposes |
 
@@ -1808,6 +1811,7 @@ Retrieve all available stock market indices with their IDs.
 **Input Parameters:**
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
+| exclude_instructions | boolean | no | false | Exclude all instructions in response |
 | originating_prompt | string | no | null | Original user prompt |
 | self_identification | string | no | null | Self-identied information about the user/server/session, used for tracking purposes |
 
@@ -1838,6 +1842,7 @@ Get all equities within a specific stock market index.
 | index | string/integer | **yes** | - | Index ID or short name |
 | page | integer/string | no | 1 | Page number |
 | page_size | integer/string | no | 50 | Results per page |
+| exclude_instructions | boolean | no | false | Exclude all instructions in response |
 | originating_prompt | string | no | null | Original user prompt |
 | self_identification | string | no | null | Self-identied information about the user/server/session, used for tracking purposes |
 
@@ -1870,6 +1875,9 @@ Retrieve all available watchlists with their IDs.
 **Input Parameters:**
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
+| page | integer/string | no | 1 | Page number |
+| page_size | integer/string | no | 50 | Results per page |
+| exclude_instructions | boolean | no | false | Exclude all instructions in response |
 | originating_prompt | string | no | null | Original user prompt |
 | self_identification | string | no | null | Self-identied information about the user/server/session, used for tracking purposes |
 
@@ -1900,6 +1908,7 @@ Get all equities within a specific watchlist.
 | watchlist_id | string/integer | **yes** | - | Watchlist ID |
 | page | integer/string | no | 1 | Page number |
 | page_size | integer/string | no | 50 | Results per page |
+| exclude_instructions | boolean | no | false | Exclude all instructions in response |
 | originating_prompt | string | no | null | Original user prompt |
 | self_identification | string | no | null | Self-identied information about the user/server/session, used for tracking purposes |
 
@@ -1935,6 +1944,7 @@ Retrieve all available sectors and subsectors with their IDs.
 | search | string | no | null | Search term to filter |
 | page | integer/string | no | 1 | Page number |
 | page_size | integer/string | no | 50 | Results per page |
+| exclude_instructions | boolean | no | false | Exclude all instructions in response |
 | originating_prompt | string | no | null | Original user prompt |
 | self_identification | string | no | null | Self-identied information about the user/server/session, used for tracking purposes |
 
