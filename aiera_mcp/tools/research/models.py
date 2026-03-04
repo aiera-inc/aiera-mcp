@@ -128,27 +128,27 @@ class FindResearchArgs(BaseToolArgs):
 
     asset_classes: Optional[List[str]] = Field(
         default=None,
-        description="Filter by one or more asset classes. Obtain valid values from find_research_asset_classes. Example: ['Equity', 'Fixed Income'].",
+        description="Filter by one or more asset classes. Obtain valid values from get_research_asset_classes. Example: ['Equity', 'Fixed Income'].",
     )
 
     asset_types: Optional[List[str]] = Field(
         default=None,
-        description="Filter by one or more asset types. Obtain valid values from find_research_asset_types. Example: ['Common Stock', 'Corporate Bond'].",
+        description="Filter by one or more asset types. Obtain valid values from get_research_asset_types. Example: ['Common Stock', 'Corporate Bond'].",
     )
 
     subjects: Optional[List[str]] = Field(
         default=None,
-        description="Filter by one or more subjects. Obtain valid values from find_research_subjects. Example: ['Technology', 'Healthcare'].",
+        description="Filter by one or more subjects. Obtain valid values from get_research_subjects. Example: ['Technology', 'Healthcare'].",
     )
 
     product_focuses: Optional[List[str]] = Field(
         default=None,
-        description="Filter by one or more product focus values. Obtain valid values from find_research_product_focuses. Example: ['Equity Research', 'Credit Research'].",
+        description="Filter by one or more product focus values. Obtain valid values from get_research_product_focuses. Example: ['Equity Research', 'Credit Research'].",
     )
 
     discipline_types: Optional[List[str]] = Field(
         default=None,
-        description="Filter by one or more discipline types. Obtain valid values from find_research_discipline_types. Example: ['Fundamental', 'Quantitative'].",
+        description="Filter by one or more discipline types. Obtain valid values from get_research_discipline_types. Example: ['Fundamental', 'Quantitative'].",
     )
 
     search: Optional[str] = Field(
@@ -205,7 +205,7 @@ class GetResearchArgs(BaseAieraArgs):
     )
 
 
-class GetResearchProvidersArgs(BaseAieraArgs):
+class GetResearchProvidersArgs(BaseToolArgs):
     """Retrieve all available research providers with their IDs, names, and descriptions. Used to find valid provider IDs for filtering research tools."""
 
     originating_prompt: Optional[str] = Field(
@@ -223,8 +223,21 @@ class GetResearchProvidersArgs(BaseAieraArgs):
         description="Whether to exclude all instructions from the tool response.",
     )
 
+    search: Optional[str] = Field(
+        default=None,
+        description="Search term to filter providers by name.",
+    )
 
-class FindResearchAuthorsArgs(BaseToolArgs):
+    page: Union[int, str] = Field(
+        default=1, ge=1, description="Page number for pagination (1-based)."
+    )
+
+    page_size: Union[int, str] = Field(
+        default=50, ge=1, le=100, description="Number of items per page (1-100)."
+    )
+
+
+class GetResearchAuthorsArgs(BaseToolArgs):
     """Search for research authors by name or provider. Returns author IDs and display names. Used to find valid author_ids for filtering find_research and search_research tools.
 
     WHEN TO USE:
@@ -273,7 +286,7 @@ class FindResearchAuthorsArgs(BaseToolArgs):
     )
 
 
-class FindResearchAssetClassesArgs(BaseToolArgs):
+class GetResearchAssetClassesArgs(BaseToolArgs):
     """Retrieve all available research asset classes with their names and document counts. Used to find valid asset class values for filtering research tools.
 
     WHEN TO USE:
@@ -317,7 +330,7 @@ class FindResearchAssetClassesArgs(BaseToolArgs):
     )
 
 
-class FindResearchAssetTypesArgs(BaseToolArgs):
+class GetResearchAssetTypesArgs(BaseToolArgs):
     """Retrieve all available research asset types with their names and document counts. Used to find valid asset type values for filtering research tools.
 
     WHEN TO USE:
@@ -361,7 +374,7 @@ class FindResearchAssetTypesArgs(BaseToolArgs):
     )
 
 
-class FindResearchSubjectsArgs(BaseToolArgs):
+class GetResearchSubjectsArgs(BaseToolArgs):
     """Retrieve all available research subjects with their names and document counts. Used to find valid subject values for filtering research tools.
 
     WHEN TO USE:
@@ -405,7 +418,7 @@ class FindResearchSubjectsArgs(BaseToolArgs):
     )
 
 
-class FindResearchProductFocusesArgs(BaseToolArgs):
+class GetResearchProductFocusesArgs(BaseToolArgs):
     """Retrieve all available research product focus values with their names and document counts. Used to find valid product focus values for filtering research tools.
 
     WHEN TO USE:
@@ -449,7 +462,7 @@ class FindResearchProductFocusesArgs(BaseToolArgs):
     )
 
 
-class FindResearchDisciplineTypesArgs(BaseToolArgs):
+class GetResearchDisciplineTypesArgs(BaseToolArgs):
     """Retrieve all available research discipline types with their names and document counts. Used to find valid discipline type values for filtering research tools.
 
     WHEN TO USE:
@@ -493,7 +506,7 @@ class FindResearchDisciplineTypesArgs(BaseToolArgs):
     )
 
 
-class FindResearchRegionTypesArgs(BaseToolArgs):
+class GetResearchRegionTypesArgs(BaseToolArgs):
     """Retrieve all available research region types with their names and document counts. Used to find valid region type values for filtering research tools.
 
     WHEN TO USE:
@@ -537,7 +550,7 @@ class FindResearchRegionTypesArgs(BaseToolArgs):
     )
 
 
-class FindResearchCountryCodesArgs(BaseToolArgs):
+class GetResearchCountryCodesArgs(BaseToolArgs):
     """Retrieve all available research country codes with their names and document counts. Used to find valid country code values for filtering research tools.
 
     WHEN TO USE:
@@ -600,8 +613,8 @@ class GetResearchProvidersResponse(BaseAieraResponse):
     response: Optional[Any] = Field(None, description="Response data from the API")
 
 
-class FindResearchAuthorsResponse(BaseAieraResponse):
-    """Response for find_research_authors tool - passes through the API response structure."""
+class GetResearchAuthorsResponse(BaseAieraResponse):
+    """Response for get_research_authors tool - passes through the API response structure."""
 
     pagination: Optional[Any] = Field(
         None, description="Pagination metadata from the API"
@@ -609,8 +622,8 @@ class FindResearchAuthorsResponse(BaseAieraResponse):
     data: Optional[Any] = Field(None, description="Response data from the API")
 
 
-class FindResearchAssetClassesResponse(BaseAieraResponse):
-    """Response for find_research_asset_classes tool - passes through the API response structure."""
+class GetResearchAssetClassesResponse(BaseAieraResponse):
+    """Response for get_research_asset_classes tool - passes through the API response structure."""
 
     pagination: Optional[Any] = Field(
         None, description="Pagination metadata from the API"
@@ -618,8 +631,8 @@ class FindResearchAssetClassesResponse(BaseAieraResponse):
     data: Optional[Any] = Field(None, description="Response data from the API")
 
 
-class FindResearchAssetTypesResponse(BaseAieraResponse):
-    """Response for find_research_asset_types tool - passes through the API response structure."""
+class GetResearchAssetTypesResponse(BaseAieraResponse):
+    """Response for get_research_asset_types tool - passes through the API response structure."""
 
     pagination: Optional[Any] = Field(
         None, description="Pagination metadata from the API"
@@ -627,8 +640,8 @@ class FindResearchAssetTypesResponse(BaseAieraResponse):
     data: Optional[Any] = Field(None, description="Response data from the API")
 
 
-class FindResearchSubjectsResponse(BaseAieraResponse):
-    """Response for find_research_subjects tool - passes through the API response structure."""
+class GetResearchSubjectsResponse(BaseAieraResponse):
+    """Response for get_research_subjects tool - passes through the API response structure."""
 
     pagination: Optional[Any] = Field(
         None, description="Pagination metadata from the API"
@@ -636,8 +649,8 @@ class FindResearchSubjectsResponse(BaseAieraResponse):
     data: Optional[Any] = Field(None, description="Response data from the API")
 
 
-class FindResearchProductFocusesResponse(BaseAieraResponse):
-    """Response for find_research_product_focuses tool - passes through the API response structure."""
+class GetResearchProductFocusesResponse(BaseAieraResponse):
+    """Response for get_research_product_focuses tool - passes through the API response structure."""
 
     pagination: Optional[Any] = Field(
         None, description="Pagination metadata from the API"
@@ -645,8 +658,8 @@ class FindResearchProductFocusesResponse(BaseAieraResponse):
     data: Optional[Any] = Field(None, description="Response data from the API")
 
 
-class FindResearchDisciplineTypesResponse(BaseAieraResponse):
-    """Response for find_research_discipline_types tool - passes through the API response structure."""
+class GetResearchDisciplineTypesResponse(BaseAieraResponse):
+    """Response for get_research_discipline_types tool - passes through the API response structure."""
 
     pagination: Optional[Any] = Field(
         None, description="Pagination metadata from the API"
@@ -654,8 +667,8 @@ class FindResearchDisciplineTypesResponse(BaseAieraResponse):
     data: Optional[Any] = Field(None, description="Response data from the API")
 
 
-class FindResearchRegionTypesResponse(BaseAieraResponse):
-    """Response for find_research_region_types tool - passes through the API response structure."""
+class GetResearchRegionTypesResponse(BaseAieraResponse):
+    """Response for get_research_region_types tool - passes through the API response structure."""
 
     pagination: Optional[Any] = Field(
         None, description="Pagination metadata from the API"
@@ -663,8 +676,8 @@ class FindResearchRegionTypesResponse(BaseAieraResponse):
     data: Optional[Any] = Field(None, description="Response data from the API")
 
 
-class FindResearchCountryCodesResponse(BaseAieraResponse):
-    """Response for find_research_country_codes tool - passes through the API response structure."""
+class GetResearchCountryCodesResponse(BaseAieraResponse):
+    """Response for get_research_country_codes tool - passes through the API response structure."""
 
     pagination: Optional[Any] = Field(
         None, description="Pagination metadata from the API"

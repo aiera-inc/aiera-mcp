@@ -36,14 +36,14 @@ This document provides comprehensive documentation for all Aiera MCP (Model Cont
    - [get_research](#get_research)
    - [search_research](#search_research)
    - [get_research_providers](#get_research_providers)
-   - [find_research_authors](#find_research_authors)
-   - [find_research_asset_classes](#find_research_asset_classes)
-   - [find_research_asset_types](#find_research_asset_types)
-   - [find_research_subjects](#find_research_subjects)
-   - [find_research_product_focuses](#find_research_product_focuses)
-   - [find_research_discipline_types](#find_research_discipline_types)
-   - [find_research_region_types](#find_research_region_types)
-   - [find_research_country_codes](#find_research_country_codes)
+   - [get_research_authors](#get_research_authors)
+   - [get_research_asset_classes](#get_research_asset_classes)
+   - [get_research_asset_types](#get_research_asset_types)
+   - [get_research_subjects](#get_research_subjects)
+   - [get_research_product_focuses](#get_research_product_focuses)
+   - [get_research_discipline_types](#get_research_discipline_types)
+   - [get_research_region_types](#get_research_region_types)
+   - [get_research_country_codes](#get_research_country_codes)
 9. [Financial Data Tools](#financial-data-tools)
    - [get_financials](#get_financials)
    - [get_ratios](#get_ratios)
@@ -1006,11 +1006,11 @@ Find research reports filtered by optional author IDs, provider IDs, regions, co
 | aiera_provider_ids | array[string] | no | null | List of Aiera provider IDs to filter by |
 | regions | array[string] | no | null | List of regions to filter by (e.g., ['Americas', 'EMEA']) |
 | countries | array[string] | no | null | List of country codes to filter by (e.g., ['US', 'GB']) |
-| asset_classes | array[string] | no | null | List of asset classes to filter by. Obtain valid values from find_research_asset_classes (e.g., ['Equity', 'Fixed Income']) |
-| asset_types | array[string] | no | null | List of asset types to filter by. Obtain valid values from find_research_asset_types (e.g., ['Common Stock', 'Corporate Bond']) |
-| subjects | array[string] | no | null | List of subjects to filter by. Obtain valid values from find_research_subjects (e.g., ['Technology', 'Healthcare']) |
-| product_focuses | array[string] | no | null | List of product focus values to filter by. Obtain valid values from find_research_product_focuses (e.g., ['Equity Research', 'Credit Research']) |
-| discipline_types | array[string] | no | null | List of discipline types to filter by. Obtain valid values from find_research_discipline_types (e.g., ['Fundamental', 'Quantitative']) |
+| asset_classes | array[string] | no | null | List of asset classes to filter by. Obtain valid values from get_research_asset_classes (e.g., ['Equity', 'Fixed Income']) |
+| asset_types | array[string] | no | null | List of asset types to filter by. Obtain valid values from get_research_asset_types (e.g., ['Common Stock', 'Corporate Bond']) |
+| subjects | array[string] | no | null | List of subjects to filter by. Obtain valid values from get_research_subjects (e.g., ['Technology', 'Healthcare']) |
+| product_focuses | array[string] | no | null | List of product focus values to filter by. Obtain valid values from get_research_product_focuses (e.g., ['Equity Research', 'Credit Research']) |
+| discipline_types | array[string] | no | null | List of discipline types to filter by. Obtain valid values from get_research_discipline_types (e.g., ['Fundamental', 'Quantitative']) |
 | search | string | no | null | Free-text search term. Matches against title, abstract, and description of research reports |
 | search_after | array | no | null | Cursor for pagination. Pass `next_search_after` from a previous response to fetch the next page |
 | page_size | integer/string | no | 50 | Number of items per page (1-100) |
@@ -1156,8 +1156,8 @@ Semantic search within research content for specific topics, analyses, or insigh
 | document_ids | array[string] | no | null | List of document IDs to search within. Obtain from find_research results |
 | author_ids | array[string] | no | null | List of author person IDs to filter by |
 | aiera_provider_ids | array[string] | no | null | List of Aiera provider IDs to filter by |
-| asset_classes | array[string] | no | null | List of asset classes to filter by. Obtain valid values from find_research_asset_classes (e.g., ['Equity', 'Fixed Income']) |
-| asset_types | array[string] | no | null | List of asset types to filter by. Obtain valid values from find_research_asset_types (e.g., ['Common Stock', 'Corporate Bond']) |
+| asset_classes | array[string] | no | null | List of asset classes to filter by. Obtain valid values from get_research_asset_classes (e.g., ['Equity', 'Fixed Income']) |
+| asset_types | array[string] | no | null | List of asset types to filter by. Obtain valid values from get_research_asset_types (e.g., ['Common Stock', 'Corporate Bond']) |
 | start_date | string | no | "" | Start date filter (YYYY-MM-DD) |
 | end_date | string | no | "" | End date filter (YYYY-MM-DD) |
 | size | integer | no | 20 | Number of results per page (max 250) |
@@ -1225,25 +1225,36 @@ Retrieve all available research providers with their IDs, names, and description
 | originating_prompt | string | no | null | Original user prompt for context |
 | self_identification | string | no | null | Self-identified information about the user/server/session, used for tracking purposes |
 | exclude_instructions | boolean | no | false | Exclude all instructions in response |
+| search | string | no | null | Search term to filter providers by name |
+| page | integer/string | no | 1 | Page number for pagination |
+| page_size | integer/string | no | 50 | Results per page (1-100) |
 
 **Output Structure:**
 ```json
 {
   "instructions": ["STRING", ...],
-  "response": [
-    {
-      "aiera_provider_id": "STRING",
-      "name": "STRING",
-      "description": "STRING"
-    }
-  ],
+  "response": {
+    "pagination": {
+      "total_count": INTEGER,
+      "current_page": INTEGER,
+      "total_pages": INTEGER,
+      "page_size": INTEGER
+    },
+    "data": [
+      {
+        "provider_id": "STRING",
+        "provider_name": "STRING",
+        "doc_count": INTEGER
+      }
+    ]
+  },
   "error": STRING | null
 }
 ```
 
 ---
 
-### find_research_authors
+### get_research_authors
 
 Search for research authors by name or provider. Returns author IDs and display names. Used to find valid author_ids for filtering find_research and search_research tools.
 
@@ -1281,7 +1292,7 @@ Search for research authors by name or provider. Returns author IDs and display 
 
 ---
 
-### find_research_asset_classes
+### get_research_asset_classes
 
 Retrieve all available research asset classes with their names and document counts. Used to find valid asset class values for filtering research tools.
 
@@ -1318,7 +1329,7 @@ Retrieve all available research asset classes with their names and document coun
 
 ---
 
-### find_research_asset_types
+### get_research_asset_types
 
 Retrieve all available research asset types with their names and document counts. Used to find valid asset type values for filtering research tools.
 
@@ -1355,7 +1366,7 @@ Retrieve all available research asset types with their names and document counts
 
 ---
 
-### find_research_subjects
+### get_research_subjects
 
 Retrieve all available research subjects with their names and document counts. Used to find valid subject values for filtering research tools.
 
@@ -1392,7 +1403,7 @@ Retrieve all available research subjects with their names and document counts. U
 
 ---
 
-### find_research_product_focuses
+### get_research_product_focuses
 
 Retrieve all available research product focus values with their names and document counts. Used to find valid product focus values for filtering research tools.
 
@@ -1429,7 +1440,7 @@ Retrieve all available research product focus values with their names and docume
 
 ---
 
-### find_research_discipline_types
+### get_research_discipline_types
 
 Retrieve all available research discipline types with their names and document counts. Used to find valid discipline type values for filtering research tools.
 
@@ -1466,7 +1477,7 @@ Retrieve all available research discipline types with their names and document c
 
 ---
 
-### find_research_region_types
+### get_research_region_types
 
 Retrieve all available research region types with their names and document counts. Used to find valid region type values for filtering research tools.
 
@@ -1503,7 +1514,7 @@ Retrieve all available research region types with their names and document count
 
 ---
 
-### find_research_country_codes
+### get_research_country_codes
 
 Retrieve all available research country codes with their names and document counts. Used to find valid country code values for filtering research tools.
 

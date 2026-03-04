@@ -363,7 +363,7 @@ Response varies by index type:
 
 ---
 
-## GET /find-research-authors
+## GET /get-research-authors
 
 Searches for research authors by name or provider. Returns a paginated list of authors with their IDs and display names. Requires research API access.
 
@@ -400,7 +400,7 @@ Searches for research authors by name or provider. Returns a paginated list of a
 
 ---
 
-## GET /find-research-asset-classes
+## GET /get-research-asset-classes
 
 Returns a paginated list of all available research asset classes (e.g. "Equity", "Fixed Income"). Aggregated from the research index filtered by the user's entitlements. Requires research API access.
 
@@ -436,7 +436,7 @@ Returns a paginated list of all available research asset classes (e.g. "Equity",
 
 ---
 
-## GET /find-research-asset-types
+## GET /get-research-asset-types
 
 Returns a paginated list of all available research asset types (e.g. "Common Stock", "Corporate Bond"). Aggregated from the research index filtered by the user's entitlements. Requires research API access.
 
@@ -472,7 +472,7 @@ Returns a paginated list of all available research asset types (e.g. "Common Sto
 
 ---
 
-## GET /find-research-subjects
+## GET /get-research-subjects
 
 Returns a paginated list of all available research subjects. Aggregated from the research index filtered by the user's entitlements. Requires research API access.
 
@@ -508,7 +508,7 @@ Returns a paginated list of all available research subjects. Aggregated from the
 
 ---
 
-## GET /find-research-product-focuses
+## GET /get-research-product-focuses
 
 Returns a paginated list of all available research product focus values. Aggregated from the research index filtered by the user's entitlements. Requires research API access.
 
@@ -544,7 +544,7 @@ Returns a paginated list of all available research product focus values. Aggrega
 
 ---
 
-## GET /find-research-discipline-types
+## GET /get-research-discipline-types
 
 Returns a paginated list of all available research discipline types. Aggregated from the research index filtered by the user's entitlements. Requires research API access.
 
@@ -580,7 +580,7 @@ Returns a paginated list of all available research discipline types. Aggregated 
 
 ---
 
-## GET /find-research-region-types
+## GET /get-research-region-types
 
 Returns a paginated list of all available research region types. Aggregated from the nested `regions` field in the research index, filtered by the user's entitlements. Requires research API access.
 
@@ -616,7 +616,7 @@ Returns a paginated list of all available research region types. Aggregated from
 
 ---
 
-## GET /find-research-country-codes
+## GET /get-research-country-codes
 
 Returns a paginated list of all available research country codes. Aggregated from the nested `countries` field in the research index, filtered by the user's entitlements. Requires research API access.
 
@@ -793,7 +793,7 @@ Finds and retrieves research reports. Can fetch a specific report by ID or searc
 
 ## GET /get-research-providers
 
-Returns a list of available research providers. Requires research API access.
+Returns a paginated list of available research providers. Requires research API access.
 
 **Query Parameters:**
 
@@ -802,17 +802,29 @@ Returns a list of available research providers. Requires research API access.
 | `include_base_instructions` | boolean | `true`  | Include base instructions |
 | `originating_prompt`        | string  | -       | Original prompt           |
 | `self_identification`       | string  | -       | Caller identifier         |
+| `search`                    | string  | -       | Filter providers by name  |
+| `page`                      | integer | `1`     | Page number               |
+| `page_size`                 | integer | `50`    | Results per page          |
 
 **Response:**
 
 ```json
 {
-  "response": [
-    {
-      "aiera_provider_id": "STRING",
-      "name": "STRING"
-    }, ...
-  ]
+  "response": {
+    "pagination": {
+      "total_count": 0,
+      "current_page": 1,
+      "total_pages": 1,
+      "page_size": 0
+    },
+    "data": [
+      {
+        "provider_id": "STRING",
+        "provider_name": "STRING",
+        "doc_count": 0
+      }, ...
+    ]
+  }
 }
 ```
 
@@ -1589,7 +1601,7 @@ Searches for SEC filings and regulatory documents.
 | `include_base_instructions` | boolean  | `true`         | Include base instructions                         |
 | `originating_prompt`        | string   | -              | Original prompt                                   |
 | `self_identification`       | string   | -              | Caller identifier                                 |
-| `search`                    | string   | -              | Search term to filter filings by title            |
+| `search`                    | string   | -              | Search term to filter filings                     |
 | `bloomberg_ticker`          | string   | -              | Bloomberg ticker symbol                           |
 | `sector_id`                 | integer  | -              | Filter by GICS sector                             |
 | `subsector_id`              | integer  | -              | Filter by GICS subsector                          |

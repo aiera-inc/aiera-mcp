@@ -245,12 +245,12 @@ class SearchResearchArgs(BaseAieraArgs):
 
     asset_classes: Optional[List[str]] = Field(
         default=None,
-        description="Filter by one or more asset classes. Obtain valid values from find_research_asset_classes. Example: ['Equity', 'Fixed Income'].",
+        description="Filter by one or more asset classes. Obtain valid values from get_research_asset_classes. Example: ['Equity', 'Fixed Income'].",
     )
 
     asset_types: Optional[List[str]] = Field(
         default=None,
-        description="Filter by one or more asset types. Obtain valid values from find_research_asset_types. Example: ['Common Stock', 'Corporate Bond'].",
+        description="Filter by one or more asset types. Obtain valid values from get_research_asset_types. Example: ['Common Stock', 'Corporate Bond'].",
     )
 
     size: int = Field(
