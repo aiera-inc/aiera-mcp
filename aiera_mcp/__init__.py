@@ -119,6 +119,9 @@ AVAILABLE_TOOLS = [
     # Search Tools
     "search_transcripts",
     "search_filings",
+    "search_research",
+    "search_company_docs",
+    "search_thirdbridge",
     # Web Tools
     "trusted_web_search",
 ]
@@ -157,6 +160,13 @@ RESEARCH_TOOLS = [
     "get_research_region_types",
     "get_research_country_codes",
 ]
+SEARCH_TOOLS = [
+    "search_transcripts",
+    "search_filings",
+    "search_research",
+    "search_company_docs",
+    "search_thirdbridge",
+]
 WEB_TOOLS = ["trusted_web_search"]
 EMBEDDING_SEARCH_PIPELINE = "embedding_pipeline"
 HYBRID_SEARCH_PIPELINE = "hybrid_search_pipeline"
@@ -193,7 +203,13 @@ from .tools.research import (
     get_research_region_types,
     get_research_country_codes,
 )
-from .tools.search import search_transcripts, search_filings
+from .tools.search import (
+    search_transcripts,
+    search_filings,
+    search_research,
+    search_company_docs,
+    search_thirdbridge,
+)
 from .tools.web import trusted_web_search
 
 # Import configuration
@@ -259,6 +275,9 @@ __all__ = [
     "get_research_country_codes",
     "search_transcripts",
     "search_filings",
+    "search_research",
+    "search_company_docs",
+    "search_thirdbridge",
     "trusted_web_search",
     # Utilities
     "make_aiera_request",
@@ -298,5 +317,6 @@ __all__ = [
     "COMPANY_DOC_TOOLS",
     "THIRD_BRIDGE_TOOLS",
     "RESEARCH_TOOLS",
+    "SEARCH_TOOLS",
     "WEB_TOOLS",
 ]

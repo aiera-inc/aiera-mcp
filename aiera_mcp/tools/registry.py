@@ -39,7 +39,13 @@ from .research import (
     get_research_country_codes,
 )
 from .web import trusted_web_search
-from .search import search_transcripts, search_filings, search_research
+from .search import (
+    search_transcripts,
+    search_filings,
+    search_research,
+    search_company_docs,
+    search_thirdbridge,
+)
 
 # Import all parameter model classes from domain modules
 from .events import (
@@ -82,7 +88,13 @@ from .research import (
     GetResearchCountryCodesArgs,
 )
 from .web import TrustedWebSearchArgs
-from .search import SearchTranscriptsArgs, SearchFilingsArgs, SearchResearchArgs
+from .search import (
+    SearchTranscriptsArgs,
+    SearchFilingsArgs,
+    SearchResearchArgs,
+    SearchCompanyDocsArgs,
+    SearchThirdbridgeArgs,
+)
 
 TOOL_REGISTRY = {
     "find_events": {
@@ -405,6 +417,24 @@ TOOL_REGISTRY = {
         "input_schema": SearchResearchArgs.model_json_schema(),
         "function": search_research,
         "args_model": SearchResearchArgs,
+        "category": "search",
+        "read_only": True,
+        "destructive": False,
+    },
+    "search_company_docs": {
+        "display_name": "Search Company Documents",
+        "input_schema": SearchCompanyDocsArgs.model_json_schema(),
+        "function": search_company_docs,
+        "args_model": SearchCompanyDocsArgs,
+        "category": "search",
+        "read_only": True,
+        "destructive": False,
+    },
+    "search_thirdbridge": {
+        "display_name": "Search Third Bridge",
+        "input_schema": SearchThirdbridgeArgs.model_json_schema(),
+        "function": search_thirdbridge,
+        "args_model": SearchThirdbridgeArgs,
         "category": "search",
         "read_only": True,
         "destructive": False,

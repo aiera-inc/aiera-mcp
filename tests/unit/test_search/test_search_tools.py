@@ -11,14 +11,20 @@ from aiera_mcp.tools.search.tools import (
     search_transcripts,
     search_filings,
     search_research,
+    search_company_docs,
+    search_thirdbridge,
 )
 from aiera_mcp.tools.search.models import (
     SearchTranscriptsArgs,
     SearchFilingsArgs,
     SearchResearchArgs,
+    SearchCompanyDocsArgs,
+    SearchThirdbridgeArgs,
     SearchTranscriptsResponse,
     SearchFilingsResponse,
     SearchResearchResponse,
+    SearchCompanyDocsResponse,
+    SearchThirdbridgeResponse,
     TranscriptSearchItem,
 )
 
@@ -812,3 +818,462 @@ class TestSearchToolsErrorHandling:
         call_args = mock_http_dependencies["mock_make_request"].call_args
         data = call_args[1]["data"]
         assert data["size"] == size
+
+
+@pytest.mark.unit
+class TestSearchCompanyDocs:
+    """Test the search_company_docs tool."""
+
+    @pytest.mark.asyncio
+    async def test_search_company_docs_success(
+        self, mock_http_dependencies, sample_api_responses
+    ):
+        """Test successful company docs search."""
+        search_responses = sample_api_responses.get("search", {})
+        mock_http_dependencies["mock_make_request"].return_value = search_responses[
+            "search_company_doc_chunks_success"
+        ]
+
+        args = SearchCompanyDocsArgs(
+            query_text="sustainability initiatives",
+            company_ids=[1],
+            size=20,
+        )
+
+        result = await search_company_docs(args)
+
+        assert isinstance(result, SearchCompanyDocsResponse)
+        assert result.response is not None
+        assert len(result.response.result) == 1
+
+        first_result = result.response.result[0]
+        assert first_result["_score"] > 0
+        assert first_result["title"] == "Amazon.com Inc - Sustainability Report 2024"
+
+        mock_http_dependencies["mock_make_request"].assert_called()
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        assert call_args[1]["method"] == "POST"
+        assert call_args[1]["endpoint"] == "/chat-support/search/company-doc-chunks"
+
+    @pytest.mark.asyncio
+    async def test_search_company_docs_empty_results(self, mock_http_dependencies):
+        """Test search_company_docs with no results."""
+        empty_response = {
+            "instructions": [],
+            "response": {"result": []},
+        }
+        mock_http_dependencies["mock_make_request"].return_value = empty_response
+
+        args = SearchCompanyDocsArgs(
+            query_text="nonexistent xyz123",
+            size=20,
+        )
+
+        result = await search_company_docs(args)
+
+        assert isinstance(result, SearchCompanyDocsResponse)
+        assert result.response is not None
+        assert len(result.response.result) == 0
+
+    @pytest.mark.asyncio
+    async def test_search_company_docs_with_company_doc_ids(
+        self, mock_http_dependencies, sample_api_responses
+    ):
+        """Test search_company_docs with company_doc_ids filter."""
+        search_responses = sample_api_responses.get("search", {})
+        mock_http_dependencies["mock_make_request"].return_value = search_responses[
+            "search_company_doc_chunks_success"
+        ]
+
+        args = SearchCompanyDocsArgs(
+            query_text="capital allocation",
+            company_doc_ids=[3001234, 3001235],
+            size=20,
+        )
+
+        result = await search_company_docs(args)
+
+        assert isinstance(result, SearchCompanyDocsResponse)
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        data = call_args[1]["data"]
+        must_clauses = data["post_filter"]["bool"]["must"]
+        doc_id_filter = [c for c in must_clauses if "company_doc_id" in str(c)]
+        assert len(doc_id_filter) > 0
+
+    @pytest.mark.asyncio
+    async def test_search_company_docs_with_categories(
+        self, mock_http_dependencies, sample_api_responses
+    ):
+        """Test search_company_docs with categories filter."""
+        search_responses = sample_api_responses.get("search", {})
+        mock_http_dependencies["mock_make_request"].return_value = search_responses[
+            "search_company_doc_chunks_success"
+        ]
+
+        args = SearchCompanyDocsArgs(
+            query_text="earnings",
+            categories=["Investor Presentation", "Press Release"],
+            size=20,
+        )
+
+        result = await search_company_docs(args)
+
+        assert isinstance(result, SearchCompanyDocsResponse)
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        data = call_args[1]["data"]
+        must_clauses = data["post_filter"]["bool"]["must"]
+        category_filter = [c for c in must_clauses if "category.keyword" in str(c)]
+        assert len(category_filter) == 1
+        assert category_filter[0]["terms"]["category.keyword"] == [
+            "Investor Presentation",
+            "Press Release",
+        ]
+
+    @pytest.mark.asyncio
+    async def test_search_company_docs_with_keywords(
+        self, mock_http_dependencies, sample_api_responses
+    ):
+        """Test search_company_docs with keywords filter."""
+        search_responses = sample_api_responses.get("search", {})
+        mock_http_dependencies["mock_make_request"].return_value = search_responses[
+            "search_company_doc_chunks_success"
+        ]
+
+        args = SearchCompanyDocsArgs(
+            query_text="ESG report",
+            keywords=["sustainability", "ESG"],
+            size=20,
+        )
+
+        result = await search_company_docs(args)
+
+        assert isinstance(result, SearchCompanyDocsResponse)
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        data = call_args[1]["data"]
+        must_clauses = data["post_filter"]["bool"]["must"]
+        keywords_filter = [c for c in must_clauses if "keywords" in str(c)]
+        assert len(keywords_filter) == 1
+
+    @pytest.mark.asyncio
+    async def test_search_company_docs_with_date_range(
+        self, mock_http_dependencies, sample_api_responses
+    ):
+        """Test search_company_docs with date range filter."""
+        search_responses = sample_api_responses.get("search", {})
+        mock_http_dependencies["mock_make_request"].return_value = search_responses[
+            "search_company_doc_chunks_success"
+        ]
+
+        args = SearchCompanyDocsArgs(
+            query_text="quarterly results",
+            start_date="2024-01-01",
+            end_date="2024-12-31",
+            size=20,
+        )
+
+        result = await search_company_docs(args)
+
+        assert isinstance(result, SearchCompanyDocsResponse)
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        data = call_args[1]["data"]
+        must_clauses = data["post_filter"]["bool"]["must"]
+        date_filter = [c for c in must_clauses if "range" in str(c)]
+        assert len(date_filter) > 0
+
+    @pytest.mark.asyncio
+    async def test_search_company_docs_exclude_instructions(
+        self, mock_http_dependencies, sample_api_responses
+    ):
+        """Test search_company_docs with exclude_instructions."""
+        search_responses = sample_api_responses.get("search", {})
+        mock_http_dependencies["mock_make_request"].return_value = search_responses[
+            "search_company_doc_chunks_success"
+        ]
+
+        args = SearchCompanyDocsArgs(
+            query_text="sustainability",
+            exclude_instructions=True,
+            size=20,
+        )
+
+        result = await search_company_docs(args)
+
+        assert result.instructions == []
+
+    @pytest.mark.asyncio
+    async def test_search_company_docs_fallback_on_timeout(
+        self, mock_http_dependencies
+    ):
+        """Test that search_company_docs falls back to standard search on timeout."""
+        fallback_response = {
+            "instructions": [],
+            "response": {"result": []},
+        }
+        mock_http_dependencies["mock_make_request"].side_effect = [
+            asyncio.TimeoutError("ML inference timed out"),
+            fallback_response,
+        ]
+
+        args = SearchCompanyDocsArgs(
+            query_text="test query",
+            size=20,
+        )
+
+        result = await search_company_docs(args)
+
+        assert mock_http_dependencies["mock_make_request"].call_count == 2
+        assert isinstance(result, SearchCompanyDocsResponse)
+
+    @pytest.mark.asyncio
+    async def test_search_company_docs_fallback_uses_correct_endpoint(
+        self, mock_http_dependencies
+    ):
+        """Test that search_company_docs fallback uses the correct endpoint."""
+        mock_http_dependencies["mock_make_request"].side_effect = [
+            {"response": {}},
+            {"instructions": [], "response": {"result": []}},
+        ]
+
+        args = SearchCompanyDocsArgs(
+            query_text="test query",
+            size=20,
+        )
+
+        result = await search_company_docs(args)
+
+        assert mock_http_dependencies["mock_make_request"].call_count == 2
+        for call in mock_http_dependencies["mock_make_request"].call_args_list:
+            assert call[1]["endpoint"] == "/chat-support/search/company-doc-chunks"
+
+
+@pytest.mark.unit
+class TestSearchThirdbridge:
+    """Test the search_thirdbridge tool."""
+
+    @pytest.mark.asyncio
+    async def test_search_thirdbridge_success(
+        self, mock_http_dependencies, sample_api_responses
+    ):
+        """Test successful Third Bridge search."""
+        search_responses = sample_api_responses.get("search", {})
+        mock_http_dependencies["mock_make_request"].return_value = search_responses[
+            "search_thirdbridge_success"
+        ]
+
+        args = SearchThirdbridgeArgs(
+            query_text="semiconductor supply chain",
+            company_ids=[1],
+            size=20,
+        )
+
+        result = await search_thirdbridge(args)
+
+        assert isinstance(result, SearchThirdbridgeResponse)
+        assert result.response is not None
+        assert len(result.response.result) == 1
+
+        first_result = result.response.result[0]
+        assert first_result["_score"] > 0
+        assert (
+            first_result["event_title"]
+            == "Expert Call: Semiconductor Supply Chain Dynamics"
+        )
+
+        mock_http_dependencies["mock_make_request"].assert_called()
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        assert call_args[1]["method"] == "POST"
+        assert call_args[1]["endpoint"] == "/chat-support/search/thirdbridge"
+
+    @pytest.mark.asyncio
+    async def test_search_thirdbridge_empty_results(self, mock_http_dependencies):
+        """Test search_thirdbridge with no results."""
+        empty_response = {
+            "instructions": [],
+            "response": {"result": []},
+        }
+        mock_http_dependencies["mock_make_request"].return_value = empty_response
+
+        args = SearchThirdbridgeArgs(
+            query_text="nonexistent xyz123",
+            size=20,
+        )
+
+        result = await search_thirdbridge(args)
+
+        assert isinstance(result, SearchThirdbridgeResponse)
+        assert result.response is not None
+        assert len(result.response.result) == 0
+
+    @pytest.mark.asyncio
+    async def test_search_thirdbridge_with_company_ids(
+        self, mock_http_dependencies, sample_api_responses
+    ):
+        """Test search_thirdbridge with company_ids filter."""
+        search_responses = sample_api_responses.get("search", {})
+        mock_http_dependencies["mock_make_request"].return_value = search_responses[
+            "search_thirdbridge_success"
+        ]
+
+        args = SearchThirdbridgeArgs(
+            query_text="competitive landscape",
+            company_ids=[1, 42],
+            size=20,
+        )
+
+        result = await search_thirdbridge(args)
+
+        assert isinstance(result, SearchThirdbridgeResponse)
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        data = call_args[1]["data"]
+        must_clauses = data["post_filter"]["bool"]["must"]
+        company_filter = [c for c in must_clauses if "primary_company_ids" in str(c)]
+        assert len(company_filter) > 0
+        # Should be a bool with should matching both primary and secondary
+        bool_clause = company_filter[0]["bool"]
+        assert len(bool_clause["should"]) == 2
+        assert bool_clause["should"][0]["terms"]["primary_company_ids"] == [1, 42]
+        assert bool_clause["should"][1]["terms"]["secondary_company_ids"] == [1, 42]
+        assert bool_clause["minimum_should_match"] == 1
+
+    @pytest.mark.asyncio
+    async def test_search_thirdbridge_with_event_ids(
+        self, mock_http_dependencies, sample_api_responses
+    ):
+        """Test search_thirdbridge with event_ids filter."""
+        search_responses = sample_api_responses.get("search", {})
+        mock_http_dependencies["mock_make_request"].return_value = search_responses[
+            "search_thirdbridge_success"
+        ]
+
+        args = SearchThirdbridgeArgs(
+            query_text="market dynamics",
+            event_ids=[12345, 67890],
+            size=20,
+        )
+
+        result = await search_thirdbridge(args)
+
+        assert isinstance(result, SearchThirdbridgeResponse)
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        data = call_args[1]["data"]
+        must_clauses = data["post_filter"]["bool"]["must"]
+        event_filter = [
+            c for c in must_clauses if "event_scheduled_audio_call_id" in str(c)
+        ]
+        assert len(event_filter) > 0
+
+    @pytest.mark.asyncio
+    async def test_search_thirdbridge_with_date_range(
+        self, mock_http_dependencies, sample_api_responses
+    ):
+        """Test search_thirdbridge with date range filter."""
+        search_responses = sample_api_responses.get("search", {})
+        mock_http_dependencies["mock_make_request"].return_value = search_responses[
+            "search_thirdbridge_success"
+        ]
+
+        args = SearchThirdbridgeArgs(
+            query_text="pricing trends",
+            start_date="2024-01-01",
+            end_date="2024-12-31",
+            size=20,
+        )
+
+        result = await search_thirdbridge(args)
+
+        assert isinstance(result, SearchThirdbridgeResponse)
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        data = call_args[1]["data"]
+        must_clauses = data["post_filter"]["bool"]["must"]
+        date_filter = [c for c in must_clauses if "range" in str(c)]
+        assert len(date_filter) > 0
+
+    @pytest.mark.asyncio
+    async def test_search_thirdbridge_with_content_type(
+        self, mock_http_dependencies, sample_api_responses
+    ):
+        """Test search_thirdbridge with event_content_type filter."""
+        search_responses = sample_api_responses.get("search", {})
+        mock_http_dependencies["mock_make_request"].return_value = search_responses[
+            "search_thirdbridge_success"
+        ]
+
+        args = SearchThirdbridgeArgs(
+            query_text="expert opinion",
+            event_content_type="Interview",
+            size=20,
+        )
+
+        result = await search_thirdbridge(args)
+
+        assert isinstance(result, SearchThirdbridgeResponse)
+        call_args = mock_http_dependencies["mock_make_request"].call_args
+        data = call_args[1]["data"]
+        must_clauses = data["post_filter"]["bool"]["must"]
+        content_type_filter = [
+            c for c in must_clauses if "event_content_type" in str(c)
+        ]
+        assert len(content_type_filter) > 0
+
+    @pytest.mark.asyncio
+    async def test_search_thirdbridge_exclude_instructions(
+        self, mock_http_dependencies, sample_api_responses
+    ):
+        """Test search_thirdbridge with exclude_instructions."""
+        search_responses = sample_api_responses.get("search", {})
+        mock_http_dependencies["mock_make_request"].return_value = search_responses[
+            "search_thirdbridge_success"
+        ]
+
+        args = SearchThirdbridgeArgs(
+            query_text="supply chain",
+            exclude_instructions=True,
+            size=20,
+        )
+
+        result = await search_thirdbridge(args)
+
+        assert result.instructions == []
+
+    @pytest.mark.asyncio
+    async def test_search_thirdbridge_fallback_on_timeout(self, mock_http_dependencies):
+        """Test that search_thirdbridge falls back to standard search on timeout."""
+        fallback_response = {
+            "instructions": [],
+            "response": {"result": []},
+        }
+        mock_http_dependencies["mock_make_request"].side_effect = [
+            asyncio.TimeoutError("ML inference timed out"),
+            fallback_response,
+        ]
+
+        args = SearchThirdbridgeArgs(
+            query_text="test query",
+            size=20,
+        )
+
+        result = await search_thirdbridge(args)
+
+        assert mock_http_dependencies["mock_make_request"].call_count == 2
+        assert isinstance(result, SearchThirdbridgeResponse)
+
+    @pytest.mark.asyncio
+    async def test_search_thirdbridge_fallback_uses_correct_endpoint(
+        self, mock_http_dependencies
+    ):
+        """Test that search_thirdbridge fallback uses the correct endpoint."""
+        mock_http_dependencies["mock_make_request"].side_effect = [
+            {"response": {}},
+            {"instructions": [], "response": {"result": []}},
+        ]
+
+        args = SearchThirdbridgeArgs(
+            query_text="test query",
+            size=20,
+        )
+
+        result = await search_thirdbridge(args)
+
+        assert mock_http_dependencies["mock_make_request"].call_count == 2
+        for call in mock_http_dependencies["mock_make_request"].call_args_list:
+            assert call[1]["endpoint"] == "/chat-support/search/thirdbridge"

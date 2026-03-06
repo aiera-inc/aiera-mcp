@@ -11,9 +11,13 @@ from aiera_mcp.tools.search.models import (
     SearchTranscriptsArgs,
     SearchFilingsArgs,
     SearchResearchArgs,
+    SearchCompanyDocsArgs,
+    SearchThirdbridgeArgs,
     SearchTranscriptsResponse,
     SearchFilingsResponse,
     SearchResearchResponse,
+    SearchCompanyDocsResponse,
+    SearchThirdbridgeResponse,
     TranscriptSearchItem,
     TranscriptSearchCitation,
     TranscriptSearchCitationMetadata,
@@ -654,3 +658,180 @@ class TestSearchModelSerialization:
         assert parsed["score"] == 9.5
         assert parsed["transcript_item_id"] == 123
         assert parsed["text"] == "Test text"
+
+
+@pytest.mark.unit
+class TestSearchCompanyDocsArgs:
+    """Test SearchCompanyDocsArgs model."""
+
+    def test_valid_search_company_docs_args(self):
+        """Test valid SearchCompanyDocsArgs creation."""
+        args = SearchCompanyDocsArgs(
+            query_text="sustainability initiatives",
+            company_doc_ids=[12345, 67890],
+            company_ids=[1, 2],
+            categories=["Investor Presentation"],
+            keywords=["sustainability", "ESG"],
+            start_date="2024-01-01",
+            end_date="2024-12-31",
+            size=30,
+        )
+
+        assert args.query_text == "sustainability initiatives"
+        assert args.company_doc_ids == [12345, 67890]
+        assert args.company_ids == [1, 2]
+        assert args.categories == ["Investor Presentation"]
+        assert args.keywords == ["sustainability", "ESG"]
+        assert args.start_date == "2024-01-01"
+        assert args.end_date == "2024-12-31"
+        assert args.size == 30
+        assert args.search_after is None
+
+    def test_search_company_docs_args_defaults(self):
+        """Test SearchCompanyDocsArgs default values."""
+        args = SearchCompanyDocsArgs(
+            query_text="test query",
+        )
+
+        assert args.company_doc_ids is None
+        assert args.company_ids is None
+        assert args.categories is None
+        assert args.keywords is None
+        assert args.start_date == ""
+        assert args.end_date == ""
+        assert args.size == 20
+        assert args.search_after is None
+        assert args.originating_prompt is None
+        assert args.self_identification is None
+        assert args.include_base_instructions is True
+        assert args.exclude_instructions is False
+
+    def test_search_company_docs_args_required_fields(self):
+        """Test that query_text is required."""
+        with pytest.raises(ValidationError):
+            SearchCompanyDocsArgs()
+
+        args = SearchCompanyDocsArgs(query_text="test")
+        assert args.query_text == "test"
+
+    def test_search_company_docs_args_json_schema(self):
+        """Test that SearchCompanyDocsArgs generates valid JSON schema."""
+        schema = SearchCompanyDocsArgs.model_json_schema()
+
+        assert "properties" in schema
+        assert "query_text" in schema["properties"]
+        assert "company_doc_ids" in schema["properties"]
+        assert "company_ids" in schema["properties"]
+        assert "categories" in schema["properties"]
+        assert "keywords" in schema["properties"]
+        assert "start_date" in schema["properties"]
+        assert "end_date" in schema["properties"]
+        assert "size" in schema["properties"]
+        assert "search_after" in schema["properties"]
+
+
+@pytest.mark.unit
+class TestSearchThirdbridgeArgs:
+    """Test SearchThirdbridgeArgs model."""
+
+    def test_valid_search_thirdbridge_args(self):
+        """Test valid SearchThirdbridgeArgs creation."""
+        args = SearchThirdbridgeArgs(
+            query_text="semiconductor supply chain",
+            company_ids=[1, 42],
+            event_ids=[12345, 67890],
+            start_date="2024-01-01",
+            end_date="2024-12-31",
+            event_content_type="Interview",
+            size=30,
+        )
+
+        assert args.query_text == "semiconductor supply chain"
+        assert args.company_ids == [1, 42]
+        assert args.event_ids == [12345, 67890]
+        assert args.start_date == "2024-01-01"
+        assert args.end_date == "2024-12-31"
+        assert args.event_content_type == "Interview"
+        assert args.size == 30
+        assert args.search_after is None
+
+    def test_search_thirdbridge_args_defaults(self):
+        """Test SearchThirdbridgeArgs default values."""
+        args = SearchThirdbridgeArgs(
+            query_text="test query",
+        )
+
+        assert args.company_ids is None
+        assert args.event_ids is None
+        assert args.start_date == ""
+        assert args.end_date == ""
+        assert args.event_content_type == ""
+        assert args.size == 20
+        assert args.search_after is None
+        assert args.originating_prompt is None
+        assert args.self_identification is None
+        assert args.include_base_instructions is True
+        assert args.exclude_instructions is False
+
+    def test_search_thirdbridge_args_required_fields(self):
+        """Test that query_text is required."""
+        with pytest.raises(ValidationError):
+            SearchThirdbridgeArgs()
+
+        args = SearchThirdbridgeArgs(query_text="test")
+        assert args.query_text == "test"
+
+    def test_search_thirdbridge_args_json_schema(self):
+        """Test that SearchThirdbridgeArgs generates valid JSON schema."""
+        schema = SearchThirdbridgeArgs.model_json_schema()
+
+        assert "properties" in schema
+        assert "query_text" in schema["properties"]
+        assert "company_ids" in schema["properties"]
+        assert "event_ids" in schema["properties"]
+        assert "start_date" in schema["properties"]
+        assert "end_date" in schema["properties"]
+        assert "event_content_type" in schema["properties"]
+        assert "size" in schema["properties"]
+        assert "search_after" in schema["properties"]
+
+
+@pytest.mark.unit
+class TestNewSearchResponses:
+    """Test new search response models."""
+
+    def test_search_company_docs_response(self):
+        """Test SearchCompanyDocsResponse model."""
+        response = SearchCompanyDocsResponse(
+            instructions=["Test instruction"],
+            response=SearchResponseData(result=[{"test": "data"}]),
+        )
+
+        assert len(response.response.result) == 1
+        assert response.instructions == ["Test instruction"]
+
+    def test_search_thirdbridge_response(self):
+        """Test SearchThirdbridgeResponse model."""
+        response = SearchThirdbridgeResponse(
+            instructions=["Test instruction"],
+            response=SearchResponseData(result=[{"test": "data"}]),
+        )
+
+        assert len(response.response.result) == 1
+        assert response.instructions == ["Test instruction"]
+
+    def test_search_company_docs_response_null(self):
+        """Test SearchCompanyDocsResponse with null response."""
+        response = SearchCompanyDocsResponse(
+            instructions=[],
+            response=None,
+        )
+        assert response.response is None
+
+    def test_search_thirdbridge_response_null(self):
+        """Test SearchThirdbridgeResponse with null response."""
+        response = SearchThirdbridgeResponse(
+            instructions=[],
+            response=None,
+        )
+        assert response.response is None

@@ -22,9 +22,9 @@ Executes a raw OpenSearch query against the specified index.
 
 **Path Parameters:**
 
-| Parameter  | Type   | Description                                                                                                                       |
-|------------|--------|-----------------------------------------------------------------------------------------------------------------------------------|
-| `index`    | string | Index to search. Valid values: `events`, `transcripts`, `filings`, `filing-chunks`, `attachments`, `company_docs`, `third_bridge`, `research`, `research-chunks` |
+| Parameter  | Type   | Description                                                                                                                                                  |
+|------------|--------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `index`    | string | Index to search. Valid values: `transcripts`, `filings`, `filing-chunks`, `company-docs`, `company-doc-chunks`, `thirdbridge`, `research`, `research-chunks` |
 
 **Request Body (JSON):**
 
@@ -73,8 +73,8 @@ Response varies by index type:
         "content_id": INTEGER,
         "transcript_event_id": INTEGER,
         "transcript_section": "STRING_OR_NULL",
-        "speaker_name": "STRING_OR_NULL",
-        "speaker_title": "STRING_OR_NULL",
+        "transcript_speaker_name": "STRING_OR_NULL",
+        "transcript_speaker_title": "STRING_OR_NULL",
         "text": "STRING",
         "primary_equity_id": INTEGER,
         "title": "STRING",
@@ -87,43 +87,6 @@ Response varies by index type:
             "company_id": INTEGER,
             "event_id": INTEGER,
             "transcript_item_id": INTEGER
-          }
-        }
-      }, ...
-    ],
-    "pagination": {
-      "total": INTEGER,
-      "page_size": INTEGER,
-      "has_next_page": BOOLEAN,
-      "next_search_after": [FLOAT, INTEGER] | null
-    }
-  }
-}
-```
-
-### /search/events
-
-```json
-{
-  "instructions": ["STRING", "STRING", ... ],
-  "response": {
-    "result": [
-      {
-        "score": FLOAT,
-        "date": "ISO_DATETIME",
-        "primary_company_id": INTEGER,
-        "content_id": INTEGER,
-        "text": "STRING",
-        "primary_equity_id": INTEGER,
-        "title": "STRING",
-        "citation_information": {
-          "title": "STRING",
-          "url": "URL",
-          "metadata": {
-            "type": "STRING",
-            "url_target": "STRING",
-            "company_id": INTEGER,
-            "event_id": INTEGER
           }
         }
       }, ...
@@ -192,8 +155,6 @@ Response varies by index type:
         "primary_company_id": INTEGER,
         "content_id": INTEGER,
         "filing_id": INTEGER,
-        "company_common_name": "STRING",
-        "filing_type": "STRING",
         "primary_equity_id": INTEGER,
         "text": "STRING",
         "title": "STRING",
@@ -220,7 +181,7 @@ Response varies by index type:
 }
 ```
 
-### /search/attachments
+### /search/company-docs
 
 ```json
 {
@@ -229,21 +190,28 @@ Response varies by index type:
     "result": [
       {
         "score": FLOAT,
-        "date": "ISO_DATETIME",
-        "primary_company_id": INTEGER,
+        "document_id": INTEGER,
+        "company_doc_id": INTEGER,
+        "company_id": INTEGER,
         "content_id": INTEGER,
-        "event_id": INTEGER,
-        "attachment_type": "STRING",
-        "text": "STRING",
-        "primary_equity_id": INTEGER,
+        "category": "STRING",
+        "keywords": ["STRING", ...],
+        "publish_date": "ISO_DATE",
+        "content_date": "ISO_DATETIME",
+        "original_url": "URL",
+        "copy_url": "URL",
+        "original_type": "STRING",
+        "has_chunks": BOOLEAN,
+        "page_count": INTEGER,
         "title": "STRING",
         "citation_information": {
           "title": "STRING",
           "url": "URL",
           "metadata": {
-            "type": "STRING",
-            "url_target": "STRING",
-            "event_id": INTEGER
+            "type": "company_doc",
+            "url_target": "external",
+            "company_doc_id": INTEGER,
+            "company_id": INTEGER
           }
         }
       }, ...
@@ -356,6 +324,101 @@ Response varies by index type:
       "page_size": INTEGER,
       "has_next_page": BOOLEAN,
       "next_search_after": [FLOAT, "STRING"] | null
+    }
+  }
+}
+```
+
+### /search/company-doc-chunks
+
+```json
+{
+  "instructions": ["STRING", "STRING", ... ],
+  "response": {
+    "result": [
+      {
+        "score": FLOAT,
+        "chunk_id": "STRING",
+        "document_id": INTEGER,
+        "company_doc_id": INTEGER,
+        "company_id": INTEGER,
+        "content_id": INTEGER,
+        "category": "STRING",
+        "keywords": ["STRING", ...],
+        "chunk_index": INTEGER,
+        "page": INTEGER,
+        "page_count": INTEGER,
+        "publish_date": "ISO_DATE",
+        "content_date": "ISO_DATETIME",
+        "original_url": "URL",
+        "copy_url": "URL",
+        "original_type": "STRING",
+        "has_chunks": BOOLEAN,
+        "title": "STRING",
+        "text": "STRING",
+        "citation_information": {
+          "title": "STRING",
+          "url": "URL",
+          "metadata": {
+            "type": "company_doc",
+            "url_target": "external",
+            "company_doc_id": INTEGER,
+            "company_id": INTEGER,
+            "page": INTEGER,
+            "chunk_index": INTEGER
+          }
+        }
+      }, ...
+    ],
+    "pagination": {
+      "total": INTEGER,
+      "page_size": INTEGER,
+      "has_next_page": BOOLEAN,
+      "next_search_after": [FLOAT, INTEGER] | null
+    }
+  }
+}
+```
+
+### /search/thirdbridge
+
+```json
+{
+  "instructions": ["STRING", "STRING", ... ],
+  "response": {
+    "result": [
+      {
+        "score": FLOAT,
+        "transcript_id": INTEGER,
+        "thirdbridge_id": "STRING",
+        "aiera_event_id": INTEGER,
+        "event_date": "ISO_DATETIME",
+        "event_title": "STRING",
+        "event_agenda": "STRING",
+        "event_insights": "STRING",
+        "event_content_type": "STRING",
+        "speaker": "STRING",
+        "paragraph_idx": INTEGER,
+        "sub_paragraph_idx": INTEGER,
+        "primary_company_ids": [INTEGER, ...],
+        "text": "STRING",
+        "citation_information": {
+          "title": "STRING",
+          "url": "URL",
+          "metadata": {
+            "type": "event",
+            "url_target": "aiera",
+            "event_id": INTEGER,
+            "company_id": INTEGER
+          }
+        }
+      }, ...
+    ],
+    "pagination": {
+      "total": INTEGER,
+      "page_size": INTEGER,
+      "has_next_page": BOOLEAN,
+      "next_search_after": [FLOAT, INTEGER] | null
     }
   }
 }
