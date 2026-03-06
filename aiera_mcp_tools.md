@@ -28,9 +28,11 @@ This document provides comprehensive documentation for all Aiera MCP (Model Cont
    - [get_company_doc](#get_company_doc)
    - [get_company_doc_categories](#get_company_doc_categories)
    - [get_company_doc_keywords](#get_company_doc_keywords)
+   - [search_company_docs](#search_company_docs)
 7. [Third Bridge Expert Insights](#third-bridge-expert-insights)
    - [find_third_bridge_events](#find_third_bridge_events)
    - [get_third_bridge_event](#get_third_bridge_event)
+   - [search_thirdbridge](#search_thirdbridge)
 8. [Research Tools](#research-tools)
    - [find_research](#find_research)
    - [get_research](#get_research)
@@ -902,6 +904,66 @@ Retrieve all available keywords for filtering company documents.
 
 ---
 
+### search_company_docs
+
+Semantic search within company document chunks for specific content, disclosures, or topics using embedding-based matching.
+
+**Input Parameters:**
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| query_text | string | **yes** | - | Search query for semantic matching within company document chunks. Examples: 'sustainability initiatives', 'capital allocation', 'product roadmap' |
+| company_ids | array[integer] | no | null | List of company IDs to filter search. Obtain from find_equities results |
+| categories | array[string] | no | null | List of document categories to filter by. Obtain valid values from get_company_doc_categories |
+| keywords | array[string] | no | null | List of keywords to filter by. Obtain valid values from get_company_doc_keywords |
+| start_date | string | no | "" | Start date filter on publish_date (YYYY-MM-DD) |
+| end_date | string | no | "" | End date filter on publish_date (YYYY-MM-DD) |
+| size | integer | no | 20 | Number of results per page (max 250) |
+| search_after | array | no | null | Cursor for pagination. Pass `next_search_after` from a previous response to fetch the next page. |
+| include_base_instructions | boolean | no | true | Include base instructions |
+| exclude_instructions | boolean | no | false | Exclude all instructions in response |
+| originating_prompt | string | no | null | Original user prompt |
+| self_identification | string | no | null | Self-identified information about the user/server/session, used for tracking purposes |
+
+**Output Structure:**
+```json
+{
+  "instructions": ["STRING", ...],
+  "error": STRING | null,
+  "response": {
+    "result": [
+      {
+        "score": FLOAT,
+        "company_id": INTEGER,
+        "title": "STRING",
+        "text": "STRING",
+        "category": "STRING",
+        "publish_date": "DATE_STRING",
+        "summary": "STRING",
+        "keywords": ["STRING", ...],
+        "citation_information": {
+          "title": "STRING",
+          "url": "STRING",
+          "metadata": {
+            "type": "STRING",
+            "url_target": "STRING",
+            "company_id": INTEGER,
+            "content_id": INTEGER
+          }
+        }
+      }
+    ],
+    "pagination": {
+      "total": INTEGER,
+      "page_size": INTEGER,
+      "has_next_page": BOOLEAN,
+      "next_search_after": [FLOAT, INTEGER] | null
+    }
+  }
+}
+```
+
+---
+
 ## Third Bridge Expert Insights
 
 ### find_third_bridge_events
@@ -988,6 +1050,67 @@ Get detailed information about a specific Third Bridge expert insight event.
         "citation_information": {...}
       }
     ]
+  }
+}
+```
+
+---
+
+### search_thirdbridge
+
+Semantic search within Third Bridge expert interview transcripts for specific topics, insights, or discussions using embedding-based matching.
+
+**Input Parameters:**
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| query_text | string | **yes** | - | Search query for semantic matching within Third Bridge transcripts. Examples: 'competitive landscape', 'pricing trends', 'market share dynamics' |
+| company_ids | array[integer] | no | null | List of company IDs to filter search. Matches against both primary and secondary company IDs. Obtain from find_equities results |
+| event_ids | array[integer] | no | null | List of event IDs (event_scheduled_audio_call_id) to search within. Obtain from find_third_bridge_events results |
+| start_date | string | no | "" | Start date filter on event_date (YYYY-MM-DD) |
+| end_date | string | no | "" | End date filter on event_date (YYYY-MM-DD) |
+| event_content_type | string | no | "" | Filter for Third Bridge content type. Example: 'FORUM'. Leave empty to search all content types |
+| size | integer | no | 20 | Number of results per page (max 250) |
+| search_after | array | no | null | Cursor for pagination. Pass `next_search_after` from a previous response to fetch the next page. |
+| include_base_instructions | boolean | no | true | Include base instructions |
+| exclude_instructions | boolean | no | false | Exclude all instructions in response |
+| originating_prompt | string | no | null | Original user prompt |
+| self_identification | string | no | null | Self-identified information about the user/server/session, used for tracking purposes |
+
+**Output Structure:**
+```json
+{
+  "instructions": ["STRING", ...],
+  "error": STRING | null,
+  "response": {
+    "result": [
+      {
+        "score": FLOAT,
+        "event_scheduled_audio_call_id": INTEGER,
+        "event_title": "STRING",
+        "event_date": "DATETIME_STRING",
+        "event_content_type": "STRING",
+        "event_agenda": "STRING",
+        "event_insights": "STRING",
+        "text": "STRING",
+        "primary_company_ids": [INTEGER, ...],
+        "secondary_company_ids": [INTEGER, ...],
+        "citation_information": {
+          "title": "STRING",
+          "url": "STRING",
+          "metadata": {
+            "type": "STRING",
+            "url_target": "STRING",
+            "event_id": INTEGER
+          }
+        }
+      }
+    ],
+    "pagination": {
+      "total": INTEGER,
+      "page_size": INTEGER,
+      "has_next_page": BOOLEAN,
+      "next_search_after": [FLOAT, INTEGER] | null
+    }
   }
 }
 ```
