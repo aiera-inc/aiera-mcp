@@ -529,6 +529,11 @@ class SearchCompanyDocsArgs(BaseAieraArgs):
         description="Search query for semantic matching within company document chunks. Examples: 'sustainability initiatives', 'capital allocation', 'product roadmap'.",
     )
 
+    company_doc_ids: Optional[List[int]] = Field(
+        default=None,
+        description="Optional list of specific company document IDs to search within. Obtain company_doc_ids from find_company_docs results. Example: [12345, 67890]",
+    )
+
     company_ids: Optional[List[int]] = Field(
         default=None,
         description="Optional list of company IDs to filter search. Obtain company_ids from find_equities results. Example: [1, 2]",
@@ -621,9 +626,9 @@ class SearchThirdbridgeArgs(BaseAieraArgs):
         description="Optional list of company IDs to filter search. Matches against both primary_company_ids and secondary_company_ids. Obtain company_ids from find_equities results. Example: [1, 2]",
     )
 
-    event_ids: Optional[List[int]] = Field(
+    thirdbridge_ids: Optional[List[str]] = Field(
         default=None,
-        description="Optional list of event IDs (event_scheduled_audio_call_id) to search within. Obtain from find_third_bridge_events results. Example: [12345, 67890]",
+        description="Optional list of Third Bridge IDs to search within. Obtain from find_third_bridge_events results. Example: ['TB-12345', 'TB-67890']",
     )
 
     start_date: str = Field(

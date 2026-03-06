@@ -1136,10 +1136,10 @@ class TestSearchThirdbridge:
         assert bool_clause["minimum_should_match"] == 1
 
     @pytest.mark.asyncio
-    async def test_search_thirdbridge_with_event_ids(
+    async def test_search_thirdbridge_with_thirdbridge_ids(
         self, mock_http_dependencies, sample_api_responses
     ):
-        """Test search_thirdbridge with event_ids filter."""
+        """Test search_thirdbridge with thirdbridge_ids filter."""
         search_responses = sample_api_responses.get("search", {})
         mock_http_dependencies["mock_make_request"].return_value = search_responses[
             "search_thirdbridge_success"
@@ -1147,7 +1147,7 @@ class TestSearchThirdbridge:
 
         args = SearchThirdbridgeArgs(
             query_text="market dynamics",
-            event_ids=[12345, 67890],
+            thirdbridge_ids=["TB-12345", "TB-67890"],
             size=20,
         )
 
@@ -1157,10 +1157,8 @@ class TestSearchThirdbridge:
         call_args = mock_http_dependencies["mock_make_request"].call_args
         data = call_args[1]["data"]
         must_clauses = data["post_filter"]["bool"]["must"]
-        event_filter = [
-            c for c in must_clauses if "event_scheduled_audio_call_id" in str(c)
-        ]
-        assert len(event_filter) > 0
+        tb_filter = [c for c in must_clauses if "thirdbridge_id" in str(c)]
+        assert len(tb_filter) > 0
 
     @pytest.mark.asyncio
     async def test_search_thirdbridge_with_date_range(

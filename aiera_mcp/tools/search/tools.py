@@ -838,12 +838,12 @@ async def search_thirdbridge(args: SearchThirdbridgeArgs) -> SearchThirdbridgeRe
             }
         )
 
-    # add event ID filter (event_scheduled_audio_call_id)...
-    if args.event_ids:
+    # add Third Bridge ID filter...
+    if args.thirdbridge_ids:
         must_clauses.append(
             {
                 "terms": {
-                    "event_scheduled_audio_call_id": args.event_ids,
+                    "thirdbridge_id": args.thirdbridge_ids,
                 }
             }
         )

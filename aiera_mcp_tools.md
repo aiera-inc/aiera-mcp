@@ -912,6 +912,7 @@ Semantic search within company document chunks for specific content, disclosures
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | query_text | string | **yes** | - | Search query for semantic matching within company document chunks. Examples: 'sustainability initiatives', 'capital allocation', 'product roadmap' |
+| company_doc_ids | array[integer] | no | null | List of specific company document IDs to search within. Obtain from find_company_docs results |
 | company_ids | array[integer] | no | null | List of company IDs to filter search. Obtain from find_equities results |
 | categories | array[string] | no | null | List of document categories to filter by. Obtain valid values from get_company_doc_categories |
 | keywords | array[string] | no | null | List of keywords to filter by. Obtain valid values from get_company_doc_keywords |
@@ -1065,7 +1066,7 @@ Semantic search within Third Bridge expert interview transcripts for specific to
 |-----------|------|----------|---------|-------------|
 | query_text | string | **yes** | - | Search query for semantic matching within Third Bridge transcripts. Examples: 'competitive landscape', 'pricing trends', 'market share dynamics' |
 | company_ids | array[integer] | no | null | List of company IDs to filter search. Matches against both primary and secondary company IDs. Obtain from find_equities results |
-| event_ids | array[integer] | no | null | List of event IDs (event_scheduled_audio_call_id) to search within. Obtain from find_third_bridge_events results |
+| thirdbridge_ids | array[string] | no | null | List of Third Bridge IDs to search within. Obtain from find_third_bridge_events results |
 | start_date | string | no | "" | Start date filter on event_date (YYYY-MM-DD) |
 | end_date | string | no | "" | End date filter on event_date (YYYY-MM-DD) |
 | event_content_type | string | no | "" | Filter for Third Bridge content type. Example: 'FORUM'. Leave empty to search all content types |

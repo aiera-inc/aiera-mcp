@@ -739,7 +739,7 @@ class TestSearchThirdbridgeArgs:
         args = SearchThirdbridgeArgs(
             query_text="semiconductor supply chain",
             company_ids=[1, 42],
-            event_ids=[12345, 67890],
+            thirdbridge_ids=["TB-12345", "TB-67890"],
             start_date="2024-01-01",
             end_date="2024-12-31",
             event_content_type="Interview",
@@ -748,7 +748,7 @@ class TestSearchThirdbridgeArgs:
 
         assert args.query_text == "semiconductor supply chain"
         assert args.company_ids == [1, 42]
-        assert args.event_ids == [12345, 67890]
+        assert args.thirdbridge_ids == ["TB-12345", "TB-67890"]
         assert args.start_date == "2024-01-01"
         assert args.end_date == "2024-12-31"
         assert args.event_content_type == "Interview"
@@ -762,7 +762,7 @@ class TestSearchThirdbridgeArgs:
         )
 
         assert args.company_ids is None
-        assert args.event_ids is None
+        assert args.thirdbridge_ids is None
         assert args.start_date == ""
         assert args.end_date == ""
         assert args.event_content_type == ""
@@ -788,7 +788,7 @@ class TestSearchThirdbridgeArgs:
         assert "properties" in schema
         assert "query_text" in schema["properties"]
         assert "company_ids" in schema["properties"]
-        assert "event_ids" in schema["properties"]
+        assert "thirdbridge_ids" in schema["properties"]
         assert "start_date" in schema["properties"]
         assert "end_date" in schema["properties"]
         assert "event_content_type" in schema["properties"]
