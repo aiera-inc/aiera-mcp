@@ -640,6 +640,16 @@ async def search_company_docs(args: SearchCompanyDocsArgs) -> SearchCompanyDocsR
 
     must_clauses = []
 
+    # add company doc ID filter...
+    if args.company_doc_ids:
+        must_clauses.append(
+            {
+                "terms": {
+                    "company_doc_id": args.company_doc_ids,
+                }
+            }
+        )
+
     # add company ID filter...
     if args.company_ids:
         must_clauses.append(
