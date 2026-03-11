@@ -299,20 +299,6 @@ class GetEventArgs(BaseToolArgs):
         description="Unique identifier for the event. Obtain event_id from find_events or search_transcripts results. Example: '12345'"
     )
 
-    transcript_section: Optional[str] = Field(
-        default=None,
-        description="Filter transcripts by section. Only applicable for earnings events. Options: 'presentation' (prepared remarks by management, typically first 15-30 min), 'q_and_a' (analyst questions and management answers). Leave empty to get both sections.",
-    )
-
-    @field_validator("transcript_section")
-    @classmethod
-    def validate_transcript_section(cls, v):
-        if v is not None and v not in ["presentation", "q_and_a"]:
-            raise ValueError(
-                "transcript_section must be either 'presentation' or 'q_and_a'"
-            )
-        return v
-
 
 class GetUpcomingEventsArgs(BaseToolArgs, BloombergTickerMixin):
     """Get confirmed and estimated upcoming events within a date range. Requires one of the following: bloomberg_tickers (a comma-separated list of tickers),

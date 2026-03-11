@@ -407,26 +407,6 @@ class TestGetEvent:
         assert params["include_transcripts"] == "true"
 
     @pytest.mark.asyncio
-    async def test_get_event_with_transcript_section(
-        self, mock_http_dependencies, events_api_responses
-    ):
-        """Test get_event with transcript section filter."""
-        # Setup
-        mock_http_dependencies["mock_make_request"].return_value = events_api_responses[
-            "get_event_success"
-        ]
-
-        args = GetEventArgs(event_id="2734016", transcript_section="q_and_a")
-
-        # Execute
-        result = await get_event(args)
-
-        # Verify
-        call_args = mock_http_dependencies["mock_make_request"].call_args
-        params = call_args[1]["params"]
-        assert params["transcript_section"] == "q_and_a"
-
-    @pytest.mark.asyncio
     async def test_get_event_not_found(self, mock_http_dependencies):
         """Test get_event when event is not found."""
         # Setup - empty response

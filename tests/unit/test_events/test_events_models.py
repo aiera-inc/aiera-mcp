@@ -213,7 +213,6 @@ class TestGetEventArgs:
         """Test valid GetEventArgs creation."""
         args = GetEventArgs(event_id="12345")
         assert args.event_id == "12345"
-        assert args.transcript_section is None
         assert args.originating_prompt is None
         assert args.include_base_instructions is True
 
@@ -226,30 +225,6 @@ class TestGetEventArgs:
         )
         assert args.originating_prompt == "Get details for this earnings call"
         assert args.include_base_instructions is False
-
-    def test_get_event_args_with_transcript_section(self):
-        """Test GetEventArgs with transcript_section."""
-        args = GetEventArgs(event_id="12345", transcript_section="q_and_a")
-        assert args.event_id == "12345"
-        assert args.transcript_section == "q_and_a"
-
-        args = GetEventArgs(event_id="12345", transcript_section="presentation")
-        assert args.transcript_section == "presentation"
-
-    def test_get_event_args_transcript_section_validation(self):
-        """Test transcript_section validation."""
-        # Valid values
-        GetEventArgs(event_id="12345", transcript_section="presentation")
-        GetEventArgs(event_id="12345", transcript_section="q_and_a")
-        GetEventArgs(event_id="12345", transcript_section=None)
-
-        # Invalid value
-        with pytest.raises(ValidationError) as exc_info:
-            GetEventArgs(event_id="12345", transcript_section="invalid_section")
-
-        assert "transcript_section must be either 'presentation' or 'q_and_a'" in str(
-            exc_info.value
-        )
 
 
 @pytest.mark.unit
