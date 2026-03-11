@@ -348,7 +348,6 @@ Get detailed information about a specific event including full transcript.
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | event_id | string | **yes** | - | The event ID to retrieve |
-| transcript_section | string | no | null | Filter to specific section: `presentation` or `q_and_a` |
 | include_base_instructions | boolean | no | true | Include base instructions |
 | exclude_instructions | boolean | no | false | Exclude all instructions in response |
 | originating_prompt | string | no | null | Original user prompt |
