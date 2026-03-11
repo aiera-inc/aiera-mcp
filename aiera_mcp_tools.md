@@ -126,7 +126,6 @@ Find companies and equities using various identifiers or search terms.
 |-----------|------|----------|---------|-------------|
 | search | string | no | null | Free-text search term |
 | bloomberg_ticker | string | no | null | Bloomberg ticker (comma-separated for multiple) |
-| ticker | string | no | null | Standard ticker symbol |
 | isin | string | no | null | ISIN identifier (comma-separated for multiple) |
 | ric | string | no | null | Reuters Instrument Code (comma-separated for multiple) |
 | permid | string | no | null | PermID identifier |

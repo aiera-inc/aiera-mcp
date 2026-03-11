@@ -97,10 +97,6 @@ class FindEquitiesArgs(BaseToolArgs, BloombergTickerMixin):
         default=None, description="Reuters Instrument Code (RIC)."
     )
 
-    ticker: Optional[str] = Field(
-        default=None, description="Stock ticker symbol (without country code)."
-    )
-
     permid: Optional[str] = Field(
         default=None, description="Refinitiv Permanent Identifier (PermID)."
     )
