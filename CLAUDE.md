@@ -44,7 +44,6 @@ entrypoint.py          # CLI entrypoint, transport selection
 scripts/
   manual_test.py       # Manual integration testing against live API
 tests/                 # pytest test suite (unit + fixtures)
-local_claude_files/    # Reference data: API endpoint docs, OpenSearch mappings & samples (gitignored)
 ```
 
 ## Tool Count
@@ -92,14 +91,14 @@ AIERA_API_KEY=your_key uv run python scripts/manual_test.py find_events
 
 All settings via env vars or `.env` file (see `.env.example`):
 
-| Variable | Default | Description |
-|---|---|---|
-| `AIERA_API_KEY` | (required) | API key |
-| `AIERA_BASE_URL` | `https://premium.aiera.com/api` | API base URL |
-| `DEFAULT_PAGE_SIZE` | `50` | Default pagination size |
-| `DEFAULT_MAX_PAGE_SIZE` | `100` | Max pagination size |
-| `HTTP_TIMEOUT` | `30.0` | Request timeout (seconds) |
-| `LOG_LEVEL` | `INFO` | Logging level |
+| Variable                | Default                         | Description               |
+|-------------------------|---------------------------------|---------------------------|
+| `AIERA_API_KEY`         | (required)                      | API key                   |
+| `AIERA_BASE_URL`        | `https://premium.aiera.com/api` | API base URL              |
+| `DEFAULT_PAGE_SIZE`     | `50`                            | Default pagination size   |
+| `DEFAULT_MAX_PAGE_SIZE` | `100`                           | Max pagination size       |
+| `HTTP_TIMEOUT`          | `30.0`                          | Request timeout (seconds) |
+| `LOG_LEVEL`             | `INFO`                          | Logging level             |
 
 ## Pre-commit Hooks
 
