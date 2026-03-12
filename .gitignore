@@ -1,4 +1,5 @@
 local_claude_files/*
+
 # dependencies
 venv
 .venv
