@@ -186,12 +186,13 @@ class TestResearchModelSerialization:
         assert "countries" in schema["properties"]
         assert "search_after" in schema["properties"]
         assert "page_size" in schema["properties"]
-        # Removed fields should not be present
-        assert "bloomberg_ticker" not in schema["properties"]
-        assert "index_id" not in schema["properties"]
-        assert "watchlist_id" not in schema["properties"]
-        assert "sector_id" not in schema["properties"]
-        assert "subsector_id" not in schema["properties"]
+        # Equity/group filter fields should be present
+        assert "bloomberg_ticker" in schema["properties"]
+        assert "index_id" in schema["properties"]
+        assert "watchlist_id" in schema["properties"]
+        assert "sector_id" in schema["properties"]
+        assert "subsector_id" in schema["properties"]
+        # page is not present (uses cursor-based pagination via search_after)
         assert "page" not in schema["properties"]
 
     def test_get_research_args_json_schema(self):

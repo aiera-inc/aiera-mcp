@@ -65,13 +65,14 @@ class BloombergTickerMixin(BaseModel):
         return correct_bloomberg_ticker(v)
 
 
-class FindResearchArgs(BaseToolArgs):
+class FindResearchArgs(BaseToolArgs, BloombergTickerMixin):
     """Find research reports filtered by optional search terms, author IDs, organizations, regions, and date range.
 
     WHEN TO USE:
     - Use this to browse and discover research reports
     - Use this to find research by specific author IDs, organizations, or regions
     - Use this to find research within a date range
+    - Use this to find research related to specific companies, sectors, indexes, or watchlists
 
     MULTIPLE FILTERS: All filter parameters are optional. Combine them to narrow results.
     """
@@ -104,6 +105,31 @@ class FindResearchArgs(BaseToolArgs):
     end_date: Optional[str] = Field(
         default=None,
         description="End date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET). Defaults to now on the server.",
+    )
+
+    bloomberg_ticker: Optional[str] = Field(
+        default=None,
+        description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces (e.g., 'AAPL:US,MSFT:US'). Defaults to ':US' if country code omitted.",
+    )
+
+    sector_id: Optional[Union[int, str]] = Field(
+        default=None,
+        description="ID of a specific GICS sector. Use get_sectors_and_subsectors to find valid IDs.",
+    )
+
+    subsector_id: Optional[Union[int, str]] = Field(
+        default=None,
+        description="ID of a specific GICS subsector. Use get_sectors_and_subsectors to find valid IDs.",
+    )
+
+    index_id: Optional[Union[int, str]] = Field(
+        default=None,
+        description="ID of a specific market index. Use get_available_indexes to find valid IDs.",
+    )
+
+    watchlist_id: Optional[Union[int, str]] = Field(
+        default=None,
+        description="ID of a specific user watchlist. Use get_available_watchlists to find valid IDs.",
     )
 
     author_ids: Optional[List[str]] = Field(
