@@ -3,17 +3,7 @@
 """Pydantic models for Aiera search tools."""
 
 from typing import List, Optional, Any
-from datetime import datetime
-from pydantic import (
-    AliasChoices,
-    BaseModel,
-    Field,
-    field_validator,
-    field_serializer,
-    model_validator,
-    ValidationInfo,
-)
-from pydantic_core import PydanticCustomError
+from pydantic import Field
 
 from ..common.models import BaseAieraArgs, BaseAieraResponse
 
@@ -264,228 +254,6 @@ class SearchResearchArgs(BaseAieraArgs):
     )
 
 
-# Search result item models
-class TranscriptSearchCitationMetadata(BaseModel):
-    """Metadata for transcript search citation."""
-
-    type: str = Field(
-        description="The type of citation ('event', 'filing', 'company_doc', 'conference', or 'company')"
-    )
-    url_target: Optional[str] = Field(
-        None,
-        description="Whether the citation URL will go to Aiera or to an external source",
-    )
-    company_id: Optional[int] = Field(None, description="Company identifier")
-    event_id: Optional[int] = Field(None, description="Event identifier")
-    transcript_item_id: Optional[int] = Field(
-        None, description="Transcript item identifier"
-    )
-
-
-class TranscriptSearchCitation(BaseModel):
-    """Citation information for transcript search results."""
-
-    title: str = Field(description="Title of the cited transcript")
-    url: str = Field(description="URL to the specific transcript segment")
-    metadata: Optional[TranscriptSearchCitationMetadata] = Field(
-        None, description="Additional metadata about the citation"
-    )
-
-
-class TranscriptSearchItem(BaseModel):
-    """Individual transcript search result item."""
-
-    score: float = Field(
-        validation_alias=AliasChoices("_score", "score"),
-        description="Search relevance score",
-    )
-    date: datetime = Field(description="Date and time of the transcript")
-    primary_company_id: int = Field(description="Primary company identifier.")
-    transcript_item_id: int = Field(
-        validation_alias="content_id",
-        description="Transcript item identifier (aliased from content_id)",
-    )
-    transcript_event_id: int = Field(description="Event identifier for the transcript")
-    transcript_section: Optional[str] = Field(
-        description="Section of transcript (e.g., 'q_and_a', 'presentation'). Can be null for some transcripts."
-    )
-    speaker_name: Optional[str] = Field(
-        None, description="Name of the speaker. Can be null for some transcripts."
-    )
-    speaker_title: Optional[str] = Field(
-        None, description="Title/role of the speaker. Can be null for some transcripts."
-    )
-    text: str = Field(description="The matching text content from the transcript")
-    primary_equity_id: int = Field(
-        description="Primary equity identifier. Can be found using the find_equities tool."
-    )
-    title: str = Field(description="Title of the event/transcript")
-    citation_information: TranscriptSearchCitation = Field(
-        description="Citation details for this result"
-    )
-
-    @field_validator("date", mode="before")
-    @classmethod
-    def parse_date(cls, v):
-        """Parse ISO format datetime strings to datetime objects."""
-        if isinstance(v, str):
-            try:
-                # Replace 'Z' with '+00:00' for ISO format compatibility
-                return datetime.fromisoformat(v.replace("Z", "+00:00"))
-            except (ValueError, AttributeError):
-                return datetime.now()
-        # If it's already a datetime object, return as is
-        return v
-
-    @field_serializer("date")
-    def serialize_date(self, value: datetime) -> str:
-        """Serialize datetime to ISO format string for JSON compatibility."""
-        return value.isoformat()
-
-
-class TranscriptSearchResult(BaseModel):
-    """Container for transcript search results."""
-
-    result: List[TranscriptSearchItem] = Field(
-        description="List of transcript search results"
-    )
-
-
-# Search response pagination structure
-class SearchPagination(BaseModel):
-    """Cursor-based pagination metadata for search results."""
-
-    total: int = Field(description="Total number of matching documents")
-    page_size: int = Field(description="Number of results requested for this page")
-    has_next_page: bool = Field(description="Whether more results are available")
-    next_search_after: Optional[List[Any]] = Field(
-        None,
-        description="Cursor to pass as search_after in the next request, or null if no more pages",
-    )
-
-
-class SearchTotalCount(BaseModel):
-    """Total count structure from search API."""
-
-    value: int = Field(description="Total count value")
-    relation: str = Field(description="Relation type (e.g., 'eq')")
-
-
-class SearchResponseData(BaseModel):
-    """Search response data container."""
-
-    result: Optional[List[Any]] = Field(description="Search results (can be null)")
-    pagination: Optional[SearchPagination] = Field(
-        None, description="Cursor-based pagination metadata"
-    )
-
-
-class TranscriptSearchResponseData(BaseModel):
-    """Transcript search response data container with typed results."""
-
-    result: Optional[List[TranscriptSearchItem]] = Field(
-        description="Transcript search results (can be null)"
-    )
-    pagination: Optional[SearchPagination] = Field(
-        None, description="Cursor-based pagination metadata"
-    )
-
-
-# Response models
-class SearchTranscriptsResponse(BaseAieraResponse):
-    """Response for search_transcripts tool - matches actual API structure."""
-
-    response: Optional[TranscriptSearchResponseData] = Field(
-        None, description="Response data container"
-    )
-
-
-class FilingSearchCitationMetadata(BaseModel):
-    """Metadata for filing search citation."""
-
-    type: str = Field(
-        description="The type of citation ('event', 'filing', 'company_doc', 'conference', or 'company')"
-    )
-    url_target: Optional[str] = Field(
-        None,
-        description="Whether the citation URL will go to Aiera or to an external source",
-    )
-    company_id: Optional[int] = Field(None, description="Company identifier")
-    content_id: Optional[int] = Field(None, description="Content identifier")
-    filing_id: Optional[int] = Field(None, description="Filing identifier")
-
-
-class FilingSearchCitation(BaseModel):
-    """Citation information for filing search results."""
-
-    title: str = Field(description="Title of the cited filing")
-    url: str = Field(description="URL to the specific filing segment")
-    metadata: Optional[FilingSearchCitationMetadata] = Field(
-        None, description="Additional metadata about the citation"
-    )
-
-
-class FilingSearchItem(BaseModel):
-    """Individual filing chunk search result item."""
-
-    date: datetime = Field(description="Date and time of the filing")
-    primary_company_id: int = Field(description="Primary company identifier")
-    content_id: str = Field(description="Filing chunk content identifier")
-    filing_id: str = Field(description="Filing identifier")
-    company_common_name: Optional[str] = Field(
-        default=None, description="Company common name"
-    )
-    text: str = Field(description="The matching text content from the filing chunk")
-    primary_equity_id: int = Field(
-        description="Primary equity identifier. Can be found using the find_equities tool."
-    )
-    title: str = Field(description="Title of the filing")
-    filing_type: Optional[str] = Field(
-        default=None, description="Type of SEC filing (e.g., '10-K', '10-Q', '8-K')"
-    )
-    score: float = Field(
-        validation_alias=AliasChoices("_score", "score"),
-        description="Search relevance score",
-    )
-    citation_information: FilingSearchCitation = Field(
-        description="Citation details for this result"
-    )
-
-    @field_validator("date", mode="before")
-    @classmethod
-    def parse_date(cls, v):
-        """Parse ISO format datetime strings to datetime objects."""
-        if isinstance(v, str):
-            try:
-                # Replace 'Z' with '+00:00' for ISO format compatibility
-                return datetime.fromisoformat(v.replace("Z", "+00:00"))
-            except (ValueError, AttributeError):
-                return datetime.now()
-        # If it's already a datetime object, return as is
-        return v
-
-    @field_serializer("date")
-    def serialize_date(self, value: datetime) -> str:
-        """Serialize datetime to ISO format string for JSON compatibility."""
-        return value.isoformat()
-
-
-class SearchFilingsResponse(BaseAieraResponse):
-    """Response for search_filings tool - matches actual API structure."""
-
-    response: Optional[SearchResponseData] = Field(
-        None, description="Response data container"
-    )
-
-
-class SearchResearchResponse(BaseAieraResponse):
-    """Response for search_research tool - matches actual API structure."""
-
-    response: Optional[SearchResponseData] = Field(
-        None, description="Response data container"
-    )
-
-
 class SearchCompanyDocsArgs(BaseAieraArgs):
     """Semantic search within company document chunks for specific content, disclosures, or topics.
 
@@ -570,14 +338,6 @@ class SearchCompanyDocsArgs(BaseAieraArgs):
     )
 
 
-class SearchCompanyDocsResponse(BaseAieraResponse):
-    """Response for search_company_docs tool - matches actual API structure."""
-
-    response: Optional[SearchResponseData] = Field(
-        None, description="Response data container"
-    )
-
-
 class SearchThirdbridgeArgs(BaseAieraArgs):
     """Semantic search within Third Bridge expert interview transcripts for specific topics, insights, or discussions.
 
@@ -657,9 +417,32 @@ class SearchThirdbridgeArgs(BaseAieraArgs):
     )
 
 
-class SearchThirdbridgeResponse(BaseAieraResponse):
-    """Response for search_thirdbridge tool - matches actual API structure."""
+# Response models - pass through API response structure
+class SearchTranscriptsResponse(BaseAieraResponse):
+    """Response for search_transcripts tool - passes through the API response structure."""
 
-    response: Optional[SearchResponseData] = Field(
-        None, description="Response data container"
-    )
+    response: Optional[Any] = Field(None, description="Response data from the API")
+
+
+class SearchFilingsResponse(BaseAieraResponse):
+    """Response for search_filings tool - passes through the API response structure."""
+
+    response: Optional[Any] = Field(None, description="Response data from the API")
+
+
+class SearchResearchResponse(BaseAieraResponse):
+    """Response for search_research tool - passes through the API response structure."""
+
+    response: Optional[Any] = Field(None, description="Response data from the API")
+
+
+class SearchCompanyDocsResponse(BaseAieraResponse):
+    """Response for search_company_docs tool - passes through the API response structure."""
+
+    response: Optional[Any] = Field(None, description="Response data from the API")
+
+
+class SearchThirdbridgeResponse(BaseAieraResponse):
+    """Response for search_thirdbridge tool - passes through the API response structure."""
+
+    response: Optional[Any] = Field(None, description="Response data from the API")

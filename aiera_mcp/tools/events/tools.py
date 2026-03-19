@@ -13,10 +13,7 @@ from .models import (
     FindConferencesResponse,
     GetEventResponse,
     GetUpcomingEventsResponse,
-    EventItem,
-    EventType,
 )
-from ..common.models import CitationInfo
 from ..base import get_http_client, make_aiera_request
 from ... import get_api_key
 
@@ -46,7 +43,6 @@ async def find_events(args: FindEventsArgs) -> FindEventsResponse:
         params=params,
     )
 
-    # Pydantic validators will automatically parse datetime strings and nested objects
     response = FindEventsResponse.model_validate(raw_response)
     if args.exclude_instructions:
         response.instructions = []
@@ -71,7 +67,6 @@ async def find_conferences(args: FindConferencesArgs) -> FindConferencesResponse
         params=params,
     )
 
-    # Pydantic validators will automatically parse datetime strings and nested objects
     response = FindConferencesResponse.model_validate(raw_response)
     if args.exclude_instructions:
         response.instructions = []
@@ -101,7 +96,6 @@ async def get_event(args: GetEventArgs) -> GetEventResponse:
         params=params,
     )
 
-    # Pydantic validators will automatically parse datetime strings and nested objects
     response = GetEventResponse.model_validate(raw_response)
     if args.exclude_instructions:
         response.instructions = []
@@ -126,11 +120,7 @@ async def get_upcoming_events(args: GetUpcomingEventsArgs) -> GetUpcomingEventsR
         params=params,
     )
 
-    # Pydantic validators will automatically parse datetime strings and nested objects
     response = GetUpcomingEventsResponse.model_validate(raw_response)
     if args.exclude_instructions:
         response.instructions = []
     return response
-
-
-# Legacy registration functions removed - all tools now registered via registry

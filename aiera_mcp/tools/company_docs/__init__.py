@@ -17,9 +17,6 @@ from .models import (
     GetCompanyDocResponse,
     GetCompanyDocCategoriesResponse,
     GetCompanyDocKeywordsResponse,
-    CompanyDocItem,
-    CompanyDocDetails,
-    CategoryKeyword,
 )
 
 __all__ = [
@@ -38,8 +35,4 @@ __all__ = [
     "GetCompanyDocResponse",
     "GetCompanyDocCategoriesResponse",
     "GetCompanyDocKeywordsResponse",
-    # Data models
-    "CompanyDocItem",
-    "CompanyDocDetails",
-    "CategoryKeyword",
 ]

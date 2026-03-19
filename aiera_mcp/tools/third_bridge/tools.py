@@ -9,12 +9,9 @@ from .models import (
     GetThirdBridgeEventArgs,
     FindThirdBridgeEventsResponse,
     GetThirdBridgeEventResponse,
-    ThirdBridgeEventItem,
-    ThirdBridgeEventDetails,
 )
 from ..base import get_http_client, make_aiera_request
 from ... import get_api_key
-from ..common.models import CitationInfo
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -44,8 +41,6 @@ async def find_third_bridge_events(
         params=params,
     )
 
-    # Return the structured response directly - no transformation needed
-    # since FindThirdBridgeEventsResponse model now matches the actual API format
     response = FindThirdBridgeEventsResponse.model_validate(raw_response)
     if args.exclude_instructions:
         response.instructions = []
@@ -77,33 +72,7 @@ async def get_third_bridge_event(
         params=params,
     )
 
-    # Transform raw response to structured format
-    # Handle both old format (response.data) and new format (data directly)
-    if "response" in raw_response:
-        api_data = raw_response.get("response", {})
-        events_data = api_data.get("data", [])
-        total_count = api_data.get("total", 0)
-    else:
-        # New API format with pagination object
-        events_data = raw_response.get("data", [])
-        pagination = raw_response.get("pagination", {})
-        total_count = pagination.get("total_count", len(events_data))
-
-    if not events_data:
-        raise ValueError(f"Third Bridge event not found: {args.thirdbridge_event_id}")
-
-    event_data = events_data[0]  # Get the first (and should be only) event
-
-    # Build detailed event using model_validate to apply validation_aliases
-    event_details = ThirdBridgeEventDetails.model_validate(event_data)
-
-    response = GetThirdBridgeEventResponse(
-        event=event_details,
-        instructions=raw_response.get("instructions", []),
-    )
+    response = GetThirdBridgeEventResponse.model_validate(raw_response)
     if args.exclude_instructions:
         response.instructions = []
     return response
-
-
-# Legacy registration functions removed - all tools now registered via registry

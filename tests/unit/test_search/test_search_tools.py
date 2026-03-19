@@ -25,7 +25,6 @@ from aiera_mcp.tools.search.models import (
     SearchResearchResponse,
     SearchCompanyDocsResponse,
     SearchThirdbridgeResponse,
-    TranscriptSearchItem,
 )
 
 
@@ -59,14 +58,13 @@ class TestSearchTranscripts:
         # Verify
         assert isinstance(result, SearchTranscriptsResponse)
         assert result.response is not None
-        assert len(result.response.result) == 2
+        assert len(result.response["result"]) == 2
 
         # Check first result
-        first_result = result.response.result[0]
-        assert isinstance(first_result, TranscriptSearchItem)
-        assert first_result.score > 0
-        assert "inflation" in first_result.text.lower()
-        assert first_result.title == "Q1 2022 Amazon.com Inc Earnings Call"
+        first_result = result.response["result"][0]
+        assert first_result["_score"] > 0
+        assert "inflation" in first_result["text"].lower()
+        assert first_result["title"] == "Q1 2022 Amazon.com Inc Earnings Call"
 
         # Check API call was made correctly
         mock_http_dependencies["mock_make_request"].assert_called()
@@ -97,7 +95,7 @@ class TestSearchTranscripts:
         # Verify
         assert isinstance(result, SearchTranscriptsResponse)
         assert result.response is not None
-        assert len(result.response.result) == 0
+        assert len(result.response["result"]) == 0
 
     @pytest.mark.asyncio
     async def test_search_transcripts_with_section_filter(
@@ -246,10 +244,10 @@ class TestSearchFilings:
         # Verify
         assert isinstance(result, SearchFilingsResponse)
         assert result.response is not None
-        assert len(result.response.result) == 1
+        assert len(result.response["result"]) == 1
 
         # Check first result
-        first_result = result.response.result[0]
+        first_result = result.response["result"][0]
         assert first_result["_score"] > 0
         assert first_result["title"] == "Amazon.com Inc - DEF 14A"
 
@@ -281,7 +279,7 @@ class TestSearchFilings:
         # Verify
         assert isinstance(result, SearchFilingsResponse)
         assert result.response is not None
-        assert len(result.response.result) == 0
+        assert len(result.response["result"]) == 0
 
     @pytest.mark.asyncio
     async def test_search_filings_with_filing_type_filter(
@@ -447,10 +445,10 @@ class TestSearchResearch:
         # Verify
         assert isinstance(result, SearchResearchResponse)
         assert result.response is not None
-        assert len(result.response.result) == 1
+        assert len(result.response["result"]) == 1
 
         # Check first result
-        first_result = result.response.result[0]
+        first_result = result.response["result"][0]
         assert first_result["_score"] > 0
         assert first_result["title"] == "Amazon.com Inc - Research Report"
 
@@ -481,7 +479,7 @@ class TestSearchResearch:
         # Verify
         assert isinstance(result, SearchResearchResponse)
         assert result.response is not None
-        assert len(result.response.result) == 0
+        assert len(result.response["result"]) == 0
 
     @pytest.mark.asyncio
     async def test_search_research_with_date_range(
@@ -844,9 +842,9 @@ class TestSearchCompanyDocs:
 
         assert isinstance(result, SearchCompanyDocsResponse)
         assert result.response is not None
-        assert len(result.response.result) == 1
+        assert len(result.response["result"]) == 1
 
-        first_result = result.response.result[0]
+        first_result = result.response["result"][0]
         assert first_result["_score"] > 0
         assert first_result["title"] == "Amazon.com Inc - Sustainability Report 2024"
 
@@ -873,7 +871,7 @@ class TestSearchCompanyDocs:
 
         assert isinstance(result, SearchCompanyDocsResponse)
         assert result.response is not None
-        assert len(result.response.result) == 0
+        assert len(result.response["result"]) == 0
 
     @pytest.mark.asyncio
     async def test_search_company_docs_with_company_doc_ids(
@@ -1070,9 +1068,9 @@ class TestSearchThirdbridge:
 
         assert isinstance(result, SearchThirdbridgeResponse)
         assert result.response is not None
-        assert len(result.response.result) == 1
+        assert len(result.response["result"]) == 1
 
-        first_result = result.response.result[0]
+        first_result = result.response["result"][0]
         assert first_result["_score"] > 0
         assert (
             first_result["event_title"]
@@ -1102,7 +1100,7 @@ class TestSearchThirdbridge:
 
         assert isinstance(result, SearchThirdbridgeResponse)
         assert result.response is not None
-        assert len(result.response.result) == 0
+        assert len(result.response["result"]) == 0
 
     @pytest.mark.asyncio
     async def test_search_thirdbridge_with_company_ids(

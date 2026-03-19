@@ -2,10 +2,10 @@
 
 """Third Bridge domain models for Aiera MCP."""
 
-from pydantic import AliasChoices, BaseModel, Field, field_validator, field_serializer
-from typing import Optional, List, Any, Union
+from pydantic import BaseModel, Field, field_validator, field_serializer
+from typing import Optional, Any, Union
 
-from ..common.models import BaseAieraResponse, PaginatedResponse
+from ..common.models import BaseAieraResponse
 
 
 # Mixins for validation (extracted from original params.py)
@@ -200,143 +200,14 @@ class GetThirdBridgeEventArgs(BaseToolArgs):
     )
 
 
-# Search result item models
-class ThirdBridgeCitationMetadata(BaseModel):
-    """Metadata for third bridge citation."""
-
-    type: str = Field(
-        description="The type of citation ('event', 'filing', 'company_doc', 'conference', or 'company')"
-    )
-    url_target: Optional[str] = Field(
-        None,
-        description="Whether the citation URL will go to Aiera or to an external source",
-    )
-    company_id: Optional[int] = Field(None, description="Company identifier")
-    event_id: Optional[int] = Field(None, description="Event identifier")
-    transcript_item_id: Optional[int] = Field(
-        None, description="Transcript item identifier"
-    )
-
-
-# Citation models
-class ThirdBridgeCitationInfo(BaseModel):
-    """Citation information for Third Bridge events."""
-
-    title: str = Field(description="Event title")
-    url: str = Field(description="URL to the event")
-    metadata: Optional[ThirdBridgeCitationMetadata] = Field(
-        None, description="Additional metadata about the citation"
-    )
-
-
-# Response models (extracted from responses.py)
-class ThirdBridgeEventItem(BaseModel):
-    """Third Bridge event item."""
-
-    thirdbridge_event_id: str = Field(
-        validation_alias="event_id",
-        serialization_alias="event_id",
-        description="Event identifier",
-    )
-    content_type: str = Field(description="Content type (e.g., FORUM, COMMUNITY)")
-    call_date: Optional[str] = Field(
-        default="", description="Event date and time as string"
-    )
-    title: str = Field(description="Event title")
-    language: str = Field(description="Event language")
-    agenda: List[str] = Field(description="Event agenda items")
-    insights: Optional[List[str]] = Field(
-        None, description="Key insights from the event (can be null)"
-    )
-    transcripts: Optional[List["ThirdBridgeTranscriptItem"]] = Field(
-        None, description="Event transcripts (when included)"
-    )
-    citation_information: Optional[ThirdBridgeCitationInfo] = Field(
-        None,
-        description="Citation information",
-    )
-
-
-class ThirdBridgeSpecialist(BaseModel):
-    """Third Bridge specialist/expert information."""
-
-    title: str = Field(description="Expert's job title")
-    initials: str = Field(description="Expert's initials")
-
-
-class ThirdBridgeModerator(BaseModel):
-    """Third Bridge moderator information."""
-
-    id: str = Field(description="Moderator identifier")
-    initials: str = Field(description="Moderator's initials")
-
-
-class ThirdBridgeTranscriptItem(BaseModel):
-    """Third Bridge transcript item."""
-
-    start_ms: Optional[int] = Field(None, description="Start time in milliseconds")
-    duration_ms: Optional[int] = Field(None, description="Duration in milliseconds")
-    transcript: Optional[str] = Field(None, description="Transcript text content")
-    citation_information: Optional[ThirdBridgeCitationInfo] = Field(
-        None, description="Citation information for this transcript item"
-    )
-
-
-class ThirdBridgeEventDetails(BaseModel):
-    """Detailed Third Bridge event information."""
-
-    thirdbridge_event_id: str = Field(
-        validation_alias="event_id",
-        serialization_alias="event_id",
-        description="Event identifier",
-    )
-    content_type: str = Field(description="Content type (e.g., FORUM, COMMUNITY)")
-    call_date: Optional[str] = Field(
-        default="", description="Event date and time as string"
-    )
-    title: str = Field(description="Event title")
-    language: str = Field(description="Event language")
-    agenda: Optional[List[str]] = Field(None, description="Event agenda items")
-    insights: Optional[List[str]] = Field(
-        None, description="Key insights from the event"
-    )
-    citation_information: Optional[ThirdBridgeCitationInfo] = Field(
-        None,
-        description="Citation information",
-    )
-    transcripts: Optional[List[ThirdBridgeTranscriptItem]] = Field(
-        None, description="Full event transcripts"
-    )
-
-
-# Response classes
-class ThirdBridgePaginationInfo(BaseModel):
-    """Pagination information from Third Bridge API."""
-
-    total_count: int = Field(description="Total number of events")
-    current_page: int = Field(description="Current page number")
-    total_pages: int = Field(description="Total number of pages")
-    page_size: int = Field(description="Number of events per page")
-
-
-class ThirdBridgeResponseData(BaseModel):
-    """Third Bridge response data container."""
-
-    pagination: ThirdBridgePaginationInfo = Field(description="Pagination information")
-    data: List[ThirdBridgeEventItem] = Field(description="List of Third Bridge events")
-
-
+# Response models - pass through API response structure
 class FindThirdBridgeEventsResponse(BaseAieraResponse):
-    """Response for find_third_bridge_events tool - matches actual API structure."""
+    """Response for find_third_bridge_events tool - passes through the API response structure."""
 
-    response: Optional[ThirdBridgeResponseData] = Field(
-        None, description="Response data container"
-    )
+    response: Optional[Any] = Field(None, description="Response data from the API")
 
 
 class GetThirdBridgeEventResponse(BaseAieraResponse):
-    """Response for get_third_bridge_event tool."""
+    """Response for get_third_bridge_event tool - passes through the API response structure."""
 
-    event: Optional[ThirdBridgeEventDetails] = Field(
-        default=None, description="Detailed Third Bridge event (None if not found)"
-    )
+    response: Optional[Any] = Field(None, description="Response data from the API")

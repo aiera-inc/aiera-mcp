@@ -18,8 +18,6 @@ from .models import (
     SearchResearchResponse,
     SearchCompanyDocsResponse,
     SearchThirdbridgeResponse,
-    SearchResponseData,
-    TranscriptSearchResponseData,
 )
 
 # Setup logging
@@ -1028,9 +1026,7 @@ def _get_empty_filings_response() -> SearchFilingsResponse:
     """Return empty response structure for filing chunks search."""
     return SearchFilingsResponse(
         instructions=[],
-        response=SearchResponseData(
-            result=[],
-        ),
+        response={"result": [], "pagination": None},
     )
 
 
@@ -1038,9 +1034,7 @@ def _get_empty_transcripts_response() -> SearchTranscriptsResponse:
     """Return empty response structure for transcript search."""
     return SearchTranscriptsResponse(
         instructions=[],
-        response=TranscriptSearchResponseData(
-            result=[],
-        ),
+        response={"result": [], "pagination": None},
     )
 
 
@@ -1048,9 +1042,7 @@ def _get_empty_research_response() -> SearchResearchResponse:
     """Return empty response structure for research chunks search."""
     return SearchResearchResponse(
         instructions=[],
-        response=SearchResponseData(
-            result=[],
-        ),
+        response={"result": [], "pagination": None},
     )
 
 
@@ -1058,9 +1050,7 @@ def _get_empty_company_docs_response() -> SearchCompanyDocsResponse:
     """Return empty response structure for company doc chunks search."""
     return SearchCompanyDocsResponse(
         instructions=[],
-        response=SearchResponseData(
-            result=[],
-        ),
+        response={"result": [], "pagination": None},
     )
 
 
@@ -1068,7 +1058,5 @@ def _get_empty_thirdbridge_response() -> SearchThirdbridgeResponse:
     """Return empty response structure for Third Bridge search."""
     return SearchThirdbridgeResponse(
         instructions=[],
-        response=SearchResponseData(
-            result=[],
-        ),
+        response={"result": [], "pagination": None},
     )

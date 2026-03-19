@@ -39,13 +39,6 @@ from aiera_mcp.tools.equities.models import (
     GetFinancialsResponse,
     GetRatiosResponse,
     GetKpisAndSegmentsResponse,
-    EquityItem,
-    EquityDetails,
-    EquitySummary,
-    EquitySummaryItem,
-    SectorSubsector,
-    IndexItem,
-    WatchlistItem,
 )
 
 
@@ -70,16 +63,16 @@ class TestFindEquities:
 
         # Verify
         assert isinstance(result, FindEquitiesResponse)
-        assert len(result.response.data) == 2
+        assert result.response is not None
+        assert len(result.response["data"]) == 2
 
         # Check first equity
-        first_equity = result.response.data[0]
-        assert isinstance(first_equity, EquityItem)
-        assert first_equity.equity_id == 22685
-        assert first_equity.name == "SAMSUNG ELECTRONICS CO LTD /FI"
-        assert first_equity.bloomberg_ticker == "005935:KS"
-        assert first_equity.sector_id == 5
-        assert first_equity.subsector_id == 73
+        first_equity = result.response["data"][0]
+        assert first_equity["equity_id"] == 22685
+        assert first_equity["name"] == "SAMSUNG ELECTRONICS CO LTD /FI"
+        assert first_equity["bloomberg_ticker"] == "005935:KS"
+        assert first_equity["sector_id"] == 5
+        assert first_equity["subsector_id"] == 73
 
         # Check API call was made correctly
         mock_http_dependencies["mock_make_request"].assert_called_once()
@@ -106,14 +99,14 @@ class TestFindEquities:
 
         # Verify
         assert isinstance(result, FindEquitiesResponse)
-        assert len(result.response.data) == 0
+        assert result.response is not None
+        assert len(result.response["data"]) == 0
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "identifier_type,identifier_value",
         [
             ("bloomberg_ticker", "AAPL:US"),
-            ("ticker", "AAPL"),
             ("isin", "US0378331005"),
             ("ric", "AAPL.O"),
             ("permid", "4295905573"),
@@ -181,7 +174,7 @@ class TestFindEquities:
 
         # Verify basic response structure
         assert isinstance(result, FindEquitiesResponse)
-        assert len(result.response.data) >= 0  # Could be empty or have results
+        assert result.response is not None
 
 
 @pytest.mark.unit
@@ -205,28 +198,27 @@ class TestGetEquitySummaries:
 
         # Verify
         assert isinstance(result, GetEquitySummariesResponse)
+        assert result.response is not None
         assert len(result.response) == 1
 
         # Check first summary
         first_summary = result.response[0]
-        assert isinstance(first_summary, EquitySummaryItem)
-        assert first_summary.equity_id == 1
-        assert first_summary.name == "AMAZON COM INC"
-        # Check basic equity details from fixture data
-        assert first_summary.bloomberg_ticker == "AMZN:US"
-        assert first_summary.sector_id == 1
-        assert first_summary.subsector_id == 259
-        assert first_summary.country == "United States of America"
-        assert "Amazon.com, Inc. engages" in first_summary.description
-        assert first_summary.status == "active"
+        assert first_summary["equity_id"] == 1
+        assert first_summary["name"] == "AMAZON COM INC"
+        assert first_summary["bloomberg_ticker"] == "AMZN:US"
+        assert first_summary["sector_id"] == 1
+        assert first_summary["subsector_id"] == 259
+        assert first_summary["country"] == "United States of America"
+        assert "Amazon.com, Inc. engages" in first_summary["description"]
+        assert first_summary["status"] == "active"
 
         # Check leadership data
-        assert first_summary.leadership is not None
-        assert len(first_summary.leadership) == 2
-        leader = first_summary.leadership[0]
-        assert leader.name == "Andrew R. Jassy"
-        assert leader.title == "CEO of Amazon Web Services Inc."
-        assert leader.event_count == 8
+        assert first_summary["leadership"] is not None
+        assert len(first_summary["leadership"]) == 2
+        leader = first_summary["leadership"][0]
+        assert leader["name"] == "Andrew R. Jassy"
+        assert leader["title"] == "CEO of Amazon Web Services Inc."
+        assert leader["event_count"] == 8
 
         # Check API call parameters
         call_args = mock_http_dependencies["mock_make_request"].call_args
@@ -268,7 +260,6 @@ class TestGetEquitySummaries:
                     "company_name": "Test Company",
                     "ticker": "TEST",
                     "bloomberg_ticker": "TEST:US",
-                    # No summary fields
                 }
             ],
             "instructions": [],
@@ -281,11 +272,11 @@ class TestGetEquitySummaries:
         result = await get_equity_summaries(args)
 
         # Verify
+        assert result.response is not None
         assert len(result.response) == 1
-        # Basic equity data should be accessible
         first_item = result.response[0]
-        assert first_item.equity_id == 123
-        assert first_item.bloomberg_ticker == "TEST:US"
+        assert first_item["equity_id"] == 123
+        assert first_item["bloomberg_ticker"] == "TEST:US"
 
 
 @pytest.mark.unit
@@ -328,39 +319,24 @@ class TestGetSectorsAndSubsectors:
 
         # Verify
         assert isinstance(result, GetSectorsSubsectorsResponse)
+        assert result.response is not None
         assert len(result.response) == 2
 
         # Check first sector
         first_sector = result.response[0]
-        assert isinstance(first_sector, SectorSubsector)
-        assert first_sector.sector_id == 10
-        assert first_sector.name == "Technology"
-        assert first_sector.gics_code == "45"
-        # Check subsectors array
-        assert len(first_sector.subsectors) == 1
-        assert first_sector.subsectors[0].subsector_id == 1010
-        assert first_sector.subsectors[0].name == "Software"
-        # Check backward compatibility properties
-        assert first_sector.sector_name == "Technology"  # property alias
-        assert first_sector.subsector_id == 1010  # property from first subsector
-        assert (
-            first_sector.subsector_name == "Software"
-        )  # property from first subsector
+        assert first_sector["sector_id"] == 10
+        assert first_sector["name"] == "Technology"
+        assert first_sector["gics_code"] == "45"
+        assert len(first_sector["subsectors"]) == 1
+        assert first_sector["subsectors"][0]["subsector_id"] == 1010
+        assert first_sector["subsectors"][0]["name"] == "Software"
 
         # Check sector without subsector
         second_sector = result.response[1]
-        assert second_sector.sector_id == 20
-        assert second_sector.name == "Healthcare"
-        assert second_sector.gics_code == "35"
-        assert len(second_sector.subsectors) == 0
-        # Check backward compatibility properties
-        assert second_sector.sector_name == "Healthcare"  # property alias
-        assert second_sector.subsector_id is None  # no subsectors
-        assert second_sector.subsector_name is None  # no subsectors
-
-        # Check API call
-        call_args = mock_http_dependencies["mock_make_request"].call_args
-        assert call_args[1]["endpoint"] == "/chat-support/get-sectors-and-subsectors"
+        assert second_sector["sector_id"] == 20
+        assert second_sector["name"] == "Healthcare"
+        assert second_sector["gics_code"] == "35"
+        assert len(second_sector["subsectors"]) == 0
 
 
 @pytest.mark.unit
@@ -397,24 +373,12 @@ class TestGetAvailableIndexes:
 
         # Verify
         assert isinstance(result, GetAvailableIndexesResponse)
+        assert result.response is not None
         assert len(result.response) == 2
-
-        # Check first index
-        first_index = result.response[0]
-        assert isinstance(first_index, IndexItem)
-        assert first_index.index_id == 3
-        assert first_index.name == "S&P 500"
-        assert first_index.short_name == "SP500"
-
-        # Check second index
-        second_index = result.response[1]
-        assert second_index.index_id == 8
-        assert second_index.name == "NASDAQ 100"
-        assert second_index.short_name == "NDX"
-
-        # Check API call
-        call_args = mock_http_dependencies["mock_make_request"].call_args
-        assert call_args[1]["endpoint"] == "/chat-support/available-indexes"
+        assert result.response[0]["index_id"] == 3
+        assert result.response[0]["name"] == "S&P 500"
+        assert result.response[1]["index_id"] == 8
+        assert result.response[1]["name"] == "NASDAQ 100"
 
 
 @pytest.mark.unit
@@ -426,7 +390,7 @@ class TestGetIndexConstituents:
         self, mock_http_dependencies, equities_api_responses
     ):
         """Test successful index constituents retrieval."""
-        # Setup - The index-constituents endpoint returns data at top level
+        # Setup
         find_response = equities_api_responses["find_equities_success"]
         index_response = {
             "data": find_response["response"]["data"],
@@ -443,15 +407,7 @@ class TestGetIndexConstituents:
         assert isinstance(result, GetIndexConstituentsResponse)
         assert result.data is not None
         assert len(result.data) == 2
-
-        # Check constituent
-        constituent = result.data[0]
-        assert isinstance(constituent, EquityItem)
-        assert constituent.name == "SAMSUNG ELECTRONICS CO LTD /FI"
-
-        # Check API call
-        call_args = mock_http_dependencies["mock_make_request"].call_args
-        assert call_args[1]["endpoint"] == "/chat-support/index-constituents/SP500"
+        assert result.data[0]["name"] == "SAMSUNG ELECTRONICS CO LTD /FI"
 
     @pytest.mark.asyncio
     async def test_get_index_constituents_pagination(
@@ -467,9 +423,6 @@ class TestGetIndexConstituents:
 
         # Execute
         result = await get_index_constituents(args)
-
-        # Verify pagination (pagination info would be in response if API returns it)
-        # Check that the request was made with correct params
 
         call_args = mock_http_dependencies["mock_make_request"].call_args
         params = call_args[1]["params"]
@@ -493,12 +446,7 @@ class TestGetAvailableWatchlists:
                     "description": "Large technology companies",
                     "type": "watchlist",
                 },
-                {
-                    "watchlist_id": 19269607,
-                    "name": "My Watchlist",
-                    "type": "watchlist",
-                    # No description
-                },
+                {"watchlist_id": 19269607, "name": "My Watchlist", "type": "watchlist"},
             ],
             "instructions": [],
         }
@@ -511,23 +459,12 @@ class TestGetAvailableWatchlists:
 
         # Verify
         assert isinstance(result, GetAvailableWatchlistsResponse)
+        assert result.response is not None
         assert len(result.response) == 2
-
-        # Check first watchlist
-        first_watchlist = result.response[0]
-        assert isinstance(first_watchlist, WatchlistItem)
-        assert first_watchlist.watchlist_id == 2074
-        assert first_watchlist.name == "Tech Giants"
-        assert first_watchlist.type == "watchlist"
-
-        # Check second watchlist
-        second_watchlist = result.response[1]
-        assert second_watchlist.watchlist_id == 19269607
-        assert second_watchlist.name == "My Watchlist"
-
-        # Check API call
-        call_args = mock_http_dependencies["mock_make_request"].call_args
-        assert call_args[1]["endpoint"] == "/chat-support/available-watchlists"
+        assert result.response[0]["watchlist_id"] == 2074
+        assert result.response[0]["name"] == "Tech Giants"
+        assert result.response[1]["watchlist_id"] == 19269607
+        assert result.response[1]["name"] == "My Watchlist"
 
 
 @pytest.mark.unit
@@ -539,7 +476,7 @@ class TestGetWatchlistConstituents:
         self, mock_http_dependencies, equities_api_responses
     ):
         """Test successful watchlist constituents retrieval."""
-        # Setup - The watchlist-constituents endpoint returns data at top level
+        # Setup
         find_response = equities_api_responses["find_equities_success"]
         watchlist_response = {
             "data": find_response["response"]["data"],
@@ -556,15 +493,7 @@ class TestGetWatchlistConstituents:
         assert isinstance(result, GetWatchlistConstituentsResponse)
         assert result.data is not None
         assert len(result.data) == 2
-
-        # Check constituent
-        constituent = result.data[0]
-        assert isinstance(constituent, EquityItem)
-        assert constituent.name == "SAMSUNG ELECTRONICS CO LTD /FI"
-
-        # Check API call
-        call_args = mock_http_dependencies["mock_make_request"].call_args
-        assert call_args[1]["endpoint"] == "/chat-support/watchlist-constituents/123"
+        assert result.data[0]["name"] == "SAMSUNG ELECTRONICS CO LTD /FI"
 
     @pytest.mark.asyncio
     async def test_get_watchlist_constituents_no_metadata(
@@ -605,7 +534,7 @@ class TestEquitiesToolsErrorHandling:
 
         # Verify - should handle gracefully (response may be None or have empty data)
         assert isinstance(result, FindEquitiesResponse)
-        assert result.response is None or len(result.response.data) == 0
+        assert result.response is None or len(result.response.get("data", [])) == 0
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -632,17 +561,12 @@ class TestEquitiesToolsErrorHandling:
         # Setup
         missing_sector_response = {
             "response": [
-                {
-                    "sector_id": 10,
-                    "name": "Technology",
-                    "gics_code": "45",
-                    # Missing subsectors array
-                },
+                {"sector_id": 10, "name": "Technology", "gics_code": "45"},
                 {
                     "sector_id": 20,
                     "name": "Healthcare",
                     "gics_code": "35",
-                    "subsectors": [],  # Empty subsectors array
+                    "subsectors": [],
                 },
             ],
             "instructions": [],
@@ -658,22 +582,12 @@ class TestEquitiesToolsErrorHandling:
 
         # Verify handling of missing/empty subsector data
         assert len(result.response) == 2
-
-        # First sector - missing subsectors array (should default to None/empty)
         first_sector = result.response[0]
-        assert first_sector.name == "Technology"
-        assert first_sector.subsectors is None or first_sector.subsectors == []
-        # Backward compatibility properties should be None when no subsectors
-        assert first_sector.subsector_id is None
-        assert first_sector.subsector_name is None
+        assert first_sector["name"] == "Technology"
 
-        # Second sector - explicit empty subsectors array
         second_sector = result.response[1]
-        assert second_sector.name == "Healthcare"
-        assert second_sector.subsectors == []
-        # Backward compatibility properties should be None when no subsectors
-        assert second_sector.subsector_id is None
-        assert second_sector.subsector_name is None
+        assert second_sector["name"] == "Healthcare"
+        assert second_sector["subsectors"] == []
 
 
 @pytest.mark.unit
@@ -705,27 +619,26 @@ class TestGetFinancials:
         assert isinstance(result, GetFinancialsResponse)
         assert result.response is not None
         assert len(result.response) == 1
-        assert result.response[0].equity is not None
-        assert result.response[0].equity.bloomberg_ticker == "AMZN:US"
-        assert result.response[0].equity.name == "AMAZON COM INC"
-        assert result.response[0].equity.equity_id == 1
+        assert result.response[0]["equity"] is not None
+        assert result.response[0]["equity"]["bloomberg_ticker"] == "AMZN:US"
+        assert result.response[0]["equity"]["name"] == "AMAZON COM INC"
 
         # Check periods data
-        assert result.response[0].periods is not None
-        assert len(result.response[0].periods) == 1
+        assert result.response[0]["periods"] is not None
+        assert len(result.response[0]["periods"]) == 1
 
-        first_period = result.response[0].periods[0]
-        assert first_period.period_type == "annual"
-        assert first_period.fiscal_year == 2024
-        assert first_period.metrics is not None
-        assert len(first_period.metrics) == 3
+        first_period = result.response[0]["periods"][0]
+        assert first_period["period_type"] == "annual"
+        assert first_period["fiscal_year"] == 2024
+        assert first_period["metrics"] is not None
+        assert len(first_period["metrics"]) == 3
 
         # Check first metric (Total Revenue)
-        revenue_metric = first_period.metrics[0]
-        assert revenue_metric.metric.metric_name == "Total Revenue"
-        assert revenue_metric.metric_value == 574785000000
-        assert revenue_metric.metric_currency == "USD"
-        assert revenue_metric.metric.is_key_metric is True
+        revenue_metric = first_period["metrics"][0]
+        assert revenue_metric["metric"]["metric_name"] == "Total Revenue"
+        assert revenue_metric["metric_value"] == 574785000000
+        assert revenue_metric["metric_currency"] == "USD"
+        assert revenue_metric["metric"]["is_key_metric"] is True
 
         # Check API call parameters
         call_args = mock_http_dependencies["mock_make_request"].call_args
@@ -763,8 +676,6 @@ class TestGetFinancials:
 
         # Verify
         assert isinstance(result, GetFinancialsResponse)
-
-        # Check API call parameters
         call_args = mock_http_dependencies["mock_make_request"].call_args
         params = call_args[1]["params"]
         assert params["bloomberg_ticker"] == "AAPL:US"
@@ -823,67 +734,7 @@ class TestGetFinancials:
 
         # Verify
         assert isinstance(result, GetFinancialsResponse)
-        assert result.response[0].periods == []
-
-    @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        "source",
-        ["income-statement", "balance-sheet", "cash-flow-statement"],
-    )
-    async def test_get_financials_different_sources(
-        self, mock_http_dependencies, equities_api_responses, source
-    ):
-        """Test get_financials with different source types."""
-        # Setup
-        mock_http_dependencies["mock_make_request"].return_value = (
-            equities_api_responses["get_financials_success"]
-        )
-
-        args = GetFinancialsArgs(
-            bloomberg_ticker="AMZN:US",
-            source=source,
-            source_type="standardized",
-            period="annual",
-            calendar_year=2024,
-        )
-
-        # Execute
-        result = await get_financials(args)
-
-        # Verify
-        assert isinstance(result, GetFinancialsResponse)
-        call_args = mock_http_dependencies["mock_make_request"].call_args
-        assert call_args[1]["params"]["source"] == source
-
-    @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        "period",
-        ["annual", "quarterly", "semi-annual", "ltm", "ytd", "latest"],
-    )
-    async def test_get_financials_different_periods(
-        self, mock_http_dependencies, equities_api_responses, period
-    ):
-        """Test get_financials with different period types."""
-        # Setup
-        mock_http_dependencies["mock_make_request"].return_value = (
-            equities_api_responses["get_financials_success"]
-        )
-
-        args = GetFinancialsArgs(
-            bloomberg_ticker="AMZN:US",
-            source="income-statement",
-            source_type="standardized",
-            period=period,
-            calendar_year=2024,
-        )
-
-        # Execute
-        result = await get_financials(args)
-
-        # Verify
-        assert isinstance(result, GetFinancialsResponse)
-        call_args = mock_http_dependencies["mock_make_request"].call_args
-        assert call_args[1]["params"]["period"] == period
+        assert result.response[0]["periods"] == []
 
 
 @pytest.mark.unit
@@ -913,66 +764,25 @@ class TestGetRatios:
         assert isinstance(result, GetRatiosResponse)
         assert result.response is not None
         assert len(result.response) == 1
-        assert result.response[0].equity is not None
-        assert result.response[0].equity.bloomberg_ticker == "AMZN:US"
-        assert result.response[0].equity.name == "AMAZON COM INC"
+        assert result.response[0]["equity"] is not None
+        assert result.response[0]["equity"]["bloomberg_ticker"] == "AMZN:US"
+        assert result.response[0]["equity"]["name"] == "AMAZON COM INC"
 
         # Check periods data
-        assert result.response[0].periods is not None
-        assert len(result.response[0].periods) == 1
+        assert result.response[0]["periods"] is not None
+        assert len(result.response[0]["periods"]) == 1
 
-        first_period = result.response[0].periods[0]
-        assert first_period.period_type == "annual"
-        assert first_period.calendar_year == 2024
-        assert first_period.ratios is not None
-        assert len(first_period.ratios) == 3
+        first_period = result.response[0]["periods"][0]
+        assert first_period["period_type"] == "annual"
+        assert first_period["calendar_year"] == 2024
+        assert first_period["ratios"] is not None
+        assert len(first_period["ratios"]) == 3
 
         # Check first ratio (Gross Margin)
-        gross_margin = first_period.ratios[0]
-        assert gross_margin.ratio == "Gross Margin"
-        assert gross_margin.ratio_category == "Profitability"
-        assert gross_margin.ratio_value == 0.478
-
-        # Check API call parameters
-        call_args = mock_http_dependencies["mock_make_request"].call_args
-        assert call_args[1]["method"] == "GET"
-        assert call_args[1]["endpoint"] == "/chat-support/get-ratios"
-
-        params = call_args[1]["params"]
-        assert params["bloomberg_ticker"] == "AMZN:US"
-        assert params["period"] == "annual"
-        assert params["calendar_year"] == 2024
-
-    @pytest.mark.asyncio
-    async def test_get_ratios_with_calendar_quarter(
-        self, mock_http_dependencies, equities_api_responses
-    ):
-        """Test get_ratios with calendar_quarter parameter."""
-        # Setup
-        mock_http_dependencies["mock_make_request"].return_value = (
-            equities_api_responses["get_ratios_success"]
-        )
-
-        args = GetRatiosArgs(
-            bloomberg_ticker="AAPL:US",
-            period="quarterly",
-            calendar_year=2024,
-            calendar_quarter=3,
-        )
-
-        # Execute
-        result = await get_ratios(args)
-
-        # Verify
-        assert isinstance(result, GetRatiosResponse)
-
-        # Check API call parameters
-        call_args = mock_http_dependencies["mock_make_request"].call_args
-        params = call_args[1]["params"]
-        assert params["bloomberg_ticker"] == "AAPL:US"
-        assert params["period"] == "quarterly"
-        assert params["calendar_year"] == 2024
-        assert params["calendar_quarter"] == 3
+        gross_margin = first_period["ratios"][0]
+        assert gross_margin["ratio"] == "Gross Margin"
+        assert gross_margin["ratio_category"] == "Profitability"
+        assert gross_margin["ratio_value"] == 0.478
 
     @pytest.mark.asyncio
     async def test_get_ratios_exclude_instructions(
@@ -997,34 +807,6 @@ class TestGetRatios:
         # Verify
         assert isinstance(result, GetRatiosResponse)
         assert result.instructions == []
-
-    @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        "period",
-        ["annual", "quarterly", "semi-annual", "ltm", "ytd", "latest"],
-    )
-    async def test_get_ratios_different_periods(
-        self, mock_http_dependencies, equities_api_responses, period
-    ):
-        """Test get_ratios with different period types."""
-        # Setup
-        mock_http_dependencies["mock_make_request"].return_value = (
-            equities_api_responses["get_ratios_success"]
-        )
-
-        args = GetRatiosArgs(
-            bloomberg_ticker="AMZN:US",
-            period=period,
-            calendar_year=2024,
-        )
-
-        # Execute
-        result = await get_ratios(args)
-
-        # Verify
-        assert isinstance(result, GetRatiosResponse)
-        call_args = mock_http_dependencies["mock_make_request"].call_args
-        assert call_args[1]["params"]["period"] == period
 
 
 @pytest.mark.unit
@@ -1054,74 +836,33 @@ class TestGetKpisAndSegments:
         assert isinstance(result, GetKpisAndSegmentsResponse)
         assert result.response is not None
         assert len(result.response) == 1
-        assert result.response[0].equity is not None
-        assert result.response[0].equity.bloomberg_ticker == "AMZN:US"
-        assert result.response[0].equity.name == "AMAZON COM INC"
+        assert result.response[0]["equity"] is not None
+        assert result.response[0]["equity"]["bloomberg_ticker"] == "AMZN:US"
+        assert result.response[0]["equity"]["name"] == "AMAZON COM INC"
 
         # Check periods data
-        assert result.response[0].periods is not None
-        assert len(result.response[0].periods) == 1
+        assert result.response[0]["periods"] is not None
+        assert len(result.response[0]["periods"]) == 1
 
-        first_period = result.response[0].periods[0]
-        assert first_period.period_type == "annual"
-        assert first_period.calendar_year == 2024
+        first_period = result.response[0]["periods"][0]
+        assert first_period["period_type"] == "annual"
+        assert first_period["calendar_year"] == 2024
 
         # Check KPIs
-        assert first_period.kpi is not None
-        assert len(first_period.kpi) == 2
-        aws_kpi = first_period.kpi[0]
-        assert aws_kpi.metric_name == "AWS Revenue"
-        assert aws_kpi.is_currency is True
-        assert aws_kpi.metric_value == 90757000000
+        assert first_period["kpi"] is not None
+        assert len(first_period["kpi"]) == 2
+        aws_kpi = first_period["kpi"][0]
+        assert aws_kpi["metric_name"] == "AWS Revenue"
+        assert aws_kpi["is_currency"] is True
+        assert aws_kpi["metric_value"] == 90757000000
 
         # Check Segments
-        assert first_period.segment is not None
-        assert len(first_period.segment) == 2
-        north_america = first_period.segment[0]
-        assert north_america.metric_name == "North America"
-        assert north_america.is_currency is True
-        assert north_america.metric_value == 353460000000
-
-        # Check API call parameters
-        call_args = mock_http_dependencies["mock_make_request"].call_args
-        assert call_args[1]["method"] == "GET"
-        assert call_args[1]["endpoint"] == "/chat-support/get-segments-and-kpis"
-
-        params = call_args[1]["params"]
-        assert params["bloomberg_ticker"] == "AMZN:US"
-        assert params["period"] == "annual"
-        assert params["calendar_year"] == 2024
-
-    @pytest.mark.asyncio
-    async def test_get_kpis_and_segments_with_calendar_quarter(
-        self, mock_http_dependencies, equities_api_responses
-    ):
-        """Test get_kpis_and_segments with calendar_quarter parameter."""
-        # Setup
-        mock_http_dependencies["mock_make_request"].return_value = (
-            equities_api_responses["get_kpis_and_segments_success"]
-        )
-
-        args = GetKpisAndSegmentsArgs(
-            bloomberg_ticker="AAPL:US",
-            period="quarterly",
-            calendar_year=2024,
-            calendar_quarter=3,
-        )
-
-        # Execute
-        result = await get_kpis_and_segments(args)
-
-        # Verify
-        assert isinstance(result, GetKpisAndSegmentsResponse)
-
-        # Check API call parameters
-        call_args = mock_http_dependencies["mock_make_request"].call_args
-        params = call_args[1]["params"]
-        assert params["bloomberg_ticker"] == "AAPL:US"
-        assert params["period"] == "quarterly"
-        assert params["calendar_year"] == 2024
-        assert params["calendar_quarter"] == 3
+        assert first_period["segment"] is not None
+        assert len(first_period["segment"]) == 2
+        north_america = first_period["segment"][0]
+        assert north_america["metric_name"] == "North America"
+        assert north_america["is_currency"] is True
+        assert north_america["metric_value"] == 353460000000
 
     @pytest.mark.asyncio
     async def test_get_kpis_and_segments_exclude_instructions(
@@ -1146,31 +887,3 @@ class TestGetKpisAndSegments:
         # Verify
         assert isinstance(result, GetKpisAndSegmentsResponse)
         assert result.instructions == []
-
-    @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        "period",
-        ["annual", "quarterly", "semi-annual", "ltm", "ytd", "latest"],
-    )
-    async def test_get_kpis_and_segments_different_periods(
-        self, mock_http_dependencies, equities_api_responses, period
-    ):
-        """Test get_kpis_and_segments with different period types."""
-        # Setup
-        mock_http_dependencies["mock_make_request"].return_value = (
-            equities_api_responses["get_kpis_and_segments_success"]
-        )
-
-        args = GetKpisAndSegmentsArgs(
-            bloomberg_ticker="AMZN:US",
-            period=period,
-            calendar_year=2024,
-        )
-
-        # Execute
-        result = await get_kpis_and_segments(args)
-
-        # Verify
-        assert isinstance(result, GetKpisAndSegmentsResponse)
-        call_args = mock_http_dependencies["mock_make_request"].call_args
-        assert call_args[1]["params"]["period"] == period

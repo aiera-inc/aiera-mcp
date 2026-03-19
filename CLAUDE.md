@@ -94,7 +94,7 @@ All settings via env vars or `.env` file (see `.env.example`):
 | Variable                | Default                         | Description               |
 |-------------------------|---------------------------------|---------------------------|
 | `AIERA_API_KEY`         | (required)                      | API key                   |
-| `AIERA_BASE_URL`        | `https://premium.aiera.com/api` | API base URL              |
+| `AIERA_BASE_URL`        | `https://graphql.aiera.com/api` | API base URL              |
 | `DEFAULT_PAGE_SIZE`     | `50`                            | Default pagination size   |
 | `DEFAULT_MAX_PAGE_SIZE` | `100`                           | Max pagination size       |
 | `HTTP_TIMEOUT`          | `30.0`                          | Request timeout (seconds) |

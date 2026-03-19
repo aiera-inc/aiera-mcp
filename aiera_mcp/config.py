@@ -19,7 +19,7 @@ class AieraSettings(BaseSettings):
     """
 
     # API Configuration
-    aiera_base_url: str = "https://premium.aiera.com/api"
+    aiera_base_url: str = "https://graphql.aiera.com/api"
     aiera_api_key: Optional[str] = None
 
     # Pagination Configuration

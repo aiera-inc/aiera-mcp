@@ -80,7 +80,7 @@ The package uses Pydantic BaseSettings for configuration management. All setting
 
 | Setting                   | Environment Variable             | Default                         | Description                      |
 |---------------------------|----------------------------------|---------------------------------|----------------------------------|
-| Base URL                  | `AIERA_BASE_URL`                 | `https://premium.aiera.com/api` | Aiera API base URL               |
+| Base URL                  | `AIERA_BASE_URL`                 | `https://graphql.aiera.com/api` | Aiera API base URL               |
 | API Key                   | `AIERA_API_KEY`                  | None                            | Your Aiera API key (required)    |
 | Page Size                 | `DEFAULT_PAGE_SIZE`              | `50`                            | Default number of items per page |
 | Max Page Size             | `DEFAULT_MAX_PAGE_SIZE`          | `100`                           | Maximum allowed page size        |
@@ -100,7 +100,7 @@ cp .env.example .env
 
 # Edit with your values
 AIERA_API_KEY=your-api-key-here
-AIERA_BASE_URL=https://premium.aiera.com/api  # Optional: override default
+AIERA_BASE_URL=https://graphql.aiera.com/api  # Optional: override default
 DEFAULT_PAGE_SIZE=100  # Optional: override default
 ```
 

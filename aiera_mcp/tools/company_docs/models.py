@@ -3,9 +3,9 @@
 """Company docs domain models for Aiera MCP."""
 
 from pydantic import BaseModel, Field, field_validator, field_serializer
-from typing import Optional, List, Any, Dict, Union
+from typing import Optional, Any, Union
 
-from ..common.models import BaseAieraResponse, PaginatedResponse
+from ..common.models import BaseAieraResponse
 
 
 # Mixins for validation (extracted from original params.py)
@@ -302,129 +302,32 @@ class GetCompanyDocKeywordsArgs(BaseToolArgs):
     )
 
 
-# Response models (extracted from responses.py)
-class CompanyInfo(BaseModel):
-    """Company information in document."""
-
-    company_id: int = Field(description="Company identifier")
-    name: str = Field(description="Company name")
-
-
-class DocumentCitationMetadata(BaseModel):
-    """Metadata for document citation."""
-
-    type: str = Field(
-        description="The type of citation ('event', 'filing', 'company_doc', 'conference', or 'company')"
-    )
-    url_target: Optional[str] = Field(
-        None,
-        description="Whether the citation URL will go to Aiera or to an external source",
-    )
-    company_id: Optional[int] = Field(None, description="Company identifier")
-    company_doc_id: Optional[int] = Field(
-        None, description="Company document identifier"
-    )
-
-
-class DocumentCitationInfo(BaseModel):
-    """Citation information for document."""
-
-    title: Optional[str] = Field(
-        None, description="Citation title (can be null if document title is null)"
-    )
-    url: str = Field(description="Citation URL")
-    metadata: Optional[DocumentCitationMetadata] = Field(
-        None, description="Additional metadata about the citation"
-    )
-
-
-class CompanyDocItem(BaseModel):
-    """Individual company document item - matches actual API structure."""
-
-    doc_id: int = Field(description="Document identifier")
-    company: CompanyInfo = Field(description="Company information")
-    publish_date: Optional[str] = Field(
-        None, description="Publication date (can be null)"
-    )
-    category: Optional[str] = Field(None, description="Document category (can be null)")
-    title: Optional[str] = Field(None, description="Document title (can be null)")
-    source_url: str = Field(description="Original source URL")
-    summary: Optional[List[str]] = Field(
-        None, description="Document summary (can be null)"
-    )
-    keywords: Optional[List[str]] = Field(
-        None, description="Document keywords (can be null)"
-    )
-    processed: Optional[str] = Field(None, description="Processing date")
-    created: Optional[str] = Field(None, description="Creation date")
-    modified: Optional[str] = Field(None, description="Modification date")
-    content_raw: Optional[str] = Field(None, description="Raw document content")
-    citation_information: Optional[DocumentCitationInfo] = Field(
-        None, description="Citation information"
-    )
-
-
-class CompanyDocDetails(CompanyDocItem):
-    """Detailed company document information."""
-
-    # Don't override summary - inherit List[str] from CompanyDocItem
-    # The API returns summary as a list for both find and get endpoints
-    # content_raw is inherited from CompanyDocItem
-    attachments: Optional[List[Dict[str, Any]]] = Field(
-        default=None, description="Document attachments"
-    )
-
-
-class CategoryKeyword(BaseModel):
-    """Category or keyword information."""
-
-    name: str = Field(description="Category/keyword name")
-    count: int = Field(description="Usage count")
-
-
-# Response pagination structure
-class CompanyDocPaginationInfo(BaseModel):
-    """Pagination information from company docs API."""
-
-    total_count: int = Field(description="Total number of documents")
-    current_page: int = Field(description="Current page number")
-    total_pages: int = Field(description="Total number of pages")
-    page_size: int = Field(description="Number of documents per page")
-
-
-class CompanyDocResponseData(BaseModel):
-    """Company docs response data container."""
-
-    pagination: CompanyDocPaginationInfo = Field(description="Pagination information")
-    data: List[CompanyDocItem] = Field(description="List of company documents")
-
-
-# Response classes
+# Response models - pass through API response structure
 class FindCompanyDocsResponse(BaseAieraResponse):
-    """Response for find_company_docs tool - matches actual API structure."""
+    """Response for find_company_docs tool - passes through the API response structure."""
 
-    response: Optional[CompanyDocResponseData] = Field(
-        None, description="Response data container"
-    )
+    response: Optional[Any] = Field(None, description="Response data from the API")
 
 
 class GetCompanyDocResponse(BaseAieraResponse):
-    """Response for get_company_doc tool."""
+    """Response for get_company_doc tool - passes through the API response structure."""
 
-    document: Optional[CompanyDocDetails] = Field(
-        default=None, description="Detailed document information (None if not found)"
-    )
+    response: Optional[Any] = Field(None, description="Response data from the API")
 
 
 class GetCompanyDocCategoriesResponse(BaseAieraResponse):
-    """Response for get_company_doc_categories tool - matches actual API structure."""
+    """Response for get_company_doc_categories tool - passes through the API response structure."""
 
-    pagination: CompanyDocPaginationInfo = Field(description="Pagination information")
-    data: Dict[str, int] = Field(description="Dictionary of categories with counts")
+    pagination: Optional[Any] = Field(
+        None, description="Pagination metadata from the API"
+    )
+    data: Optional[Any] = Field(None, description="Response data from the API")
 
 
 class GetCompanyDocKeywordsResponse(BaseAieraResponse):
-    """Response for get_company_doc_keywords tool - matches actual API structure."""
+    """Response for get_company_doc_keywords tool - passes through the API response structure."""
 
-    pagination: CompanyDocPaginationInfo = Field(description="Pagination information")
-    data: Dict[str, int] = Field(description="Dictionary of keywords with counts")
+    pagination: Optional[Any] = Field(
+        None, description="Pagination metadata from the API"
+    )
+    data: Optional[Any] = Field(None, description="Response data from the API")

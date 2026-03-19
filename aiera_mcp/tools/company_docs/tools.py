@@ -13,13 +13,9 @@ from .models import (
     GetCompanyDocResponse,
     GetCompanyDocCategoriesResponse,
     GetCompanyDocKeywordsResponse,
-    CompanyDocItem,
-    CompanyDocDetails,
-    CategoryKeyword,
 )
 from ..base import get_http_client, make_aiera_request
 from ... import get_api_key
-from ..common.models import CitationInfo
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -49,8 +45,6 @@ async def find_company_docs(args: FindCompanyDocsArgs) -> FindCompanyDocsRespons
         params=params,
     )
 
-    # Return the structured response directly - no transformation needed
-    # since FindCompanyDocsResponse model now matches the actual API format
     response = FindCompanyDocsResponse.model_validate(raw_response)
     if args.exclude_instructions:
         response.instructions = []
@@ -68,10 +62,6 @@ async def get_company_doc(args: GetCompanyDocArgs) -> GetCompanyDocResponse:
     params = args.model_dump(exclude_none=True)
     params["include_content"] = "true"
 
-    # Handle special field mapping: company_doc_id -> company_doc_ids
-    # if "company_doc_id" in params:
-    #    params["company_doc_ids"] = str(params.pop("company_doc_id"))
-
     raw_response = await make_aiera_request(
         client=client,
         method="GET",
@@ -80,28 +70,7 @@ async def get_company_doc(args: GetCompanyDocArgs) -> GetCompanyDocResponse:
         params=params,
     )
 
-    # Extract document from the nested response structure
-    # API returns documents in a data array, just like find_company_docs
-    if "response" in raw_response and "data" in raw_response["response"]:
-        data_array = raw_response["response"]["data"]
-        if data_array and len(data_array) > 0:
-            doc_data = data_array[0]  # Get the first document from the array
-        else:
-            # No documents found - return None for the document field
-            doc_data = None
-    else:
-        # Unexpected response structure
-        raise ValueError(
-            f"Unexpected API response structure for company_doc_ids: {args.company_doc_ids}"
-        )
-
-    # Create the response structure expected by GetCompanyDocResponse
-    response_data = {
-        "document": doc_data,
-        "instructions": raw_response.get("instructions", []),
-    }
-
-    response = GetCompanyDocResponse.model_validate(response_data)
+    response = GetCompanyDocResponse.model_validate(raw_response)
     if args.exclude_instructions:
         response.instructions = []
     return response
@@ -127,8 +96,6 @@ async def get_company_doc_categories(
         params=params,
     )
 
-    # Return the structured response directly - no transformation needed
-    # since GetCompanyDocCategoriesResponse model now matches the actual API format
     response = GetCompanyDocCategoriesResponse.model_validate(raw_response)
     if args.exclude_instructions:
         response.instructions = []
@@ -155,12 +122,7 @@ async def get_company_doc_keywords(
         params=params,
     )
 
-    # Return the structured response directly - no transformation needed
-    # since GetCompanyDocKeywordsResponse model now matches the actual API format
     response = GetCompanyDocKeywordsResponse.model_validate(raw_response)
     if args.exclude_instructions:
         response.instructions = []
     return response
-
-
-# Legacy registration functions removed - all tools now registered via registry

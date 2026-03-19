@@ -52,19 +52,10 @@ async def find_equities(args: FindEquitiesArgs) -> FindEquitiesResponse:
         params=params,
     )
 
-    # Pydantic validators will automatically parse datetime strings and nested objects
-    # Handle malformed responses gracefully
-    try:
-        response = FindEquitiesResponse.model_validate(raw_response)
-        if args.exclude_instructions:
-            response.instructions = []
-        return response
-    except Exception as e:
-        logger.warning(f"Failed to parse API response: {e}")
-        # Return empty response for malformed data
-        return FindEquitiesResponse(
-            instructions=[], response={"data": [], "pagination": None}
-        )
+    response = FindEquitiesResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
 
 
 async def get_sectors_and_subsectors(
@@ -87,8 +78,6 @@ async def get_sectors_and_subsectors(
         params=params,
     )
 
-    # Return the structured response directly - no transformation needed
-    # since GetSectorsSubsectorsResponse model now matches the actual API format
     return GetSectorsSubsectorsResponse.model_validate(raw_response)
 
 
@@ -116,8 +105,6 @@ async def get_equity_summaries(
         params=params,
     )
 
-    # Return the structured response directly - no transformation needed
-    # since GetEquitySummariesResponse model now matches the actual API format
     response = GetEquitySummariesResponse.model_validate(raw_response)
     if args.exclude_instructions:
         response.instructions = []
@@ -170,7 +157,6 @@ async def get_index_constituents(
         params=params,
     )
 
-    # Validate and return the response directly since it matches FindEquitiesResponse structure
     return GetIndexConstituentsResponse.model_validate(raw_response)
 
 
@@ -220,7 +206,6 @@ async def get_watchlist_constituents(
         params=params,
     )
 
-    # Validate and return the response directly since it matches FindEquitiesResponse structure
     return GetWatchlistConstituentsResponse.model_validate(raw_response)
 
 
@@ -245,7 +230,6 @@ async def get_financials(args: GetFinancialsArgs) -> GetFinancialsResponse:
         params=params,
     )
 
-    # Validate and return the structured response
     response = GetFinancialsResponse.model_validate(raw_response)
     if args.exclude_instructions:
         response.instructions = []
@@ -273,7 +257,6 @@ async def get_ratios(args: GetRatiosArgs) -> GetRatiosResponse:
         params=params,
     )
 
-    # Validate and return the structured response
     response = GetRatiosResponse.model_validate(raw_response)
     if args.exclude_instructions:
         response.instructions = []
@@ -303,7 +286,6 @@ async def get_kpis_and_segments(
         params=params,
     )
 
-    # Validate and return the structured response
     response = GetKpisAndSegmentsResponse.model_validate(raw_response)
     if args.exclude_instructions:
         response.instructions = []
