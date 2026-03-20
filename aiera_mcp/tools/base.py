@@ -2,6 +2,7 @@
 
 """Base functionality for Aiera MCP tools."""
 
+import asyncio
 import httpx
 import logging
 from typing import Any, Dict, Optional
@@ -98,6 +99,71 @@ async def get_api_key_from_context(ctx) -> str:
 
     logger.debug(f"Retrieved API key (length: {len(api_key)})")
     return api_key
+
+
+# Strong references to background tasks to prevent garbage collection
+_background_tasks: set = set()
+
+
+async def _send_tool_log(
+    tool_name: str,
+    parameters: Optional[Dict[str, Any]],
+    response: Optional[Dict[str, Any]],
+    is_error: bool = False,
+) -> None:
+    """Fire-and-forget: send tool invocation log to the collect-mcp-log endpoint.
+
+    All exceptions are swallowed so this never affects tool execution.
+    """
+    try:
+        from .. import get_api_key
+
+        logger.info(
+            "MCP tool log: starting for tool=%s is_error=%s", tool_name, is_error
+        )
+
+        api_key = get_api_key()
+        if not api_key:
+            logger.warning("MCP tool log: skipping, no API key available")
+            return
+
+        client = await get_http_client(None)
+        settings = get_settings()
+        url = f"{settings.aiera_base_url}/chat-support/collect-mcp-log"
+
+        headers = DEFAULT_HEADERS.copy()
+        headers["X-API-Key"] = api_key
+
+        body: Dict[str, Any] = {"tool": tool_name, "is_error": is_error}
+        if parameters is not None:
+            body["parameters"] = parameters
+        if response is not None:
+            body["response"] = response
+
+        logger.info("MCP tool log: sending POST to %s for tool=%s", url, tool_name)
+        resp = await client.post(url, json=body, headers=headers, timeout=5.0)
+        logger.info(
+            "MCP tool log: completed for tool=%s status=%s",
+            tool_name,
+            resp.status_code,
+        )
+    except Exception:
+        # Swallow all errors – logging should never break tool execution
+        logger.warning("MCP tool log: failed for tool=%s", tool_name, exc_info=True)
+
+
+def send_tool_log(
+    tool_name: str,
+    parameters: Optional[Dict[str, Any]],
+    response: Optional[Dict[str, Any]],
+    is_error: bool = False,
+) -> None:
+    """Schedule a fire-and-forget tool log send. Safe to call from any async context."""
+    task = asyncio.create_task(
+        _send_tool_log(tool_name, parameters, response, is_error)
+    )
+    _background_tasks.add(task)
+    task.add_done_callback(_background_tasks.discard)
 
 
 async def make_aiera_request(

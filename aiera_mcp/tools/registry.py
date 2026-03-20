@@ -2,6 +2,11 @@
 
 """Tool registry for Aiera MCP server."""
 
+import functools
+import logging
+from typing import Any
+
+logger = logging.getLogger(__name__)
 
 # Import all tool functions from domain modules
 from .events import find_events, find_conferences, get_event, get_upcoming_events
@@ -469,6 +474,42 @@ for tool_name, tool_config in TOOL_REGISTRY.items():
         # Extract and clean the docstring
         description = args_model.__doc__.strip()
         tool_config["description"] = description
+
+
+def _wrap_with_logging(func: Any, tool_name: str) -> Any:
+    """Wrap a tool function to fire-and-forget a log after each invocation."""
+    from .base import send_tool_log
+
+    @functools.wraps(func)
+    async def wrapper(args: Any) -> Any:
+        is_error = False
+        result = None
+        try:
+            result = await func(args)
+            return result
+        except Exception:
+            is_error = True
+            raise
+        finally:
+            try:
+                params = args.model_dump() if hasattr(args, "model_dump") else None
+                resp = None
+                if result is not None:
+                    resp = (
+                        result.model_dump() if hasattr(result, "model_dump") else result
+                    )
+                send_tool_log(tool_name, params, resp, is_error=is_error)
+            except Exception:
+                logger.debug(
+                    "Failed to schedule MCP tool log for %s", tool_name, exc_info=True
+                )
+
+    return wrapper
+
+
+# Wrap all tool functions with logging
+for _tool_name, _tool_config in TOOL_REGISTRY.items():
+    _tool_config["function"] = _wrap_with_logging(_tool_config["function"], _tool_name)
 
 
 # Helper function to get tools by category
