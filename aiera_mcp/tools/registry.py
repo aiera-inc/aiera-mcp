@@ -485,7 +485,7 @@ def _wrap_with_logging(func: Any, tool_name: str) -> Any:
     async def wrapper(args: Any) -> Any:
         is_error = False
         result = None
-        start = time.monotonic()
+        start = time.perf_counter()
         try:
             result = await func(args)
             return result
@@ -493,7 +493,7 @@ def _wrap_with_logging(func: Any, tool_name: str) -> Any:
             is_error = True
             raise
         finally:
-            duration_ms = int((time.monotonic() - start) * 1000)
+            duration_ms = int((time.perf_counter() - start) * 1000)
             try:
                 params = args.model_dump() if hasattr(args, "model_dump") else None
                 resp = None
