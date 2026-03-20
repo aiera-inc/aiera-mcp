@@ -238,40 +238,8 @@ class GetCompanyDocArgs(BaseToolArgs):
     )
 
 
-class GetCompanyDocCategoriesArgs(BaseToolArgs):
-    """Retrieve all available document categories for filtering company documents. Used to find valid category values for find_company_docs."""
-
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
-
-    self_identification: Optional[str] = Field(
-        default=None,
-        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
-    )
-
-    exclude_instructions: Optional[bool] = Field(
-        default=False,
-        description="Whether to exclude all instructions from the tool response.",
-    )
-
-    search: Optional[str] = Field(
-        default=None,
-        description="Search term to filter results. Searches within relevant text fields.",
-    )
-
-    page: Union[int, str] = Field(
-        default=1, ge=1, description="Page number for pagination (1-based)."
-    )
-
-    page_size: Union[int, str] = Field(
-        default=25, ge=1, le=25, description="Number of items per page (1-25)."
-    )
-
-
-class GetCompanyDocKeywordsArgs(BaseToolArgs, BloombergTickerMixin):
-    """Retrieve all available keywords for filtering company documents. Requires at least one equity identifier (bloomberg_ticker, isin, ric, or permid). Used to find valid keyword values for find_company_docs."""
+class GetCompanyDocCategoriesArgs(BaseToolArgs, BloombergTickerMixin):
+    """Retrieve all available document categories for filtering company documents. Requires at least one company filter (bloomberg_ticker, isin, ric, permid, sector_id, or subsector_id). Used to find valid category values for find_company_docs."""
 
     originating_prompt: Optional[str] = Field(
         default=None,
@@ -295,7 +263,7 @@ class GetCompanyDocKeywordsArgs(BaseToolArgs, BloombergTickerMixin):
 
     bloomberg_ticker: Optional[str] = Field(
         default=None,
-        description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). At least one equity identifier is required.",
+        description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). At least one company filter is required.",
     )
 
     isin: Optional[str] = Field(
@@ -311,6 +279,78 @@ class GetCompanyDocKeywordsArgs(BaseToolArgs, BloombergTickerMixin):
     permid: Optional[str] = Field(
         default=None,
         description="Refinitiv Permanent Identifier (PermID).",
+    )
+
+    sector_id: Optional[Union[int, str]] = Field(
+        default=None,
+        description="ID of a specific sector. Use get_sectors_and_subsectors to find valid IDs.",
+    )
+
+    subsector_id: Optional[Union[int, str]] = Field(
+        default=None,
+        description="ID of a specific subsector. Use get_sectors_and_subsectors to find valid IDs.",
+    )
+
+    page: Union[int, str] = Field(
+        default=1, ge=1, description="Page number for pagination (1-based)."
+    )
+
+    page_size: Union[int, str] = Field(
+        default=25, ge=1, le=25, description="Number of items per page (1-25)."
+    )
+
+
+class GetCompanyDocKeywordsArgs(BaseToolArgs, BloombergTickerMixin):
+    """Retrieve all available keywords for filtering company documents. Requires at least one company filter (bloomberg_ticker, isin, ric, permid, sector_id, or subsector_id). Used to find valid keyword values for find_company_docs."""
+
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
+    )
+
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
+    search: Optional[str] = Field(
+        default=None,
+        description="Search term to filter results. Searches within relevant text fields.",
+    )
+
+    bloomberg_ticker: Optional[str] = Field(
+        default=None,
+        description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). At least one company filter is required.",
+    )
+
+    isin: Optional[str] = Field(
+        default=None,
+        description="International Securities Identification Number (ISIN).",
+    )
+
+    ric: Optional[str] = Field(
+        default=None,
+        description="Reuters Instrument Code (RIC).",
+    )
+
+    permid: Optional[str] = Field(
+        default=None,
+        description="Refinitiv Permanent Identifier (PermID).",
+    )
+
+    sector_id: Optional[Union[int, str]] = Field(
+        default=None,
+        description="ID of a specific sector. Use get_sectors_and_subsectors to find valid IDs.",
+    )
+
+    subsector_id: Optional[Union[int, str]] = Field(
+        default=None,
+        description="ID of a specific subsector. Use get_sectors_and_subsectors to find valid IDs.",
     )
 
     page: Union[int, str] = Field(
