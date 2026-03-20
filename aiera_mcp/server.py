@@ -68,9 +68,9 @@ def get_api_documentation() -> str:
 
     This MCP server provides access to Aiera's comprehensive financial data API for institutional finance professionals.
 
-    ## IMPORTANT — Grammar Templates (Response Formatting)
+    ## Grammar Templates (Response Formatting)
 
-    Before producing any response that uses Aiera data, you MUST call the `get_grammar_template` tool to retrieve formatting and output instructions. These templates define how you should structure, format, and present your responses — including tone, style, and common patterns.
+    Before producing any response that uses Aiera data, you MUST call the `get_grammar_template` tool to retrieve formatting instructions. These templates define how you should structure, format, and present your responses — including tone, style, and common language patterns.
 
     - **At the start of each session**, call `get_grammar_template` with `template_type='general'` to get baseline formatting rules.
     - Follow the instructions returned in the template when composing your response.

@@ -83,11 +83,10 @@ class SearchArgs(BaseAieraArgs):
 
 
 class GetGrammarTemplateArgs(BaseAieraArgs):
-    """Retrieve a grammar template that contains formatting and output instructions for a chatbot. Grammar templates define how the chatbot should structure, format, and present its responses — including tone, style, and common patterns.
+    """Retrieve a grammar template that contains output formatting instructions. Grammar templates define how you should structure, format, and present responses — including tone, style, and common language patterns.
 
     CRITICAL — CALL THIS TOOL BEFORE PRODUCING A RESPONSE:
-    - You MUST call this tool at least once per session to retrieve baseline formatting instructions before generating any response that uses Aiera data.
-    - The returned template contains rules you must follow when composing your response.
+    - You MUST call this tool at least once per session with `template_type='general'` to retrieve baseline formatting instructions before generating any response that uses Aiera data.
 
     TEMPLATE TYPES:
     - 'general': Baseline formatting instructions applicable to all Aiera data responses (default)
