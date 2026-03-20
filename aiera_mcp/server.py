@@ -69,7 +69,7 @@ async def _send_tool_log(
 
         client = await get_http_client(None)
         settings = get_settings()
-        url = f"{settings.aiera_base_url}/collect-mcp-log"
+        url = f"{settings.aiera_base_url}/chat-support/collect-mcp-log"
 
         headers = DEFAULT_HEADERS.copy()
         headers["X-API-Key"] = api_key
