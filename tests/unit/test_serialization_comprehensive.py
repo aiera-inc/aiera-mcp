@@ -54,7 +54,7 @@ class TestToolSerializationComprehensive:
                     "total_count": 0,
                     "current_page": 1,
                     "total_pages": 0,
-                    "page_size": 50,
+                    "page_size": 25,
                 }
                 sample_data["data"] = {}
 

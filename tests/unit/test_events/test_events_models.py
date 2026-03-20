@@ -29,7 +29,7 @@ class TestFindEventsArgs:
             bloomberg_ticker="AAPL:US",
             event_type="earnings",
             page=1,
-            page_size=50,
+            page_size=25,
         )
 
         assert args.start_date == "2023-10-01"
@@ -37,7 +37,7 @@ class TestFindEventsArgs:
         assert args.bloomberg_ticker == "AAPL:US"
         assert args.event_type == "earnings"
         assert args.page == 1
-        assert args.page_size == 50
+        assert args.page_size == 25
 
     def test_find_events_args_defaults(self):
         """Test FindEventsArgs with default values."""
@@ -45,7 +45,7 @@ class TestFindEventsArgs:
 
         assert args.event_type == "earnings"  # Default value
         assert args.page == 1  # Default value
-        assert args.page_size == 50  # Default value
+        assert args.page_size == 25  # Default value
         assert args.bloomberg_ticker is None
         assert args.watchlist_id is None
         assert args.originating_prompt is None  # Default value
@@ -119,9 +119,7 @@ class TestFindEventsArgs:
             FindEventsArgs(start_date="2023-10-01", end_date="2023-10-31", page_size=0)
 
         with pytest.raises(ValidationError):
-            FindEventsArgs(
-                start_date="2023-10-01", end_date="2023-10-31", page_size=101
-            )
+            FindEventsArgs(start_date="2023-10-01", end_date="2023-10-31", page_size=26)
 
     @pytest.mark.parametrize(
         "field_name,field_value",
@@ -228,7 +226,7 @@ class TestEventsResponses:
                     "total_count": 1,
                     "current_page": 1,
                     "total_pages": 1,
-                    "page_size": 50,
+                    "page_size": 25,
                 },
             },
         )
@@ -373,7 +371,7 @@ class TestEventsResponseJsonSerialization:
                     "total_count": 1,
                     "current_page": 1,
                     "total_pages": 1,
-                    "page_size": 50,
+                    "page_size": 25,
                 },
             },
         )

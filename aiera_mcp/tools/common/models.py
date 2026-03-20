@@ -2,7 +2,7 @@
 
 """Common base models for Aiera MCP tools."""
 
-from typing import List, Optional
+from typing import Any, List, Optional
 from pydantic import BaseModel, Field, field_serializer
 
 
@@ -79,4 +79,52 @@ class SearchArgs(BaseAieraArgs):
 
     search: Optional[str] = Field(None, description="Search query")
     page: int = Field(1, description="Page number for pagination")
-    page_size: int = Field(50, description="Number of items per page")
+    page_size: int = Field(25, description="Number of items per page")
+
+
+class GetGrammarTemplateArgs(BaseAieraArgs):
+    """Retrieve a grammar template that contains formatting and output instructions for a chatbot. Grammar templates define how the chatbot should structure, format, and present its responses — including tone, style, and common patterns.
+
+    CRITICAL — CALL THIS TOOL BEFORE PRODUCING A RESPONSE:
+    - You MUST call this tool at least once per session to retrieve baseline formatting instructions before generating any response that uses Aiera data.
+    - The returned template contains rules you must follow when composing your response.
+
+    TEMPLATE TYPES:
+    - 'general': Baseline formatting instructions applicable to all Aiera data responses (default)
+    """
+
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
+    )
+
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
+    template_type: str = Field(
+        default="general",
+        description="Template type to retrieve. Options: 'general' (broad guidance), 'topic' (topic-specific), 'provider' (provider-specific), 'sector' (sector-specific), 'subsector' (subsector-specific).",
+    )
+
+    template_subtype: Optional[str] = Field(
+        default=None,
+        description="Template subtype (e.g., sector name, provider name). Required for non-general template types.",
+    )
+
+
+class GetGrammarTemplateResponse(BaseAieraResponse):
+    """Response for get_grammar_template tool - passes through the API response structure."""
+
+    response: Optional[Any] = Field(None, description="Response data from the API")

@@ -54,7 +54,7 @@ class TestFindEvents:
         assert len(result.response["data"]) == 2
         assert result.response["pagination"]["total_count"] == 2
         assert result.response["pagination"]["current_page"] == 1
-        assert result.response["pagination"]["page_size"] == 50
+        assert result.response["pagination"]["page_size"] == 25
 
         # Check first event
         first_event = result.response["data"][0]
@@ -88,7 +88,7 @@ class TestFindEvents:
                     "total_count": 0,
                     "current_page": 1,
                     "total_pages": 0,
-                    "page_size": 50,
+                    "page_size": 25,
                 },
             },
             "instructions": [],
@@ -150,7 +150,7 @@ class TestFindEvents:
 
         # Verify
         assert result.response["pagination"]["current_page"] == 1  # From fixture
-        assert result.response["pagination"]["page_size"] == 50  # From fixture
+        assert result.response["pagination"]["page_size"] == 25  # From fixture
 
         call_args = mock_http_dependencies["mock_make_request"].call_args
         params = call_args[1]["params"]
@@ -239,7 +239,7 @@ class TestFindConferences:
                     "total_count": 0,
                     "current_page": 1,
                     "total_pages": 0,
-                    "page_size": 50,
+                    "page_size": 25,
                 },
             },
             "instructions": [],
@@ -574,7 +574,7 @@ class TestEventsToolsErrorHandling:
                     "total_count": 2,
                     "current_page": 1,
                     "total_pages": 1,
-                    "page_size": 50,
+                    "page_size": 25,
                 },
             },
             "instructions": [],

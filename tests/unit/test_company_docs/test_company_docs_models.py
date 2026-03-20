@@ -28,7 +28,7 @@ class TestFindCompanyDocsArgs:
             categories="Sustainability,Governance",
             keywords="ESG,climate",
             page=1,
-            page_size=50,
+            page_size=25,
         )
 
         assert args.start_date == "2023-09-01"
@@ -37,14 +37,14 @@ class TestFindCompanyDocsArgs:
         assert args.categories == "Sustainability,Governance"
         assert args.keywords == "ESG,climate"
         assert args.page == 1
-        assert args.page_size == 50
+        assert args.page_size == 25
 
     def test_find_company_docs_args_defaults(self):
         """Test FindCompanyDocsArgs with default values."""
         args = FindCompanyDocsArgs(start_date="2023-09-01", end_date="2023-09-30")
 
         assert args.page == 1  # Default value
-        assert args.page_size == 50  # Default value
+        assert args.page_size == 25  # Default value
         assert args.bloomberg_ticker is None
         assert args.watchlist_id is None
         assert args.categories is None
@@ -102,7 +102,7 @@ class TestFindCompanyDocsArgs:
 
         with pytest.raises(ValidationError):
             FindCompanyDocsArgs(
-                start_date="2023-09-01", end_date="2023-09-30", page_size=101
+                start_date="2023-09-01", end_date="2023-09-30", page_size=26
             )
 
     @pytest.mark.parametrize(
@@ -197,7 +197,7 @@ class TestCompanyDocsResponses:
                     "total_count": 1,
                     "current_page": 1,
                     "total_pages": 1,
-                    "page_size": 50,
+                    "page_size": 25,
                 },
                 "data": [
                     {
@@ -253,7 +253,7 @@ class TestCompanyDocsResponses:
                 "total_count": 2,
                 "current_page": 1,
                 "total_pages": 1,
-                "page_size": 50,
+                "page_size": 25,
             },
             data={"sustainability": 25, "governance": 18},
             instructions=["Categories retrieved"],
@@ -272,7 +272,7 @@ class TestCompanyDocsResponses:
                 "total_count": 2,
                 "current_page": 1,
                 "total_pages": 1,
-                "page_size": 50,
+                "page_size": 25,
             },
             data={"ESG": 15, "climate": 23},
             instructions=["Keywords retrieved"],

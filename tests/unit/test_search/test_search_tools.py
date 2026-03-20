@@ -49,7 +49,7 @@ class TestSearchTranscripts:
             equity_ids=[1],
             start_date="2022-01-01",
             end_date="2022-12-31",
-            size=20,
+            size=25,
         )
 
         # Execute
@@ -86,7 +86,7 @@ class TestSearchTranscripts:
             query_text="nonexistent query term xyz123",
             event_ids=[999999],
             equity_ids=[1],
-            size=20,
+            size=25,
         )
 
         # Execute
@@ -145,7 +145,7 @@ class TestSearchTranscripts:
             event_ids=[2108591],
             equity_ids=[1],
             event_type="presentation",
-            size=20,
+            size=25,
         )
 
         # Execute
@@ -177,7 +177,7 @@ class TestSearchTranscripts:
             event_ids=[2108591],
             equity_ids=[1],
             exclude_instructions=True,
-            size=20,
+            size=25,
         )
 
         # Execute
@@ -203,7 +203,7 @@ class TestSearchTranscripts:
             query_text="test query",
             event_ids=[1],
             equity_ids=[1],
-            size=20,
+            size=25,
         )
 
         # Execute
@@ -235,7 +235,7 @@ class TestSearchFilings:
             filing_type="DEF14A",
             start_date="2023-01-01",
             end_date="2023-12-31",
-            size=20,
+            size=25,
         )
 
         # Execute
@@ -270,7 +270,7 @@ class TestSearchFilings:
         args = SearchFilingsArgs(
             query_text="nonexistent xyz123",
             equity_ids=[999999],
-            size=20,
+            size=25,
         )
 
         # Execute
@@ -296,7 +296,7 @@ class TestSearchFilings:
             query_text="risk factors",
             equity_ids=[1],
             filing_type="10-K",
-            size=20,
+            size=25,
         )
 
         # Execute
@@ -327,7 +327,7 @@ class TestSearchFilings:
             equity_ids=[1],
             start_date="2023-01-01",
             end_date="2023-12-31",
-            size=20,
+            size=25,
         )
 
         # Execute
@@ -356,7 +356,7 @@ class TestSearchFilings:
             query_text="compensation",
             equity_ids=[1],
             exclude_instructions=True,
-            size=20,
+            size=25,
         )
 
         # Execute
@@ -381,7 +381,7 @@ class TestSearchFilings:
         args = SearchFilingsArgs(
             query_text="test query",
             equity_ids=[1],
-            size=20,
+            size=25,
         )
 
         # Execute
@@ -405,7 +405,7 @@ class TestSearchFilings:
         args = SearchFilingsArgs(
             query_text="test query",
             equity_ids=[1],
-            size=20,
+            size=25,
         )
 
         # Execute
@@ -436,7 +436,7 @@ class TestSearchResearch:
             query_text="cloud computing growth",
             start_date="2024-01-01",
             end_date="2024-12-31",
-            size=20,
+            size=25,
         )
 
         # Execute
@@ -470,7 +470,7 @@ class TestSearchResearch:
 
         args = SearchResearchArgs(
             query_text="nonexistent xyz123",
-            size=20,
+            size=25,
         )
 
         # Execute
@@ -496,7 +496,7 @@ class TestSearchResearch:
             query_text="revenue",
             start_date="2024-01-01",
             end_date="2024-12-31",
-            size=20,
+            size=25,
         )
 
         # Execute
@@ -524,7 +524,7 @@ class TestSearchResearch:
         args = SearchResearchArgs(
             query_text="market analysis",
             document_ids=["8001234", "8001235"],
-            size=20,
+            size=25,
         )
 
         # Execute
@@ -552,7 +552,7 @@ class TestSearchResearch:
         args = SearchResearchArgs(
             query_text="macro strategy",
             author_ids=["12345"],
-            size=20,
+            size=25,
         )
 
         # Execute
@@ -587,7 +587,7 @@ class TestSearchResearch:
             aiera_provider_ids=["krypton"],
             asset_classes=["Equity"],
             asset_types=["Common Stock"],
-            size=20,
+            size=25,
         )
 
         # Execute
@@ -615,7 +615,7 @@ class TestSearchResearch:
         args = SearchResearchArgs(
             query_text="equity analysis",
             asset_classes=["Equity", "Fixed Income"],
-            size=20,
+            size=25,
         )
 
         # Execute
@@ -647,7 +647,7 @@ class TestSearchResearch:
         args = SearchResearchArgs(
             query_text="stock analysis",
             asset_types=["Common Stock"],
-            size=20,
+            size=25,
         )
 
         # Execute
@@ -676,7 +676,7 @@ class TestSearchResearch:
         args = SearchResearchArgs(
             query_text="cloud computing",
             exclude_instructions=True,
-            size=20,
+            size=25,
         )
 
         # Execute
@@ -700,7 +700,7 @@ class TestSearchResearch:
 
         args = SearchResearchArgs(
             query_text="test query",
-            size=20,
+            size=25,
         )
 
         # Execute
@@ -723,7 +723,7 @@ class TestSearchResearch:
 
         args = SearchResearchArgs(
             query_text="test query",
-            size=20,
+            size=25,
         )
 
         # Execute
@@ -758,7 +758,7 @@ class TestSearchToolsErrorHandling:
             query_text="test",
             event_ids=[1],
             equity_ids=[1],
-            size=20,
+            size=25,
         )
 
         # Execute & Verify
@@ -783,7 +783,7 @@ class TestSearchToolsErrorHandling:
         args = SearchFilingsArgs(
             query_text="test",
             equity_ids=[1],
-            size=20,
+            size=25,
         )
 
         # Execute & Verify
@@ -835,7 +835,7 @@ class TestSearchCompanyDocs:
         args = SearchCompanyDocsArgs(
             query_text="sustainability initiatives",
             company_ids=[1],
-            size=20,
+            size=25,
         )
 
         result = await search_company_docs(args)
@@ -864,7 +864,7 @@ class TestSearchCompanyDocs:
 
         args = SearchCompanyDocsArgs(
             query_text="nonexistent xyz123",
-            size=20,
+            size=25,
         )
 
         result = await search_company_docs(args)
@@ -886,7 +886,7 @@ class TestSearchCompanyDocs:
         args = SearchCompanyDocsArgs(
             query_text="capital allocation",
             company_doc_ids=[3001234, 3001235],
-            size=20,
+            size=25,
         )
 
         result = await search_company_docs(args)
@@ -911,7 +911,7 @@ class TestSearchCompanyDocs:
         args = SearchCompanyDocsArgs(
             query_text="earnings",
             categories=["Investor Presentation", "Press Release"],
-            size=20,
+            size=25,
         )
 
         result = await search_company_docs(args)
@@ -940,7 +940,7 @@ class TestSearchCompanyDocs:
         args = SearchCompanyDocsArgs(
             query_text="ESG report",
             keywords=["sustainability", "ESG"],
-            size=20,
+            size=25,
         )
 
         result = await search_company_docs(args)
@@ -966,7 +966,7 @@ class TestSearchCompanyDocs:
             query_text="quarterly results",
             start_date="2024-01-01",
             end_date="2024-12-31",
-            size=20,
+            size=25,
         )
 
         result = await search_company_docs(args)
@@ -991,7 +991,7 @@ class TestSearchCompanyDocs:
         args = SearchCompanyDocsArgs(
             query_text="sustainability",
             exclude_instructions=True,
-            size=20,
+            size=25,
         )
 
         result = await search_company_docs(args)
@@ -1014,7 +1014,7 @@ class TestSearchCompanyDocs:
 
         args = SearchCompanyDocsArgs(
             query_text="test query",
-            size=20,
+            size=25,
         )
 
         result = await search_company_docs(args)
@@ -1034,7 +1034,7 @@ class TestSearchCompanyDocs:
 
         args = SearchCompanyDocsArgs(
             query_text="test query",
-            size=20,
+            size=25,
         )
 
         result = await search_company_docs(args)
@@ -1061,7 +1061,7 @@ class TestSearchThirdbridge:
         args = SearchThirdbridgeArgs(
             query_text="semiconductor supply chain",
             company_ids=[1],
-            size=20,
+            size=25,
         )
 
         result = await search_thirdbridge(args)
@@ -1093,7 +1093,7 @@ class TestSearchThirdbridge:
 
         args = SearchThirdbridgeArgs(
             query_text="nonexistent xyz123",
-            size=20,
+            size=25,
         )
 
         result = await search_thirdbridge(args)
@@ -1115,7 +1115,7 @@ class TestSearchThirdbridge:
         args = SearchThirdbridgeArgs(
             query_text="competitive landscape",
             company_ids=[1, 42],
-            size=20,
+            size=25,
         )
 
         result = await search_thirdbridge(args)
@@ -1146,7 +1146,7 @@ class TestSearchThirdbridge:
         args = SearchThirdbridgeArgs(
             query_text="market dynamics",
             thirdbridge_ids=["TB-12345", "TB-67890"],
-            size=20,
+            size=25,
         )
 
         result = await search_thirdbridge(args)
@@ -1172,7 +1172,7 @@ class TestSearchThirdbridge:
             query_text="pricing trends",
             start_date="2024-01-01",
             end_date="2024-12-31",
-            size=20,
+            size=25,
         )
 
         result = await search_thirdbridge(args)
@@ -1197,7 +1197,7 @@ class TestSearchThirdbridge:
         args = SearchThirdbridgeArgs(
             query_text="expert opinion",
             event_content_type="Interview",
-            size=20,
+            size=25,
         )
 
         result = await search_thirdbridge(args)
@@ -1224,7 +1224,7 @@ class TestSearchThirdbridge:
         args = SearchThirdbridgeArgs(
             query_text="supply chain",
             exclude_instructions=True,
-            size=20,
+            size=25,
         )
 
         result = await search_thirdbridge(args)
@@ -1245,7 +1245,7 @@ class TestSearchThirdbridge:
 
         args = SearchThirdbridgeArgs(
             query_text="test query",
-            size=20,
+            size=25,
         )
 
         result = await search_thirdbridge(args)
@@ -1265,7 +1265,7 @@ class TestSearchThirdbridge:
 
         args = SearchThirdbridgeArgs(
             query_text="test query",
-            size=20,
+            size=25,
         )
 
         result = await search_thirdbridge(args)

@@ -14,7 +14,7 @@
           "total_count": 2,
           "current_page": 1,
           "total_pages": 1,
-          "page_size": 50
+          "page_size": 25
         },
         "data": [
           {
@@ -326,7 +326,7 @@
           "total_count": 97,
           "current_page": 1,
           "total_pages": 2,
-          "page_size": 50
+          "page_size": 25
         },
         "data": [
           {
@@ -433,7 +433,7 @@
           "total_count": 16639,
           "current_page": 1,
           "total_pages": 333,
-          "page_size": 50
+          "page_size": 25
         },
         "data": [
           {
@@ -615,7 +615,7 @@
         "total_count": 509,
         "current_page": 1,
         "total_pages": 11,
-        "page_size": 50
+        "page_size": 25
       },
       "data": [
         {
@@ -927,7 +927,7 @@
           "total_count": 417,
           "current_page": 1,
           "total_pages": 9,
-          "page_size": 50
+          "page_size": 25
         },
         "data": [
           {
@@ -1022,7 +1022,7 @@
         "total_count": 5163,
         "current_page": 1,
         "total_pages": 259,
-        "page_size": 20
+        "page_size": 25
       },
       "data": {
         "announcement": 828592,
@@ -1113,7 +1113,7 @@
         ],
         "pagination": {
           "total": 2,
-          "page_size": 20,
+          "page_size": 25,
           "has_next_page": false,
           "next_search_after": null
         }
@@ -1127,7 +1127,7 @@
       "response": {
         "pagination": {
           "total": 10000,
-          "page_size": 20,
+          "page_size": 25,
           "has_next_page": true,
           "next_search_after": [12.584471, 21687400]
         },
@@ -1166,7 +1166,7 @@
       "response": {
         "pagination": {
           "total": 500,
-          "page_size": 20,
+          "page_size": 25,
           "has_next_page": true,
           "next_search_after": [11.234567, "doc_8001234"]
         },
@@ -1207,7 +1207,7 @@
       "response": {
         "pagination": {
           "total": 250,
-          "page_size": 20,
+          "page_size": 25,
           "has_next_page": true,
           "next_search_after": [10.876543, 5001234]
         },
@@ -1256,7 +1256,7 @@
       "response": {
         "pagination": {
           "total": 150,
-          "page_size": 20,
+          "page_size": 25,
           "has_next_page": true,
           "next_search_after": [9.654321, 6001234]
         },
@@ -1415,7 +1415,7 @@
           "total_count": 25,
           "current_page": 1,
           "total_pages": 1,
-          "page_size": 50
+          "page_size": 25
         },
         "data": [
           {

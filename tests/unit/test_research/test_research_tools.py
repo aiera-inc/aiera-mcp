@@ -65,7 +65,7 @@ FIND_RESEARCH_RESPONSE = {
         ],
         "pagination": {
             "total": 1,
-            "page_size": 50,
+            "page_size": 25,
             "has_next_page": False,
             "next_search_after": None,
         },
@@ -262,7 +262,7 @@ class TestFindResearch:
                 "result": [],
                 "pagination": {
                     "total": 0,
-                    "page_size": 50,
+                    "page_size": 25,
                     "has_next_page": False,
                     "next_search_after": None,
                 },

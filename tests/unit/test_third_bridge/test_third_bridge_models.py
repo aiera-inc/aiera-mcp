@@ -25,21 +25,21 @@ class TestFindThirdBridgeEventsArgs:
             end_date="2023-10-31",
             bloomberg_ticker="AAPL:US",
             page=1,
-            page_size=50,
+            page_size=25,
         )
 
         assert args.start_date == "2023-10-01"
         assert args.end_date == "2023-10-31"
         assert args.bloomberg_ticker == "AAPL:US"
         assert args.page == 1
-        assert args.page_size == 50
+        assert args.page_size == 25
 
     def test_find_third_bridge_events_args_defaults(self):
         """Test FindThirdBridgeEventsArgs with default values."""
         args = FindThirdBridgeEventsArgs(start_date="2023-10-01", end_date="2023-10-31")
 
         assert args.page == 1  # Default value
-        assert args.page_size == 50  # Default value
+        assert args.page_size == 25  # Default value
         assert args.bloomberg_ticker is None
         assert args.watchlist_id is None
         assert args.originating_prompt is None  # Default value
@@ -97,7 +97,7 @@ class TestFindThirdBridgeEventsArgs:
 
         with pytest.raises(ValidationError):
             FindThirdBridgeEventsArgs(
-                start_date="2023-10-01", end_date="2023-10-31", page_size=101
+                start_date="2023-10-01", end_date="2023-10-31", page_size=26
             )
 
     @pytest.mark.parametrize(
@@ -200,7 +200,7 @@ class TestThirdBridgeResponses:
                     "total_count": 1,
                     "current_page": 1,
                     "total_pages": 1,
-                    "page_size": 50,
+                    "page_size": 25,
                 },
             },
             instructions=["Test instruction"],
@@ -305,7 +305,7 @@ class TestThirdBridgeModelValidation:
                     "total_count": 1,
                     "current_page": 1,
                     "total_pages": 1,
-                    "page_size": 50,
+                    "page_size": 25,
                 },
             },
             instructions=["Third Bridge instruction"],

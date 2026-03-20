@@ -33,7 +33,7 @@ class TestSearchTranscriptsArgs:
             end_date="2024-12-31",
             transcript_section="q_and_a",
             event_type="earnings",
-            size=20,
+            size=25,
         )
 
         assert args.query_text == "earnings guidance"
@@ -43,7 +43,7 @@ class TestSearchTranscriptsArgs:
         assert args.end_date == "2024-12-31"
         assert args.transcript_section == "q_and_a"
         assert args.event_type == "earnings"
-        assert args.size == 20
+        assert args.size == 25
         assert args.search_after is None
 
     def test_search_transcripts_args_defaults(self):
@@ -58,7 +58,7 @@ class TestSearchTranscriptsArgs:
         assert args.end_date == ""
         assert args.transcript_section == ""
         assert args.event_type == "earnings"
-        assert args.size == 20
+        assert args.size == 25
         assert args.search_after is None
         assert args.originating_prompt is None
         assert args.include_base_instructions is True
@@ -125,7 +125,7 @@ class TestSearchFilingsArgs:
         assert args.start_date == ""
         assert args.end_date == ""
         assert args.filing_type == ""
-        assert args.size == 20
+        assert args.size == 25
         assert args.search_after is None
 
     def test_search_filings_args_required_fields(self):
@@ -176,7 +176,7 @@ class TestSearchResearchArgs:
         assert args.aiera_provider_ids is None
         assert args.asset_classes is None
         assert args.asset_types is None
-        assert args.size == 20
+        assert args.size == 25
 
     def test_search_research_args_required_fields(self):
         """Test that query_text is required."""
@@ -333,7 +333,7 @@ class TestSearchCompanyDocsArgs:
         assert args.keywords is None
         assert args.start_date == ""
         assert args.end_date == ""
-        assert args.size == 20
+        assert args.size == 25
 
     def test_search_company_docs_args_required_fields(self):
         """Test that query_text is required."""
@@ -386,7 +386,7 @@ class TestSearchThirdbridgeArgs:
         assert args.start_date == ""
         assert args.end_date == ""
         assert args.event_content_type == ""
-        assert args.size == 20
+        assert args.size == 25
 
     def test_search_thirdbridge_args_required_fields(self):
         """Test that query_text is required."""

@@ -56,7 +56,7 @@ class TestFindCompanyDocs:
         assert len(result.response["data"]) == 1
         assert result.response["pagination"]["total_count"] == 417
         assert result.response["pagination"]["current_page"] == 1
-        assert result.response["pagination"]["page_size"] == 50
+        assert result.response["pagination"]["page_size"] == 25
 
         # Check first document
         first_doc = result.response["data"][0]
@@ -93,7 +93,7 @@ class TestFindCompanyDocs:
                     "total_count": 0,
                     "current_page": 1,
                     "total_pages": 0,
-                    "page_size": 50,
+                    "page_size": 25,
                 },
                 "data": [],
             },
@@ -131,7 +131,7 @@ class TestFindCompanyDocs:
 
         # Verify - values will come from fixture, not request params
         assert result.response["pagination"]["current_page"] == 1  # From fixture
-        assert result.response["pagination"]["page_size"] == 50  # From fixture
+        assert result.response["pagination"]["page_size"] == 25  # From fixture
 
         call_args = mock_http_dependencies["mock_make_request"].call_args
         params = call_args[1]["params"]
@@ -305,7 +305,7 @@ class TestGetCompanyDocCategories:
                 "total_count": 0,
                 "current_page": 1,
                 "total_pages": 1,
-                "page_size": 50,
+                "page_size": 25,
             },
             "data": {},
             "instructions": [],
@@ -397,7 +397,7 @@ class TestGetCompanyDocKeywords:
                 "total_count": 0,
                 "current_page": 1,
                 "total_pages": 1,
-                "page_size": 50,
+                "page_size": 25,
             },
             "data": {},
             "instructions": [],
@@ -425,7 +425,7 @@ class TestGetCompanyDocKeywords:
                 "total_count": 2,
                 "current_page": 1,
                 "total_pages": 1,
-                "page_size": 50,
+                "page_size": 25,
             },
             "data": {"ESG": 15, "climate": 23},
             "instructions": [],
@@ -475,7 +475,7 @@ class TestCompanyDocsToolsErrorHandling:
                     "total_count": 2,
                     "current_page": 1,
                     "total_pages": 1,
-                    "page_size": 50,
+                    "page_size": 25,
                 },
                 "data": [
                     {

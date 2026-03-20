@@ -82,8 +82,8 @@ class SearchTranscriptsArgs(BaseAieraArgs):
     )
 
     size: int = Field(
-        default=20,
-        description="Number of transcript segments to return per page (max 250, 10-50 recommended for optimal performance)",
+        default=25,
+        description="Number of transcript segments to return per page (max 25, 10-25 recommended for optimal performance)",
     )
 
     search_after: Optional[List[Any]] = Field(
@@ -161,8 +161,8 @@ class SearchFilingsArgs(BaseAieraArgs):
     )
 
     size: int = Field(
-        default=20,
-        description="Number of filing chunks to return per page (max 250, 10-50 recommended for optimal performance)",
+        default=25,
+        description="Number of filing chunks to return per page (max 25, 10-25 recommended for optimal performance)",
     )
 
     search_after: Optional[List[Any]] = Field(
@@ -244,8 +244,8 @@ class SearchResearchArgs(BaseAieraArgs):
     )
 
     size: int = Field(
-        default=20,
-        description="Number of research chunks to return per page (max 250, 10-50 recommended for optimal performance)",
+        default=25,
+        description="Number of research chunks to return per page (max 25, 10-25 recommended for optimal performance)",
     )
 
     search_after: Optional[List[Any]] = Field(
@@ -328,8 +328,8 @@ class SearchCompanyDocsArgs(BaseAieraArgs):
     )
 
     size: int = Field(
-        default=20,
-        description="Number of company document chunks to return per page (max 250, 10-50 recommended for optimal performance)",
+        default=25,
+        description="Number of company document chunks to return per page (max 25, 10-25 recommended for optimal performance)",
     )
 
     search_after: Optional[List[Any]] = Field(
@@ -407,8 +407,8 @@ class SearchThirdbridgeArgs(BaseAieraArgs):
     )
 
     size: int = Field(
-        default=20,
-        description="Number of Third Bridge transcript segments to return per page (max 250, 10-50 recommended for optimal performance)",
+        default=25,
+        description="Number of Third Bridge transcript segments to return per page (max 25, 10-25 recommended for optimal performance)",
     )
 
     search_after: Optional[List[Any]] = Field(

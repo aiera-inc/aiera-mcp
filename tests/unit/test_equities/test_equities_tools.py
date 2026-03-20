@@ -56,7 +56,7 @@ class TestFindEquities:
             equities_api_responses["find_equities_success"]
         )
 
-        args = FindEquitiesArgs(bloomberg_ticker="AAPL:US", page=1, page_size=50)
+        args = FindEquitiesArgs(bloomberg_ticker="AAPL:US", page=1, page_size=25)
 
         # Execute
         result = await find_equities(args)

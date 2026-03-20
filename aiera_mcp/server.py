@@ -68,6 +68,13 @@ def get_api_documentation() -> str:
 
     This MCP server provides access to Aiera's comprehensive financial data API for institutional finance professionals.
 
+    ## IMPORTANT — Grammar Templates (Response Formatting)
+
+    Before producing any response that uses Aiera data, you MUST call the `get_grammar_template` tool to retrieve formatting and output instructions. These templates define how you should structure, format, and present your responses — including tone, style, and common patterns.
+
+    - **At the start of each session**, call `get_grammar_template` with `template_type='general'` to get baseline formatting rules.
+    - Follow the instructions returned in the template when composing your response.
+
     ## Tool Categories
 
     **Research**: Find, retrieve, and search within sell-side research content (analyst reports, research notes, market analysis, etc.)
@@ -81,6 +88,8 @@ def get_api_documentation() -> str:
     **Expert Insights**: Find and retrieve Third Bridge expert interview events and insights.
 
     **Company Data**: Access company financials and KPIs, sector classifications, index constituents, and watchlists.
+
+    **Utility**: Grammar templates for response formatting guidance.
 
     ## Key Features
 

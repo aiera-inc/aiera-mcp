@@ -37,21 +37,21 @@ class TestFindEquitiesArgs:
             isin="US0378331005",
             search="Apple",
             page=1,
-            page_size=50,
+            page_size=25,
         )
 
         assert args.bloomberg_ticker == "AAPL:US"
         assert args.isin == "US0378331005"
         assert args.search == "Apple"
         assert args.page == 1
-        assert args.page_size == 50
+        assert args.page_size == 25
 
     def test_find_equities_args_defaults(self):
         """Test FindEquitiesArgs with default values."""
         args = FindEquitiesArgs()
 
         assert args.page == 1  # Default value
-        assert args.page_size == 50  # Default value
+        assert args.page_size == 25  # Default value
         assert args.bloomberg_ticker is None
         assert args.isin is None
         assert args.ric is None
@@ -84,7 +84,7 @@ class TestFindEquitiesArgs:
             FindEquitiesArgs(page_size=0)
 
         with pytest.raises(ValidationError):
-            FindEquitiesArgs(page_size=101)
+            FindEquitiesArgs(page_size=26)
 
     def test_find_equities_args_numeric_field_serialization(self):
         """Test that numeric fields are serialized as strings."""
@@ -165,11 +165,11 @@ class TestGetIndexConstituentsArgs:
 
     def test_valid_get_index_constituents_args(self):
         """Test valid GetIndexConstituentsArgs creation."""
-        args = GetIndexConstituentsArgs(index="SP500", page=1, page_size=50)
+        args = GetIndexConstituentsArgs(index="SP500", page=1, page_size=25)
 
         assert args.index == "SP500"
         assert args.page == 1
-        assert args.page_size == 50
+        assert args.page_size == 25
 
     def test_get_index_constituents_args_defaults(self):
         """Test GetIndexConstituentsArgs with default values."""
@@ -177,7 +177,7 @@ class TestGetIndexConstituentsArgs:
 
         assert args.index == "SP500"
         assert args.page == 1
-        assert args.page_size == 50
+        assert args.page_size == 25
         assert args.originating_prompt is None
 
     def test_get_index_constituents_args_required_field(self):
@@ -195,11 +195,11 @@ class TestGetWatchlistConstituentsArgs:
 
     def test_valid_get_watchlist_constituents_args(self):
         """Test valid GetWatchlistConstituentsArgs creation."""
-        args = GetWatchlistConstituentsArgs(watchlist_id=123, page=1, page_size=50)
+        args = GetWatchlistConstituentsArgs(watchlist_id=123, page=1, page_size=25)
 
         assert args.watchlist_id == 123  # Stored as int
         assert args.page == 1
-        assert args.page_size == 50
+        assert args.page_size == 25
 
     def test_get_watchlist_constituents_args_defaults(self):
         """Test GetWatchlistConstituentsArgs with default values."""
@@ -207,7 +207,7 @@ class TestGetWatchlistConstituentsArgs:
 
         assert args.watchlist_id == 123  # Stored as int
         assert args.page == 1
-        assert args.page_size == 50
+        assert args.page_size == 25
         assert args.originating_prompt is None
 
     def test_get_watchlist_constituents_args_required_field(self):
@@ -239,7 +239,7 @@ class TestEquitiesResponses:
                     "total_count": 1,
                     "current_page": 1,
                     "total_pages": 1,
-                    "page_size": 50,
+                    "page_size": 25,
                 },
             },
         )
@@ -308,7 +308,7 @@ class TestEquitiesResponses:
                 "total_count": 1,
                 "current_page": 1,
                 "total_pages": 1,
-                "page_size": 50,
+                "page_size": 25,
             },
         )
 
@@ -341,7 +341,7 @@ class TestEquitiesResponses:
                 "total_count": 1,
                 "current_page": 1,
                 "total_pages": 1,
-                "page_size": 50,
+                "page_size": 25,
             },
         )
 
@@ -450,7 +450,7 @@ class TestEquitiesModelValidation:
         assert page_schema.get("default") == 1 or "anyOf" in page_schema
 
         page_size_schema = schema["properties"]["page_size"]
-        assert page_size_schema.get("default") == 50 or "anyOf" in page_size_schema
+        assert page_size_schema.get("default") == 25 or "anyOf" in page_size_schema
 
 
 @pytest.mark.unit

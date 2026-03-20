@@ -25,7 +25,7 @@ class TestFindFilingsArgs:
             bloomberg_ticker="AAPL:US",
             form_number="10-K",
             page=1,
-            page_size=50,
+            page_size=25,
         )
 
         assert args.start_date == "2023-10-01"
@@ -33,14 +33,14 @@ class TestFindFilingsArgs:
         assert args.bloomberg_ticker == "AAPL:US"
         assert args.form_number == "10-K"
         assert args.page == 1
-        assert args.page_size == 50
+        assert args.page_size == 25
 
     def test_find_filings_args_defaults(self):
         """Test FindFilingsArgs with default values."""
         args = FindFilingsArgs(start_date="2023-10-01", end_date="2023-10-31")
 
         assert args.page == 1  # Default value
-        assert args.page_size == 50  # Default value
+        assert args.page_size == 25  # Default value
         assert args.bloomberg_ticker is None
         assert args.form_number is None
         assert args.watchlist_id is None
@@ -95,7 +95,7 @@ class TestFindFilingsArgs:
 
         with pytest.raises(ValidationError):
             FindFilingsArgs(
-                start_date="2023-10-01", end_date="2023-10-31", page_size=101
+                start_date="2023-10-01", end_date="2023-10-31", page_size=26
             )
 
     @pytest.mark.parametrize(
@@ -204,7 +204,7 @@ class TestFilingsResponses:
                     "total_count": 1,
                     "current_page": 1,
                     "total_pages": 1,
-                    "page_size": 50,
+                    "page_size": 25,
                 },
             },
         )

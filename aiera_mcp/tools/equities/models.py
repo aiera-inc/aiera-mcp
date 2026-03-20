@@ -122,7 +122,7 @@ class FindEquitiesArgs(BaseToolArgs, BloombergTickerMixin):
     )
 
     page_size: Union[int, str] = Field(
-        default=50, ge=1, le=100, description="Number of items per page (1-100)."
+        default=25, ge=1, le=25, description="Number of items per page (1-25)."
     )
 
 
@@ -184,7 +184,7 @@ class GetIndexConstituentsArgs(BaseToolArgs):
     )
 
     page_size: Union[int, str] = Field(
-        default=50, ge=1, le=100, description="Number of items per page (1-100)."
+        default=25, ge=1, le=25, description="Number of items per page (1-25)."
     )
 
 
@@ -215,7 +215,7 @@ class GetWatchlistConstituentsArgs(BaseToolArgs):
     )
 
     page_size: Union[int, str] = Field(
-        default=50, ge=1, le=100, description="Number of items per page (1-100)."
+        default=25, ge=1, le=25, description="Number of items per page (1-25)."
     )
 
 
@@ -242,7 +242,7 @@ class GetAvailableWatchlistsArgs(BaseToolArgs):
     )
 
     page_size: Union[int, str] = Field(
-        default=50, ge=1, le=100, description="Number of items per page (1-100)."
+        default=25, ge=1, le=25, description="Number of items per page (1-25)."
     )
 
 
@@ -293,7 +293,7 @@ class GetSectorsAndSubsectorsArgs(BaseToolArgs):
     )
 
     page_size: Union[int, str] = Field(
-        default=50, ge=1, le=100, description="Number of items per page (1-100)."
+        default=25, ge=1, le=25, description="Number of items per page (1-25)."
     )
 
 

@@ -195,7 +195,7 @@ class FindCompanyDocsArgs(BaseToolArgs, BloombergTickerMixin, CategoriesKeywords
     )
 
     page_size: Union[int, str] = Field(
-        default=50, ge=1, le=100, description="Number of items per page (1-100)."
+        default=25, ge=1, le=25, description="Number of items per page (1-25)."
     )
 
 
@@ -266,12 +266,12 @@ class GetCompanyDocCategoriesArgs(BaseToolArgs):
     )
 
     page_size: Union[int, str] = Field(
-        default=50, ge=1, le=100, description="Number of items per page (1-100)."
+        default=25, ge=1, le=25, description="Number of items per page (1-25)."
     )
 
 
-class GetCompanyDocKeywordsArgs(BaseToolArgs):
-    """Retrieve all available keywords for filtering company documents. Used to find valid keyword values for find_company_docs."""
+class GetCompanyDocKeywordsArgs(BaseToolArgs, BloombergTickerMixin):
+    """Retrieve all available keywords for filtering company documents. Requires at least one equity identifier (bloomberg_ticker, isin, ric, or permid). Used to find valid keyword values for find_company_docs."""
 
     originating_prompt: Optional[str] = Field(
         default=None,
@@ -293,12 +293,32 @@ class GetCompanyDocKeywordsArgs(BaseToolArgs):
         description="Search term to filter results. Searches within relevant text fields.",
     )
 
+    bloomberg_ticker: Optional[str] = Field(
+        default=None,
+        description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). At least one equity identifier is required.",
+    )
+
+    isin: Optional[str] = Field(
+        default=None,
+        description="International Securities Identification Number (ISIN).",
+    )
+
+    ric: Optional[str] = Field(
+        default=None,
+        description="Reuters Instrument Code (RIC).",
+    )
+
+    permid: Optional[str] = Field(
+        default=None,
+        description="Refinitiv Permanent Identifier (PermID).",
+    )
+
     page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )
 
     page_size: Union[int, str] = Field(
-        default=50, ge=1, le=100, description="Number of items per page (1-100)."
+        default=25, ge=1, le=25, description="Number of items per page (1-25)."
     )
 
 

@@ -53,7 +53,7 @@ class TestFindResearchArgs:
         assert args.self_identification is None
         assert args.include_base_instructions is True
         assert args.exclude_instructions is False
-        assert args.page_size == 50
+        assert args.page_size == 25
 
     def test_find_research_args_with_originating_prompt(self):
         """Test FindResearchArgs with originating_prompt field."""
