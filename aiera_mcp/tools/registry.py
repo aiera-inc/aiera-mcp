@@ -4,6 +4,7 @@
 
 import functools
 import logging
+import time
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -484,6 +485,7 @@ def _wrap_with_logging(func: Any, tool_name: str) -> Any:
     async def wrapper(args: Any) -> Any:
         is_error = False
         result = None
+        start = time.monotonic()
         try:
             result = await func(args)
             return result
@@ -491,6 +493,7 @@ def _wrap_with_logging(func: Any, tool_name: str) -> Any:
             is_error = True
             raise
         finally:
+            duration_ms = int((time.monotonic() - start) * 1000)
             try:
                 params = args.model_dump() if hasattr(args, "model_dump") else None
                 resp = None
@@ -498,7 +501,9 @@ def _wrap_with_logging(func: Any, tool_name: str) -> Any:
                     resp = (
                         result.model_dump() if hasattr(result, "model_dump") else result
                     )
-                send_tool_log(tool_name, params, resp, is_error=is_error)
+                send_tool_log(
+                    tool_name, params, resp, is_error=is_error, duration_ms=duration_ms
+                )
             except Exception:
                 logger.debug(
                     "Failed to schedule MCP tool log for %s", tool_name, exc_info=True

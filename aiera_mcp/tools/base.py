@@ -110,6 +110,7 @@ async def _send_tool_log(
     parameters: Optional[Dict[str, Any]],
     response: Optional[Dict[str, Any]],
     is_error: bool = False,
+    duration_ms: Optional[int] = None,
 ) -> None:
     """Fire-and-forget: send tool invocation log to the collect-mcp-log endpoint.
 
@@ -139,6 +140,8 @@ async def _send_tool_log(
             body["parameters"] = parameters
         if response is not None:
             body["response"] = response
+        if duration_ms is not None:
+            body["duration_ms"] = duration_ms
 
         logger.info("MCP tool log: sending POST to %s for tool=%s", url, tool_name)
         resp = await client.post(url, json=body, headers=headers, timeout=5.0)
@@ -157,10 +160,11 @@ def send_tool_log(
     parameters: Optional[Dict[str, Any]],
     response: Optional[Dict[str, Any]],
     is_error: bool = False,
+    duration_ms: Optional[int] = None,
 ) -> None:
     """Schedule a fire-and-forget tool log send. Safe to call from any async context."""
     task = asyncio.create_task(
-        _send_tool_log(tool_name, parameters, response, is_error)
+        _send_tool_log(tool_name, parameters, response, is_error, duration_ms)
     )
     _background_tasks.add(task)
     task.add_done_callback(_background_tasks.discard)
