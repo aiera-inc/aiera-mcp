@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import asyncio
+import json
 import httpx
 import logging
 from typing import Any, Dict, Optional, Callable, List
@@ -47,8 +49,41 @@ def get_lambda_http_client() -> httpx.AsyncClient:
     return _lambda_http_client
 
 
-# HTTP client management for the standard MCP server
-# We'll manage clients directly in the tool functions as needed
+async def _send_tool_log(
+    tool_name: str,
+    parameters: Optional[Dict[str, Any]],
+    response: Optional[Dict[str, Any]],
+    is_error: bool = False,
+) -> None:
+    """Fire-and-forget: send tool invocation log to the collect-mcp-log endpoint.
+
+    All exceptions are swallowed so this never affects tool execution.
+    """
+    try:
+        from . import get_api_key
+        from .tools.base import DEFAULT_HEADERS, get_http_client
+
+        api_key = get_api_key()
+        if not api_key:
+            return
+
+        client = await get_http_client(None)
+        settings = get_settings()
+        url = f"{settings.aiera_base_url}/collect-mcp-log"
+
+        headers = DEFAULT_HEADERS.copy()
+        headers["X-API-Key"] = api_key
+
+        body: Dict[str, Any] = {"tool": tool_name, "is_error": is_error}
+        if parameters is not None:
+            body["parameters"] = parameters
+        if response is not None:
+            body["response"] = response
+
+        await client.post(url, json=body, headers=headers, timeout=5.0)
+    except Exception:
+        # Swallow all errors – logging should never break tool execution
+        logger.info("Failed to send MCP tool log", exc_info=True)
 
 
 # Initialize standard MCP server
@@ -194,19 +229,24 @@ async def run_server():
                 result_dict = result
 
             # Return as TextContent
-            import json
-
             result_text = (
                 json.dumps(result_dict, indent=2)
                 if not isinstance(result_dict, str)
                 else result_dict
             )
 
+            # Fire-and-forget: log tool invocation
+            asyncio.create_task(_send_tool_log(name, arguments, result_dict))
+
             logger.info(f"Tool {name} completed successfully")
             return [TextContent(type="text", text=result_text)]
 
         except Exception as e:
             logger.error(f"Tool {name} failed: {str(e)}")
+            # Fire-and-forget: log failed tool invocation
+            asyncio.create_task(
+                _send_tool_log(name, arguments, {"error": str(e)}, is_error=True)
+            )
             return [TextContent(type="text", text=f"Error: {str(e)}")]
 
     # Start stdio-based MCP server
