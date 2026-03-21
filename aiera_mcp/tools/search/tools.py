@@ -492,7 +492,7 @@ async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
                 "queries": [
                     {
                         "neural": {
-                            "embedding_384": {
+                            "passage_chunk.knn": {
                                 "query_text": args.query_text,
                                 "k": k_value,
                             }
