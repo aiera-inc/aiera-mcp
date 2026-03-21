@@ -297,24 +297,26 @@ class TestEquitiesResponses:
     def test_get_index_constituents_response(self):
         """Test GetIndexConstituentsResponse model with pass-through data."""
         response = GetIndexConstituentsResponse(
-            data=[
-                {
-                    "equity_id": 12345,
-                    "name": "Test Company",
-                    "bloomberg_ticker": "TEST:US",
-                }
-            ],
-            pagination={
-                "total_count": 1,
-                "current_page": 1,
-                "total_pages": 1,
-                "page_size": 25,
+            response={
+                "data": [
+                    {
+                        "equity_id": 12345,
+                        "name": "Test Company",
+                        "bloomberg_ticker": "TEST:US",
+                    }
+                ],
+                "pagination": {
+                    "total_count": 1,
+                    "current_page": 1,
+                    "total_pages": 1,
+                    "page_size": 25,
+                },
             },
         )
 
-        assert response.data is not None
-        assert len(response.data) == 1
-        assert response.pagination["total_count"] == 1
+        assert response.response is not None
+        assert len(response.response["data"]) == 1
+        assert response.response["pagination"]["total_count"] == 1
 
     def test_get_available_watchlists_response(self):
         """Test GetAvailableWatchlistsResponse model with pass-through data."""
@@ -330,23 +332,25 @@ class TestEquitiesResponses:
     def test_get_watchlist_constituents_response(self):
         """Test GetWatchlistConstituentsResponse model with pass-through data."""
         response = GetWatchlistConstituentsResponse(
-            data=[
-                {
-                    "equity_id": 12345,
-                    "name": "Test Company",
-                    "bloomberg_ticker": "TEST:US",
-                }
-            ],
-            pagination={
-                "total_count": 1,
-                "current_page": 1,
-                "total_pages": 1,
-                "page_size": 25,
+            response={
+                "data": [
+                    {
+                        "equity_id": 12345,
+                        "name": "Test Company",
+                        "bloomberg_ticker": "TEST:US",
+                    }
+                ],
+                "pagination": {
+                    "total_count": 1,
+                    "current_page": 1,
+                    "total_pages": 1,
+                    "page_size": 25,
+                },
             },
         )
 
-        assert response.data is not None
-        assert len(response.data) == 1
+        assert response.response is not None
+        assert len(response.response["data"]) == 1
 
     def test_get_financials_response(self):
         """Test GetFinancialsResponse model with pass-through data."""

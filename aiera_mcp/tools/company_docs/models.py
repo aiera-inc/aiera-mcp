@@ -378,16 +378,10 @@ class GetCompanyDocResponse(BaseAieraResponse):
 class GetCompanyDocCategoriesResponse(BaseAieraResponse):
     """Response for get_company_doc_categories tool - passes through the API response structure."""
 
-    pagination: Optional[Any] = Field(
-        None, description="Pagination metadata from the API"
-    )
-    data: Optional[Any] = Field(None, description="Response data from the API")
+    response: Optional[Any] = Field(None, description="Response data from the API")
 
 
 class GetCompanyDocKeywordsResponse(BaseAieraResponse):
     """Response for get_company_doc_keywords tool - passes through the API response structure."""
 
-    pagination: Optional[Any] = Field(
-        None, description="Pagination metadata from the API"
-    )
-    data: Optional[Any] = Field(None, description="Response data from the API")
+    response: Optional[Any] = Field(None, description="Response data from the API")

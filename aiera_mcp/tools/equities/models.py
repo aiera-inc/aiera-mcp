@@ -519,10 +519,7 @@ class GetAvailableIndexesResponse(BaseAieraResponse):
 class GetIndexConstituentsResponse(BaseAieraResponse):
     """Response for get_index_constituents tool - passes through the API response structure."""
 
-    pagination: Optional[Any] = Field(
-        None, description="Pagination metadata from the API"
-    )
-    data: Optional[Any] = Field(None, description="Response data from the API")
+    response: Optional[Any] = Field(None, description="Response data from the API")
 
 
 class GetAvailableWatchlistsResponse(BaseAieraResponse):
@@ -534,10 +531,7 @@ class GetAvailableWatchlistsResponse(BaseAieraResponse):
 class GetWatchlistConstituentsResponse(BaseAieraResponse):
     """Response for get_watchlist_constituents tool - passes through the API response structure."""
 
-    pagination: Optional[Any] = Field(
-        None, description="Pagination metadata from the API"
-    )
-    data: Optional[Any] = Field(None, description="Response data from the API")
+    response: Optional[Any] = Field(None, description="Response data from the API")
 
 
 class GetFinancialsResponse(BaseAieraResponse):

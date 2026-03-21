@@ -393,8 +393,10 @@ class TestGetIndexConstituents:
         # Setup
         find_response = equities_api_responses["find_equities_success"]
         index_response = {
-            "data": find_response["response"]["data"],
-            "pagination": find_response["response"]["pagination"],
+            "response": {
+                "data": find_response["response"]["data"],
+                "pagination": find_response["response"]["pagination"],
+            },
         }
         mock_http_dependencies["mock_make_request"].return_value = index_response
 
@@ -405,9 +407,9 @@ class TestGetIndexConstituents:
 
         # Verify
         assert isinstance(result, GetIndexConstituentsResponse)
-        assert result.data is not None
-        assert len(result.data) == 2
-        assert result.data[0]["name"] == "SAMSUNG ELECTRONICS CO LTD /FI"
+        assert result.response is not None
+        assert len(result.response["data"]) == 2
+        assert result.response["data"][0]["name"] == "SAMSUNG ELECTRONICS CO LTD /FI"
 
     @pytest.mark.asyncio
     async def test_get_index_constituents_pagination(
@@ -479,8 +481,10 @@ class TestGetWatchlistConstituents:
         # Setup
         find_response = equities_api_responses["find_equities_success"]
         watchlist_response = {
-            "data": find_response["response"]["data"],
-            "pagination": find_response["response"]["pagination"],
+            "response": {
+                "data": find_response["response"]["data"],
+                "pagination": find_response["response"]["pagination"],
+            },
         }
         mock_http_dependencies["mock_make_request"].return_value = watchlist_response
 
@@ -491,16 +495,16 @@ class TestGetWatchlistConstituents:
 
         # Verify
         assert isinstance(result, GetWatchlistConstituentsResponse)
-        assert result.data is not None
-        assert len(result.data) == 2
-        assert result.data[0]["name"] == "SAMSUNG ELECTRONICS CO LTD /FI"
+        assert result.response is not None
+        assert len(result.response["data"]) == 2
+        assert result.response["data"][0]["name"] == "SAMSUNG ELECTRONICS CO LTD /FI"
 
     @pytest.mark.asyncio
     async def test_get_watchlist_constituents_no_metadata(
         self, mock_http_dependencies, equities_api_responses
     ):
         """Test watchlist constituents without metadata."""
-        # Setup
+        # Setup - find_equities_success has "response" at top level, which maps to response field
         mock_http_dependencies["mock_make_request"].return_value = (
             equities_api_responses["find_equities_success"]
         )
@@ -512,7 +516,10 @@ class TestGetWatchlistConstituents:
 
         # Verify - response should have data
         assert isinstance(result, GetWatchlistConstituentsResponse)
-        assert result.data is None or len(result.data) >= 0
+        assert result.response is None or (
+            isinstance(result.response, dict)
+            and len(result.response.get("data", [])) >= 0
+        )
 
 
 @pytest.mark.unit

@@ -260,11 +260,13 @@ class TestGetCompanyDocCategories:
         self, mock_http_dependencies, company_docs_api_responses
     ):
         """Test successful company doc categories retrieval."""
-        # Setup - transform fixture to match model structure (data at top level)
+        # Setup - transform fixture to match model structure (wrapped in response)
         fixture = company_docs_api_responses["get_company_doc_categories_success"]
         mock_http_dependencies["mock_make_request"].return_value = {
-            "data": fixture["data"],
-            "pagination": fixture["pagination"],
+            "response": {
+                "data": fixture["data"],
+                "pagination": fixture["pagination"],
+            },
             "instructions": fixture.get("instructions", []),
         }
 
@@ -275,12 +277,12 @@ class TestGetCompanyDocCategories:
 
         # Verify
         assert isinstance(result, GetCompanyDocCategoriesResponse)
-        assert result.data is not None
-        assert len(result.data) == 10
-        assert result.pagination["total_count"] == 5163
+        assert result.response is not None
+        assert len(result.response["data"]) == 10
+        assert result.response["pagination"]["total_count"] == 5163
 
         # The data is a dictionary of {category_name: count}
-        categories_data = result.data
+        categories_data = result.response["data"]
         assert "announcement" in categories_data
         assert categories_data["announcement"] == 828592
         assert "annual_report" in categories_data
@@ -299,15 +301,17 @@ class TestGetCompanyDocCategories:
         self, mock_http_dependencies
     ):
         """Test get_company_doc_categories with empty results."""
-        # Setup - data at top level
+        # Setup - wrapped in response
         empty_response = {
-            "pagination": {
-                "total_count": 0,
-                "current_page": 1,
-                "total_pages": 1,
-                "page_size": 25,
+            "response": {
+                "pagination": {
+                    "total_count": 0,
+                    "current_page": 1,
+                    "total_pages": 1,
+                    "page_size": 25,
+                },
+                "data": {},
             },
-            "data": {},
             "instructions": [],
         }
         mock_http_dependencies["mock_make_request"].return_value = empty_response
@@ -319,21 +323,23 @@ class TestGetCompanyDocCategories:
 
         # Verify
         assert isinstance(result, GetCompanyDocCategoriesResponse)
-        assert len(result.data) == 0
-        assert result.pagination["total_count"] == 0
+        assert len(result.response["data"]) == 0
+        assert result.response["pagination"]["total_count"] == 0
 
     @pytest.mark.asyncio
     async def test_get_company_doc_categories_pagination(self, mock_http_dependencies):
         """Test get_company_doc_categories with pagination."""
-        # Setup - data at top level
+        # Setup - wrapped in response
         categories_response = {
-            "pagination": {
-                "total_count": 1,
-                "current_page": 2,
-                "total_pages": 1,
-                "page_size": 25,
+            "response": {
+                "pagination": {
+                    "total_count": 1,
+                    "current_page": 2,
+                    "total_pages": 1,
+                    "page_size": 25,
+                },
+                "data": {"Test": 1},
             },
-            "data": {"Test": 1},
             "instructions": [],
         }
         mock_http_dependencies["mock_make_request"].return_value = categories_response
@@ -344,8 +350,8 @@ class TestGetCompanyDocCategories:
         result = await get_company_doc_categories(args)
 
         # Verify
-        assert result.pagination["current_page"] == 2
-        assert result.pagination["page_size"] == 25
+        assert result.response["pagination"]["current_page"] == 2
+        assert result.response["pagination"]["page_size"] == 25
 
         call_args = mock_http_dependencies["mock_make_request"].call_args
         params = call_args[1]["params"]
@@ -362,11 +368,13 @@ class TestGetCompanyDocKeywords:
         self, mock_http_dependencies, company_docs_api_responses
     ):
         """Test successful company doc keywords retrieval."""
-        # Setup - transform fixture to match model structure (data at top level)
+        # Setup - transform fixture to match model structure (wrapped in response)
         fixture = company_docs_api_responses["get_company_doc_keywords_success"]
         mock_http_dependencies["mock_make_request"].return_value = {
-            "data": fixture["data"],
-            "pagination": fixture["pagination"],
+            "response": {
+                "data": fixture["data"],
+                "pagination": fixture["pagination"],
+            },
             "instructions": fixture.get("instructions", []),
         }
 
@@ -377,12 +385,12 @@ class TestGetCompanyDocKeywords:
 
         # Verify
         assert isinstance(result, GetCompanyDocKeywordsResponse)
-        assert result.data is not None
-        assert len(result.data) == 10
-        assert result.pagination["total_count"] == 1703856
+        assert result.response is not None
+        assert len(result.response["data"]) == 10
+        assert result.response["pagination"]["total_count"] == 1703856
 
         # The data is a dictionary of {keyword_name: count}
-        keywords_data = result.data
+        keywords_data = result.response["data"]
         assert "financial results" in keywords_data
         assert keywords_data["financial results"] == 343826
         assert "sustainability" in keywords_data
@@ -391,15 +399,17 @@ class TestGetCompanyDocKeywords:
     @pytest.mark.asyncio
     async def test_get_company_doc_keywords_empty_results(self, mock_http_dependencies):
         """Test get_company_doc_keywords with empty results."""
-        # Setup - data at top level
+        # Setup - wrapped in response
         empty_response = {
-            "pagination": {
-                "total_count": 0,
-                "current_page": 1,
-                "total_pages": 1,
-                "page_size": 25,
+            "response": {
+                "pagination": {
+                    "total_count": 0,
+                    "current_page": 1,
+                    "total_pages": 1,
+                    "page_size": 25,
+                },
+                "data": {},
             },
-            "data": {},
             "instructions": [],
         }
         mock_http_dependencies["mock_make_request"].return_value = empty_response
@@ -411,23 +421,25 @@ class TestGetCompanyDocKeywords:
 
         # Verify
         assert isinstance(result, GetCompanyDocKeywordsResponse)
-        assert len(result.data) == 0
-        assert result.pagination["total_count"] == 0
+        assert len(result.response["data"]) == 0
+        assert result.response["pagination"]["total_count"] == 0
 
     @pytest.mark.asyncio
     async def test_get_company_doc_keywords_alternative_field_names(
         self, mock_http_dependencies
     ):
         """Test get_company_doc_keywords handles alternative field names."""
-        # Setup - data at top level
+        # Setup - wrapped in response
         keywords_response = {
-            "pagination": {
-                "total_count": 2,
-                "current_page": 1,
-                "total_pages": 1,
-                "page_size": 25,
+            "response": {
+                "pagination": {
+                    "total_count": 2,
+                    "current_page": 1,
+                    "total_pages": 1,
+                    "page_size": 25,
+                },
+                "data": {"ESG": 15, "climate": 23},
             },
-            "data": {"ESG": 15, "climate": 23},
             "instructions": [],
         }
         mock_http_dependencies["mock_make_request"].return_value = keywords_response
@@ -439,8 +451,8 @@ class TestGetCompanyDocKeywords:
 
         # Verify - dictionary format data
         assert isinstance(result, GetCompanyDocKeywordsResponse)
-        assert result.pagination["total_count"] == 2
-        keywords_data = result.data
+        assert result.response["pagination"]["total_count"] == 2
+        keywords_data = result.response["data"]
         assert keywords_data["ESG"] == 15
         assert keywords_data["climate"] == 23
 

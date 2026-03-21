@@ -636,79 +636,52 @@ class GetResearchResponse(BaseAieraResponse):
 class GetResearchProvidersResponse(BaseAieraResponse):
     """Response for get_research_providers tool - passes through the API response structure."""
 
-    pagination: Optional[Any] = Field(
-        None, description="Pagination metadata from the API"
-    )
-    data: Optional[Any] = Field(None, description="Response data from the API")
+    response: Optional[Any] = Field(None, description="Response data from the API")
 
 
 class GetResearchAuthorsResponse(BaseAieraResponse):
     """Response for get_research_authors tool - passes through the API response structure."""
 
-    pagination: Optional[Any] = Field(
-        None, description="Pagination metadata from the API"
-    )
-    data: Optional[Any] = Field(None, description="Response data from the API")
+    response: Optional[Any] = Field(None, description="Response data from the API")
 
 
 class GetResearchAssetClassesResponse(BaseAieraResponse):
     """Response for get_research_asset_classes tool - passes through the API response structure."""
 
-    pagination: Optional[Any] = Field(
-        None, description="Pagination metadata from the API"
-    )
-    data: Optional[Any] = Field(None, description="Response data from the API")
+    response: Optional[Any] = Field(None, description="Response data from the API")
 
 
 class GetResearchAssetTypesResponse(BaseAieraResponse):
     """Response for get_research_asset_types tool - passes through the API response structure."""
 
-    pagination: Optional[Any] = Field(
-        None, description="Pagination metadata from the API"
-    )
-    data: Optional[Any] = Field(None, description="Response data from the API")
+    response: Optional[Any] = Field(None, description="Response data from the API")
 
 
 class GetResearchSubjectsResponse(BaseAieraResponse):
     """Response for get_research_subjects tool - passes through the API response structure."""
 
-    pagination: Optional[Any] = Field(
-        None, description="Pagination metadata from the API"
-    )
-    data: Optional[Any] = Field(None, description="Response data from the API")
+    response: Optional[Any] = Field(None, description="Response data from the API")
 
 
 class GetResearchProductFocusesResponse(BaseAieraResponse):
     """Response for get_research_product_focuses tool - passes through the API response structure."""
 
-    pagination: Optional[Any] = Field(
-        None, description="Pagination metadata from the API"
-    )
-    data: Optional[Any] = Field(None, description="Response data from the API")
+    response: Optional[Any] = Field(None, description="Response data from the API")
 
 
 class GetResearchDisciplineTypesResponse(BaseAieraResponse):
     """Response for get_research_discipline_types tool - passes through the API response structure."""
 
-    pagination: Optional[Any] = Field(
-        None, description="Pagination metadata from the API"
-    )
-    data: Optional[Any] = Field(None, description="Response data from the API")
+    response: Optional[Any] = Field(None, description="Response data from the API")
 
 
 class GetResearchRegionTypesResponse(BaseAieraResponse):
     """Response for get_research_region_types tool - passes through the API response structure."""
 
-    pagination: Optional[Any] = Field(
-        None, description="Pagination metadata from the API"
-    )
-    data: Optional[Any] = Field(None, description="Response data from the API")
+    response: Optional[Any] = Field(None, description="Response data from the API")
 
 
 class GetResearchCountryCodesResponse(BaseAieraResponse):
     """Response for get_research_country_codes tool - passes through the API response structure."""
 
-    pagination: Optional[Any] = Field(
-        None, description="Pagination metadata from the API"
-    )
-    data: Optional[Any] = Field(None, description="Response data from the API")
+    response: Optional[Any] = Field(None, description="Response data from the API")

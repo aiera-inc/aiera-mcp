@@ -249,39 +249,43 @@ class TestCompanyDocsResponses:
     def test_get_company_doc_categories_response(self):
         """Test GetCompanyDocCategoriesResponse model with pass-through data."""
         response = GetCompanyDocCategoriesResponse(
-            pagination={
-                "total_count": 2,
-                "current_page": 1,
-                "total_pages": 1,
-                "page_size": 25,
+            response={
+                "pagination": {
+                    "total_count": 2,
+                    "current_page": 1,
+                    "total_pages": 1,
+                    "page_size": 25,
+                },
+                "data": {"sustainability": 25, "governance": 18},
             },
-            data={"sustainability": 25, "governance": 18},
             instructions=["Categories retrieved"],
         )
 
-        assert response.data is not None
-        assert response.data["sustainability"] == 25
-        assert response.data["governance"] == 18
-        assert response.pagination["total_count"] == 2
+        assert response.response is not None
+        assert response.response["data"]["sustainability"] == 25
+        assert response.response["data"]["governance"] == 18
+        assert response.response["pagination"]["total_count"] == 2
         assert response.instructions == ["Categories retrieved"]
 
     def test_get_company_doc_keywords_response(self):
         """Test GetCompanyDocKeywordsResponse model with pass-through data."""
         response = GetCompanyDocKeywordsResponse(
-            pagination={
-                "total_count": 2,
-                "current_page": 1,
-                "total_pages": 1,
-                "page_size": 25,
+            response={
+                "pagination": {
+                    "total_count": 2,
+                    "current_page": 1,
+                    "total_pages": 1,
+                    "page_size": 25,
+                },
+                "data": {"ESG": 15, "climate": 23},
             },
-            data={"ESG": 15, "climate": 23},
             instructions=["Keywords retrieved"],
         )
 
-        assert response.data is not None
-        assert response.data["ESG"] == 15
-        assert response.data["climate"] == 23
-        assert response.pagination["total_count"] == 2
+        assert response.response is not None
+        assert response.response["data"]["ESG"] == 15
+        assert response.response["data"]["climate"] == 23
+        assert response.response["pagination"]["total_count"] == 2
         assert response.instructions == ["Keywords retrieved"]
 
 

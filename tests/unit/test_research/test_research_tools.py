@@ -415,7 +415,7 @@ class TestGetResearchProviders:
             "instructions": [
                 "This data is provided for institutional finance professionals...",
             ],
-            "data": [
+            "response": [
                 {
                     "provider_id": "krypton",
                     "name": "Krypton Research",
@@ -435,10 +435,10 @@ class TestGetResearchProviders:
         result = await get_research_providers(args)
 
         assert isinstance(result, GetResearchProvidersResponse)
-        assert result.data is not None
-        assert len(result.data) == 2
-        assert result.data[0]["provider_id"] == "krypton"
-        assert result.data[1]["name"] == "Acme Analytics"
+        assert result.response is not None
+        assert len(result.response) == 2
+        assert result.response[0]["provider_id"] == "krypton"
+        assert result.response[1]["name"] == "Acme Analytics"
 
         # Check API call was made correctly
         mock_http_dependencies["mock_make_request"].assert_called_once()
@@ -455,7 +455,7 @@ class TestGetResearchProviders:
             "instructions": [
                 "This data is provided for institutional finance professionals...",
             ],
-            "data": [],
+            "response": [],
         }
         mock_http_dependencies["mock_make_request"].return_value = providers_response
 
@@ -473,7 +473,7 @@ class TestGetResearchProviders:
         """Test get_research_providers passes originating_prompt."""
         mock_http_dependencies["mock_make_request"].return_value = {
             "instructions": [],
-            "data": [],
+            "response": [],
         }
 
         args = GetResearchProvidersArgs(
@@ -491,7 +491,7 @@ class TestGetResearchProviders:
         """Test get_research_providers with empty response."""
         mock_http_dependencies["mock_make_request"].return_value = {
             "instructions": [],
-            "data": [],
+            "response": [],
         }
 
         args = GetResearchProvidersArgs()
@@ -499,4 +499,4 @@ class TestGetResearchProviders:
         result = await get_research_providers(args)
 
         assert isinstance(result, GetResearchProvidersResponse)
-        assert result.data == []
+        assert result.response == []

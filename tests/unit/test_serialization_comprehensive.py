@@ -48,16 +48,6 @@ class TestToolSerializationComprehensive:
             if "response" in properties:
                 sample_data["response"] = {"data": [], "test": True}
 
-            # Handle pagination + data at top level (Categories/Keywords responses)
-            if "pagination" in properties and "data" in properties:
-                sample_data["pagination"] = {
-                    "total_count": 0,
-                    "current_page": 1,
-                    "total_pages": 0,
-                    "page_size": 25,
-                }
-                sample_data["data"] = {}
-
         except Exception as e:
             print(
                 f"Warning: Could not generate sample data for {model_class.__name__}: {e}"
