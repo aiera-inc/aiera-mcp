@@ -24,6 +24,20 @@ from .models import (
 logger = logging.getLogger(__name__)
 
 
+def _has_search_results(raw_response: dict) -> bool:
+    """Check if a raw search API response contains results.
+
+    The API may return results under either the 'result' or 'data' key
+    within the 'response' object.
+    """
+    if not raw_response or "response" not in raw_response:
+        return False
+    resp = raw_response["response"]
+    if not isinstance(resp, dict):
+        return False
+    return bool(resp.get("result")) or bool(resp.get("data"))
+
+
 async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsResponse:
     """Smart event transcript search with dual modes: semantic search or filtered browsing.
 
@@ -145,11 +159,7 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
             timeout=15.0,
         )
 
-        if (
-            raw_response
-            and "response" in raw_response
-            and raw_response["response"].get("result")
-        ):
+        if _has_search_results(raw_response):
             logger.info("search_transcripts ML inference successful")
             response = SearchTranscriptsResponse.model_validate(raw_response)
             if args.exclude_instructions:
@@ -163,11 +173,7 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
         raw_response = None
 
     # Fall back to standard text-based search with pipeline
-    if (
-        not raw_response
-        or "response" not in raw_response
-        or not raw_response["response"].get("result")
-    ):
+    if not _has_search_results(raw_response):
         try:
             query = {
                 "query": {
@@ -348,11 +354,7 @@ async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
             timeout=15.0,
         )
 
-        if (
-            raw_response
-            and "response" in raw_response
-            and raw_response["response"].get("result")
-        ):
+        if _has_search_results(raw_response):
             logger.info("search_filings ML inference successful")
             response = SearchFilingsResponse.model_validate(raw_response)
             if args.exclude_instructions:
@@ -366,11 +368,7 @@ async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
         raw_response = None
 
     # Fall back to standard text-based search with pipeline
-    if (
-        not raw_response
-        or "response" not in raw_response
-        or not raw_response["response"].get("result")
-    ):
+    if not _has_search_results(raw_response):
         try:
             query = {
                 "query": {
@@ -540,11 +538,7 @@ async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
             timeout=15.0,
         )
 
-        if (
-            raw_response
-            and "response" in raw_response
-            and raw_response["response"].get("result")
-        ):
+        if _has_search_results(raw_response):
             logger.info("search_research ML inference successful")
             response = SearchResearchResponse.model_validate(raw_response)
             if args.exclude_instructions:
@@ -558,11 +552,7 @@ async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
         raw_response = None
 
     # Fall back to standard text-based search with pipeline
-    if (
-        not raw_response
-        or "response" not in raw_response
-        or not raw_response["response"].get("result")
-    ):
+    if not _has_search_results(raw_response):
         try:
             query = {
                 "query": {
@@ -734,11 +724,7 @@ async def search_company_docs(args: SearchCompanyDocsArgs) -> SearchCompanyDocsR
             timeout=15.0,
         )
 
-        if (
-            raw_response
-            and "response" in raw_response
-            and raw_response["response"].get("result")
-        ):
+        if _has_search_results(raw_response):
             logger.info("search_company_docs ML inference successful")
             response = SearchCompanyDocsResponse.model_validate(raw_response)
             if args.exclude_instructions:
@@ -752,11 +738,7 @@ async def search_company_docs(args: SearchCompanyDocsArgs) -> SearchCompanyDocsR
         raw_response = None
 
     # Fall back to standard text-based search with pipeline
-    if (
-        not raw_response
-        or "response" not in raw_response
-        or not raw_response["response"].get("result")
-    ):
+    if not _has_search_results(raw_response):
         try:
             query = {
                 "query": {
@@ -935,11 +917,7 @@ async def search_thirdbridge(args: SearchThirdbridgeArgs) -> SearchThirdbridgeRe
             timeout=15.0,
         )
 
-        if (
-            raw_response
-            and "response" in raw_response
-            and raw_response["response"].get("result")
-        ):
+        if _has_search_results(raw_response):
             logger.info("search_thirdbridge ML inference successful")
             response = SearchThirdbridgeResponse.model_validate(raw_response)
             if args.exclude_instructions:
@@ -953,11 +931,7 @@ async def search_thirdbridge(args: SearchThirdbridgeArgs) -> SearchThirdbridgeRe
         raw_response = None
 
     # Fall back to standard text-based search with pipeline
-    if (
-        not raw_response
-        or "response" not in raw_response
-        or not raw_response["response"].get("result")
-    ):
+    if not _has_search_results(raw_response):
         try:
             query = {
                 "query": {
