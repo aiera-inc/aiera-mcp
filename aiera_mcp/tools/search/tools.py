@@ -24,6 +24,27 @@ from .models import (
 logger = logging.getLogger(__name__)
 
 
+def _build_filter_clause(
+    must_clauses: list,
+    must_not_clauses: list = None,
+) -> dict | None:
+    """Build a bool filter clause from must/must_not lists.
+
+    Returns None if no clauses are provided, allowing callers
+    to conditionally omit the filter entirely.
+    """
+    if not must_clauses and not must_not_clauses:
+        return None
+
+    bool_body = {}
+    if must_clauses:
+        bool_body["must"] = must_clauses
+    if must_not_clauses:
+        bool_body["must_not"] = must_not_clauses
+
+    return {"bool": bool_body}
+
+
 def _has_search_results(raw_response: dict) -> bool:
     """Check if a raw search API response contains results.
 
@@ -41,9 +62,9 @@ def _has_search_results(raw_response: dict) -> bool:
 async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsResponse:
     """Smart event transcript search with dual modes: semantic search or filtered browsing.
 
-    Uses the post_filter approach to avoid "hybrid query must be a top level query" errors,
-    similar to the opensearch-mcp-server-py implementation. This tool uses hybrid search
-    with neural embedding-based semantic search and the ext.ml_inference.query_text pattern.
+    Uses per-sub-query filters within the hybrid query for efficient pre-filtering.
+    Neural queries use the filter parameter for kNN pre-filtering, and text queries
+    are wrapped in a bool with a filter clause.
     """
     logger.info("tool called: search_transcripts")
 
@@ -98,41 +119,48 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
     ]:
         must_clauses.append({"term": {"transcript_section": args.transcript_section}})
 
-    k_value = args.size * 2
-    if must_clauses:
-        k_value = args.size * 20  # Increased for filters
+    # always exclude thirdbridge from transcript search
+    must_not_clauses = [{"term": {"transcript_event_source": "thirdbridge"}}]
 
-    if k_value > 10000:
-        k_value = 10000
+    filter_clause = _build_filter_clause(must_clauses, must_not_clauses)
+
+    k_value = min(args.size * 2, 10000)
+
+    # build neural sub-query with pre-filter
+    neural_inner = {
+        "query_text": args.query_text,
+        "k": k_value,
+    }
+    if filter_clause:
+        neural_inner["filter"] = filter_clause
+
+    # build text sub-query with filter
+    multi_match_query = {
+        "multi_match": {
+            "query": args.query_text,
+            "fields": ["text^2", "title", "transcript_speaker_name"],
+            "type": "best_fields",
+            "boost": 1.5,
+        }
+    }
+    if filter_clause:
+        text_query = {
+            "bool": {
+                "must": [multi_match_query],
+                "filter": [filter_clause],
+            }
+        }
+    else:
+        text_query = multi_match_query
 
     # first, try ML-based search...
     query = {
         "query": {
             "hybrid": {
                 "queries": [
-                    {
-                        "neural": {
-                            "embedding_384": {
-                                "query_text": args.query_text,
-                                "k": k_value,
-                            }
-                        }
-                    },
-                    {
-                        "multi_match": {
-                            "query": args.query_text,
-                            "fields": ["text^2", "title", "transcript_speaker_name"],
-                            "type": "best_fields",
-                            "boost": 1.5,
-                        }
-                    },
+                    {"neural": {"embedding_384": neural_inner}},
+                    text_query,
                 ]
-            }
-        },
-        "post_filter": {
-            "bool": {
-                "must": must_clauses,
-                "must_not": [{"term": {"transcript_event_source": "thirdbridge"}}],
             }
         },
         "size": args.size,
@@ -243,10 +271,9 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
 async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
     """Semantic search within SEC filing document chunks using embedding-based matching.
 
-    Uses the post_filter approach to avoid "hybrid query must be a top level query" errors,
-    similar to the opensearch-mcp-server-py implementation. This tool uses the
-    ext.ml_inference.query_text pattern to automatically generate embeddings
-    from the query text using the configured embedding pipeline.
+    Uses per-sub-query filters within the hybrid query for efficient pre-filtering.
+    Neural queries use the filter parameter for kNN pre-filtering, and text queries
+    are wrapped in a bool with a filter clause.
     """
     logger.info("tool called: search_filings")
 
@@ -294,40 +321,45 @@ async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
             }
         )
 
-    k_value = args.size * 2
-    if must_clauses:
-        k_value = args.size * 20  # Increased for filters
+    filter_clause = _build_filter_clause(must_clauses)
 
-    if k_value > 10000:
-        k_value = 10000
+    k_value = min(args.size * 2, 10000)
+
+    # build neural sub-query with pre-filter
+    neural_inner = {
+        "query_text": args.query_text,
+        "k": k_value,
+    }
+    if filter_clause:
+        neural_inner["filter"] = filter_clause
+
+    # build text sub-query with filter
+    multi_match_query = {
+        "multi_match": {
+            "query": args.query_text,
+            "fields": ["text^2", "title", "transcript_speaker_name"],
+            "type": "best_fields",
+            "boost": 1.5,
+        }
+    }
+    if filter_clause:
+        text_query = {
+            "bool": {
+                "must": [multi_match_query],
+                "filter": [filter_clause],
+            }
+        }
+    else:
+        text_query = multi_match_query
 
     # first, try ML-based search...
     query = {
         "query": {
             "hybrid": {
                 "queries": [
-                    {
-                        "neural": {
-                            "embedding_384": {
-                                "query_text": args.query_text,
-                                "k": k_value,
-                            }
-                        }
-                    },
-                    {
-                        "multi_match": {
-                            "query": args.query_text,
-                            "fields": ["text^2", "title", "transcript_speaker_name"],
-                            "type": "best_fields",
-                            "boost": 1.5,
-                        }
-                    },
+                    {"neural": {"embedding_384": neural_inner}},
+                    text_query,
                 ]
-            }
-        },
-        "post_filter": {
-            "bool": {
-                "must": must_clauses,
             }
         },
         "size": args.size,
@@ -431,10 +463,9 @@ async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
 async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
     """Semantic search within research document chunks using embedding-based matching.
 
-    Uses the post_filter approach to avoid "hybrid query must be a top level query" errors,
-    similar to the opensearch-mcp-server-py implementation. This tool uses the
-    ext.ml_inference.query_text pattern to automatically generate embeddings
-    from the query text using the configured embedding pipeline.
+    Uses per-sub-query filters within the hybrid query for efficient pre-filtering.
+    Neural queries use the filter parameter for kNN pre-filtering, and text queries
+    are wrapped in a bool with a filter clause.
     """
     logger.info("tool called: search_research")
 
@@ -478,40 +509,45 @@ async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
     if args.asset_types:
         must_clauses.append({"terms": {"asset_types": args.asset_types}})
 
-    k_value = args.size * 2
-    if must_clauses:
-        k_value = args.size * 20  # Increased for filters
+    filter_clause = _build_filter_clause(must_clauses)
 
-    if k_value > 10000:
-        k_value = 10000
+    k_value = min(args.size * 2, 10000)
+
+    # build neural sub-query with pre-filter
+    neural_inner = {
+        "query_text": args.query_text,
+        "k": k_value,
+    }
+    if filter_clause:
+        neural_inner["filter"] = filter_clause
+
+    # build text sub-query with filter
+    multi_match_query = {
+        "multi_match": {
+            "query": args.query_text,
+            "fields": ["text^2", "title"],
+            "type": "best_fields",
+            "boost": 1.5,
+        }
+    }
+    if filter_clause:
+        text_query = {
+            "bool": {
+                "must": [multi_match_query],
+                "filter": [filter_clause],
+            }
+        }
+    else:
+        text_query = multi_match_query
 
     # first, try ML-based search...
     query = {
         "query": {
             "hybrid": {
                 "queries": [
-                    {
-                        "neural": {
-                            "passage_chunk.knn": {
-                                "query_text": args.query_text,
-                                "k": k_value,
-                            }
-                        }
-                    },
-                    {
-                        "multi_match": {
-                            "query": args.query_text,
-                            "fields": ["text^2", "title"],
-                            "type": "best_fields",
-                            "boost": 1.5,
-                        }
-                    },
+                    {"neural": {"passage_chunk.knn": neural_inner}},
+                    text_query,
                 ]
-            }
-        },
-        "post_filter": {
-            "bool": {
-                "must": must_clauses,
             }
         },
         "size": args.size,
@@ -615,10 +651,9 @@ async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
 async def search_company_docs(args: SearchCompanyDocsArgs) -> SearchCompanyDocsResponse:
     """Semantic search within company document chunks using embedding-based matching.
 
-    Uses the post_filter approach to avoid "hybrid query must be a top level query" errors,
-    similar to the opensearch-mcp-server-py implementation. This tool uses the
-    ext.ml_inference.query_text pattern to automatically generate embeddings
-    from the query text using the configured embedding pipeline.
+    Uses per-sub-query filters within the hybrid query for efficient pre-filtering.
+    Neural queries use the filter parameter for kNN pre-filtering, and text queries
+    are wrapped in a bool with a filter clause.
     """
     logger.info("tool called: search_company_docs")
 
@@ -664,40 +699,45 @@ async def search_company_docs(args: SearchCompanyDocsArgs) -> SearchCompanyDocsR
 
         must_clauses.append({"range": {"publish_date": range}})
 
-    k_value = args.size * 2
-    if must_clauses:
-        k_value = args.size * 20  # Increased for filters
+    filter_clause = _build_filter_clause(must_clauses)
 
-    if k_value > 10000:
-        k_value = 10000
+    k_value = min(args.size * 2, 10000)
+
+    # build neural sub-query with pre-filter
+    neural_inner = {
+        "query_text": args.query_text,
+        "k": k_value,
+    }
+    if filter_clause:
+        neural_inner["filter"] = filter_clause
+
+    # build text sub-query with filter
+    multi_match_query = {
+        "multi_match": {
+            "query": args.query_text,
+            "fields": ["text^2", "title", "summary"],
+            "type": "best_fields",
+            "boost": 1.5,
+        }
+    }
+    if filter_clause:
+        text_query = {
+            "bool": {
+                "must": [multi_match_query],
+                "filter": [filter_clause],
+            }
+        }
+    else:
+        text_query = multi_match_query
 
     # first, try ML-based search...
     query = {
         "query": {
             "hybrid": {
                 "queries": [
-                    {
-                        "neural": {
-                            "passage_chunk.knn": {
-                                "query_text": args.query_text,
-                                "k": k_value,
-                            }
-                        }
-                    },
-                    {
-                        "multi_match": {
-                            "query": args.query_text,
-                            "fields": ["text^2", "title", "summary"],
-                            "type": "best_fields",
-                            "boost": 1.5,
-                        }
-                    },
+                    {"neural": {"passage_chunk.knn": neural_inner}},
+                    text_query,
                 ]
-            }
-        },
-        "post_filter": {
-            "bool": {
-                "must": must_clauses,
             }
         },
         "size": args.size,
@@ -801,10 +841,9 @@ async def search_company_docs(args: SearchCompanyDocsArgs) -> SearchCompanyDocsR
 async def search_thirdbridge(args: SearchThirdbridgeArgs) -> SearchThirdbridgeResponse:
     """Semantic search within Third Bridge expert interview transcripts using embedding-based matching.
 
-    Uses the post_filter approach to avoid "hybrid query must be a top level query" errors,
-    similar to the opensearch-mcp-server-py implementation. This tool uses the
-    ext.ml_inference.query_text pattern to automatically generate embeddings
-    from the query text using the configured embedding pipeline.
+    Uses per-sub-query filters within the hybrid query for efficient pre-filtering.
+    Neural queries use the filter parameter for kNN pre-filtering, and text queries
+    are wrapped in a bool with a filter clause.
     """
     logger.info("tool called: search_thirdbridge")
 
@@ -852,45 +891,50 @@ async def search_thirdbridge(args: SearchThirdbridgeArgs) -> SearchThirdbridgeRe
             {"term": {"event_content_type.keyword": args.event_content_type}}
         )
 
-    k_value = args.size * 2
-    if must_clauses:
-        k_value = args.size * 20  # Increased for filters
+    filter_clause = _build_filter_clause(must_clauses)
 
-    if k_value > 10000:
-        k_value = 10000
+    k_value = min(args.size * 2, 10000)
+
+    # build neural sub-query with pre-filter
+    neural_inner = {
+        "query_text": args.query_text,
+        "k": k_value,
+    }
+    if filter_clause:
+        neural_inner["filter"] = filter_clause
+
+    # build text sub-query with filter
+    multi_match_query = {
+        "multi_match": {
+            "query": args.query_text,
+            "fields": [
+                "text^2",
+                "event_title",
+                "event_agenda",
+                "event_insights",
+            ],
+            "type": "best_fields",
+            "boost": 1.5,
+        }
+    }
+    if filter_clause:
+        text_query = {
+            "bool": {
+                "must": [multi_match_query],
+                "filter": [filter_clause],
+            }
+        }
+    else:
+        text_query = multi_match_query
 
     # first, try ML-based search...
     query = {
         "query": {
             "hybrid": {
                 "queries": [
-                    {
-                        "neural": {
-                            "embedding_384": {
-                                "query_text": args.query_text,
-                                "k": k_value,
-                            }
-                        }
-                    },
-                    {
-                        "multi_match": {
-                            "query": args.query_text,
-                            "fields": [
-                                "text^2",
-                                "event_title",
-                                "event_agenda",
-                                "event_insights",
-                            ],
-                            "type": "best_fields",
-                            "boost": 1.5,
-                        }
-                    },
+                    {"neural": {"embedding_384": neural_inner}},
+                    text_query,
                 ]
-            }
-        },
-        "post_filter": {
-            "bool": {
-                "must": must_clauses,
             }
         },
         "size": args.size,

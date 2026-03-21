@@ -123,9 +123,11 @@ class TestSearchTranscripts:
         assert isinstance(result, SearchTranscriptsResponse)
         call_args = mock_http_dependencies["mock_make_request"].call_args
         data = call_args[1]["data"]
-        assert "post_filter" in data
-        # The section filter should be in must clauses
-        must_clauses = data["post_filter"]["bool"]["must"]
+        # The section filter should be in the neural query's filter
+        neural_filter = data["query"]["hybrid"]["queries"][0]["neural"][
+            "embedding_384"
+        ]["filter"]
+        must_clauses = neural_filter["bool"]["must"]
         section_filter = [c for c in must_clauses if "transcript_section" in str(c)]
         assert len(section_filter) > 0
 
@@ -155,7 +157,10 @@ class TestSearchTranscripts:
         assert isinstance(result, SearchTranscriptsResponse)
         call_args = mock_http_dependencies["mock_make_request"].call_args
         data = call_args[1]["data"]
-        must_clauses = data["post_filter"]["bool"]["must"]
+        neural_filter = data["query"]["hybrid"]["queries"][0]["neural"][
+            "embedding_384"
+        ]["filter"]
+        must_clauses = neural_filter["bool"]["must"]
         event_type_filter = [
             c for c in must_clauses if "transcript_event_type" in str(c)
         ]
@@ -306,8 +311,10 @@ class TestSearchFilings:
         assert isinstance(result, SearchFilingsResponse)
         call_args = mock_http_dependencies["mock_make_request"].call_args
         data = call_args[1]["data"]
-        assert "post_filter" in data
-        must_clauses = data["post_filter"]["bool"]["must"]
+        neural_filter = data["query"]["hybrid"]["queries"][0]["neural"][
+            "embedding_384"
+        ]["filter"]
+        must_clauses = neural_filter["bool"]["must"]
         filing_type_filter = [c for c in must_clauses if "filing_type" in str(c)]
         assert len(filing_type_filter) > 0
 
@@ -337,7 +344,10 @@ class TestSearchFilings:
         assert isinstance(result, SearchFilingsResponse)
         call_args = mock_http_dependencies["mock_make_request"].call_args
         data = call_args[1]["data"]
-        must_clauses = data["post_filter"]["bool"]["must"]
+        neural_filter = data["query"]["hybrid"]["queries"][0]["neural"][
+            "embedding_384"
+        ]["filter"]
+        must_clauses = neural_filter["bool"]["must"]
         date_filter = [c for c in must_clauses if "range" in str(c)]
         assert len(date_filter) > 0
 
@@ -506,7 +516,10 @@ class TestSearchResearch:
         assert isinstance(result, SearchResearchResponse)
         call_args = mock_http_dependencies["mock_make_request"].call_args
         data = call_args[1]["data"]
-        must_clauses = data["post_filter"]["bool"]["must"]
+        neural_filter = data["query"]["hybrid"]["queries"][0]["neural"][
+            "passage_chunk.knn"
+        ]["filter"]
+        must_clauses = neural_filter["bool"]["must"]
         date_filter = [c for c in must_clauses if "range" in str(c)]
         assert len(date_filter) > 0
 
@@ -534,7 +547,10 @@ class TestSearchResearch:
         assert isinstance(result, SearchResearchResponse)
         call_args = mock_http_dependencies["mock_make_request"].call_args
         data = call_args[1]["data"]
-        must_clauses = data["post_filter"]["bool"]["must"]
+        neural_filter = data["query"]["hybrid"]["queries"][0]["neural"][
+            "passage_chunk.knn"
+        ]["filter"]
+        must_clauses = neural_filter["bool"]["must"]
         document_id_filter = [c for c in must_clauses if "parent_research_id" in str(c)]
         assert len(document_id_filter) > 0
 
@@ -562,7 +578,10 @@ class TestSearchResearch:
         assert isinstance(result, SearchResearchResponse)
         call_args = mock_http_dependencies["mock_make_request"].call_args
         data = call_args[1]["data"]
-        must_clauses = data["post_filter"]["bool"]["must"]
+        neural_filter = data["query"]["hybrid"]["queries"][0]["neural"][
+            "passage_chunk.knn"
+        ]["filter"]
+        must_clauses = neural_filter["bool"]["must"]
         author_filter = [c for c in must_clauses if "authors.person_id" in str(c)]
         assert len(author_filter) == 1
         assert author_filter[0]["terms"]["authors.person_id"] == ["12345"]
@@ -597,7 +616,10 @@ class TestSearchResearch:
         assert isinstance(result, SearchResearchResponse)
         call_args = mock_http_dependencies["mock_make_request"].call_args
         data = call_args[1]["data"]
-        must_clauses = data["post_filter"]["bool"]["must"]
+        neural_filter = data["query"]["hybrid"]["queries"][0]["neural"][
+            "passage_chunk.knn"
+        ]["filter"]
+        must_clauses = neural_filter["bool"]["must"]
         # Should have 6 filters: parent_research_id, date range, author, aiera_provider_id, asset_classes, asset_types
         assert len(must_clauses) == 6
 
@@ -625,7 +647,10 @@ class TestSearchResearch:
         assert isinstance(result, SearchResearchResponse)
         call_args = mock_http_dependencies["mock_make_request"].call_args
         data = call_args[1]["data"]
-        must_clauses = data["post_filter"]["bool"]["must"]
+        neural_filter = data["query"]["hybrid"]["queries"][0]["neural"][
+            "passage_chunk.knn"
+        ]["filter"]
+        must_clauses = neural_filter["bool"]["must"]
         asset_classes_filter = [c for c in must_clauses if "asset_classes" in str(c)]
         assert len(asset_classes_filter) == 1
         assert asset_classes_filter[0]["terms"]["asset_classes"] == [
@@ -657,7 +682,10 @@ class TestSearchResearch:
         assert isinstance(result, SearchResearchResponse)
         call_args = mock_http_dependencies["mock_make_request"].call_args
         data = call_args[1]["data"]
-        must_clauses = data["post_filter"]["bool"]["must"]
+        neural_filter = data["query"]["hybrid"]["queries"][0]["neural"][
+            "passage_chunk.knn"
+        ]["filter"]
+        must_clauses = neural_filter["bool"]["must"]
         asset_types_filter = [c for c in must_clauses if "asset_types" in str(c)]
         assert len(asset_types_filter) == 1
         assert asset_types_filter[0]["terms"]["asset_types"] == ["Common Stock"]
@@ -894,7 +922,10 @@ class TestSearchCompanyDocs:
         assert isinstance(result, SearchCompanyDocsResponse)
         call_args = mock_http_dependencies["mock_make_request"].call_args
         data = call_args[1]["data"]
-        must_clauses = data["post_filter"]["bool"]["must"]
+        neural_filter = data["query"]["hybrid"]["queries"][0]["neural"][
+            "passage_chunk.knn"
+        ]["filter"]
+        must_clauses = neural_filter["bool"]["must"]
         doc_id_filter = [c for c in must_clauses if "company_doc_id" in str(c)]
         assert len(doc_id_filter) > 0
 
@@ -919,7 +950,10 @@ class TestSearchCompanyDocs:
         assert isinstance(result, SearchCompanyDocsResponse)
         call_args = mock_http_dependencies["mock_make_request"].call_args
         data = call_args[1]["data"]
-        must_clauses = data["post_filter"]["bool"]["must"]
+        neural_filter = data["query"]["hybrid"]["queries"][0]["neural"][
+            "passage_chunk.knn"
+        ]["filter"]
+        must_clauses = neural_filter["bool"]["must"]
         category_filter = [c for c in must_clauses if "category.keyword" in str(c)]
         assert len(category_filter) == 1
         assert category_filter[0]["terms"]["category.keyword"] == [
@@ -948,7 +982,10 @@ class TestSearchCompanyDocs:
         assert isinstance(result, SearchCompanyDocsResponse)
         call_args = mock_http_dependencies["mock_make_request"].call_args
         data = call_args[1]["data"]
-        must_clauses = data["post_filter"]["bool"]["must"]
+        neural_filter = data["query"]["hybrid"]["queries"][0]["neural"][
+            "passage_chunk.knn"
+        ]["filter"]
+        must_clauses = neural_filter["bool"]["must"]
         keywords_filter = [c for c in must_clauses if "keywords" in str(c)]
         assert len(keywords_filter) == 1
 
@@ -974,7 +1011,10 @@ class TestSearchCompanyDocs:
         assert isinstance(result, SearchCompanyDocsResponse)
         call_args = mock_http_dependencies["mock_make_request"].call_args
         data = call_args[1]["data"]
-        must_clauses = data["post_filter"]["bool"]["must"]
+        neural_filter = data["query"]["hybrid"]["queries"][0]["neural"][
+            "passage_chunk.knn"
+        ]["filter"]
+        must_clauses = neural_filter["bool"]["must"]
         date_filter = [c for c in must_clauses if "range" in str(c)]
         assert len(date_filter) > 0
 
@@ -1123,7 +1163,10 @@ class TestSearchThirdbridge:
         assert isinstance(result, SearchThirdbridgeResponse)
         call_args = mock_http_dependencies["mock_make_request"].call_args
         data = call_args[1]["data"]
-        must_clauses = data["post_filter"]["bool"]["must"]
+        neural_filter = data["query"]["hybrid"]["queries"][0]["neural"][
+            "embedding_384"
+        ]["filter"]
+        must_clauses = neural_filter["bool"]["must"]
         company_filter = [c for c in must_clauses if "primary_company_ids" in str(c)]
         assert len(company_filter) > 0
         # Should be a bool with should matching both primary and secondary
@@ -1154,7 +1197,10 @@ class TestSearchThirdbridge:
         assert isinstance(result, SearchThirdbridgeResponse)
         call_args = mock_http_dependencies["mock_make_request"].call_args
         data = call_args[1]["data"]
-        must_clauses = data["post_filter"]["bool"]["must"]
+        neural_filter = data["query"]["hybrid"]["queries"][0]["neural"][
+            "embedding_384"
+        ]["filter"]
+        must_clauses = neural_filter["bool"]["must"]
         tb_filter = [c for c in must_clauses if "thirdbridge_id" in str(c)]
         assert len(tb_filter) > 0
 
@@ -1180,7 +1226,10 @@ class TestSearchThirdbridge:
         assert isinstance(result, SearchThirdbridgeResponse)
         call_args = mock_http_dependencies["mock_make_request"].call_args
         data = call_args[1]["data"]
-        must_clauses = data["post_filter"]["bool"]["must"]
+        neural_filter = data["query"]["hybrid"]["queries"][0]["neural"][
+            "embedding_384"
+        ]["filter"]
+        must_clauses = neural_filter["bool"]["must"]
         date_filter = [c for c in must_clauses if "range" in str(c)]
         assert len(date_filter) > 0
 
@@ -1205,7 +1254,10 @@ class TestSearchThirdbridge:
         assert isinstance(result, SearchThirdbridgeResponse)
         call_args = mock_http_dependencies["mock_make_request"].call_args
         data = call_args[1]["data"]
-        must_clauses = data["post_filter"]["bool"]["must"]
+        neural_filter = data["query"]["hybrid"]["queries"][0]["neural"][
+            "embedding_384"
+        ]["filter"]
+        must_clauses = neural_filter["bool"]["must"]
         content_type_filter = [
             c for c in must_clauses if "event_content_type" in str(c)
         ]
