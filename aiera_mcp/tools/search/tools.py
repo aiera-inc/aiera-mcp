@@ -6,6 +6,7 @@ import logging
 import asyncio
 
 from ..base import get_http_client, make_aiera_request
+from ..utils import correct_bloomberg_ticker
 from ... import get_api_key
 from .models import (
     SearchTranscriptsArgs,
@@ -474,6 +475,11 @@ async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
     api_key = get_api_key()
 
     must_clauses = []
+
+    # add bloomberg ticker filter...
+    if args.bloomberg_ticker:
+        ticker = correct_bloomberg_ticker(args.bloomberg_ticker)
+        must_clauses.append({"term": {"bloomberg_tickers": ticker}})
 
     # add document ID filter...
     if args.document_ids:

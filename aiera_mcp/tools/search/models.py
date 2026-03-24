@@ -177,6 +177,7 @@ class SearchResearchArgs(BaseAieraArgs):
     WHEN TO USE THIS TOOL:
     - Use this when you need to find specific content (analyses, insights, recommendations) within research documents
     - Use this for targeted content extraction from research reports
+    - When searching for company-specific research, provide the bloomberg_ticker to ensure results are scoped to that company
 
     RETURNS: Relevant research chunks with context, metadata, and relevance scores.
     Results are individual sections/chunks, not full research documents.
@@ -206,6 +207,11 @@ class SearchResearchArgs(BaseAieraArgs):
 
     query_text: str = Field(
         description="Search query for semantic matching within research chunks. Examples: 'earnings outlook', 'competitive analysis', 'market trends'.",
+    )
+
+    bloomberg_ticker: Optional[str] = Field(
+        default=None,
+        description="Optional Bloomberg ticker to filter research by company. Format: 'TICKER:COUNTRY' (e.g., 'AAPL:US', 'MA:US'). When provided, pre-filters search to only include research tagged for this company, significantly improving relevance for company-specific queries.",
     )
 
     document_ids: Optional[List[str]] = Field(
