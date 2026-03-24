@@ -119,9 +119,9 @@ class TestFindEquitiesArgs:
         args = FindEquitiesArgs(bloomberg_ticker="AAPL:US")
         assert args.bloomberg_ticker == "AAPL:US"
 
-        # Test with multiple tickers
+        # Test with multiple tickers (GOOGL:US is aliased to GOOG:US)
         args = FindEquitiesArgs(bloomberg_ticker="AAPL:US,MSFT:US,GOOGL:US")
-        assert args.bloomberg_ticker == "AAPL:US,MSFT:US,GOOGL:US"
+        assert args.bloomberg_ticker == "AAPL:US,MSFT:US,GOOG:US"
 
 
 @pytest.mark.unit

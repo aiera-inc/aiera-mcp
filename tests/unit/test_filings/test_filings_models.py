@@ -140,13 +140,13 @@ class TestFindFilingsArgs:
         )
         assert args.bloomberg_ticker == "AAPL:US"
 
-        # Test with multiple tickers
+        # Test with multiple tickers (GOOGL:US is aliased to GOOG:US)
         args = FindFilingsArgs(
             start_date="2023-10-01",
             end_date="2023-10-31",
             bloomberg_ticker="AAPL:US,MSFT:US,GOOGL:US",
         )
-        assert args.bloomberg_ticker == "AAPL:US,MSFT:US,GOOGL:US"
+        assert args.bloomberg_ticker == "AAPL:US,MSFT:US,GOOG:US"
 
 
 @pytest.mark.unit
