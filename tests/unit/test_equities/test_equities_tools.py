@@ -288,26 +288,34 @@ class TestGetSectorsAndSubsectors:
         """Test successful sectors and subsectors retrieval."""
         # Setup
         sectors_response = {
-            "response": [
-                {
-                    "sector_id": 10,
-                    "name": "Technology",
-                    "gics_code": "45",
-                    "subsectors": [
-                        {
-                            "subsector_id": 1010,
-                            "name": "Software",
-                            "gics_code": "45103010",
-                        }
-                    ],
+            "response": {
+                "pagination": {
+                    "total_count": 2,
+                    "current_page": 1,
+                    "total_pages": 1,
+                    "page_size": 25,
                 },
-                {
-                    "sector_id": 20,
-                    "name": "Healthcare",
-                    "gics_code": "35",
-                    "subsectors": [],
-                },
-            ],
+                "data": [
+                    {
+                        "sector_id": 10,
+                        "name": "Technology",
+                        "gics_code": "45",
+                        "subsectors": [
+                            {
+                                "subsector_id": 1010,
+                                "name": "Software",
+                                "gics_code": "45103010",
+                            }
+                        ],
+                    },
+                    {
+                        "sector_id": 20,
+                        "name": "Healthcare",
+                        "gics_code": "35",
+                        "subsectors": [],
+                    },
+                ],
+            },
             "instructions": [],
         }
         mock_http_dependencies["mock_make_request"].return_value = sectors_response
@@ -320,10 +328,11 @@ class TestGetSectorsAndSubsectors:
         # Verify
         assert isinstance(result, GetSectorsSubsectorsResponse)
         assert result.response is not None
-        assert len(result.response) == 2
+        assert len(result.response["data"]) == 2
+        assert result.response["pagination"]["total_count"] == 2
 
         # Check first sector
-        first_sector = result.response[0]
+        first_sector = result.response["data"][0]
         assert first_sector["sector_id"] == 10
         assert first_sector["name"] == "Technology"
         assert first_sector["gics_code"] == "45"
@@ -332,7 +341,7 @@ class TestGetSectorsAndSubsectors:
         assert first_sector["subsectors"][0]["name"] == "Software"
 
         # Check sector without subsector
-        second_sector = result.response[1]
+        second_sector = result.response["data"][1]
         assert second_sector["sector_id"] == 20
         assert second_sector["name"] == "Healthcare"
         assert second_sector["gics_code"] == "35"
@@ -567,15 +576,23 @@ class TestEquitiesToolsErrorHandling:
         """Test handling of missing sector/subsector data."""
         # Setup
         missing_sector_response = {
-            "response": [
-                {"sector_id": 10, "name": "Technology", "gics_code": "45"},
-                {
-                    "sector_id": 20,
-                    "name": "Healthcare",
-                    "gics_code": "35",
-                    "subsectors": [],
+            "response": {
+                "pagination": {
+                    "total_count": 2,
+                    "current_page": 1,
+                    "total_pages": 1,
+                    "page_size": 25,
                 },
-            ],
+                "data": [
+                    {"sector_id": 10, "name": "Technology", "gics_code": "45"},
+                    {
+                        "sector_id": 20,
+                        "name": "Healthcare",
+                        "gics_code": "35",
+                        "subsectors": [],
+                    },
+                ],
+            },
             "instructions": [],
         }
         mock_http_dependencies["mock_make_request"].return_value = (
@@ -588,11 +605,11 @@ class TestEquitiesToolsErrorHandling:
         result = await get_sectors_and_subsectors(args)
 
         # Verify handling of missing/empty subsector data
-        assert len(result.response) == 2
-        first_sector = result.response[0]
+        assert len(result.response["data"]) == 2
+        first_sector = result.response["data"][0]
         assert first_sector["name"] == "Technology"
 
-        second_sector = result.response[1]
+        second_sector = result.response["data"][1]
         assert second_sector["name"] == "Healthcare"
         assert second_sector["subsectors"] == []
 
