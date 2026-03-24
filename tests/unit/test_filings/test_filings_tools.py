@@ -220,7 +220,7 @@ class TestGetFiling:
 
     @pytest.mark.asyncio
     async def test_get_filing_not_found(self, mock_http_dependencies):
-        """Test get_filing when filing is not found."""
+        """Test get_filing when filing is not found returns explicit error."""
         # Setup - empty response
         mock_http_dependencies["mock_make_request"].return_value = {
             "response": {"data": []},
@@ -229,11 +229,16 @@ class TestGetFiling:
 
         args = GetFilingArgs(filing_id="nonexistent")
 
-        # Execute - with pass-through model, the response is returned as-is
+        # Execute
         result = await get_filing(args)
+
+        # Verify - should return explicit error message
         assert isinstance(result, GetFilingResponse)
         assert result.response is not None
         assert len(result.response["data"]) == 0
+        assert result.error is not None
+        assert "Filing not found" in result.error
+        assert "nonexistent" in result.error
 
     @pytest.mark.asyncio
     async def test_get_filing_date_parsing(self, mock_http_dependencies):

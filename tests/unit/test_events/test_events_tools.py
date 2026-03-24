@@ -403,7 +403,7 @@ class TestGetEvent:
 
     @pytest.mark.asyncio
     async def test_get_event_not_found(self, mock_http_dependencies):
-        """Test get_event when event is not found."""
+        """Test get_event when event is not found returns explicit error."""
         # Setup - empty response
         mock_http_dependencies["mock_make_request"].return_value = {
             "response": {"data": []},
@@ -415,9 +415,12 @@ class TestGetEvent:
         # Execute
         result = await get_event(args)
 
-        # Verify - data array should be empty
-        assert len(result.response["data"]) == 0
+        # Verify - should return explicit error message
         assert isinstance(result, GetEventResponse)
+        assert len(result.response["data"]) == 0
+        assert result.error is not None
+        assert "Event not found" in result.error
+        assert "nonexistent" in result.error
 
     @pytest.mark.asyncio
     async def test_get_event_date_parsing(self, mock_http_dependencies):

@@ -97,6 +97,13 @@ async def get_event(args: GetEventArgs) -> GetEventResponse:
     )
 
     response = GetEventResponse.model_validate(raw_response)
+
+    # Check if the requested event was found
+    response_data = response.response or {}
+    data = response_data.get("data", []) if isinstance(response_data, dict) else []
+    if not data:
+        response.error = f"Event not found for event_id '{args.event_id}'. The event may not exist or the ID may be invalid. Use find_events or search_transcripts to discover valid event IDs."
+
     if args.exclude_instructions:
         response.instructions = []
     return response

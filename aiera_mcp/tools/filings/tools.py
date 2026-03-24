@@ -68,6 +68,13 @@ async def get_filing(args: GetFilingArgs) -> GetFilingResponse:
     )
 
     response = GetFilingResponse.model_validate(raw_response)
+
+    # Check if the requested filing was found
+    response_data = response.response or {}
+    data = response_data.get("data", []) if isinstance(response_data, dict) else []
+    if not data:
+        response.error = f"Filing not found for filing_id '{args.filing_id}'. The filing may not exist or the ID may be invalid. Use find_filings or search_filings to discover valid filing IDs."
+
     if args.exclude_instructions:
         response.instructions = []
     return response
