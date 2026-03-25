@@ -342,11 +342,9 @@ class GetFinancialsArgs(BaseToolArgs, BloombergTickerMixin):
         description="The format type of the financial data: 'as-reported' for original filings or 'standardized' for normalized data.",
     )
 
-    period: Literal["annual", "quarterly", "semi-annual", "ltm", "ytd", "latest"] = (
-        Field(
-            default="annual",
-            description="The reporting period type. Options: 'annual' (full fiscal year), 'quarterly' (Q1-Q4, requires calendar_quarter), 'semi-annual' (half year), 'ltm' (last twelve months trailing), 'ytd' (year to date), 'latest' (most recent available).",
-        )
+    period: Literal["annual", "quarterly", "semi-annual"] = Field(
+        default="annual",
+        description="The reporting period type. Options: 'annual' (full fiscal year), 'quarterly' (Q1-Q4, requires calendar_quarter), 'semi-annual' (half year).",
     )
 
     calendar_year: int = Field(description="The calendar year for the financial data.")
@@ -408,11 +406,9 @@ class GetRatiosArgs(BaseToolArgs, BloombergTickerMixin):
         description="Bloomberg ticker in format 'TICKER:COUNTRY' (e.g., 'AAPL:US')."
     )
 
-    period: Literal["annual", "quarterly", "semi-annual", "ltm", "ytd", "latest"] = (
-        Field(
-            default="annual",
-            description="The reporting period type. Options: 'annual' (full fiscal year), 'quarterly' (Q1-Q4, requires calendar_quarter), 'semi-annual' (half year), 'ltm' (last twelve months trailing), 'ytd' (year to date), 'latest' (most recent available).",
-        )
+    period: Literal["annual", "quarterly", "semi-annual"] = Field(
+        default="annual",
+        description="The reporting period type. Options: 'annual' (full fiscal year), 'quarterly' (Q1-Q4, requires calendar_quarter), 'semi-annual' (half year).",
     )
 
     calendar_year: int = Field(description="The calendar year for the ratio data.")
@@ -464,11 +460,9 @@ class GetKpisAndSegmentsArgs(BaseToolArgs, BloombergTickerMixin):
         description="Bloomberg ticker in format 'TICKER:COUNTRY' (e.g., 'AAPL:US')."
     )
 
-    period: Literal["annual", "quarterly", "semi-annual", "ltm", "ytd", "latest"] = (
-        Field(
-            default="annual",
-            description="The reporting period type. Options: 'annual' (full fiscal year), 'quarterly' (Q1-Q4, requires calendar_quarter), 'semi-annual' (half year), 'ltm' (last twelve months trailing), 'ytd' (year to date), 'latest' (most recent available).",
-        )
+    period: Literal["annual", "quarterly", "semi-annual"] = Field(
+        default="annual",
+        description="The reporting period type. Options: 'annual' (full fiscal year), 'quarterly' (Q1-Q4, requires calendar_quarter), 'semi-annual' (half year).",
     )
 
     calendar_year: int = Field(

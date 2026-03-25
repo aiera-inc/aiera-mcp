@@ -559,7 +559,7 @@ class TestGetFinancialsArgs:
 
     @pytest.mark.parametrize(
         "period",
-        ["annual", "quarterly", "semi-annual", "ltm", "ytd", "latest"],
+        ["annual", "quarterly", "semi-annual"],
     )
     def test_get_financials_args_valid_periods(self, period):
         """Test all valid period values."""
@@ -647,7 +647,7 @@ class TestGetRatiosArgs:
 
     @pytest.mark.parametrize(
         "period",
-        ["annual", "quarterly", "semi-annual", "ltm", "ytd", "latest"],
+        ["annual", "quarterly", "semi-annual"],
     )
     def test_get_ratios_args_valid_periods(self, period):
         """Test all valid period values."""
@@ -707,7 +707,7 @@ class TestGetKpisAndSegmentsArgs:
 
     @pytest.mark.parametrize(
         "period",
-        ["annual", "quarterly", "semi-annual", "ltm", "ytd", "latest"],
+        ["annual", "quarterly", "semi-annual"],
     )
     def test_get_kpis_and_segments_args_valid_periods(self, period):
         """Test all valid period values."""
