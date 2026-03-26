@@ -15,7 +15,6 @@ from .models import (
     GetResearchAssetTypesArgs,
     GetResearchSubjectsArgs,
     GetResearchProductFocusesArgs,
-    GetResearchDisciplineTypesArgs,
     GetResearchRegionTypesArgs,
     GetResearchCountryCodesArgs,
     FindResearchResponse,
@@ -26,7 +25,6 @@ from .models import (
     GetResearchAssetTypesResponse,
     GetResearchSubjectsResponse,
     GetResearchProductFocusesResponse,
-    GetResearchDisciplineTypesResponse,
     GetResearchRegionTypesResponse,
     GetResearchCountryCodesResponse,
 )
@@ -246,32 +244,6 @@ async def get_research_product_focuses(
     )
 
     response = GetResearchProductFocusesResponse.model_validate(raw_response)
-    if args.exclude_instructions:
-        response.instructions = []
-    return response
-
-
-async def get_research_discipline_types(
-    args: GetResearchDisciplineTypesArgs,
-) -> GetResearchDisciplineTypesResponse:
-    """Retrieve all available research discipline types."""
-    logger.info("tool called: get_research_discipline_types")
-
-    # Get client and API key (no context needed for standard MCP)
-    client = await get_http_client(None)
-    api_key = get_api_key()
-
-    params = args.model_dump(exclude_none=True)
-
-    raw_response = await make_aiera_request(
-        client=client,
-        method="GET",
-        endpoint="/chat-support/get-research-discipline-types",
-        api_key=api_key,
-        params=params,
-    )
-
-    response = GetResearchDisciplineTypesResponse.model_validate(raw_response)
     if args.exclude_instructions:
         response.instructions = []
     return response

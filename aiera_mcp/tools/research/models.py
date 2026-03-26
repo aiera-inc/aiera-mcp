@@ -174,7 +174,7 @@ class FindResearchArgs(BaseToolArgs, BloombergTickerMixin):
 
     discipline_types: Optional[List[str]] = Field(
         default=None,
-        description="Filter by one or more discipline types. Obtain valid values from get_research_discipline_types. Example: ['Fundamental', 'Quantitative'].",
+        description="Filter by one or more discipline types. Example: ['Fundamental', 'Quantitative'].",
     )
 
     search: Optional[str] = Field(
@@ -488,50 +488,6 @@ class GetResearchProductFocusesArgs(BaseToolArgs):
     )
 
 
-class GetResearchDisciplineTypesArgs(BaseToolArgs):
-    """Retrieve all available research discipline types with their names and document counts. Used to find valid discipline type values for filtering research tools.
-
-    WHEN TO USE:
-    - Use this to discover available discipline types before filtering research
-    - Use this to understand the distribution of research across discipline types
-
-    WORKFLOW: Use this tool to obtain discipline type names, then pass them to find_research or search_research.
-    """
-
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
-
-    self_identification: Optional[str] = Field(
-        default=None,
-        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
-    )
-
-    include_base_instructions: Optional[bool] = Field(
-        default=True,
-        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
-    )
-
-    exclude_instructions: Optional[bool] = Field(
-        default=False,
-        description="Whether to exclude all instructions from the tool response.",
-    )
-
-    search: Optional[str] = Field(
-        default=None,
-        description="Search term to filter discipline types by name.",
-    )
-
-    page: Union[int, str] = Field(
-        default=1, ge=1, description="Page number for pagination (1-based)."
-    )
-
-    page_size: Union[int, str] = Field(
-        default=25, ge=1, le=25, description="Number of items per page (1-25)."
-    )
-
-
 class GetResearchRegionTypesArgs(BaseToolArgs):
     """Retrieve all available research region types with their names and document counts. Used to find valid region type values for filtering research tools.
 
@@ -665,12 +621,6 @@ class GetResearchSubjectsResponse(BaseAieraResponse):
 
 class GetResearchProductFocusesResponse(BaseAieraResponse):
     """Response for get_research_product_focuses tool - passes through the API response structure."""
-
-    response: Optional[Any] = Field(None, description="Response data from the API")
-
-
-class GetResearchDisciplineTypesResponse(BaseAieraResponse):
-    """Response for get_research_discipline_types tool - passes through the API response structure."""
 
     response: Optional[Any] = Field(None, description="Response data from the API")
 

@@ -11,7 +11,6 @@ from .tools import (
     get_research_asset_types,
     get_research_subjects,
     get_research_product_focuses,
-    get_research_discipline_types,
     get_research_region_types,
     get_research_country_codes,
 )
@@ -24,7 +23,6 @@ from .models import (
     GetResearchAssetTypesArgs,
     GetResearchSubjectsArgs,
     GetResearchProductFocusesArgs,
-    GetResearchDisciplineTypesArgs,
     GetResearchRegionTypesArgs,
     GetResearchCountryCodesArgs,
     FindResearchResponse,
@@ -35,7 +33,6 @@ from .models import (
     GetResearchAssetTypesResponse,
     GetResearchSubjectsResponse,
     GetResearchProductFocusesResponse,
-    GetResearchDisciplineTypesResponse,
     GetResearchRegionTypesResponse,
     GetResearchCountryCodesResponse,
 )
@@ -50,7 +47,6 @@ __all__ = [
     "get_research_asset_types",
     "get_research_subjects",
     "get_research_product_focuses",
-    "get_research_discipline_types",
     "get_research_region_types",
     "get_research_country_codes",
     # Parameter models
@@ -62,7 +58,6 @@ __all__ = [
     "GetResearchAssetTypesArgs",
     "GetResearchSubjectsArgs",
     "GetResearchProductFocusesArgs",
-    "GetResearchDisciplineTypesArgs",
     "GetResearchRegionTypesArgs",
     "GetResearchCountryCodesArgs",
     # Response models
@@ -74,7 +69,6 @@ __all__ = [
     "GetResearchAssetTypesResponse",
     "GetResearchSubjectsResponse",
     "GetResearchProductFocusesResponse",
-    "GetResearchDisciplineTypesResponse",
     "GetResearchRegionTypesResponse",
     "GetResearchCountryCodesResponse",
 ]

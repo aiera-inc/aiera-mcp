@@ -40,7 +40,6 @@ from .research import (
     get_research_asset_types,
     get_research_subjects,
     get_research_product_focuses,
-    get_research_discipline_types,
     get_research_region_types,
     get_research_country_codes,
 )
@@ -90,7 +89,6 @@ from .research import (
     GetResearchAssetTypesArgs,
     GetResearchSubjectsArgs,
     GetResearchProductFocusesArgs,
-    GetResearchDisciplineTypesArgs,
     GetResearchRegionTypesArgs,
     GetResearchCountryCodesArgs,
 )
@@ -371,15 +369,6 @@ TOOL_REGISTRY = {
         "input_schema": GetResearchProductFocusesArgs.model_json_schema(),
         "function": get_research_product_focuses,
         "args_model": GetResearchProductFocusesArgs,
-        "category": "research",
-        "read_only": True,
-        "destructive": False,
-    },
-    "get_research_discipline_types": {
-        "display_name": "Get Research Discipline Types",
-        "input_schema": GetResearchDisciplineTypesArgs.model_json_schema(),
-        "function": get_research_discipline_types,
-        "args_model": GetResearchDisciplineTypesArgs,
         "category": "research",
         "read_only": True,
         "destructive": False,

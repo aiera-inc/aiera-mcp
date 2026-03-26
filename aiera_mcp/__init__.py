@@ -113,7 +113,6 @@ AVAILABLE_TOOLS = [
     "get_research_asset_types",
     "get_research_subjects",
     "get_research_product_focuses",
-    "get_research_discipline_types",
     "get_research_region_types",
     "get_research_country_codes",
     # Search Tools
@@ -158,7 +157,6 @@ RESEARCH_TOOLS = [
     "get_research_asset_types",
     "get_research_subjects",
     "get_research_product_focuses",
-    "get_research_discipline_types",
     "get_research_region_types",
     "get_research_country_codes",
 ]
@@ -202,7 +200,6 @@ from .tools.research import (
     get_research_asset_types,
     get_research_subjects,
     get_research_product_focuses,
-    get_research_discipline_types,
     get_research_region_types,
     get_research_country_codes,
 )
@@ -274,7 +271,6 @@ __all__ = [
     "get_research_asset_types",
     "get_research_subjects",
     "get_research_product_focuses",
-    "get_research_discipline_types",
     "get_research_region_types",
     "get_research_country_codes",
     "search_transcripts",
