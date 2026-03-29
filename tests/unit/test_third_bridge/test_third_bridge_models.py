@@ -171,10 +171,32 @@ class TestGetThirdBridgeEventArgs:
         assert "thirdbridge_event_id" in dumped_internal
         assert dumped_internal["thirdbridge_event_id"] == "tb123"
 
-    def test_get_third_bridge_event_args_required_field(self):
-        """Test that thirdbridge_event_id is required."""
+    def test_get_third_bridge_event_args_with_aiera_event_id(self):
+        """Test GetThirdBridgeEventArgs with aiera_event_id instead of thirdbridge_event_id."""
+        args = GetThirdBridgeEventArgs(aiera_event_id=12345)
+        assert args.aiera_event_id == 12345
+        assert args.thirdbridge_event_id is None
+
+    def test_get_third_bridge_event_args_with_both_ids(self):
+        """Test GetThirdBridgeEventArgs with both IDs provided."""
+        args = GetThirdBridgeEventArgs(
+            thirdbridge_event_id="tb123", aiera_event_id=12345
+        )
+        assert args.thirdbridge_event_id == "tb123"
+        assert args.aiera_event_id == 12345
+
+    def test_get_third_bridge_event_args_aiera_event_id_serialization(self):
+        """Test that aiera_event_id serializes correctly for API."""
+        args = GetThirdBridgeEventArgs(aiera_event_id=12345)
+        dumped = args.model_dump(exclude_none=True, by_alias=True)
+        assert "aiera_event_id" in dumped
+        assert dumped["aiera_event_id"] == 12345
+        assert "event_id" not in dumped
+
+    def test_get_third_bridge_event_args_requires_at_least_one_id(self):
+        """Test that at least one of thirdbridge_event_id or aiera_event_id is required."""
         with pytest.raises(ValidationError):
-            GetThirdBridgeEventArgs()  # Missing required field
+            GetThirdBridgeEventArgs()  # No IDs provided
 
 
 @pytest.mark.unit

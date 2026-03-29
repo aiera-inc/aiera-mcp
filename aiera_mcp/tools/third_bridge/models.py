@@ -2,7 +2,13 @@
 
 """Third Bridge domain models for Aiera MCP."""
 
-from pydantic import BaseModel, Field, field_validator, field_serializer
+from pydantic import (
+    BaseModel,
+    Field,
+    field_validator,
+    field_serializer,
+    model_validator,
+)
 from typing import Optional, Any, Union
 
 from ..common.models import BaseAieraResponse
@@ -171,7 +177,7 @@ class GetThirdBridgeEventArgs(BaseToolArgs):
     LIMITATIONS:
     - If you need multiple events, make separate sequential calls (one event_id per call)
 
-    WORKFLOW: Use find_third_bridge_events first to obtain valid thirdbridge_event_ids.
+    WORKFLOW: Use find_third_bridge_events first to obtain valid thirdbridge_event_ids, or use an aiera_event_id from search_thirdbridge results.
     """
 
     originating_prompt: Optional[str] = Field(
@@ -194,10 +200,24 @@ class GetThirdBridgeEventArgs(BaseToolArgs):
         description="Whether to exclude all instructions from the tool response.",
     )
 
-    thirdbridge_event_id: str = Field(
+    thirdbridge_event_id: Optional[str] = Field(
+        default=None,
         serialization_alias="event_id",  # Serialize to API as "event_id"
         description="Unique identifier for the Third Bridge event. Obtain from find_third_bridge_events results (returned as 'event_id' in the response). Example: 'TB-12345'",
     )
+
+    aiera_event_id: Optional[Union[int, str]] = Field(
+        default=None,
+        description="Aiera event ID (scheduled_audio_call_id) for the Third Bridge event. Obtain from search_thirdbridge results (returned as 'aiera_event_id').",
+    )
+
+    @model_validator(mode="after")
+    def validate_at_least_one_id(self):
+        if not self.thirdbridge_event_id and not self.aiera_event_id:
+            raise ValueError(
+                "At least one of 'thirdbridge_event_id' or 'aiera_event_id' must be provided."
+            )
+        return self
 
 
 # Response models - pass through API response structure

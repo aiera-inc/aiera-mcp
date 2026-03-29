@@ -64,6 +64,10 @@ async def get_third_bridge_event(
     if "event_id" in params:
         params["event_ids"] = str(params.pop("event_id"))
 
+    # Handle special field mapping: aiera_event_id -> aiera_event_ids
+    if "aiera_event_id" in params:
+        params["aiera_event_ids"] = str(params.pop("aiera_event_id"))
+
     raw_response = await make_aiera_request(
         client=client,
         method="GET",
