@@ -177,7 +177,7 @@ class GetThirdBridgeEventArgs(BaseToolArgs):
     LIMITATIONS:
     - If you need multiple events, make separate sequential calls (one event_id per call)
 
-    WORKFLOW: Use find_third_bridge_events first to obtain valid thirdbridge_event_ids, or use an aiera_event_id from search_thirdbridge results.
+    WORKFLOW: Use find_third_bridge_events first to obtain valid thirdbridge_event_ids.
     """
 
     originating_prompt: Optional[str] = Field(
