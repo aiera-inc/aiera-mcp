@@ -883,6 +883,16 @@ async def search_thirdbridge(args: SearchThirdbridgeArgs) -> SearchThirdbridgeRe
             }
         )
 
+    # add Aiera event ID filter...
+    if args.aiera_event_ids:
+        must_clauses.append(
+            {
+                "terms": {
+                    "event_scheduled_audio_call_id": args.aiera_event_ids,
+                }
+            }
+        )
+
     # add date range filter...
     if args.start_date:
         range = {"gte": args.start_date}

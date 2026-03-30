@@ -397,6 +397,11 @@ class SearchThirdbridgeArgs(BaseAieraArgs):
         description="Optional list of Third Bridge IDs to search within. Obtain from find_third_bridge_events results. Example: ['TB-12345', 'TB-67890']",
     )
 
+    aiera_event_ids: Optional[List[int]] = Field(
+        default=None,
+        description="Optional list of Aiera event IDs to search within. Obtain from find_third_bridge_events or search_thirdbridge results. Example: [12345, 67890]",
+    )
+
     start_date: str = Field(
         default="",
         description="Start date for Third Bridge transcript search in YYYY-MM-DD format. Filters on event_date. Example: '2024-01-01'.",
