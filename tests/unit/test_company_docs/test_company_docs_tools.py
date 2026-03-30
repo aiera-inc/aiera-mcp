@@ -212,7 +212,7 @@ class TestGetCompanyDoc:
             company_docs_api_responses["get_company_doc_success"]
         )
 
-        args = GetCompanyDocArgs(company_doc_ids="456789")
+        args = GetCompanyDocArgs(company_doc_id="456789")
 
         # Execute
         result = await get_company_doc(args)
@@ -242,7 +242,7 @@ class TestGetCompanyDoc:
             "instructions": [],
         }
 
-        args = GetCompanyDocArgs(company_doc_ids="nonexistent")
+        args = GetCompanyDocArgs(company_doc_id="nonexistent")
 
         # Execute
         result = await get_company_doc(args)

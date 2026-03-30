@@ -233,8 +233,8 @@ class GetCompanyDocArgs(BaseToolArgs):
         description="Whether to exclude all instructions from the tool response.",
     )
 
-    company_doc_ids: str = Field(
-        description="Unique identifier(s) for the company documents. Obtain doc_id from find_company_docs results. For multiple documents, use comma-separated list. Example: '12345' or '12345,67890'"
+    company_doc_id: str = Field(
+        description="Unique identifier for the company document. Obtain company_doc_id from find_company_docs results. Example: '12345'"
     )
 
 

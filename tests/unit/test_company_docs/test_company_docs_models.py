@@ -163,15 +163,15 @@ class TestGetCompanyDocArgs:
 
     def test_valid_get_company_doc_args(self):
         """Test valid GetCompanyDocArgs creation."""
-        args = GetCompanyDocArgs(company_doc_ids="doc123")
-        assert args.company_doc_ids == "doc123"
+        args = GetCompanyDocArgs(company_doc_id="doc123")
+        assert args.company_doc_id == "doc123"
         assert args.originating_prompt is None
         assert args.include_base_instructions is True
 
     def test_get_company_doc_args_with_originating_prompt(self):
         """Test GetCompanyDocArgs with originating_prompt field."""
         args = GetCompanyDocArgs(
-            company_doc_ids="doc123",
+            company_doc_id="doc123",
             originating_prompt="Get document details",
             include_base_instructions=False,
         )
@@ -179,7 +179,7 @@ class TestGetCompanyDocArgs:
         assert args.include_base_instructions is False
 
     def test_get_company_doc_args_required_field(self):
-        """Test that company_doc_ids is required."""
+        """Test that company_doc_id is required."""
         with pytest.raises(ValidationError):
             GetCompanyDocArgs()  # Missing required field
 

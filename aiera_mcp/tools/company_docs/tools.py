@@ -62,6 +62,10 @@ async def get_company_doc(args: GetCompanyDocArgs) -> GetCompanyDocResponse:
     params = args.model_dump(exclude_none=True)
     params["include_content"] = "true"
 
+    # Handle special field mapping: company_doc_id -> company_doc_ids
+    if "company_doc_id" in params:
+        params["company_doc_ids"] = str(params.pop("company_doc_id"))
+
     raw_response = await make_aiera_request(
         client=client,
         method="GET",
