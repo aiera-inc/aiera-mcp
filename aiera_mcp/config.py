@@ -19,12 +19,12 @@ class AieraSettings(BaseSettings):
     """
 
     # API Configuration
-    aiera_base_url: str = "https://premium.aiera.com/api"
+    aiera_base_url: str = "https://graphql.aiera.com/api"
     aiera_api_key: Optional[str] = None
 
     # Pagination Configuration
-    default_page_size: int = 50
-    default_max_page_size: int = 100
+    default_page_size: int = 25
+    default_max_page_size: int = 25
 
     # HTTP Client Configuration
     http_timeout: float = 30.0

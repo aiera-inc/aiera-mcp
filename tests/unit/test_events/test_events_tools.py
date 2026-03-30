@@ -4,7 +4,6 @@
 
 import pytest
 import pytest_asyncio
-from datetime import datetime
 from unittest.mock import AsyncMock
 
 from aiera_mcp.tools.events.tools import (
@@ -22,10 +21,6 @@ from aiera_mcp.tools.events.models import (
     FindConferencesResponse,
     GetEventResponse,
     GetUpcomingEventsResponse,
-    EventItem,
-    EventDetails,
-    EventType,
-    ConferenceItem,
 )
 
 
@@ -55,19 +50,19 @@ class TestFindEvents:
 
         # Verify
         assert isinstance(result, FindEventsResponse)
-        assert len(result.response.data) == 2
-        assert result.response.pagination.total_count == 2
-        assert result.response.pagination.current_page == 1
-        assert result.response.pagination.page_size == 50
+        assert result.response is not None
+        assert len(result.response["data"]) == 2
+        assert result.response["pagination"]["total_count"] == 2
+        assert result.response["pagination"]["current_page"] == 1
+        assert result.response["pagination"]["page_size"] == 25
 
         # Check first event
-        first_event = result.response.data[0]
-        assert isinstance(first_event, EventItem)
-        assert first_event.event_id == 2819716
-        assert first_event.title == "Q3 2025 Amazon.com Inc Earnings Call"
-        assert first_event.event_type == "earnings"
-        assert first_event.equity.name == "AMAZON COM INC"
-        assert first_event.equity.bloomberg_ticker == "AMZN:US"
+        first_event = result.response["data"][0]
+        assert first_event["event_id"] == 2819716
+        assert first_event["title"] == "Q3 2025 Amazon.com Inc Earnings Call"
+        assert first_event["event_type"] == "earnings"
+        assert first_event["equity"]["name"] == "AMAZON COM INC"
+        assert first_event["equity"]["bloomberg_ticker"] == "AMZN:US"
 
         # Check API call was made correctly
         mock_http_dependencies["mock_make_request"].assert_called_once()
@@ -93,7 +88,7 @@ class TestFindEvents:
                     "total_count": 0,
                     "current_page": 1,
                     "total_pages": 0,
-                    "page_size": 50,
+                    "page_size": 25,
                 },
             },
             "instructions": [],
@@ -107,8 +102,9 @@ class TestFindEvents:
 
         # Verify
         assert isinstance(result, FindEventsResponse)
-        assert len(result.response.data) == 0
-        assert result.response.pagination.total_count == 0
+        assert result.response is not None
+        assert len(result.response["data"]) == 0
+        assert result.response["pagination"]["total_count"] == 0
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -153,8 +149,8 @@ class TestFindEvents:
         result = await find_events(args)
 
         # Verify
-        assert result.response.pagination.current_page == 1  # From fixture
-        assert result.response.pagination.page_size == 50  # From fixture
+        assert result.response["pagination"]["current_page"] == 1  # From fixture
+        assert result.response["pagination"]["page_size"] == 25  # From fixture
 
         call_args = mock_http_dependencies["mock_make_request"].call_args
         params = call_args[1]["params"]
@@ -216,26 +212,21 @@ class TestFindConferences:
 
         # Verify
         assert isinstance(result, FindConferencesResponse)
-        assert len(result.response.data) == 2
-        assert result.response.pagination.total_count == 15
+        assert result.response is not None
+        assert len(result.response["data"]) == 2
+        assert result.response["pagination"]["total_count"] == 15
 
         # Check first conference
-        first_conference = result.response.data[0]
-        assert isinstance(first_conference, ConferenceItem)
-        assert first_conference.conference_id == 36743
-        assert first_conference.title == "TD Cowen Global Mining Conference"
-        assert first_conference.event_count == 2
+        first_conference = result.response["data"][0]
+        assert first_conference["conference_id"] == 36743
+        assert first_conference["title"] == "TD Cowen Global Mining Conference"
+        assert first_conference["event_count"] == 2
 
         # Check API call was made correctly
         mock_http_dependencies["mock_make_request"].assert_called_once()
         call_args = mock_http_dependencies["mock_make_request"].call_args
         assert call_args[1]["method"] == "GET"
         assert call_args[1]["endpoint"] == "/chat-support/find-conferences"
-
-        # Check parameters were passed correctly
-        params = call_args[1]["params"]
-        assert params["start_date"] == "2026-01-01"
-        assert params["end_date"] == "2026-01-31"
 
     @pytest.mark.asyncio
     async def test_find_conferences_empty_results(self, mock_http_dependencies):
@@ -248,7 +239,7 @@ class TestFindConferences:
                     "total_count": 0,
                     "current_page": 1,
                     "total_pages": 0,
-                    "page_size": 50,
+                    "page_size": 25,
                 },
             },
             "instructions": [],
@@ -262,8 +253,9 @@ class TestFindConferences:
 
         # Verify
         assert isinstance(result, FindConferencesResponse)
-        assert len(result.response.data) == 0
-        assert result.response.pagination.total_count == 0
+        assert result.response is not None
+        assert len(result.response["data"]) == 0
+        assert result.response["pagination"]["total_count"] == 0
 
     @pytest.mark.asyncio
     async def test_find_conferences_with_pagination(
@@ -310,15 +302,20 @@ class TestFindConferences:
         result = await find_conferences(args)
 
         # Verify citations
-        first_conference = result.response.data[0]
-        assert first_conference.citation_information is not None
+        first_conference = result.response["data"][0]
+        assert first_conference["citation_information"] is not None
         assert (
-            first_conference.citation_information.title
+            first_conference["citation_information"]["title"]
             == "TD Cowen Global Mining Conference"
         )
-        assert "conferences" in first_conference.citation_information.url
-        assert first_conference.citation_information.metadata.type == "conference"
-        assert first_conference.citation_information.metadata.conference_id == 36743
+        assert "conferences" in first_conference["citation_information"]["url"]
+        assert (
+            first_conference["citation_information"]["metadata"]["type"] == "conference"
+        )
+        assert (
+            first_conference["citation_information"]["metadata"]["conference_id"]
+            == 36743
+        )
 
     @pytest.mark.asyncio
     async def test_find_conferences_exclude_instructions(
@@ -386,13 +383,11 @@ class TestGetEvent:
 
         # Verify
         assert isinstance(result, GetEventResponse)
-        assert len(result.response.data) == 1
-        event = result.response.data[0]
-        assert isinstance(event, EventItem)
-        assert event.event_id == 2734016
-        assert event.title == "Q2 2025 Amazon.com Inc Earnings Call"
-        # Note: EventItem doesn't have description, transcript_preview, or audio_url
-        # These would be in EventDetails if the model had that distinction
+        assert result.response is not None
+        assert len(result.response["data"]) == 1
+        event = result.response["data"][0]
+        assert event["event_id"] == 2734016
+        assert event["title"] == "Q2 2025 Amazon.com Inc Earnings Call"
 
         # Check API call parameters
         call_args = mock_http_dependencies["mock_make_request"].call_args
@@ -407,28 +402,8 @@ class TestGetEvent:
         assert params["include_transcripts"] == "true"
 
     @pytest.mark.asyncio
-    async def test_get_event_with_transcript_section(
-        self, mock_http_dependencies, events_api_responses
-    ):
-        """Test get_event with transcript section filter."""
-        # Setup
-        mock_http_dependencies["mock_make_request"].return_value = events_api_responses[
-            "get_event_success"
-        ]
-
-        args = GetEventArgs(event_id="2734016", transcript_section="q_and_a")
-
-        # Execute
-        result = await get_event(args)
-
-        # Verify
-        call_args = mock_http_dependencies["mock_make_request"].call_args
-        params = call_args[1]["params"]
-        assert params["transcript_section"] == "q_and_a"
-
-    @pytest.mark.asyncio
     async def test_get_event_not_found(self, mock_http_dependencies):
-        """Test get_event when event is not found."""
+        """Test get_event when event is not found returns explicit error."""
         # Setup - empty response
         mock_http_dependencies["mock_make_request"].return_value = {
             "response": {"data": []},
@@ -440,13 +415,16 @@ class TestGetEvent:
         # Execute
         result = await get_event(args)
 
-        # Verify - data array should be empty
-        assert len(result.response.data) == 0
+        # Verify - should return explicit error message
         assert isinstance(result, GetEventResponse)
+        assert len(result.response["data"]) == 0
+        assert result.error is not None
+        assert "Event not found" in result.error
+        assert "nonexistent" in result.error
 
     @pytest.mark.asyncio
     async def test_get_event_date_parsing(self, mock_http_dependencies):
-        """Test get_event handles date parsing correctly."""
+        """Test get_event handles date fields correctly in pass-through mode."""
         # Setup with various date formats
         response_with_dates = {
             "response": {
@@ -472,12 +450,9 @@ class TestGetEvent:
         # Execute
         result = await get_event(args)
 
-        # Verify date was parsed correctly
-        first_event = result.response.data[0]
-        assert isinstance(first_event.event_date, datetime)
-        assert first_event.event_date.year == 2023
-        assert first_event.event_date.month == 10
-        assert first_event.event_date.day == 26
+        # Verify date was preserved as-is in pass-through
+        first_event = result.response["data"][0]
+        assert first_event["event_date"] == "2023-10-26T21:00:00Z"
 
 
 @pytest.mark.unit
@@ -503,18 +478,19 @@ class TestGetUpcomingEvents:
 
         # Verify
         assert isinstance(result, GetUpcomingEventsResponse)
-        assert len(result.response.estimates) == 2
-        assert len(result.response.actuals) == 1
+        assert result.response is not None
+        assert len(result.response["estimates"]) == 2
+        assert len(result.response["actuals"]) == 1
 
         # Check estimated event
-        est_event = result.response.estimates[0]
-        assert est_event.estimate_id == 20876
-        assert est_event.equity.name == "Wells Fargo & Co"
+        est_event = result.response["estimates"][0]
+        assert est_event["estimate_id"] == 20876
+        assert est_event["equity"]["name"] == "Wells Fargo & Co"
 
         # Check actual event
-        actual_event = result.response.actuals[0]
-        assert actual_event.event_id == 2820054
-        assert actual_event.equity.name == "Wells Fargo & Co"
+        actual_event = result.response["actuals"][0]
+        assert actual_event["event_id"] == 2820054
+        assert actual_event["equity"]["name"] == "Wells Fargo & Co"
 
         # Check API call parameters
         call_args = mock_http_dependencies["mock_make_request"].call_args
@@ -542,10 +518,16 @@ class TestGetUpcomingEvents:
         result = await get_upcoming_events(args)
 
         # Verify citations structure
-        assert result.response.estimates[0].citation_information is not None
-        assert result.response.actuals[0].citation_information is not None
-        assert "Wells Fargo" in result.response.estimates[0].citation_information.title
-        assert "Wells Fargo" in result.response.actuals[0].citation_information.title
+        assert result.response["estimates"][0]["citation_information"] is not None
+        assert result.response["actuals"][0]["citation_information"] is not None
+        assert (
+            "Wells Fargo"
+            in result.response["estimates"][0]["citation_information"]["title"]
+        )
+        assert (
+            "Wells Fargo"
+            in result.response["actuals"][0]["citation_information"]["title"]
+        )
 
 
 @pytest.mark.unit
@@ -567,27 +549,27 @@ class TestEventsToolsErrorHandling:
 
         # Verify - returns a valid response with None or empty data
         assert isinstance(result, FindEventsResponse)
-        assert result.response is None or len(result.response.data) == 0
+        assert result.response is None or len(result.response.get("data", [])) == 0
 
     @pytest.mark.asyncio
     async def test_handle_missing_date_fields(self, mock_http_dependencies):
         """Test handling of events with missing or invalid date fields."""
-        # Setup - response with missing/invalid dates
-        response_with_bad_dates = {
+        # Setup - response with dates
+        response_with_dates = {
             "response": {
                 "data": [
                     {
                         "event_id": 12345,
                         "title": "Test Event",
                         "event_type": "earnings",
-                        "event_date": "2023-10-26T21:00:00Z",  # Valid date now
+                        "event_date": "2023-10-26T21:00:00Z",
                         "equity": {"name": "Test Company"},
                     },
                     {
                         "event_id": 67890,
                         "title": "Test Event 2",
                         "event_type": "earnings",
-                        "event_date": "2023-10-27T21:00:00Z",  # Valid date now
+                        "event_date": "2023-10-27T21:00:00Z",
                         "equity": {"name": "Test Company 2"},
                     },
                 ],
@@ -595,24 +577,20 @@ class TestEventsToolsErrorHandling:
                     "total_count": 2,
                     "current_page": 1,
                     "total_pages": 1,
-                    "page_size": 50,
+                    "page_size": 25,
                 },
             },
             "instructions": [],
         }
-        mock_http_dependencies["mock_make_request"].return_value = (
-            response_with_bad_dates
-        )
+        mock_http_dependencies["mock_make_request"].return_value = response_with_dates
 
         args = FindEventsArgs(start_date="2023-10-01", end_date="2023-10-31")
 
         # Execute
         result = await find_events(args)
 
-        # Verify - should still process events with valid dates
-        assert len(result.response.data) == 2
-        for event in result.response.data:
-            assert isinstance(event.event_date, datetime)  # Should have valid dates
+        # Verify - should still process events
+        assert len(result.response["data"]) == 2
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(

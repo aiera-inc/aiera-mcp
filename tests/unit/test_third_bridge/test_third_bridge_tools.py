@@ -15,8 +15,6 @@ from aiera_mcp.tools.third_bridge.models import (
     GetThirdBridgeEventArgs,
     FindThirdBridgeEventsResponse,
     GetThirdBridgeEventResponse,
-    ThirdBridgeEventItem,
-    ThirdBridgeEventDetails,
 )
 
 
@@ -43,27 +41,22 @@ class TestFindThirdBridgeEvents:
 
         # Verify
         assert isinstance(result, FindThirdBridgeEventsResponse)
-        assert len(result.response.data) == 1
-        assert result.response.pagination.total_count == 13
-        assert result.response.pagination.current_page == 1
-        assert result.response.pagination.page_size == 13
+        assert result.response is not None
+        assert len(result.response["data"]) == 1
+        assert result.response["pagination"]["total_count"] == 13
+        assert result.response["pagination"]["current_page"] == 1
+        assert result.response["pagination"]["page_size"] == 13
 
         # Check first event
-        first_event = result.response.data[0]
-        assert isinstance(first_event, ThirdBridgeEventItem)
-        assert first_event.thirdbridge_event_id == "46abc016e6da845a6459e80a200341c5"
+        first_event = result.response["data"][0]
+        assert first_event["event_id"] == "46abc016e6da845a6459e80a200341c5"
         assert (
-            first_event.title
+            first_event["title"]
             == "Robotic Delivery Market - Senior Executive, Sales & Operations Planning at Amazon.com Inc"
         )
-        assert first_event.content_type == "COMMUNITY"
-        assert first_event.language == "eng"
-        assert first_event.call_date == "2025-04-23T19:00:00"
-        assert len(first_event.agenda) == 3
-        assert first_event.insights is None  # Can be null in real API
-        # Check citation information
-        assert first_event.citation_information.title == first_event.title
-        assert "dashboard.aiera.com" in first_event.citation_information.url
+        assert first_event["content_type"] == "COMMUNITY"
+        assert first_event["language"] == "eng"
+        assert first_event["call_date"] == "2025-04-23T19:00:00"
 
         # Check API call was made correctly
         mock_http_dependencies["mock_make_request"].assert_called_once()
@@ -89,7 +82,7 @@ class TestFindThirdBridgeEvents:
                     "total_count": 0,
                     "current_page": 1,
                     "total_pages": 0,
-                    "page_size": 50,
+                    "page_size": 25,
                 },
             },
             "instructions": [],
@@ -103,9 +96,9 @@ class TestFindThirdBridgeEvents:
 
         # Verify
         assert isinstance(result, FindThirdBridgeEventsResponse)
-        assert len(result.response.data) == 0
-        assert result.response.pagination.total_count == 0
-        assert result.response.pagination.current_page == 1
+        assert result.response is not None
+        assert len(result.response["data"]) == 0
+        assert result.response["pagination"]["total_count"] == 0
 
     @pytest.mark.asyncio
     async def test_find_third_bridge_events_pagination(
@@ -125,13 +118,6 @@ class TestFindThirdBridgeEvents:
         result = await find_third_bridge_events(args)
 
         # Verify
-        assert (
-            result.response.pagination.current_page == 1
-        )  # Since we're using the success fixture
-        assert (
-            result.response.pagination.page_size == 13
-        )  # Since we're using the success fixture
-
         call_args = mock_http_dependencies["mock_make_request"].call_args
         params = call_args[1]["params"]
         assert params["page"] == "2"  # Should be serialized as string
@@ -168,50 +154,6 @@ class TestFindThirdBridgeEvents:
         assert params["subsector_id"] == "789"
 
     @pytest.mark.asyncio
-    async def test_find_third_bridge_events_date_parsing(self, mock_http_dependencies):
-        """Test find_third_bridge_events handles date parsing correctly."""
-        # Setup with various date formats
-        response_with_dates = {
-            "response": {
-                "data": [
-                    {
-                        "event_id": "tb123",
-                        "content_type": "FORUM",
-                        "call_date": "2023-10-20T14:00:00Z",
-                        "title": "Test Event",
-                        "language": "EN",
-                        "agenda": ["Test agenda item"],
-                        "insights": ["Test insight"],
-                        "citation_information": {
-                            "title": "Test Event",
-                            "url": "https://thirdbridge.com/event/tb123",
-                            "expert_name": "Test Expert",
-                            "expert_title": "Test Title",
-                        },
-                    }
-                ],
-                "pagination": {
-                    "total_count": 1,
-                    "current_page": 1,
-                    "total_pages": 1,
-                    "page_size": 50,
-                },
-            },
-            "instructions": [],
-        }
-        mock_http_dependencies["mock_make_request"].return_value = response_with_dates
-
-        args = FindThirdBridgeEventsArgs(start_date="2023-10-01", end_date="2023-10-31")
-
-        # Execute
-        result = await find_third_bridge_events(args)
-
-        # Verify date was parsed correctly
-        assert len(result.response.data) == 1
-        event = result.response.data[0]
-        assert event.call_date == "2023-10-20T14:00:00Z"
-
-    @pytest.mark.asyncio
     async def test_find_third_bridge_events_citations(
         self, mock_http_dependencies, third_bridge_api_responses
     ):
@@ -227,18 +169,17 @@ class TestFindThirdBridgeEvents:
         result = await find_third_bridge_events(args)
 
         # Verify citation information data
-        assert len(result.response.data) == 1
-        event = result.response.data[0]
-        citation = event.citation_information
+        assert len(result.response["data"]) == 1
+        event = result.response["data"][0]
+        citation = event["citation_information"]
         assert (
-            citation.title
+            citation["title"]
             == "Robotic Delivery Market - Senior Executive, Sales & Operations Planning at Amazon.com Inc"
         )
         assert (
-            citation.url
+            citation["url"]
             == "https://dashboard.aiera.com/companies/1/calendar?tabs[0]=evt%7C2833969"
         )
-        # Note: expert_name and expert_title are optional in real API and not present in this fixture
 
 
 @pytest.mark.unit
@@ -267,12 +208,6 @@ class TestGetThirdBridgeEvent:
                         "citation_information": {
                             "title": "Apple Supply Chain Analysis",
                             "url": "https://thirdbridge.com/event/tb789",
-                            "metadata": {
-                                "type": "event",
-                                "url_target": "aiera",
-                                "company_id": 1,
-                                "event_id": 2833969,
-                            },
                         },
                         "transcripts": [
                             {
@@ -287,7 +222,7 @@ class TestGetThirdBridgeEvent:
                     "total_count": 1,
                     "current_page": 1,
                     "total_pages": 1,
-                    "page_size": 50,
+                    "page_size": 25,
                 },
             },
             "instructions": [],
@@ -301,12 +236,7 @@ class TestGetThirdBridgeEvent:
 
         # Verify
         assert isinstance(result, GetThirdBridgeEventResponse)
-        assert isinstance(result.event, ThirdBridgeEventDetails)
-        assert result.event.thirdbridge_event_id == "tb789"
-        assert result.event.title == "Apple Supply Chain Analysis"
-        assert result.event.agenda is not None
-        assert result.event.insights is not None
-        assert result.event.transcripts is not None
+        assert result.response is not None
 
         # Check API call parameters
         call_args = mock_http_dependencies["mock_make_request"].call_args
@@ -331,286 +261,11 @@ class TestGetThirdBridgeEvent:
 
         args = GetThirdBridgeEventArgs(thirdbridge_event_id="nonexistent")
 
-        # Execute & Verify
-        with pytest.raises(
-            ValueError, match="Third Bridge event not found: nonexistent"
-        ):
-            await get_third_bridge_event(args)
-
-    @pytest.mark.asyncio
-    async def test_get_third_bridge_event_date_parsing(self, mock_http_dependencies):
-        """Test get_third_bridge_event handles date parsing correctly."""
-        # Setup with missing event_date
-        response_without_date = {
-            "response": {
-                "data": [
-                    {
-                        "event_id": "tb789",
-                        "content_type": "FORUM",
-                        "title": "Test Event",
-                        "language": "EN",
-                        "agenda": ["Test agenda"],
-                        "insights": ["Test insights"],
-                        "citation_information": {
-                            "title": "Test Event",
-                            "url": "https://thirdbridge.com/event/tb789",
-                            "expert_name": "Test Expert",
-                            "expert_title": "Test Title",
-                        },
-                        # Missing call_date
-                    }
-                ],
-                "pagination": {
-                    "total_count": 1,
-                    "current_page": 1,
-                    "total_pages": 1,
-                    "page_size": 50,
-                },
-            },
-            "instructions": [],
-        }
-        mock_http_dependencies["mock_make_request"].return_value = response_without_date
-
-        args = GetThirdBridgeEventArgs(thirdbridge_event_id="tb789")
-
-        # Execute
+        # Execute - with pass-through model, the response is returned as-is
         result = await get_third_bridge_event(args)
-
-        # Verify - should handle missing call_date gracefully
-        assert result.event.call_date == ""  # Should get empty string as default
-
-    @pytest.mark.asyncio
-    async def test_get_third_bridge_event_invalid_date(self, mock_http_dependencies):
-        """Test get_third_bridge_event handles invalid dates correctly."""
-        # Setup with invalid event_date
-        response_with_bad_date = {
-            "response": {
-                "data": [
-                    {
-                        "event_id": "tb789",
-                        "content_type": "FORUM",
-                        "call_date": "invalid-date",  # Invalid date
-                        "title": "Test Event",
-                        "language": "EN",
-                        "agenda": ["Test agenda"],
-                        "insights": ["Test insights"],
-                        "citation_information": {
-                            "title": "Test Event",
-                            "url": "https://thirdbridge.com/event/tb789",
-                            "expert_name": "Test Expert",
-                            "expert_title": "Test Title",
-                        },
-                    }
-                ],
-                "pagination": {
-                    "total_count": 1,
-                    "current_page": 1,
-                    "total_pages": 1,
-                    "page_size": 50,
-                },
-            },
-            "instructions": [],
-        }
-        mock_http_dependencies["mock_make_request"].return_value = (
-            response_with_bad_date
-        )
-
-        args = GetThirdBridgeEventArgs(thirdbridge_event_id="tb789")
-
-        # Execute
-        result = await get_third_bridge_event(args)
-
-        # Verify - should handle invalid call_date gracefully
-        assert (
-            result.event.call_date == "invalid-date"
-        )  # Should preserve the invalid date as string
-
-    @pytest.mark.asyncio
-    async def test_get_third_bridge_event_citation(self, mock_http_dependencies):
-        """Test that get_third_bridge_event generates proper citation."""
-        # Setup
-        response_with_url = {
-            "response": {
-                "data": [
-                    {
-                        "event_id": "tb789",
-                        "content_type": "FORUM",
-                        "call_date": "2023-10-20T14:00:00Z",
-                        "title": "Apple Supply Chain Analysis",
-                        "language": "EN",
-                        "agenda": ["Test agenda"],
-                        "insights": ["Test insights"],
-                        "citation_information": {
-                            "title": "Apple Supply Chain Analysis",
-                            "url": "https://thirdbridge.com/event/tb789",
-                            "expert_name": "Jane Smith",
-                            "expert_title": "Former Apple Supply Chain Director",
-                        },
-                    }
-                ],
-                "pagination": {
-                    "total_count": 1,
-                    "current_page": 1,
-                    "total_pages": 1,
-                    "page_size": 50,
-                },
-            },
-            "instructions": [],
-        }
-        mock_http_dependencies["mock_make_request"].return_value = response_with_url
-
-        args = GetThirdBridgeEventArgs(thirdbridge_event_id="tb789")
-
-        # Execute
-        result = await get_third_bridge_event(args)
-
-        # Verify event has citation information
-        assert result.event is not None
-        assert result.event.citation_information is not None
-        # Citation title and url should be present
-        assert result.event.citation_information.title is not None
-        assert result.event.citation_information.url is not None
-
-
-@pytest.mark.unit
-class TestThirdBridgeToolsErrorHandling:
-    """Test error handling for third_bridge tools."""
-
-    @pytest.mark.asyncio
-    async def test_handle_malformed_response(self, mock_http_dependencies):
-        """Test handling of malformed API responses."""
-        # Setup - malformed response (missing response field)
-        mock_http_dependencies["mock_make_request"].return_value = {
-            "response": {
-                "data": [],
-                "pagination": {
-                    "total_count": 0,
-                    "current_page": 1,
-                    "total_pages": 0,
-                    "page_size": 50,
-                },
-            },
-            "instructions": [],
-        }
-
-        args = FindThirdBridgeEventsArgs(start_date="2023-10-01", end_date="2023-10-31")
-
-        # Execute
-        result = await find_third_bridge_events(args)
-
-        # Verify - should handle gracefully with empty results
-        assert isinstance(result, FindThirdBridgeEventsResponse)
-        assert len(result.response.data) == 0
-        assert result.response.pagination.total_count == 0
-
-    @pytest.mark.asyncio
-    async def test_handle_missing_date_fields(self, mock_http_dependencies):
-        """Test handling of events with missing or invalid date fields."""
-        # Setup - response with missing/invalid dates
-        response_with_bad_dates = {
-            "response": {
-                "data": [
-                    {
-                        "event_id": "tb123",
-                        "content_type": "FORUM",
-                        "call_date": "invalid-date",  # Invalid date
-                        "title": "Test Event",
-                        "language": "EN",
-                        "agenda": ["Test agenda"],
-                        "insights": ["Test insight"],
-                        "citation_information": {
-                            "title": "Test Event",
-                            "url": "https://thirdbridge.com/event/tb123",
-                            "expert_name": "Test Expert",
-                            "expert_title": "Test Title",
-                        },
-                    },
-                    {
-                        "event_id": "tb456",
-                        "content_type": "FORUM",
-                        "call_date": "2023-10-20T14:00:00Z",
-                        "title": "Test Event 2",
-                        "language": "EN",
-                        "agenda": ["Test agenda 2"],
-                        "insights": ["Test insight 2"],
-                        "citation_information": {
-                            "title": "Test Event 2",
-                            "url": "https://thirdbridge.com/event/tb456",
-                            "expert_name": "Test Expert 2",
-                            "expert_title": "Test Title 2",
-                        },
-                    },
-                ],
-                "pagination": {
-                    "total_count": 2,
-                    "current_page": 1,
-                    "total_pages": 1,
-                    "page_size": 50,
-                },
-            },
-            "instructions": [],
-        }
-        mock_http_dependencies["mock_make_request"].return_value = (
-            response_with_bad_dates
-        )
-
-        args = FindThirdBridgeEventsArgs(start_date="2023-10-01", end_date="2023-10-31")
-
-        # Execute
-        result = await find_third_bridge_events(args)
-
-        # Verify - should still process events
-        assert len(result.response.data) == 2
-        assert result.response.data[0].call_date == "invalid-date"
-        assert result.response.data[1].call_date == "2023-10-20T14:00:00Z"
-
-    @pytest.mark.asyncio
-    async def test_handle_missing_expert_info(self, mock_http_dependencies):
-        """Test handling of events with missing expert information."""
-        # Setup - response with missing expert fields
-        response_with_missing_expert = {
-            "response": {
-                "data": [
-                    {
-                        "event_id": "tb123",
-                        "content_type": "FORUM",
-                        "call_date": "2023-10-20T14:00:00Z",
-                        "title": "Test Event",
-                        "language": "EN",
-                        "agenda": ["Test agenda"],
-                        "insights": ["Test insight"],
-                        "citation_information": {
-                            "title": "Test Event",
-                            "url": "https://thirdbridge.com/event/tb123",
-                            "expert_name": None,
-                            "expert_title": None,
-                        },
-                    }
-                ],
-                "pagination": {
-                    "total_count": 1,
-                    "current_page": 1,
-                    "total_pages": 1,
-                    "page_size": 50,
-                },
-            },
-            "instructions": [],
-        }
-        mock_http_dependencies["mock_make_request"].return_value = (
-            response_with_missing_expert
-        )
-
-        args = FindThirdBridgeEventsArgs(start_date="2023-10-01", end_date="2023-10-31")
-
-        # Execute
-        result = await find_third_bridge_events(args)
-
-        # Verify - should handle missing expert info gracefully
-        assert len(result.response.data) == 1
-        event = result.response.data[0]
-        # Citation information should still be present
-        assert event.citation_information is not None
-        assert event.citation_information.title is not None
+        assert isinstance(result, GetThirdBridgeEventResponse)
+        assert result.response is not None
+        assert len(result.response["data"]) == 0
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -654,5 +309,4 @@ class TestThirdBridgeToolsErrorHandling:
         assert isinstance(result, FindThirdBridgeEventsResponse)
         call_args = mock_http_dependencies["mock_make_request"].call_args
         params = call_args[1]["params"]
-        # The ticker should be passed as provided (validation handled by utils if implemented)
         assert "bloomberg_ticker" in params

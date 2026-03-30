@@ -8,9 +8,6 @@ from .models import (
     GetFilingArgs,
     FindFilingsResponse,
     GetFilingResponse,
-    FilingItem,
-    FilingDetails,
-    FilingSummary,
 )
 
 __all__ = [
@@ -23,8 +20,4 @@ __all__ = [
     # Response models
     "FindFilingsResponse",
     "GetFilingResponse",
-    # Data models
-    "FilingItem",
-    "FilingDetails",
-    "FilingSummary",
 ]

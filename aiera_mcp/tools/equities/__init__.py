@@ -35,12 +35,6 @@ from .models import (
     GetFinancialsResponse,
     GetRatiosResponse,
     GetKpisAndSegmentsResponse,
-    EquityItem,
-    EquityDetails,
-    EquitySummary,
-    SectorSubsector,
-    IndexItem,
-    WatchlistItem,
 )
 
 __all__ = [
@@ -77,11 +71,4 @@ __all__ = [
     "GetFinancialsResponse",
     "GetRatiosResponse",
     "GetKpisAndSegmentsResponse",
-    # Data models
-    "EquityItem",
-    "EquityDetails",
-    "EquitySummary",
-    "SectorSubsector",
-    "IndexItem",
-    "WatchlistItem",
 ]

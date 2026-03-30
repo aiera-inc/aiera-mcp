@@ -3,17 +3,7 @@
 """Pydantic models for Aiera search tools."""
 
 from typing import List, Optional, Any
-from datetime import datetime
-from pydantic import (
-    AliasChoices,
-    BaseModel,
-    Field,
-    field_validator,
-    field_serializer,
-    model_validator,
-    ValidationInfo,
-)
-from pydantic_core import PydanticCustomError
+from pydantic import Field
 
 from ..common.models import BaseAieraArgs, BaseAieraResponse
 
@@ -91,9 +81,14 @@ class SearchTranscriptsArgs(BaseAieraArgs):
         description="Type of event to include within search. ONLY ONE type per call - to search multiple types, make separate calls. Options: 'earnings' (quarterly earnings calls with Q&A), 'presentation' (investor conferences, company presentations at events - use this for conferences), 'investor_meeting' (investor day events, one-on-one meetings - use this for investor meetings), 'shareholder_meeting' (annual/special shareholder meetings), 'special_situation' (M&A announcements, other corporate actions). Example: for 'conference calls AND meetings', make TWO calls: one with event_type='presentation' and one with event_type='investor_meeting'. Defaults to 'earnings'.",
     )
 
-    max_results: int = Field(
-        default=20,
-        description="Maximum number of transcript segments to return across all events (10-50 recommended for optimal performance)",
+    size: int = Field(
+        default=25,
+        description="Number of transcript segments to return per page (max 25, 10-25 recommended for optimal performance)",
+    )
+
+    search_after: Optional[List[Any]] = Field(
+        default=None,
+        description="Cursor for pagination. Pass the next_search_after value from a previous response to fetch the next page of results. Omit for the first page.",
     )
 
 
@@ -165,203 +160,300 @@ class SearchFilingsArgs(BaseAieraArgs):
         description="Filter for specific filing types. Common values: '10-K' (annual report), '10-Q' (quarterly report), '8-K' (current report/material events), '4' (insider trading), 'DEF 14A' (proxy statement). Leave empty to search all filing types.",
     )
 
-    max_results: int = Field(
-        default=20,
-        description="Maximum number of filing chunks to return (10-50 recommended for optimal performance)",
+    size: int = Field(
+        default=25,
+        description="Number of filing chunks to return per page (max 25, 10-25 recommended for optimal performance)",
+    )
+
+    search_after: Optional[List[Any]] = Field(
+        default=None,
+        description="Cursor for pagination. Pass the next_search_after value from a previous response to fetch the next page of results. Omit for the first page.",
     )
 
 
-# Search result item models
-class TranscriptSearchCitationMetadata(BaseModel):
-    """Metadata for transcript search citation."""
+class SearchResearchArgs(BaseAieraArgs):
+    """Semantic search within research content for specific topics, analyses, or insights.
 
-    type: str = Field(
-        description="The type of citation ('event', 'filing', 'company_doc', 'conference', or 'company')"
-    )
-    url_target: Optional[str] = Field(
-        None,
-        description="Whether the citation URL will go to Aiera or to an external source",
-    )
-    company_id: Optional[int] = Field(None, description="Company identifier")
-    event_id: Optional[int] = Field(None, description="Event identifier")
-    transcript_item_id: Optional[int] = Field(
-        None, description="Transcript item identifier"
-    )
+    WHEN TO USE THIS TOOL:
+    - Use this when you need to find specific content (analyses, insights, recommendations) within research documents
+    - Use this for targeted content extraction from research reports
+    - When searching for company-specific research, provide the bloomberg_ticker to ensure results are scoped to that company
 
+    RETURNS: Relevant research chunks with context, metadata, and relevance scores.
+    Results are individual sections/chunks, not full research documents.
 
-class TranscriptSearchCitation(BaseModel):
-    """Citation information for transcript search results."""
+    NOTE: This tool uses hybrid semantic + keyword search for high-quality results.
+    """
 
-    title: str = Field(description="Title of the cited transcript")
-    url: str = Field(description="URL to the specific transcript segment")
-    metadata: Optional[TranscriptSearchCitationMetadata] = Field(
-        None, description="Additional metadata about the citation"
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
     )
 
-
-class TranscriptSearchItem(BaseModel):
-    """Individual transcript search result item."""
-
-    score: float = Field(
-        validation_alias=AliasChoices("_score", "score"),
-        description="Search relevance score",
-    )
-    date: datetime = Field(description="Date and time of the transcript")
-    primary_company_id: int = Field(description="Primary company identifier.")
-    transcript_item_id: int = Field(
-        validation_alias="content_id",
-        description="Transcript item identifier (aliased from content_id)",
-    )
-    transcript_event_id: int = Field(description="Event identifier for the transcript")
-    transcript_section: Optional[str] = Field(
-        description="Section of transcript (e.g., 'q_and_a', 'presentation'). Can be null for some transcripts."
-    )
-    speaker_name: Optional[str] = Field(
-        None, description="Name of the speaker. Can be null for some transcripts."
-    )
-    speaker_title: Optional[str] = Field(
-        None, description="Title/role of the speaker. Can be null for some transcripts."
-    )
-    text: str = Field(description="The matching text content from the transcript")
-    primary_equity_id: int = Field(
-        description="Primary equity identifier. Can be found using the find_equities tool."
-    )
-    title: str = Field(description="Title of the event/transcript")
-    citation_information: TranscriptSearchCitation = Field(
-        description="Citation details for this result"
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
     )
 
-    @field_validator("date", mode="before")
-    @classmethod
-    def parse_date(cls, v):
-        """Parse ISO format datetime strings to datetime objects."""
-        if isinstance(v, str):
-            try:
-                # Replace 'Z' with '+00:00' for ISO format compatibility
-                return datetime.fromisoformat(v.replace("Z", "+00:00"))
-            except (ValueError, AttributeError):
-                return datetime.now()
-        # If it's already a datetime object, return as is
-        return v
-
-    @field_serializer("date")
-    def serialize_date(self, value: datetime) -> str:
-        """Serialize datetime to ISO format string for JSON compatibility."""
-        return value.isoformat()
-
-
-class TranscriptSearchResult(BaseModel):
-    """Container for transcript search results."""
-
-    result: List[TranscriptSearchItem] = Field(
-        description="List of transcript search results"
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
     )
 
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
 
-# Search response pagination structure
-class SearchTotalCount(BaseModel):
-    """Total count structure from search API."""
+    query_text: str = Field(
+        description="Search query for semantic matching within research chunks. Examples: 'earnings outlook', 'competitive analysis', 'market trends'.",
+    )
 
-    value: int = Field(description="Total count value")
-    relation: str = Field(description="Relation type (e.g., 'eq')")
+    bloomberg_ticker: Optional[str] = Field(
+        default=None,
+        description="Optional Bloomberg ticker to filter research by company. Format: 'TICKER:COUNTRY' (e.g., 'AAPL:US', 'MA:US'). When provided, pre-filters search to only include research tagged for this company, significantly improving relevance for company-specific queries.",
+    )
 
+    document_ids: Optional[List[str]] = Field(
+        default=None,
+        description="Optional list of specific document IDs to search within. Obtain document_ids from find_research or search_research results. Example: ['doc123', 'doc456']",
+    )
 
-class SearchResponseData(BaseModel):
-    """Search response data container."""
+    start_date: str = Field(
+        default="",
+        description="Start date for research chunks search in YYYY-MM-DD format. Example: '2024-01-01'.",
+    )
 
-    result: Optional[List[Any]] = Field(description="Search results (can be null)")
+    end_date: str = Field(
+        default="",
+        description="End date for research chunks search in YYYY-MM-DD format. Example: '2024-12-31'.",
+    )
 
+    author_ids: Optional[List[str]] = Field(
+        default=None,
+        description="Filter by one or more author person IDs. Matches against the author's person_id field. Example: ['12345', '67890'].",
+    )
 
-class TranscriptSearchResponseData(BaseModel):
-    """Transcript search response data container with typed results."""
+    aiera_provider_ids: Optional[List[str]] = Field(
+        default=None,
+        description="Filter by one or more Aiera provider IDs. Obtain provider IDs from get_research_providers results. Example: ['krypton', 'krypton-test'].",
+    )
 
-    result: Optional[List[TranscriptSearchItem]] = Field(
-        description="Transcript search results (can be null)"
+    asset_classes: Optional[List[str]] = Field(
+        default=None,
+        description="Filter by one or more asset classes. Obtain valid values from get_research_asset_classes. Example: ['Equity', 'Fixed Income'].",
+    )
+
+    asset_types: Optional[List[str]] = Field(
+        default=None,
+        description="Filter by one or more asset types. Obtain valid values from get_research_asset_types. Example: ['Common Stock', 'Corporate Bond'].",
+    )
+
+    size: int = Field(
+        default=25,
+        description="Number of research chunks to return per page (max 25, 10-25 recommended for optimal performance)",
+    )
+
+    search_after: Optional[List[Any]] = Field(
+        default=None,
+        description="Cursor for pagination. Pass the next_search_after value from a previous response to fetch the next page of results. Omit for the first page.",
     )
 
 
-# Response models
+class SearchCompanyDocsArgs(BaseAieraArgs):
+    """Semantic search within company document chunks for specific content, disclosures, or topics.
+
+    WHEN TO USE THIS TOOL:
+    - Use this when you need to find specific content within company documents (presentations, press releases, investor materials, etc.)
+    - Use find_company_docs FIRST to identify relevant documents by date/company/category, then use this tool to search within their content
+    - Use this for targeted content extraction rather than reading full documents
+
+    RETURNS: Relevant company document chunks with context, metadata, and relevance scores.
+    Results are individual sections/chunks, not full documents. Use get_company_doc for complete document content.
+
+    WORKFLOW EXAMPLE:
+    1. User asks: "What did Apple say about sustainability in their investor presentations?"
+    2. First call find_company_docs with company_id to get relevant document IDs
+    3. Then call search_company_docs with query_text='sustainability' and the company_doc_ids
+
+    NOTE: This tool uses hybrid semantic + keyword search for high-quality results.
+    """
+
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
+    )
+
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
+    query_text: str = Field(
+        description="Search query for semantic matching within company document chunks. Examples: 'sustainability initiatives', 'capital allocation', 'product roadmap'.",
+    )
+
+    company_doc_ids: Optional[List[int]] = Field(
+        default=None,
+        description="Optional list of specific company document IDs to search within. Obtain company_doc_ids from find_company_docs results. Example: [12345, 67890]",
+    )
+
+    company_ids: Optional[List[int]] = Field(
+        default=None,
+        description="Optional list of company IDs to filter search. Obtain company_ids from find_equities results. Example: [1, 2]",
+    )
+
+    categories: Optional[List[str]] = Field(
+        default=None,
+        description="Optional list of document categories to filter by. Obtain valid values from get_company_doc_categories. Example: ['Investor Presentation', 'Press Release'].",
+    )
+
+    keywords: Optional[List[str]] = Field(
+        default=None,
+        description="Optional list of keywords to filter by. Obtain valid values from get_company_doc_keywords. Example: ['earnings', 'guidance'].",
+    )
+
+    start_date: str = Field(
+        default="",
+        description="Start date for company document chunks search in YYYY-MM-DD format. Filters on publish_date. Example: '2024-01-01'.",
+    )
+
+    end_date: str = Field(
+        default="",
+        description="End date for company document chunks search in YYYY-MM-DD format. Filters on publish_date. Example: '2024-12-31'.",
+    )
+
+    size: int = Field(
+        default=25,
+        description="Number of company document chunks to return per page (max 25, 10-25 recommended for optimal performance)",
+    )
+
+    search_after: Optional[List[Any]] = Field(
+        default=None,
+        description="Cursor for pagination. Pass the next_search_after value from a previous response to fetch the next page of results. Omit for the first page.",
+    )
+
+
+class SearchThirdbridgeArgs(BaseAieraArgs):
+    """Semantic search within Third Bridge expert interview transcripts for specific topics, insights, or discussions.
+
+    WHEN TO USE THIS TOOL:
+    - Use this when you need to find specific content (expert opinions, industry insights, competitive analysis) within Third Bridge interviews
+    - Use find_third_bridge_events FIRST to identify relevant interviews by date/company, then use this tool to search within their content
+    - Use this for targeted content extraction rather than reading full transcripts
+
+    RETURNS: Relevant Third Bridge transcript segments with speaker attribution, event metadata, and relevance scores.
+    Results are individual paragraphs/chunks, not full transcripts. Use get_third_bridge_event for complete transcripts.
+
+    WORKFLOW EXAMPLE:
+    1. User asks: "What do experts say about semiconductor supply chains?"
+    2. First call find_third_bridge_events to get relevant event IDs
+    3. Then call search_thirdbridge with query_text='semiconductor supply chain'
+
+    NOTE: This tool uses hybrid semantic + keyword search for high-quality results.
+    """
+
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
+    )
+
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
+    query_text: str = Field(
+        description="Search query for semantic matching within Third Bridge transcripts. Examples: 'competitive landscape', 'pricing trends', 'market share dynamics'.",
+    )
+
+    company_ids: Optional[List[int]] = Field(
+        default=None,
+        description="Optional list of company IDs to filter search. Matches against both primary_company_ids and secondary_company_ids. Obtain company_ids from find_equities results. Example: [1, 2]",
+    )
+
+    thirdbridge_ids: Optional[List[str]] = Field(
+        default=None,
+        description="Optional list of Third Bridge IDs to search within. Obtain from find_third_bridge_events results. Example: ['TB-12345', 'TB-67890']",
+    )
+
+    aiera_event_ids: Optional[List[int]] = Field(
+        default=None,
+        description="Optional list of Aiera event IDs to search within. Obtain from find_third_bridge_events or search_thirdbridge results. Example: [12345, 67890]",
+    )
+
+    start_date: str = Field(
+        default="",
+        description="Start date for Third Bridge transcript search in YYYY-MM-DD format. Filters on event_date. Example: '2024-01-01'.",
+    )
+
+    end_date: str = Field(
+        default="",
+        description="End date for Third Bridge transcript search in YYYY-MM-DD format. Filters on event_date. Example: '2024-12-31'.",
+    )
+
+    event_content_type: str = Field(
+        default="",
+        description="Optional filter for Third Bridge content type. Example: 'FORUM'. Leave empty to search all content types.",
+    )
+
+    size: int = Field(
+        default=25,
+        description="Number of Third Bridge transcript segments to return per page (max 25, 10-25 recommended for optimal performance)",
+    )
+
+    search_after: Optional[List[Any]] = Field(
+        default=None,
+        description="Cursor for pagination. Pass the next_search_after value from a previous response to fetch the next page of results. Omit for the first page.",
+    )
+
+
+# Response models - pass through API response structure
 class SearchTranscriptsResponse(BaseAieraResponse):
-    """Response for search_transcripts tool - matches actual API structure."""
+    """Response for search_transcripts tool - passes through the API response structure."""
 
-    response: Optional[TranscriptSearchResponseData] = Field(
-        None, description="Response data container"
-    )
-
-
-class FilingSearchCitationMetadata(BaseModel):
-    """Metadata for filing search citation."""
-
-    type: str = Field(
-        description="The type of citation ('event', 'filing', 'company_doc', 'conference', or 'company')"
-    )
-    url_target: Optional[str] = Field(
-        None,
-        description="Whether the citation URL will go to Aiera or to an external source",
-    )
-    company_id: Optional[int] = Field(None, description="Company identifier")
-    content_id: Optional[int] = Field(None, description="Content identifier")
-    filing_id: Optional[int] = Field(None, description="Filing identifier")
-
-
-class FilingSearchCitation(BaseModel):
-    """Citation information for filing search results."""
-
-    title: str = Field(description="Title of the cited filing")
-    url: str = Field(description="URL to the specific filing segment")
-    metadata: Optional[FilingSearchCitationMetadata] = Field(
-        None, description="Additional metadata about the citation"
-    )
-
-
-class FilingSearchItem(BaseModel):
-    """Individual filing chunk search result item."""
-
-    date: datetime = Field(description="Date and time of the filing")
-    primary_company_id: int = Field(description="Primary company identifier")
-    content_id: str = Field(description="Filing chunk content identifier")
-    filing_id: str = Field(description="Filing identifier")
-    company_common_name: Optional[str] = Field(
-        default=None, description="Company common name"
-    )
-    text: str = Field(description="The matching text content from the filing chunk")
-    primary_equity_id: int = Field(
-        description="Primary equity identifier. Can be found using the find_equities tool."
-    )
-    title: str = Field(description="Title of the filing")
-    filing_type: Optional[str] = Field(
-        default=None, description="Type of SEC filing (e.g., '10-K', '10-Q', '8-K')"
-    )
-    score: float = Field(
-        validation_alias=AliasChoices("_score", "score"),
-        description="Search relevance score",
-    )
-    citation_information: FilingSearchCitation = Field(
-        description="Citation details for this result"
-    )
-
-    @field_validator("date", mode="before")
-    @classmethod
-    def parse_date(cls, v):
-        """Parse ISO format datetime strings to datetime objects."""
-        if isinstance(v, str):
-            try:
-                # Replace 'Z' with '+00:00' for ISO format compatibility
-                return datetime.fromisoformat(v.replace("Z", "+00:00"))
-            except (ValueError, AttributeError):
-                return datetime.now()
-        # If it's already a datetime object, return as is
-        return v
-
-    @field_serializer("date")
-    def serialize_date(self, value: datetime) -> str:
-        """Serialize datetime to ISO format string for JSON compatibility."""
-        return value.isoformat()
+    response: Optional[Any] = Field(None, description="Response data from the API")
 
 
 class SearchFilingsResponse(BaseAieraResponse):
-    """Response for search_filings tool - matches actual API structure."""
+    """Response for search_filings tool - passes through the API response structure."""
 
-    response: Optional[SearchResponseData] = Field(
-        None, description="Response data container"
-    )
+    response: Optional[Any] = Field(None, description="Response data from the API")
+
+
+class SearchResearchResponse(BaseAieraResponse):
+    """Response for search_research tool - passes through the API response structure."""
+
+    response: Optional[Any] = Field(None, description="Response data from the API")
+
+
+class SearchCompanyDocsResponse(BaseAieraResponse):
+    """Response for search_company_docs tool - passes through the API response structure."""
+
+    response: Optional[Any] = Field(None, description="Response data from the API")
+
+
+class SearchThirdbridgeResponse(BaseAieraResponse):
+    """Response for search_thirdbridge tool - passes through the API response structure."""
+
+    response: Optional[Any] = Field(None, description="Response data from the API")

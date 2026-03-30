@@ -11,113 +11,7 @@ from aiera_mcp.tools.third_bridge.models import (
     GetThirdBridgeEventArgs,
     FindThirdBridgeEventsResponse,
     GetThirdBridgeEventResponse,
-    ThirdBridgeEventItem,
-    ThirdBridgeEventDetails,
-    ThirdBridgeCitationInfo,
-    ThirdBridgeSpecialist,
-    ThirdBridgeModerator,
-    ThirdBridgeTranscriptItem,
 )
-from aiera_mcp.tools.common.models import CitationInfo
-
-
-@pytest.mark.unit
-class TestThirdBridgeModels:
-    """Test third_bridge Pydantic models."""
-
-    def test_third_bridge_event_item_creation(self):
-        """Test ThirdBridgeEventItem model creation with event_id alias."""
-        event_data = {
-            "event_id": "tb123",  # API uses event_id
-            "content_type": "FORUM",
-            "call_date": "2023-10-20T14:00:00Z",
-            "title": "Apple Supply Chain Analysis",
-            "language": "EN",
-            "agenda": ["Supply chain resilience", "Cost optimization"],
-            "insights": ["Key insight about supply chain", "Another strategic insight"],
-            "citation_information": {
-                "title": "Apple Supply Chain Analysis",
-                "url": "https://thirdbridge.com/event/tb123",
-            },
-        }
-
-        event = ThirdBridgeEventItem(**event_data)
-
-        # Access via thirdbridge_event_id (internal name)
-        assert event.thirdbridge_event_id == "tb123"
-        assert event.content_type == "FORUM"
-        assert event.call_date == "2023-10-20T14:00:00Z"
-        assert event.title == "Apple Supply Chain Analysis"
-        assert event.language == "EN"
-        assert len(event.agenda) == 2
-        assert len(event.insights) == 2
-        assert event.citation_information.title == "Apple Supply Chain Analysis"
-
-    def test_third_bridge_event_item_optional_fields(self):
-        """Test ThirdBridgeEventItem with only required fields."""
-        minimal_data = {
-            "event_id": "tb123",
-            "content_type": "FORUM",
-            "call_date": "2023-10-20T14:00:00Z",
-            "title": "Test Event",
-            "language": "EN",
-            "agenda": ["Basic agenda item"],
-        }
-
-        event = ThirdBridgeEventItem(**minimal_data)
-
-        assert event.thirdbridge_event_id == "tb123"
-        assert event.content_type == "FORUM"
-        assert event.call_date == "2023-10-20T14:00:00Z"
-        assert event.title == "Test Event"
-        assert event.language == "EN"
-        assert event.insights is None  # Optional field
-        assert event.citation_information is None
-
-    def test_third_bridge_event_details_with_lists(self):
-        """Test ThirdBridgeEventDetails with List types for agenda, insights, transcript."""
-        details_data = {
-            "event_id": "tb123",
-            "content_type": "FORUM",
-            "call_date": "2023-10-20T14:00:00Z",
-            "title": "Apple Supply Chain Analysis",
-            "language": "EN",
-            "agenda": ["Supply chain challenges", "Cost optimization"],  # List[str]
-            "insights": ["Key insight 1", "Key insight 2"],  # List[str]
-            "citation_information": {
-                "title": "Apple Supply Chain Analysis",
-                "url": "https://thirdbridge.com/event/tb123",
-            },
-            "transcripts": [
-                {
-                    "start_ms": 1000,
-                    "duration_ms": 60000,
-                    "transcript": "Opening remarks",
-                }
-            ],
-        }
-
-        details = ThirdBridgeEventDetails(**details_data)
-
-        # Test inherited fields
-        assert details.thirdbridge_event_id == "tb123"
-        assert details.content_type == "FORUM"
-        assert details.call_date == "2023-10-20T14:00:00Z"
-        assert details.title == "Apple Supply Chain Analysis"
-        assert details.language == "EN"
-
-        # Test List[str] fields (changed from Optional[str])
-        assert isinstance(details.agenda, list)
-        assert len(details.agenda) == 2
-        assert details.agenda[0] == "Supply chain challenges"
-
-        assert isinstance(details.insights, list)
-        assert len(details.insights) == 2
-        assert details.insights[0] == "Key insight 1"
-
-        # Test transcripts
-        assert len(details.transcripts) == 1
-        assert details.transcripts[0].start_ms == 1000
 
 
 @pytest.mark.unit
@@ -131,21 +25,21 @@ class TestFindThirdBridgeEventsArgs:
             end_date="2023-10-31",
             bloomberg_ticker="AAPL:US",
             page=1,
-            page_size=50,
+            page_size=25,
         )
 
         assert args.start_date == "2023-10-01"
         assert args.end_date == "2023-10-31"
         assert args.bloomberg_ticker == "AAPL:US"
         assert args.page == 1
-        assert args.page_size == 50
+        assert args.page_size == 25
 
     def test_find_third_bridge_events_args_defaults(self):
         """Test FindThirdBridgeEventsArgs with default values."""
         args = FindThirdBridgeEventsArgs(start_date="2023-10-01", end_date="2023-10-31")
 
         assert args.page == 1  # Default value
-        assert args.page_size == 50  # Default value
+        assert args.page_size == 25  # Default value
         assert args.bloomberg_ticker is None
         assert args.watchlist_id is None
         assert args.originating_prompt is None  # Default value
@@ -203,7 +97,7 @@ class TestFindThirdBridgeEventsArgs:
 
         with pytest.raises(ValidationError):
             FindThirdBridgeEventsArgs(
-                start_date="2023-10-01", end_date="2023-10-31", page_size=101
+                start_date="2023-10-01", end_date="2023-10-31", page_size=26
             )
 
     @pytest.mark.parametrize(
@@ -232,7 +126,6 @@ class TestFindThirdBridgeEventsArgs:
 
     def test_bloomberg_ticker_validation(self):
         """Test Bloomberg ticker format validation."""
-        # This test assumes there's ticker format correction logic
         args = FindThirdBridgeEventsArgs(
             start_date="2023-10-01",
             end_date="2023-10-31",
@@ -240,7 +133,6 @@ class TestFindThirdBridgeEventsArgs:
         )
 
         # Check if ticker correction is applied
-        # This depends on the actual implementation in utils.py
         assert args.bloomberg_ticker in ["AAPL", "AAPL:US"]
 
 
@@ -279,115 +171,100 @@ class TestGetThirdBridgeEventArgs:
         assert "thirdbridge_event_id" in dumped_internal
         assert dumped_internal["thirdbridge_event_id"] == "tb123"
 
-    def test_get_third_bridge_event_args_required_field(self):
-        """Test that thirdbridge_event_id is required."""
+    def test_get_third_bridge_event_args_with_aiera_event_id(self):
+        """Test GetThirdBridgeEventArgs with aiera_event_id instead of thirdbridge_event_id."""
+        args = GetThirdBridgeEventArgs(aiera_event_id=12345)
+        assert args.aiera_event_id == 12345
+        assert args.thirdbridge_event_id is None
+
+    def test_get_third_bridge_event_args_with_both_ids(self):
+        """Test GetThirdBridgeEventArgs with both IDs provided."""
+        args = GetThirdBridgeEventArgs(
+            thirdbridge_event_id="tb123", aiera_event_id=12345
+        )
+        assert args.thirdbridge_event_id == "tb123"
+        assert args.aiera_event_id == 12345
+
+    def test_get_third_bridge_event_args_aiera_event_id_serialization(self):
+        """Test that aiera_event_id serializes correctly for API."""
+        args = GetThirdBridgeEventArgs(aiera_event_id=12345)
+        dumped = args.model_dump(exclude_none=True, by_alias=True)
+        assert "aiera_event_id" in dumped
+        assert dumped["aiera_event_id"] == 12345
+        assert "event_id" not in dumped
+
+    def test_get_third_bridge_event_args_requires_at_least_one_id(self):
+        """Test that at least one of thirdbridge_event_id or aiera_event_id is required."""
         with pytest.raises(ValidationError):
-            GetThirdBridgeEventArgs()  # Missing required field
-
-
-@pytest.mark.unit
-class TestThirdBridgeNewModels:
-    """Test new Third Bridge models."""
-
-    def test_third_bridge_specialist(self):
-        """Test ThirdBridgeSpecialist model."""
-        specialist = ThirdBridgeSpecialist(
-            title="Former Supply Chain Director", initials="JS"
-        )
-        assert specialist.title == "Former Supply Chain Director"
-        assert specialist.initials == "JS"
-
-    def test_third_bridge_moderator(self):
-        """Test ThirdBridgeModerator model."""
-        moderator = ThirdBridgeModerator(id="mod123", initials="AB")
-        assert moderator.id == "mod123"
-        assert moderator.initials == "AB"
-
-    def test_third_bridge_transcript_item(self):
-        """Test ThirdBridgeTranscriptItem model."""
-        transcript_item = ThirdBridgeTranscriptItem(
-            start_ms=1000,
-            duration_ms=60000,
-            transcript="Opening remarks and introduction",
-        )
-        assert transcript_item.start_ms == 1000
-        assert transcript_item.duration_ms == 60000
-        assert transcript_item.transcript == "Opening remarks and introduction"
+            GetThirdBridgeEventArgs()  # No IDs provided
 
 
 @pytest.mark.unit
 class TestThirdBridgeResponses:
-    """Test third_bridge response models."""
+    """Test third_bridge response models with pass-through pattern."""
 
     def test_find_third_bridge_events_response(self):
-        """Test FindThirdBridgeEventsResponse model."""
-        from aiera_mcp.tools.third_bridge.models import (
-            ThirdBridgeResponseData,
-            ThirdBridgePaginationInfo,
-        )
-
-        events = [
-            ThirdBridgeEventItem(
-                event_id="tb123",  # API format
-                content_type="FORUM",
-                call_date="2023-10-20T14:00:00Z",
-                title="Test Event",
-                language="EN",
-                agenda=["Test agenda"],
-                insights=["Test insight"],
-            )
-        ]
-
-        pagination = ThirdBridgePaginationInfo(
-            total_count=1, current_page=1, total_pages=1, page_size=50
-        )
-
-        response_data = ThirdBridgeResponseData(pagination=pagination, data=events)
-
+        """Test FindThirdBridgeEventsResponse model with pass-through data."""
         response = FindThirdBridgeEventsResponse(
-            response=response_data,
+            response={
+                "data": [
+                    {
+                        "event_id": "tb123",
+                        "content_type": "FORUM",
+                        "call_date": "2023-10-20T14:00:00Z",
+                        "title": "Test Event",
+                        "language": "EN",
+                        "agenda": ["Test agenda"],
+                        "insights": ["Test insight"],
+                    }
+                ],
+                "pagination": {
+                    "total_count": 1,
+                    "current_page": 1,
+                    "total_pages": 1,
+                    "page_size": 25,
+                },
+            },
             instructions=["Test instruction"],
         )
 
-        assert len(response.response.data) == 1
-        assert response.response.data[0].thirdbridge_event_id == "tb123"
-        assert response.response.pagination.total_count == 1
-        assert response.response.pagination.current_page == 1
-        assert response.response.pagination.page_size == 50
+        assert response.response is not None
+        assert len(response.response["data"]) == 1
+        assert response.response["data"][0]["event_id"] == "tb123"
+        assert response.response["pagination"]["total_count"] == 1
         assert response.instructions == ["Test instruction"]
 
     def test_get_third_bridge_event_response(self):
-        """Test GetThirdBridgeEventResponse model."""
-        event_details = ThirdBridgeEventDetails(
-            event_id="tb123",  # API format
-            content_type="FORUM",
-            call_date="2023-10-20T14:00:00Z",
-            title="Test Event",
-            language="EN",
-            agenda=["Test agenda item"],  # List[str]
-            insights=["Test insight"],  # List[str]
-            transcript=[{"timestamp": "[00:00:01]", "discussionItem": ["Test"]}],
-        )
-
+        """Test GetThirdBridgeEventResponse model with pass-through data."""
         response = GetThirdBridgeEventResponse(
-            event=event_details,
+            response={
+                "data": [
+                    {
+                        "event_id": "tb123",
+                        "content_type": "FORUM",
+                        "call_date": "2023-10-20T14:00:00Z",
+                        "title": "Test Event",
+                        "language": "EN",
+                        "agenda": ["Test agenda item"],
+                        "insights": ["Test insight"],
+                    }
+                ]
+            },
             instructions=["Test instruction"],
         )
 
-        assert isinstance(response.event, ThirdBridgeEventDetails)
-        assert response.event.thirdbridge_event_id == "tb123"
-        assert isinstance(response.event.agenda, list)
-        assert response.event.agenda[0] == "Test agenda item"
+        assert response.response is not None
+        assert response.response["data"][0]["event_id"] == "tb123"
         assert response.instructions == ["Test instruction"]
 
-    def test_get_third_bridge_event_response_optional_event(self):
-        """Test GetThirdBridgeEventResponse with None event (robustness)."""
+    def test_get_third_bridge_event_response_none(self):
+        """Test GetThirdBridgeEventResponse with None response."""
         response = GetThirdBridgeEventResponse(
-            event=None,  # No event found
+            response=None,
             instructions=["No event found"],
         )
 
-        assert response.event is None
+        assert response.response is None
         assert response.instructions == ["No event found"]
 
 
@@ -431,175 +308,28 @@ class TestThirdBridgeModelValidation:
         assert "start_date" in schema["required"]
         assert "end_date" in schema["required"]
 
-    def test_call_date_handling(self):
-        """Test call date field handling."""
-        # Valid call_date string
-        event = ThirdBridgeEventItem(
-            event_id="tb123",
-            content_type="FORUM",
-            call_date="2023-10-20T14:00:00Z",
-            title="Test Event",
-            language="EN",
-            agenda=["Test agenda"],
-            insights=["Test insight"],
-        )
-        assert event.call_date == "2023-10-20T14:00:00Z"
-
-        # Test with different datetime string formats
-        event_with_seconds = ThirdBridgeEventItem(
-            event_id="tb124",
-            content_type="FORUM",
-            call_date="2023-10-20T14:30:45Z",
-            title="Test Event",
-            language="EN",
-            agenda=["Test agenda"],
-            insights=["Test insight"],
-        )
-        assert event_with_seconds.call_date == "2023-10-20T14:30:45Z"
-
-    def test_event_details_optional_fields(self):
-        """Test optional fields in ThirdBridgeEventDetails."""
-        # Minimal event details
-        details = ThirdBridgeEventDetails(
-            event_id="tb123",
-            content_type="FORUM",
-            call_date="2023-10-20T14:00:00Z",
-            title="Test Event",
-            language="EN",
-        )
-        assert details.agenda is None
-        assert details.insights is None
-        assert details.transcripts is None
-
-        # Event details with all optional fields
-        details_full = ThirdBridgeEventDetails(
-            event_id="tb124",
-            content_type="FORUM",
-            call_date="2023-10-20T14:00:00Z",
-            title="Test Event",
-            language="EN",
-            agenda=["Test agenda"],
-            insights=["Test insights"],
-            transcripts=[
-                {"start_ms": 1000, "duration_ms": 60000, "transcript": "Test"}
-            ],
-        )
-        assert isinstance(details_full.agenda, list)
-        assert isinstance(details_full.insights, list)
-        assert isinstance(details_full.transcripts, list)
-
-    def test_agenda_and_insights_handling(self):
-        """Test agenda and insights field handling."""
-        # With agenda and insights
-        event = ThirdBridgeEventItem(
-            event_id="tb123",
-            content_type="FORUM",
-            call_date="2023-10-20T14:00:00Z",
-            title="Test Event",
-            language="EN",
-            agenda=["Supply chain discussion", "Market outlook"],
-            insights=["Key insight 1", "Key insight 2"],
-        )
-        assert len(event.agenda) == 2
-        assert event.agenda[0] == "Supply chain discussion"
-        assert len(event.insights) == 2
-        assert event.insights[0] == "Key insight 1"
-
-        # With empty agenda and insights
-        event_empty = ThirdBridgeEventItem(
-            event_id="tb124",
-            content_type="FORUM",
-            call_date="2023-10-20T14:00:00Z",
-            title="Test Event",
-            language="EN",
-            agenda=[],
-        )
-        assert len(event_empty.agenda) == 0
-        assert event_empty.insights is None  # Optional
-
-
-@pytest.mark.unit
-class TestThirdBridgeEventItemDateTimeSerialization:
-    """Test datetime field serialization in Third Bridge event models."""
-
-    def test_third_bridge_event_item_serialization(self):
-        """Test that ThirdBridgeEventItem fields are serialized correctly."""
-        event = ThirdBridgeEventItem(
-            event_id="tb123",
-            content_type="FORUM",
-            call_date="2024-01-15T14:30:00Z",
-            title="Test Third Bridge Event",
-            language="EN",
-            agenda=["Test agenda item"],
-            insights=["Test insight"],
-            citation_information={
-                "title": "Test Event",
-                "url": "https://thirdbridge.com/event/tb123",
-                "expert_name": "Jane Expert",
-                "expert_title": "Former Executive",
-            },
-        )
-
-        # Test model_dump serialization
-        serialized = event.model_dump()
-
-        # call_date should remain as string
-        assert isinstance(serialized["call_date"], str)
-        assert serialized["call_date"] == "2024-01-15T14:30:00Z"
-        assert isinstance(serialized["agenda"], list)
-        assert isinstance(serialized["insights"], list)
-
-    def test_third_bridge_event_details_serialization(self):
-        """Test that ThirdBridgeEventDetails serialization works correctly."""
-        details = ThirdBridgeEventDetails(
-            event_id="tb123",
-            content_type="FORUM",
-            call_date="2024-01-15T14:30:00Z",
-            title="Test Third Bridge Event",
-            language="EN",
-            agenda=["Test agenda"],  # List[str]
-            insights=["Test insights"],  # List[str]
-            transcript=[{"timestamp": "[00:00:01]", "discussionItem": []}],
-        )
-
-        # Test model_dump serialization
-        serialized = details.model_dump()
-
-        # call_date should remain as string
-        assert isinstance(serialized["call_date"], str)
-        assert serialized["call_date"] == "2024-01-15T14:30:00Z"
-        assert isinstance(serialized["agenda"], list)
-        assert serialized["agenda"][0] == "Test agenda"
-
     def test_third_bridge_response_json_serialization(self):
         """Test that complete Third Bridge response models can be serialized to JSON."""
-        from aiera_mcp.tools.third_bridge.models import (
-            ThirdBridgeResponseData,
-            ThirdBridgePaginationInfo,
-        )
-
-        # Create Third Bridge event with new structure
-        event = ThirdBridgeEventItem(
-            event_id="tb123",
-            content_type="FORUM",
-            call_date="2024-01-15T14:30:00Z",
-            title="Test Third Bridge Event",
-            language="EN",
-            agenda=["Test agenda"],
-            insights=["Test insight"],
-        )
-
-        # Create pagination info
-        pagination = ThirdBridgePaginationInfo(
-            total_count=1, current_page=1, total_pages=1, page_size=50
-        )
-
-        # Create response data container
-        response_data = ThirdBridgeResponseData(pagination=pagination, data=[event])
-
-        # Create response with new structure
         response = FindThirdBridgeEventsResponse(
-            response=response_data,
+            response={
+                "data": [
+                    {
+                        "event_id": "tb123",
+                        "content_type": "FORUM",
+                        "call_date": "2024-01-15T14:30:00Z",
+                        "title": "Test Third Bridge Event",
+                        "language": "EN",
+                        "agenda": ["Test agenda"],
+                        "insights": ["Test insight"],
+                    }
+                ],
+                "pagination": {
+                    "total_count": 1,
+                    "current_page": 1,
+                    "total_pages": 1,
+                    "page_size": 25,
+                },
+            },
             instructions=["Third Bridge instruction"],
         )
 
@@ -614,26 +344,3 @@ class TestThirdBridgeEventItemDateTimeSerialization:
         # Verify fields were serialized correctly in JSON
         parsed = json.loads(json_str)
         assert isinstance(parsed["response"]["data"][0]["call_date"], str)
-
-    def test_minimal_third_bridge_event_serialization(self):
-        """Test serialization of Third Bridge event with minimal required fields."""
-        event = ThirdBridgeEventItem(
-            event_id="tb124",
-            content_type="FORUM",
-            call_date="2024-01-15T14:30:00Z",
-            title="Minimal Event",
-            language="EN",
-            agenda=["Minimal agenda"],
-        )
-
-        # Test JSON serialization with minimal fields
-        response_dict = event.model_dump()
-        json_str = json.dumps(response_dict)
-
-        # Should not raise any serialization errors
-        assert isinstance(json_str, str)
-
-        # Verify call_date field was serialized as string
-        parsed = json.loads(json_str)
-        assert isinstance(parsed["call_date"], str)
-        assert parsed["call_date"] == "2024-01-15T14:30:00Z"

@@ -3,9 +3,9 @@
 """Company docs domain models for Aiera MCP."""
 
 from pydantic import BaseModel, Field, field_validator, field_serializer
-from typing import Optional, List, Any, Dict, Union
+from typing import Optional, Any, Union
 
-from ..common.models import BaseAieraResponse, PaginatedResponse
+from ..common.models import BaseAieraResponse
 
 
 # Mixins for validation (extracted from original params.py)
@@ -140,6 +140,11 @@ class FindCompanyDocsArgs(BaseToolArgs, BloombergTickerMixin, CategoriesKeywords
         pattern=r"^\d{4}-\d{2}-\d{2}$",
     )
 
+    search: Optional[str] = Field(
+        default=None,
+        description="Search term to filter docs by title or category.",
+    )
+
     bloomberg_ticker: Optional[str] = Field(
         default=None,
         description="Optional: Bloomberg ticker(s) to filter by specific companies in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces (e.g., 'AAPL:US,MSFT:US'). Defaults to ':US' if country code omitted. Leave empty to search across all companies.",
@@ -175,12 +180,22 @@ class FindCompanyDocsArgs(BaseToolArgs, BloombergTickerMixin, CategoriesKeywords
         description="Optional: Filter by keywords/topics (e.g., 'ESG', 'diversity', 'risk management', 'sustainability'). Use get_company_doc_keywords to see all valid keywords. Multiple keywords should be comma-separated without spaces.",
     )
 
+    exclude_categories: Optional[str] = Field(
+        default=None,
+        description="Comma-separated category names to exclude from results.",
+    )
+
+    exclude_keywords: Optional[str] = Field(
+        default=None,
+        description="Comma-separated keywords to exclude from results.",
+    )
+
     page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )
 
     page_size: Union[int, str] = Field(
-        default=50, ge=1, le=100, description="Number of items per page (1-100)."
+        default=25, ge=1, le=25, description="Number of items per page (1-25)."
     )
 
 
@@ -218,13 +233,13 @@ class GetCompanyDocArgs(BaseToolArgs):
         description="Whether to exclude all instructions from the tool response.",
     )
 
-    company_doc_ids: str = Field(
-        description="Unique identifier(s) for the company documents. Obtain doc_id from find_company_docs results. For multiple documents, use comma-separated list. Example: '12345' or '12345,67890'"
+    company_doc_id: str = Field(
+        description="Unique identifier for the company document. Obtain company_doc_id from find_company_docs results. Example: '12345'"
     )
 
 
-class GetCompanyDocCategoriesArgs(BaseToolArgs):
-    """Retrieve all available document categories for filtering company documents. Used to find valid category values for find_company_docs."""
+class GetCompanyDocCategoriesArgs(BaseToolArgs, BloombergTickerMixin):
+    """Retrieve all available document categories for filtering company documents. Requires at least one company filter (bloomberg_ticker, isin, ric, permid, sector_id, or subsector_id). Used to find valid category values for find_company_docs."""
 
     originating_prompt: Optional[str] = Field(
         default=None,
@@ -246,17 +261,47 @@ class GetCompanyDocCategoriesArgs(BaseToolArgs):
         description="Search term to filter results. Searches within relevant text fields.",
     )
 
+    bloomberg_ticker: Optional[str] = Field(
+        default=None,
+        description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). At least one company filter is required.",
+    )
+
+    isin: Optional[str] = Field(
+        default=None,
+        description="International Securities Identification Number (ISIN).",
+    )
+
+    ric: Optional[str] = Field(
+        default=None,
+        description="Reuters Instrument Code (RIC).",
+    )
+
+    permid: Optional[str] = Field(
+        default=None,
+        description="Refinitiv Permanent Identifier (PermID).",
+    )
+
+    sector_id: Optional[Union[int, str]] = Field(
+        default=None,
+        description="ID of a specific sector. Use get_sectors_and_subsectors to find valid IDs.",
+    )
+
+    subsector_id: Optional[Union[int, str]] = Field(
+        default=None,
+        description="ID of a specific subsector. Use get_sectors_and_subsectors to find valid IDs.",
+    )
+
     page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )
 
     page_size: Union[int, str] = Field(
-        default=50, ge=1, le=100, description="Number of items per page (1-100)."
+        default=25, ge=1, le=25, description="Number of items per page (1-25)."
     )
 
 
-class GetCompanyDocKeywordsArgs(BaseToolArgs):
-    """Retrieve all available keywords for filtering company documents. Used to find valid keyword values for find_company_docs."""
+class GetCompanyDocKeywordsArgs(BaseToolArgs, BloombergTickerMixin):
+    """Retrieve all available keywords for filtering company documents. Requires at least one company filter (bloomberg_ticker, isin, ric, permid, sector_id, or subsector_id). Used to find valid keyword values for find_company_docs."""
 
     originating_prompt: Optional[str] = Field(
         default=None,
@@ -278,138 +323,65 @@ class GetCompanyDocKeywordsArgs(BaseToolArgs):
         description="Search term to filter results. Searches within relevant text fields.",
     )
 
+    bloomberg_ticker: Optional[str] = Field(
+        default=None,
+        description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). At least one company filter is required.",
+    )
+
+    isin: Optional[str] = Field(
+        default=None,
+        description="International Securities Identification Number (ISIN).",
+    )
+
+    ric: Optional[str] = Field(
+        default=None,
+        description="Reuters Instrument Code (RIC).",
+    )
+
+    permid: Optional[str] = Field(
+        default=None,
+        description="Refinitiv Permanent Identifier (PermID).",
+    )
+
+    sector_id: Optional[Union[int, str]] = Field(
+        default=None,
+        description="ID of a specific sector. Use get_sectors_and_subsectors to find valid IDs.",
+    )
+
+    subsector_id: Optional[Union[int, str]] = Field(
+        default=None,
+        description="ID of a specific subsector. Use get_sectors_and_subsectors to find valid IDs.",
+    )
+
     page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )
 
     page_size: Union[int, str] = Field(
-        default=50, ge=1, le=100, description="Number of items per page (1-100)."
+        default=25, ge=1, le=25, description="Number of items per page (1-25)."
     )
 
 
-# Response models (extracted from responses.py)
-class CompanyInfo(BaseModel):
-    """Company information in document."""
-
-    company_id: int = Field(description="Company identifier")
-    name: str = Field(description="Company name")
-
-
-class DocumentCitationMetadata(BaseModel):
-    """Metadata for document citation."""
-
-    type: str = Field(
-        description="The type of citation ('event', 'filing', 'company_doc', 'conference', or 'company')"
-    )
-    url_target: Optional[str] = Field(
-        None,
-        description="Whether the citation URL will go to Aiera or to an external source",
-    )
-    company_id: Optional[int] = Field(None, description="Company identifier")
-    company_doc_id: Optional[int] = Field(
-        None, description="Company document identifier"
-    )
-
-
-class DocumentCitationInfo(BaseModel):
-    """Citation information for document."""
-
-    title: Optional[str] = Field(
-        None, description="Citation title (can be null if document title is null)"
-    )
-    url: str = Field(description="Citation URL")
-    metadata: Optional[DocumentCitationMetadata] = Field(
-        None, description="Additional metadata about the citation"
-    )
-
-
-class CompanyDocItem(BaseModel):
-    """Individual company document item - matches actual API structure."""
-
-    doc_id: int = Field(description="Document identifier")
-    company: CompanyInfo = Field(description="Company information")
-    publish_date: Optional[str] = Field(
-        None, description="Publication date (can be null)"
-    )
-    category: Optional[str] = Field(None, description="Document category (can be null)")
-    title: Optional[str] = Field(None, description="Document title (can be null)")
-    source_url: str = Field(description="Original source URL")
-    summary: Optional[List[str]] = Field(
-        None, description="Document summary (can be null)"
-    )
-    keywords: Optional[List[str]] = Field(
-        None, description="Document keywords (can be null)"
-    )
-    processed: Optional[str] = Field(None, description="Processing date")
-    created: Optional[str] = Field(None, description="Creation date")
-    modified: Optional[str] = Field(None, description="Modification date")
-    content_raw: Optional[str] = Field(None, description="Raw document content")
-    citation_information: Optional[DocumentCitationInfo] = Field(
-        None, description="Citation information"
-    )
-
-
-class CompanyDocDetails(CompanyDocItem):
-    """Detailed company document information."""
-
-    # Don't override summary - inherit List[str] from CompanyDocItem
-    # The API returns summary as a list for both find and get endpoints
-    # content_raw is inherited from CompanyDocItem
-    attachments: Optional[List[Dict[str, Any]]] = Field(
-        default=None, description="Document attachments"
-    )
-
-
-class CategoryKeyword(BaseModel):
-    """Category or keyword information."""
-
-    name: str = Field(description="Category/keyword name")
-    count: int = Field(description="Usage count")
-
-
-# Response pagination structure
-class CompanyDocPaginationInfo(BaseModel):
-    """Pagination information from company docs API."""
-
-    total_count: int = Field(description="Total number of documents")
-    current_page: int = Field(description="Current page number")
-    total_pages: int = Field(description="Total number of pages")
-    page_size: int = Field(description="Number of documents per page")
-
-
-class CompanyDocResponseData(BaseModel):
-    """Company docs response data container."""
-
-    pagination: CompanyDocPaginationInfo = Field(description="Pagination information")
-    data: List[CompanyDocItem] = Field(description="List of company documents")
-
-
-# Response classes
+# Response models - pass through API response structure
 class FindCompanyDocsResponse(BaseAieraResponse):
-    """Response for find_company_docs tool - matches actual API structure."""
+    """Response for find_company_docs tool - passes through the API response structure."""
 
-    response: Optional[CompanyDocResponseData] = Field(
-        None, description="Response data container"
-    )
+    response: Optional[Any] = Field(None, description="Response data from the API")
 
 
 class GetCompanyDocResponse(BaseAieraResponse):
-    """Response for get_company_doc tool."""
+    """Response for get_company_doc tool - passes through the API response structure."""
 
-    document: Optional[CompanyDocDetails] = Field(
-        default=None, description="Detailed document information (None if not found)"
-    )
+    response: Optional[Any] = Field(None, description="Response data from the API")
 
 
 class GetCompanyDocCategoriesResponse(BaseAieraResponse):
-    """Response for get_company_doc_categories tool - matches actual API structure."""
+    """Response for get_company_doc_categories tool - passes through the API response structure."""
 
-    pagination: CompanyDocPaginationInfo = Field(description="Pagination information")
-    data: Dict[str, int] = Field(description="Dictionary of categories with counts")
+    response: Optional[Any] = Field(None, description="Response data from the API")
 
 
 class GetCompanyDocKeywordsResponse(BaseAieraResponse):
-    """Response for get_company_doc_keywords tool - matches actual API structure."""
+    """Response for get_company_doc_keywords tool - passes through the API response structure."""
 
-    pagination: CompanyDocPaginationInfo = Field(description="Pagination information")
-    data: Dict[str, int] = Field(description="Dictionary of keywords with counts")
+    response: Optional[Any] = Field(None, description="Response data from the API")

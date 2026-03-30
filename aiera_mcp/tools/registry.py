@@ -2,6 +2,12 @@
 
 """Tool registry for Aiera MCP server."""
 
+import functools
+import logging
+import time
+from typing import Any
+
+logger = logging.getLogger(__name__)
 
 # Import all tool functions from domain modules
 from .events import find_events, find_conferences, get_event, get_upcoming_events
@@ -25,8 +31,27 @@ from .company_docs import (
     get_company_doc_keywords,
 )
 from .third_bridge import find_third_bridge_events, get_third_bridge_event
-from .transcrippets import find_transcrippets, create_transcrippet, delete_transcrippet
-from .search import search_transcripts, search_filings
+from .research import (
+    find_research,
+    get_research,
+    get_research_providers,
+    get_research_authors,
+    get_research_asset_classes,
+    get_research_asset_types,
+    get_research_subjects,
+    get_research_product_focuses,
+    get_research_region_types,
+    get_research_country_codes,
+)
+from .web import trusted_web_search
+from .common import get_grammar_template
+from .search import (
+    search_transcripts,
+    search_filings,
+    search_research,
+    search_company_docs,
+    search_thirdbridge,
+)
 
 # Import all parameter model classes from domain modules
 from .events import (
@@ -55,12 +80,27 @@ from .company_docs import (
     GetCompanyDocKeywordsArgs,
 )
 from .third_bridge import FindThirdBridgeEventsArgs, GetThirdBridgeEventArgs
-from .transcrippets import (
-    FindTranscrippetsArgs,
-    CreateTranscrippetArgs,
-    DeleteTranscrippetArgs,
+from .research import (
+    FindResearchArgs,
+    GetResearchArgs,
+    GetResearchProvidersArgs,
+    GetResearchAuthorsArgs,
+    GetResearchAssetClassesArgs,
+    GetResearchAssetTypesArgs,
+    GetResearchSubjectsArgs,
+    GetResearchProductFocusesArgs,
+    GetResearchRegionTypesArgs,
+    GetResearchCountryCodesArgs,
 )
-from .search import SearchTranscriptsArgs, SearchFilingsArgs
+from .web import TrustedWebSearchArgs
+from .common import GetGrammarTemplateArgs
+from .search import (
+    SearchTranscriptsArgs,
+    SearchFilingsArgs,
+    SearchResearchArgs,
+    SearchCompanyDocsArgs,
+    SearchThirdbridgeArgs,
+)
 
 TOOL_REGISTRY = {
     "find_events": {
@@ -261,32 +301,95 @@ TOOL_REGISTRY = {
         "read_only": True,
         "destructive": False,
     },
-    "find_transcrippets": {
-        "display_name": "Find Transcrippets",
-        "input_schema": FindTranscrippetsArgs.model_json_schema(),
-        "function": find_transcrippets,
-        "args_model": FindTranscrippetsArgs,
-        "category": "transcrippets",
+    "find_research": {
+        "display_name": "Find Research",
+        "input_schema": FindResearchArgs.model_json_schema(),
+        "function": find_research,
+        "args_model": FindResearchArgs,
+        "category": "research",
         "read_only": True,
         "destructive": False,
     },
-    "create_transcrippet": {
-        "display_name": "Create Transcrippet",
-        "input_schema": CreateTranscrippetArgs.model_json_schema(),
-        "function": create_transcrippet,
-        "args_model": CreateTranscrippetArgs,
-        "category": "transcrippets",
-        "read_only": False,
+    "get_research": {
+        "display_name": "Get Research",
+        "input_schema": GetResearchArgs.model_json_schema(),
+        "function": get_research,
+        "args_model": GetResearchArgs,
+        "category": "research",
+        "read_only": True,
         "destructive": False,
     },
-    "delete_transcrippet": {
-        "display_name": "Delete Transcrippet",
-        "input_schema": DeleteTranscrippetArgs.model_json_schema(),
-        "function": delete_transcrippet,
-        "args_model": DeleteTranscrippetArgs,
-        "category": "transcrippets",
-        "read_only": False,
-        "destructive": True,
+    "get_research_providers": {
+        "display_name": "Get Research Providers",
+        "input_schema": GetResearchProvidersArgs.model_json_schema(),
+        "function": get_research_providers,
+        "args_model": GetResearchProvidersArgs,
+        "category": "research",
+        "read_only": True,
+        "destructive": False,
+    },
+    "get_research_authors": {
+        "display_name": "Get Research Authors",
+        "input_schema": GetResearchAuthorsArgs.model_json_schema(),
+        "function": get_research_authors,
+        "args_model": GetResearchAuthorsArgs,
+        "category": "research",
+        "read_only": True,
+        "destructive": False,
+    },
+    "get_research_asset_classes": {
+        "display_name": "Get Research Asset Classes",
+        "input_schema": GetResearchAssetClassesArgs.model_json_schema(),
+        "function": get_research_asset_classes,
+        "args_model": GetResearchAssetClassesArgs,
+        "category": "research",
+        "read_only": True,
+        "destructive": False,
+    },
+    "get_research_asset_types": {
+        "display_name": "Get Research Asset Types",
+        "input_schema": GetResearchAssetTypesArgs.model_json_schema(),
+        "function": get_research_asset_types,
+        "args_model": GetResearchAssetTypesArgs,
+        "category": "research",
+        "read_only": True,
+        "destructive": False,
+    },
+    "get_research_subjects": {
+        "display_name": "Get Research Subjects",
+        "input_schema": GetResearchSubjectsArgs.model_json_schema(),
+        "function": get_research_subjects,
+        "args_model": GetResearchSubjectsArgs,
+        "category": "research",
+        "read_only": True,
+        "destructive": False,
+    },
+    "get_research_product_focuses": {
+        "display_name": "Get Research Product Focuses",
+        "input_schema": GetResearchProductFocusesArgs.model_json_schema(),
+        "function": get_research_product_focuses,
+        "args_model": GetResearchProductFocusesArgs,
+        "category": "research",
+        "read_only": True,
+        "destructive": False,
+    },
+    "get_research_region_types": {
+        "display_name": "Get Research Region Types",
+        "input_schema": GetResearchRegionTypesArgs.model_json_schema(),
+        "function": get_research_region_types,
+        "args_model": GetResearchRegionTypesArgs,
+        "category": "research",
+        "read_only": True,
+        "destructive": False,
+    },
+    "get_research_country_codes": {
+        "display_name": "Get Research Country Codes",
+        "input_schema": GetResearchCountryCodesArgs.model_json_schema(),
+        "function": get_research_country_codes,
+        "args_model": GetResearchCountryCodesArgs,
+        "category": "research",
+        "read_only": True,
+        "destructive": False,
     },
     "search_transcripts": {
         "display_name": "Search Transcripts",
@@ -306,6 +409,51 @@ TOOL_REGISTRY = {
         "read_only": True,
         "destructive": False,
     },
+    "search_research": {
+        "display_name": "Search Research",
+        "input_schema": SearchResearchArgs.model_json_schema(),
+        "function": search_research,
+        "args_model": SearchResearchArgs,
+        "category": "search",
+        "read_only": True,
+        "destructive": False,
+    },
+    "search_company_docs": {
+        "display_name": "Search Company Documents",
+        "input_schema": SearchCompanyDocsArgs.model_json_schema(),
+        "function": search_company_docs,
+        "args_model": SearchCompanyDocsArgs,
+        "category": "search",
+        "read_only": True,
+        "destructive": False,
+    },
+    "search_thirdbridge": {
+        "display_name": "Search Third Bridge",
+        "input_schema": SearchThirdbridgeArgs.model_json_schema(),
+        "function": search_thirdbridge,
+        "args_model": SearchThirdbridgeArgs,
+        "category": "search",
+        "read_only": True,
+        "destructive": False,
+    },
+    "trusted_web_search": {
+        "display_name": "Trusted Web Search",
+        "input_schema": TrustedWebSearchArgs.model_json_schema(),
+        "function": trusted_web_search,
+        "args_model": TrustedWebSearchArgs,
+        "category": "web",
+        "read_only": True,
+        "destructive": False,
+    },
+    "get_grammar_template": {
+        "display_name": "Get Grammar Template",
+        "input_schema": GetGrammarTemplateArgs.model_json_schema(),
+        "function": get_grammar_template,
+        "args_model": GetGrammarTemplateArgs,
+        "category": "common",
+        "read_only": True,
+        "destructive": False,
+    },
 }
 
 
@@ -316,6 +464,46 @@ for tool_name, tool_config in TOOL_REGISTRY.items():
         # Extract and clean the docstring
         description = args_model.__doc__.strip()
         tool_config["description"] = description
+
+
+def _wrap_with_logging(func: Any, tool_name: str) -> Any:
+    """Wrap a tool function to fire-and-forget a log after each invocation."""
+    from .base import send_tool_log
+
+    @functools.wraps(func)
+    async def wrapper(args: Any) -> Any:
+        is_error = False
+        result = None
+        start = time.perf_counter()
+        try:
+            result = await func(args)
+            return result
+        except Exception:
+            is_error = True
+            raise
+        finally:
+            duration_ms = int((time.perf_counter() - start) * 1000)
+            try:
+                params = args.model_dump() if hasattr(args, "model_dump") else None
+                resp = None
+                if result is not None:
+                    resp = (
+                        result.model_dump() if hasattr(result, "model_dump") else result
+                    )
+                send_tool_log(
+                    tool_name, params, resp, is_error=is_error, duration_ms=duration_ms
+                )
+            except Exception:
+                logger.debug(
+                    "Failed to schedule MCP tool log for %s", tool_name, exc_info=True
+                )
+
+    return wrapper
+
+
+# Wrap all tool functions with logging
+for _tool_name, _tool_config in TOOL_REGISTRY.items():
+    _tool_config["function"] = _wrap_with_logging(_tool_config["function"], _tool_name)
 
 
 # Helper function to get tools by category

@@ -63,12 +63,12 @@ async def mock_http_dependencies(mock_server_import, mock_make_aiera_request):
 
         # Tool-specific patches - organized by domain
         tool_modules = [
-            "aiera_mcp.tools.transcrippets.tools",
             "aiera_mcp.tools.third_bridge.tools",
             "aiera_mcp.tools.filings.tools",
             "aiera_mcp.tools.equities.tools",
             "aiera_mcp.tools.events.tools",
             "aiera_mcp.tools.company_docs.tools",
+            "aiera_mcp.tools.research.tools",
             "aiera_mcp.tools.search.tools",
         ]
 
@@ -122,9 +122,9 @@ def third_bridge_api_responses(sample_api_responses):
 
 
 @pytest.fixture
-def transcrippets_api_responses(sample_api_responses):
-    """Transcrippets API response fixtures."""
-    return sample_api_responses.get("transcrippets", {})
+def research_api_responses(sample_api_responses):
+    """Research API response fixtures."""
+    return sample_api_responses.get("research", {})
 
 
 @pytest.fixture

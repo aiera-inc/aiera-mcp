@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import json
 import httpx
 import logging
 from typing import Any, Dict, Optional, Callable, List
@@ -47,10 +48,6 @@ def get_lambda_http_client() -> httpx.AsyncClient:
     return _lambda_http_client
 
 
-# HTTP client management for the standard MCP server
-# We'll manage clients directly in the tool functions as needed
-
-
 # Initialize standard MCP server
 server = Server("Aiera")
 
@@ -68,21 +65,28 @@ def get_api_documentation() -> str:
 
     This MCP server provides access to Aiera's comprehensive financial data API for institutional finance professionals.
 
+    ## Grammar Templates (Response Formatting)
+
+    Before producing any response that uses Aiera data, you MUST call the `get_grammar_template` tool to retrieve formatting instructions. These templates define how you should structure, format, and present your responses — including tone, style, and common language patterns.
+
+    - **At the start of each session**, call `get_grammar_template` with `template_type='general'` to get baseline formatting rules.
+    - Follow the instructions returned in the template when composing your response.
+
     ## Tool Categories
 
-    **Events & Transcripts**: Find and retrieve corporate events (earnings calls, conferences, meetings, etc.) with full transcripts and metadata.
+    **Research**: Find, retrieve, and search within sell-side research content (analyst reports, research notes, market analysis, etc.)
 
-    **SEC Filings**: Search and retrieve SEC filings (10-K, 10-Q, 8-K, etc.) with summaries and full content.
+    **Events & Transcripts**: Find, retrieve, and search within corporate events (earnings calls, conferences, M&A announcements, etc.).
 
-    **Company Documents**: Find company publications, including press releases, regulatory filings, announcements, and more.
+    **SEC Filings**: Find, retrieve, and search within SEC filings (10-K, 10-Q, 8-K, etc.).
 
-    **Expert Insights**: Access Third Bridge expert interview events and insights.
+    **Company Documents**: Find and retrieve company publications (press releases, regulatory filings, announcements, etc.).
 
-    **Search**: Perform semantic search across transcripts and filings with advanced filtering.
+    **Expert Insights**: Find and retrieve Third Bridge expert interview events and insights.
 
-    **Company Data**: Access equity information, sector classifications, index constituents, and watchlists.
+    **Company Data**: Access company financials and KPIs, sector classifications, index constituents, and watchlists.
 
-    **Transcrippets™**: Create, find, and manage curated transcript segments for key insights and memorable quotes.
+    **Utility**: Grammar templates for response formatting guidance.
 
     ## Key Features
 
@@ -187,8 +191,6 @@ async def run_server():
                 result_dict = result
 
             # Return as TextContent
-            import json
-
             result_text = (
                 json.dumps(result_dict, indent=2)
                 if not isinstance(result_dict, str)

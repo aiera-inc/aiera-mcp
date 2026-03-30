@@ -135,7 +135,7 @@ class TestBaseModels:
         args_default = SearchArgs()
         assert args_default.search is None
         assert args_default.page == 1
-        assert args_default.page_size == 50
+        assert args_default.page_size == 25
 
     def test_base_aiera_response(self):
         """Test BaseAieraResponse model."""

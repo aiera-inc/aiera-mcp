@@ -12,7 +12,11 @@ from .models import (
     # Common argument types
     EmptyArgs,
     SearchArgs,
+    # Grammar template
+    GetGrammarTemplateArgs,
+    GetGrammarTemplateResponse,
 )
+from .tools import get_grammar_template
 
 __all__ = [
     "BaseAieraArgs",
@@ -21,4 +25,7 @@ __all__ = [
     "CitationInfo",
     "EmptyArgs",
     "SearchArgs",
+    "GetGrammarTemplateArgs",
+    "GetGrammarTemplateResponse",
+    "get_grammar_template",
 ]

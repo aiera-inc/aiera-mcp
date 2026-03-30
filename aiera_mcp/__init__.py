@@ -104,19 +104,37 @@ AVAILABLE_TOOLS = [
     # Third Bridge Tools
     "find_third_bridge_events",
     "get_third_bridge_event",
-    # Transcrippet Tools
-    "find_transcrippets",
-    "create_transcrippet",
-    "delete_transcrippet",
+    # Research Tools
+    "find_research",
+    "get_research",
+    "get_research_providers",
+    "get_research_authors",
+    "get_research_asset_classes",
+    "get_research_asset_types",
+    "get_research_subjects",
+    "get_research_product_focuses",
+    "get_research_region_types",
+    "get_research_country_codes",
     # Search Tools
     "search_transcripts",
     "search_filings",
+    "search_research",
+    "search_company_docs",
+    "search_thirdbridge",
+    # Web Tools
+    "trusted_web_search",
+    # Common/Utility Tools
+    "get_grammar_template",
 ]
 
 # Convenience tool groups for common use cases
 EVENT_TOOLS = ["find_events", "find_conferences", "get_event", "get_upcoming_events"]
 FILING_TOOLS = ["find_filings", "get_filing"]
-EQUITY_TOOLS = ["find_equities", "get_equity_summaries", "get_sectors_and_subsectors"]
+EQUITY_TOOLS = [
+    "find_equities",
+    "get_equity_summaries",
+    "get_sectors_and_subsectors",
+]
 INDEX_WATCHLIST_TOOLS = [
     "get_available_indexes",
     "get_index_constituents",
@@ -130,6 +148,27 @@ COMPANY_DOC_TOOLS = [
     "get_company_doc_keywords",
 ]
 THIRD_BRIDGE_TOOLS = ["find_third_bridge_events", "get_third_bridge_event"]
+RESEARCH_TOOLS = [
+    "find_research",
+    "get_research",
+    "get_research_providers",
+    "get_research_authors",
+    "get_research_asset_classes",
+    "get_research_asset_types",
+    "get_research_subjects",
+    "get_research_product_focuses",
+    "get_research_region_types",
+    "get_research_country_codes",
+]
+SEARCH_TOOLS = [
+    "search_transcripts",
+    "search_filings",
+    "search_research",
+    "search_company_docs",
+    "search_thirdbridge",
+]
+WEB_TOOLS = ["trusted_web_search"]
+COMMON_TOOLS = ["get_grammar_template"]
 EMBEDDING_SEARCH_PIPELINE = "embedding_pipeline"
 HYBRID_SEARCH_PIPELINE = "hybrid_search_pipeline"
 
@@ -152,12 +191,27 @@ from .tools.company_docs import (
     get_company_doc_keywords,
 )
 from .tools.third_bridge import find_third_bridge_events, get_third_bridge_event
-from .tools.transcrippets import (
-    find_transcrippets,
-    create_transcrippet,
-    delete_transcrippet,
+from .tools.research import (
+    find_research,
+    get_research,
+    get_research_providers,
+    get_research_authors,
+    get_research_asset_classes,
+    get_research_asset_types,
+    get_research_subjects,
+    get_research_product_focuses,
+    get_research_region_types,
+    get_research_country_codes,
 )
-from .tools.search import search_transcripts, search_filings
+from .tools.search import (
+    search_transcripts,
+    search_filings,
+    search_research,
+    search_company_docs,
+    search_thirdbridge,
+)
+from .tools.web import trusted_web_search
+from .tools.common import get_grammar_template
 
 # Import configuration
 from .config import get_settings, reload_settings, AieraSettings
@@ -209,11 +263,23 @@ __all__ = [
     "get_company_doc_keywords",
     "find_third_bridge_events",
     "get_third_bridge_event",
-    "find_transcrippets",
-    "create_transcrippet",
-    "delete_transcrippet",
+    "find_research",
+    "get_research",
+    "get_research_providers",
+    "get_research_authors",
+    "get_research_asset_classes",
+    "get_research_asset_types",
+    "get_research_subjects",
+    "get_research_product_focuses",
+    "get_research_region_types",
+    "get_research_country_codes",
     "search_transcripts",
     "search_filings",
+    "search_research",
+    "search_company_docs",
+    "search_thirdbridge",
+    "trusted_web_search",
+    "get_grammar_template",
     # Utilities
     "make_aiera_request",
     "correct_bloomberg_ticker",
@@ -251,4 +317,8 @@ __all__ = [
     "INDEX_WATCHLIST_TOOLS",
     "COMPANY_DOC_TOOLS",
     "THIRD_BRIDGE_TOOLS",
+    "RESEARCH_TOOLS",
+    "SEARCH_TOOLS",
+    "WEB_TOOLS",
+    "COMMON_TOOLS",
 ]

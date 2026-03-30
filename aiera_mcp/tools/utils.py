@@ -2,6 +2,17 @@
 
 """Utility functions for Aiera MCP tools."""
 
+# Mapping of commonly-used Bloomberg ticker aliases to the canonical ticker
+# recognized by the Aiera platform. Applied after format normalization.
+TICKER_ALIASES = {
+    "GOOGL:US": "GOOG:US",
+}
+
+
+def _apply_ticker_alias(ticker: str) -> str:
+    """Apply ticker alias mapping for a single normalized ticker."""
+    return TICKER_ALIASES.get(ticker, ticker)
+
 
 def correct_bloomberg_ticker(ticker: str) -> str:
     """Ensure bloomberg ticker is in the correct format (ticker:country_code)."""
@@ -21,18 +32,18 @@ def correct_bloomberg_ticker(ticker: str) -> str:
             else:
                 reticker.append(ticker)
 
-        return ",".join(reticker)
+        return ",".join(_apply_ticker_alias(t) for t in reticker)
 
     # if a space was substituted over colon...
     elif ":" not in ticker and " " in ticker:
         ticker_parts = ticker.split()
-        return f"{ticker_parts[0]}:{ticker_parts[1]}"
+        return _apply_ticker_alias(f"{ticker_parts[0]}:{ticker_parts[1]}")
 
     # default to US if ticker doesn't include country code...
     elif ":" not in ticker:
-        return f"{ticker}:US"
+        return _apply_ticker_alias(f"{ticker}:US")
 
-    return ticker
+    return _apply_ticker_alias(ticker)
 
 
 def correct_keywords(keywords: str) -> str:

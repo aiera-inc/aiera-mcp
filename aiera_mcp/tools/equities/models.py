@@ -2,9 +2,10 @@
 
 """Equities domain models for Aiera MCP."""
 
-from pydantic import AliasChoices, BaseModel, Field, field_validator, field_serializer
-from typing import Optional, List, Any, Dict, Union, Literal
-from datetime import datetime, date
+from pydantic import BaseModel, Field, field_validator, field_serializer
+from typing import Optional, Any, Union, Literal
+
+from ..common.models import BaseAieraResponse
 
 
 # Mixins for validation (extracted from original params.py)
@@ -97,10 +98,6 @@ class FindEquitiesArgs(BaseToolArgs, BloombergTickerMixin):
         default=None, description="Reuters Instrument Code (RIC)."
     )
 
-    ticker: Optional[str] = Field(
-        default=None, description="Stock ticker symbol (without country code)."
-    )
-
     permid: Optional[str] = Field(
         default=None, description="Refinitiv Permanent Identifier (PermID)."
     )
@@ -110,12 +107,22 @@ class FindEquitiesArgs(BaseToolArgs, BloombergTickerMixin):
         description="Search term to filter results. Searches within company names or tickers.",
     )
 
+    sector_id: Optional[Union[int, str]] = Field(
+        default=None,
+        description="ID of a specific sector. Use get_sectors_and_subsectors to find valid IDs.",
+    )
+
+    subsector_id: Optional[Union[int, str]] = Field(
+        default=None,
+        description="ID of a specific subsector. Use get_sectors_and_subsectors to find valid IDs.",
+    )
+
     page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )
 
     page_size: Union[int, str] = Field(
-        default=50, ge=1, le=100, description="Number of items per page (1-100)."
+        default=25, ge=1, le=25, description="Number of items per page (1-25)."
     )
 
 
@@ -177,7 +184,7 @@ class GetIndexConstituentsArgs(BaseToolArgs):
     )
 
     page_size: Union[int, str] = Field(
-        default=50, ge=1, le=100, description="Number of items per page (1-100)."
+        default=25, ge=1, le=25, description="Number of items per page (1-25)."
     )
 
 
@@ -208,7 +215,7 @@ class GetWatchlistConstituentsArgs(BaseToolArgs):
     )
 
     page_size: Union[int, str] = Field(
-        default=50, ge=1, le=100, description="Number of items per page (1-100)."
+        default=25, ge=1, le=25, description="Number of items per page (1-25)."
     )
 
 
@@ -228,6 +235,14 @@ class GetAvailableWatchlistsArgs(BaseToolArgs):
     exclude_instructions: Optional[bool] = Field(
         default=False,
         description="Whether to exclude all instructions from the tool response.",
+    )
+
+    page: Union[int, str] = Field(
+        default=1, ge=1, description="Page number for pagination (1-based)."
+    )
+
+    page_size: Union[int, str] = Field(
+        default=25, ge=1, le=25, description="Number of items per page (1-25)."
     )
 
 
@@ -278,409 +293,7 @@ class GetSectorsAndSubsectorsArgs(BaseToolArgs):
     )
 
     page_size: Union[int, str] = Field(
-        default=50, ge=1, le=100, description="Number of items per page (1-100)."
-    )
-
-
-# Response models (extracted from responses.py)
-class EquityItem(BaseModel):
-    """Individual equity item."""
-
-    equity_id: int = Field(description="Unique equity identifier")
-    company_id: Optional[int] = Field(None, description="Company ID")
-    name: Optional[str] = Field(None, description="Company name")
-    bloomberg_ticker: str = Field(description="Bloomberg ticker")
-    sector_id: Optional[int] = Field(None, description="Sector ID")
-    subsector_id: Optional[int] = Field(
-        None,
-        description="Subsector ID",
-        validation_alias=AliasChoices("subsector_id", "sub_sector_id"),
-    )
-    primary_equity: Optional[bool] = Field(None, description="Is primary equity")
-    created: Optional[datetime] = Field(None, description="Creation date")
-    modified: Optional[datetime] = Field(None, description="Modification date")
-
-    @field_validator("created", "modified", mode="before")
-    @classmethod
-    def parse_datetime_fields(cls, v):
-        """Parse ISO format datetime strings to datetime objects."""
-        if v is None:
-            return None
-        if isinstance(v, str):
-            try:
-                # Replace 'Z' with '+00:00' for ISO format compatibility
-                return datetime.fromisoformat(v.replace("Z", "+00:00"))
-            except (ValueError, AttributeError):
-                return None
-        # If it's already a datetime object, return as is
-        return v
-
-    @field_serializer("created", "modified")
-    def serialize_datetime_fields(self, value: Optional[datetime]) -> Optional[str]:
-        """Serialize datetime fields to ISO format string for JSON compatibility."""
-        if value is None:
-            return None
-        return value.isoformat()
-
-
-class LeadershipItem(BaseModel):
-    """Leadership information for equity summaries."""
-
-    name: str = Field(description="Person name")
-    title: str = Field(description="Job title")
-    event_count: Optional[int] = Field(None, description="Number of events")
-    last_event_date: Optional[datetime] = Field(None, description="Last event date")
-
-    @field_validator("last_event_date", mode="before")
-    @classmethod
-    def parse_last_event_date(cls, v):
-        """Parse ISO format datetime strings to datetime objects."""
-        if v is None:
-            return None
-        if isinstance(v, str):
-            try:
-                # Replace 'Z' with '+00:00' for ISO format compatibility
-                return datetime.fromisoformat(v.replace("Z", "+00:00"))
-            except (ValueError, AttributeError):
-                return None
-        # If it's already a datetime object, return as is
-        return v
-
-    @field_serializer("last_event_date")
-    def serialize_datetime(self, value: Optional[datetime]) -> Optional[str]:
-        if value is None:
-            return None
-        return value.isoformat()
-
-
-class ConfirmedEventCitationMetadata(BaseModel):
-    """Metadata for confirmed event citation."""
-
-    type: str = Field(
-        description="The type of citation ('event', 'filing', 'company_doc', 'conference', or 'company')"
-    )
-    url_target: Optional[str] = Field(
-        None,
-        description="Whether the citation URL will go to Aiera or to an external source",
-    )
-    company_id: Optional[int] = Field(None, description="Company identifier")
-    event_id: Optional[int] = Field(None, description="Event identifier")
-
-
-class ConfirmedEventCitationInfo(BaseModel):
-    """Citation information for confirmed events."""
-
-    title: str = Field(description="Citation title")
-    url: str = Field(description="Citation URL")
-    metadata: Optional[ConfirmedEventCitationMetadata] = Field(
-        None, description="Citation metadata"
-    )
-
-
-class EventSummary(BaseModel):
-    """Summary information for a confirmed event."""
-
-    title: Optional[str] = Field(None, description="Summary title")
-    content: Optional[List[str]] = Field(None, description="Summary content paragraphs")
-
-
-class ConfirmedEventItem(BaseModel):
-    """A confirmed past or upcoming event."""
-
-    event_id: int = Field(description="Event identifier")
-    title: str = Field(description="Event title")
-    event_type: str = Field(description="Type of event (e.g., 'earnings')")
-    event_date: Optional[datetime] = Field(None, description="Event date")
-    fiscal_quarter: Optional[int] = Field(None, description="Fiscal quarter")
-    fiscal_year: Optional[int] = Field(None, description="Fiscal year")
-    has_human_verified: Optional[bool] = Field(
-        None, description="Whether event is human verified"
-    )
-    has_live_transcript: Optional[bool] = Field(
-        None, description="Whether event has live transcript"
-    )
-    has_audio: Optional[bool] = Field(None, description="Whether event has audio")
-    summary: Optional[EventSummary] = Field(None, description="Event summary")
-    citation_information: Optional[ConfirmedEventCitationInfo] = Field(
-        None, description="Citation information for this event"
-    )
-
-    @field_validator("event_date", mode="before")
-    @classmethod
-    def parse_event_date(cls, v):
-        """Parse ISO format datetime strings to datetime objects."""
-        if v is None:
-            return None
-        if isinstance(v, str):
-            try:
-                return datetime.fromisoformat(v.replace("Z", "+00:00"))
-            except (ValueError, AttributeError):
-                return None
-        return v
-
-    @field_serializer("event_date")
-    def serialize_datetime(self, value: Optional[datetime]) -> Optional[str]:
-        if value is None:
-            return None
-        return value.isoformat()
-
-
-class ConfirmedEvents(BaseModel):
-    """Confirmed events containing past and upcoming events."""
-
-    past: Optional[List[ConfirmedEventItem]] = Field(
-        default=None, description="Past confirmed events"
-    )
-    upcoming: Optional[List[ConfirmedEventItem]] = Field(
-        default=None, description="Upcoming confirmed events"
-    )
-
-
-class EstimatedEventItem(BaseModel):
-    """An estimated future event."""
-
-    estimate_id: int = Field(description="Estimate identifier")
-    estimate_date: Optional[datetime] = Field(None, description="Estimated event date")
-    estimate_type: str = Field(description="Type of estimated event (e.g., 'earnings')")
-    estimate_title: str = Field(description="Estimated event title")
-
-    @field_validator("estimate_date", mode="before")
-    @classmethod
-    def parse_estimate_date(cls, v):
-        """Parse ISO format datetime strings to datetime objects."""
-        if v is None:
-            return None
-        if isinstance(v, str):
-            try:
-                return datetime.fromisoformat(v.replace("Z", "+00:00"))
-            except (ValueError, AttributeError):
-                return None
-        return v
-
-    @field_serializer("estimate_date")
-    def serialize_datetime(self, value: Optional[datetime]) -> Optional[str]:
-        if value is None:
-            return None
-        return value.isoformat()
-
-
-class EquitySummaryItem(BaseModel):
-    """Individual equity with full summary information."""
-
-    equity_id: int = Field(description="Unique equity identifier")
-    company_id: Optional[int] = Field(None, description="Company ID")
-    name: Optional[str] = Field(None, description="Company name")
-    bloomberg_ticker: str = Field(description="Bloomberg ticker")
-    sector_id: Optional[int] = Field(None, description="Sector ID")
-    subsector_id: Optional[int] = Field(None, description="Subsector ID")
-    description: Optional[str] = Field(None, description="Company description")
-    country: Optional[str] = Field(None, description="Country")
-    created: Optional[datetime] = Field(None, description="Creation date")
-    modified: Optional[datetime] = Field(None, description="Modification date")
-    status: Optional[str] = Field(None, description="Status (e.g., 'active')")
-    leadership: Optional[List[LeadershipItem]] = Field(
-        None, description="Leadership information"
-    )
-    indices: Optional[List[str]] = Field(
-        None, description="List of indices the equity belongs to"
-    )
-    confirmed_events: Optional[ConfirmedEvents] = Field(
-        None, description="Confirmed past and upcoming events"
-    )
-    estimated_events: Optional[List[EstimatedEventItem]] = Field(
-        None, description="Estimated future events"
-    )
-
-    @field_validator("created", "modified", mode="before")
-    @classmethod
-    def parse_datetime_fields(cls, v):
-        """Parse ISO format datetime strings to datetime objects."""
-        if v is None:
-            return None
-        if isinstance(v, str):
-            try:
-                # Replace 'Z' with '+00:00' for ISO format compatibility
-                return datetime.fromisoformat(v.replace("Z", "+00:00"))
-            except (ValueError, AttributeError):
-                return None
-        # If it's already a datetime object, return as is
-        return v
-
-    @field_serializer("created", "modified")
-    def serialize_datetime_fields(self, value: Optional[datetime]) -> Optional[str]:
-        if value is None:
-            return None
-        return value.isoformat()
-
-
-class EquitySummary(BaseModel):
-    """Equity summary information."""
-
-    description: Optional[str] = Field(default=None, description="Company description")
-    recent_events: List[str] = Field(default=[], description="Recent corporate events")
-    key_metrics: Dict[str, Any] = Field(default={}, description="Key financial metrics")
-    analyst_coverage: Dict[str, Any] = Field(
-        default={}, description="Analyst coverage info"
-    )
-
-
-class EquityDetails(EquityItem):
-    """Detailed equity information."""
-
-    summary: Optional[EquitySummary] = Field(
-        default=None, description="Company summary"
-    )
-    identifiers: Dict[str, str] = Field(
-        default={}, description="Alternative identifiers"
-    )
-
-
-class SubsectorInfo(BaseModel):
-    """Subsector information."""
-
-    subsector_id: int = Field(description="Subsector ID")
-    name: str = Field(description="Subsector name")
-    gics_code: Optional[str] = Field(None, description="GICS subsector code")
-    gics_industry_code: Optional[str] = Field(None, description="GICS industry code")
-
-
-class SectorSubsector(BaseModel):
-    """Sector and subsector information."""
-
-    sector_id: int = Field(description="Sector ID")
-    name: str = Field(description="Sector name")
-    gics_code: Optional[str] = Field(None, description="GICS sector code")
-    subsectors: Optional[List[SubsectorInfo]] = Field(
-        None, description="List of subsectors"
-    )
-
-    # Backward compatibility properties
-    @property
-    def sector_name(self) -> str:
-        return self.name
-
-    # For single subsector access (legacy compatibility)
-    @property
-    def subsector_id(self) -> Optional[int]:
-        if self.subsectors and len(self.subsectors) > 0:
-            return self.subsectors[0].subsector_id
-        return None
-
-    @property
-    def subsector_name(self) -> Optional[str]:
-        if self.subsectors and len(self.subsectors) > 0:
-            return self.subsectors[0].name
-        return None
-
-
-class IndexItem(BaseModel):
-    """Index information."""
-
-    index_id: int = Field(description="Index identifier")
-    name: str = Field(description="Index name")
-    short_name: Optional[str] = Field(None, description="Index short name/symbol")
-
-    # Alias for backward compatibility
-    @property
-    def index_name(self) -> str:
-        return self.name
-
-
-class WatchlistItem(BaseModel):
-    """Watchlist information."""
-
-    watchlist_id: int = Field(description="Watchlist identifier")
-    name: str = Field(description="Watchlist name")
-    type: Optional[str] = Field(None, description="Watchlist type")
-
-    # Alias for backward compatibility
-    @property
-    def watchlist_name(self) -> str:
-        return self.name
-
-
-# Response classes
-class ApiPaginationInfo(BaseModel):
-    """Pagination information from API response."""
-
-    total_count: Optional[int] = Field(None, description="Total number of items")
-    current_page: Optional[int] = Field(None, description="Current page number")
-    total_pages: Optional[int] = Field(None, description="Total number of pages")
-    page_size: Optional[int] = Field(None, description="Items per page")
-
-
-class FindEquitiesApiResponseData(BaseModel):
-    """API response structure with data and pagination for find_equities."""
-
-    data: List[EquityItem] = Field(None, description="List of equities")
-    pagination: Optional[ApiPaginationInfo] = Field(
-        None, description="Pagination information"
-    )
-
-
-class FindEquitiesResponse(BaseModel):
-    """Response for find_equities tool"""
-
-    instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: Optional[FindEquitiesApiResponseData] = Field(
-        None, description="Response data"
-    )
-    error: Optional[str] = Field(None, description="Error message if request failed")
-
-
-class GetEquitySummariesResponse(BaseModel):
-    """Response for get_equity_summaries tool"""
-
-    instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: Optional[List[EquitySummaryItem]] = Field(
-        None, description="List of equity summaries"
-    )
-    error: Optional[str] = Field(None, description="Error message if request failed")
-
-
-class GetSectorsSubsectorsResponse(BaseModel):
-    """Response for get_sectors_and_subsectors tool"""
-
-    response: Optional[List[SectorSubsector]] = Field(
-        None, description="List of sectors and subsectors"
-    )
-
-
-class GetAvailableIndexesResponse(BaseModel):
-    """Response for get_available_indexes tool"""
-
-    instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: Optional[List[IndexItem]] = Field(
-        None, description="List of available indexes"
-    )
-    error: Optional[str] = Field(None, description="Error message if request failed")
-
-
-class GetIndexConstituentsResponse(BaseModel):
-    """Response for get_index_constituents tool - matches actual API structure."""
-
-    data: List[EquityItem] = Field(None, description="List of equities")
-    pagination: Optional[ApiPaginationInfo] = Field(
-        None, description="Pagination information"
-    )
-
-
-class GetAvailableWatchlistsResponse(BaseModel):
-    """Response for get_available_watchlists tool - matches actual API structure."""
-
-    instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: Optional[List[WatchlistItem]] = Field(
-        None, description="List of available watchlists"
-    )
-    error: Optional[str] = Field(None, description="Error message if request failed")
-
-
-class GetWatchlistConstituentsResponse(BaseModel):
-    """Response for get_watchlist_constituents tool - matches actual API structure."""
-
-    data: List[EquityItem] = Field(None, description="List of equities")
-    pagination: Optional[ApiPaginationInfo] = Field(
-        None, description="Pagination information"
+        default=25, ge=1, le=25, description="Number of items per page (1-25)."
     )
 
 
@@ -729,11 +342,9 @@ class GetFinancialsArgs(BaseToolArgs, BloombergTickerMixin):
         description="The format type of the financial data: 'as-reported' for original filings or 'standardized' for normalized data.",
     )
 
-    period: Literal["annual", "quarterly", "semi-annual", "ltm", "ytd", "latest"] = (
-        Field(
-            default="annual",
-            description="The reporting period type. Options: 'annual' (full fiscal year), 'quarterly' (Q1-Q4, requires calendar_quarter), 'semi-annual' (half year), 'ltm' (last twelve months trailing), 'ytd' (year to date), 'latest' (most recent available).",
-        )
+    period: Literal["annual", "quarterly", "semi-annual"] = Field(
+        default="annual",
+        description="The reporting period type. Options: 'annual' (full fiscal year), 'quarterly' (Q1-Q4, requires calendar_quarter), 'semi-annual' (half year).",
     )
 
     calendar_year: int = Field(description="The calendar year for the financial data.")
@@ -757,168 +368,6 @@ class GetFinancialsArgs(BaseToolArgs, BloombergTickerMixin):
         default=None,
         description="Metric type filter.",
     )
-
-
-class FinancialMetricInfo(BaseModel):
-    """Metadata about a financial metric."""
-
-    metric_name: str = Field(description="Name of the financial metric")
-    metric_format: Optional[str] = Field(
-        None, description="What the metric represents (e.g., number, ratio)"
-    )
-    is_point_in_time: Optional[bool] = Field(
-        None, description="Whether the metric is a point-in-time value"
-    )
-    is_currency: Optional[bool] = Field(
-        None, description="Whether the metric is a currency value"
-    )
-    is_per_share: Optional[bool] = Field(
-        None, description="Whether the metric is a per-share value"
-    )
-    is_key_metric: Optional[bool] = Field(
-        None, description="Whether the metric is a key/important metric"
-    )
-    is_total: Optional[bool] = Field(
-        None, description="Whether the metric is a total/sum value"
-    )
-    headers: Optional[List[str]] = Field(
-        None, description="Header hierarchy for the metric"
-    )
-
-
-class FinancialCitationMetadata(BaseModel):
-    """Metadata for financial citation."""
-
-    type: Optional[str] = Field(None, description="The type of citation")
-    url_target: Optional[str] = Field(
-        None,
-        description="Whether the citation URL will go to Aiera or to an external source",
-    )
-
-
-class FinancialCitationInfo(BaseModel):
-    """Citation information for financial metrics."""
-
-    title: Optional[str] = Field(None, description="Citation title")
-    url: Optional[str] = Field(None, description="Citation URL")
-    metadata: Optional[FinancialCitationMetadata] = Field(
-        None, description="Citation metadata"
-    )
-
-
-class FinancialMetricItem(BaseModel):
-    """Individual financial metric with value and citation."""
-
-    metric: FinancialMetricInfo = Field(description="Metric metadata")
-    metric_value: Optional[Union[int, float]] = Field(
-        None, description="The metric value"
-    )
-    metric_unit: Optional[str] = Field(
-        None, description="Unit of the metric value (e.g. M, B)"
-    )
-    metric_currency: Optional[str] = Field(
-        None, description="Currency of the metric value (e.g. USD, EUR)"
-    )
-    metric_is_calculated: Optional[bool] = Field(
-        None, description="Whether the metric was calculated"
-    )
-    citation_information: Optional[FinancialCitationInfo] = Field(
-        None, description="Citation information for this metric"
-    )
-
-
-class FinancialPeriodItem(BaseModel):
-    """Financial data for a specific period."""
-
-    period_type: Optional[str] = Field(
-        None, description="Type of period (annual, quarterly, etc.)"
-    )
-    report_date: Optional[date] = Field(None, description="Report date")
-    period_duration: Optional[str] = Field(None, description="Duration of the period")
-    calendar_year: Optional[int] = Field(None, description="Calendar year")
-    calendar_quarter: Optional[int] = Field(None, description="Calendar quarter")
-    fiscal_year: Optional[int] = Field(None, description="Fiscal year")
-    fiscal_quarter: Optional[int] = Field(None, description="Fiscal quarter")
-    is_restated: Optional[bool] = Field(
-        None, description="Whether the data was restated"
-    )
-    earnings_date: Optional[datetime] = Field(None, description="Earnings release date")
-    filing_date: Optional[datetime] = Field(None, description="Filing date")
-    metrics: Optional[List[FinancialMetricItem]] = Field(
-        None, description="List of financial metrics"
-    )
-
-    @field_validator("report_date", mode="before")
-    @classmethod
-    def parse_report_date(cls, v):
-        """Parse date strings to date objects."""
-        if v is None:
-            return None
-        if isinstance(v, str):
-            try:
-                return date.fromisoformat(v)
-            except (ValueError, AttributeError):
-                return None
-        return v
-
-    @field_validator("earnings_date", "filing_date", mode="before")
-    @classmethod
-    def parse_datetime_fields(cls, v):
-        """Parse ISO format datetime strings to datetime objects."""
-        if v is None:
-            return None
-        if isinstance(v, str):
-            try:
-                return datetime.fromisoformat(v.replace("Z", "+00:00"))
-            except (ValueError, AttributeError):
-                return None
-        return v
-
-    @field_serializer("report_date")
-    def serialize_report_date(self, value: Optional[date]) -> Optional[str]:
-        """Serialize date fields to ISO format string."""
-        if value is None:
-            return None
-        return value.isoformat()
-
-    @field_serializer("earnings_date", "filing_date")
-    def serialize_datetime_fields(self, value: Optional[datetime]) -> Optional[str]:
-        """Serialize datetime fields to ISO format string."""
-        if value is None:
-            return None
-        return value.isoformat()
-
-
-class FinancialEquityInfo(BaseModel):
-    """Equity information in financials response."""
-
-    equity_id: Optional[int] = Field(None, description="Unique equity identifier")
-    company_id: Optional[int] = Field(None, description="Company ID")
-    name: Optional[str] = Field(None, description="Company name")
-    bloomberg_ticker: Optional[str] = Field(None, description="Bloomberg ticker")
-    sector_id: Optional[int] = Field(None, description="Sector ID")
-    subsector_id: Optional[int] = Field(None, description="Subsector ID")
-
-
-class FinancialsResponseData(BaseModel):
-    """Response data containing equity and financials."""
-
-    equity: Optional[FinancialEquityInfo] = Field(
-        None, description="Equity information"
-    )
-    periods: Optional[List[FinancialPeriodItem]] = Field(
-        None, description="List of financial period data"
-    )
-
-
-class GetFinancialsResponse(BaseModel):
-    """Response for get_financials tool."""
-
-    instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: Optional[List[FinancialsResponseData]] = Field(
-        None, description="List of response data with equity and financials"
-    )
-    error: Optional[str] = Field(None, description="Error message if request failed")
 
 
 class GetRatiosArgs(BaseToolArgs, BloombergTickerMixin):
@@ -957,11 +406,9 @@ class GetRatiosArgs(BaseToolArgs, BloombergTickerMixin):
         description="Bloomberg ticker in format 'TICKER:COUNTRY' (e.g., 'AAPL:US')."
     )
 
-    period: Literal["annual", "quarterly", "semi-annual", "ltm", "ytd", "latest"] = (
-        Field(
-            default="annual",
-            description="The reporting period type. Options: 'annual' (full fiscal year), 'quarterly' (Q1-Q4, requires calendar_quarter), 'semi-annual' (half year), 'ltm' (last twelve months trailing), 'ytd' (year to date), 'latest' (most recent available).",
-        )
+    period: Literal["annual", "quarterly", "semi-annual"] = Field(
+        default="annual",
+        description="The reporting period type. Options: 'annual' (full fiscal year), 'quarterly' (Q1-Q4, requires calendar_quarter), 'semi-annual' (half year).",
     )
 
     calendar_year: int = Field(description="The calendar year for the ratio data.")
@@ -975,80 +422,6 @@ class GetRatiosArgs(BaseToolArgs, BloombergTickerMixin):
         default=None,
         description="Specific ratio ID to filter.",
     )
-
-
-class RatioItem(BaseModel):
-    """Individual ratio metric."""
-
-    ratio_id: Optional[str] = Field(None, description="Unique ratio identifier")
-    ratio: Optional[str] = Field(None, description="Ratio name")
-    ratio_category: Optional[str] = Field(None, description="Ratio category")
-    ratio_value: Optional[Union[int, float]] = Field(None, description="Ratio value")
-
-
-class RatioPeriodItem(BaseModel):
-    """Ratio data for a specific period."""
-
-    period_type: Optional[str] = Field(
-        None, description="Type of period (annual, quarterly, etc.)"
-    )
-    report_date: Optional[date] = Field(None, description="Report date")
-    period_duration: Optional[str] = Field(None, description="Duration of the period")
-    calendar_year: Optional[int] = Field(None, description="Calendar year")
-    calendar_quarter: Optional[int] = Field(None, description="Calendar quarter")
-    fiscal_year: Optional[int] = Field(None, description="Fiscal year")
-    fiscal_quarter: Optional[int] = Field(None, description="Fiscal quarter")
-    ratios: Optional[List[RatioItem]] = Field(None, description="List of ratios")
-
-    @field_validator("report_date", mode="before")
-    @classmethod
-    def parse_report_date(cls, v):
-        """Parse date strings to date objects."""
-        if v is None:
-            return None
-        if isinstance(v, str):
-            try:
-                return date.fromisoformat(v)
-            except (ValueError, AttributeError):
-                return None
-        return v
-
-    @field_serializer("report_date")
-    def serialize_report_date(self, value: Optional[date]) -> Optional[str]:
-        """Serialize date fields to ISO format string."""
-        if value is None:
-            return None
-        return value.isoformat()
-
-
-class RatiosEquityInfo(BaseModel):
-    """Equity information in ratios response."""
-
-    equity_id: Optional[int] = Field(None, description="Unique equity identifier")
-    company_id: Optional[int] = Field(None, description="Company ID")
-    name: Optional[str] = Field(None, description="Company name")
-    bloomberg_ticker: Optional[str] = Field(None, description="Bloomberg ticker")
-    sector_id: Optional[int] = Field(None, description="Sector ID")
-    subsector_id: Optional[int] = Field(None, description="Subsector ID")
-
-
-class RatiosResponseData(BaseModel):
-    """Response data containing equity and ratios."""
-
-    equity: Optional[RatiosEquityInfo] = Field(None, description="Equity information")
-    periods: Optional[List[RatioPeriodItem]] = Field(
-        None, description="List of ratio period data"
-    )
-
-
-class GetRatiosResponse(BaseModel):
-    """Response for get_ratios tool."""
-
-    instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: Optional[List[RatiosResponseData]] = Field(
-        None, description="List of response data with equity and ratios"
-    )
-    error: Optional[str] = Field(None, description="Error message if request failed")
 
 
 class GetKpisAndSegmentsArgs(BaseToolArgs, BloombergTickerMixin):
@@ -1087,11 +460,9 @@ class GetKpisAndSegmentsArgs(BaseToolArgs, BloombergTickerMixin):
         description="Bloomberg ticker in format 'TICKER:COUNTRY' (e.g., 'AAPL:US')."
     )
 
-    period: Literal["annual", "quarterly", "semi-annual", "ltm", "ytd", "latest"] = (
-        Field(
-            default="annual",
-            description="The reporting period type. Options: 'annual' (full fiscal year), 'quarterly' (Q1-Q4, requires calendar_quarter), 'semi-annual' (half year), 'ltm' (last twelve months trailing), 'ytd' (year to date), 'latest' (most recent available).",
-        )
+    period: Literal["annual", "quarterly", "semi-annual"] = Field(
+        default="annual",
+        description="The reporting period type. Options: 'annual' (full fiscal year), 'quarterly' (Q1-Q4, requires calendar_quarter), 'semi-annual' (half year).",
     )
 
     calendar_year: int = Field(
@@ -1114,86 +485,62 @@ class GetKpisAndSegmentsArgs(BaseToolArgs, BloombergTickerMixin):
     )
 
 
-class KpiSegmentMetricItem(BaseModel):
-    """Individual KPI or segment metric."""
+# Response models - pass through API response structure
+class FindEquitiesResponse(BaseAieraResponse):
+    """Response for find_equities tool - passes through the API response structure."""
 
-    metric_id: Optional[str] = Field(None, description="Unique metric identifier")
-    metric_name: Optional[str] = Field(None, description="Metric name")
-    metric_format: Optional[str] = Field(None, description="Metric format")
-    is_currency: Optional[bool] = Field(
-        None, description="Whether metric is currency-based"
-    )
-    is_important: Optional[bool] = Field(
-        None, description="Whether metric is important"
-    )
-    metric_value: Optional[Union[int, float]] = Field(None, description="Metric value")
+    response: Optional[Any] = Field(None, description="Response data from the API")
 
 
-class KpiSegmentPeriodItem(BaseModel):
-    """KPI and segment data for a specific period."""
+class GetEquitySummariesResponse(BaseAieraResponse):
+    """Response for get_equity_summaries tool - passes through the API response structure."""
 
-    period_type: Optional[str] = Field(
-        None, description="Type of period (annual, quarterly, etc.)"
-    )
-    report_date: Optional[date] = Field(None, description="Report date")
-    period_duration: Optional[str] = Field(None, description="Duration of the period")
-    calendar_year: Optional[int] = Field(None, description="Calendar year")
-    calendar_quarter: Optional[int] = Field(None, description="Calendar quarter")
-    fiscal_year: Optional[int] = Field(None, description="Fiscal year")
-    fiscal_quarter: Optional[int] = Field(None, description="Fiscal quarter")
-    kpi: Optional[List[KpiSegmentMetricItem]] = Field(None, description="List of KPIs")
-    segment: Optional[List[KpiSegmentMetricItem]] = Field(
-        None, description="List of segment metrics"
-    )
-
-    @field_validator("report_date", mode="before")
-    @classmethod
-    def parse_report_date(cls, v):
-        """Parse date strings to date objects."""
-        if v is None:
-            return None
-        if isinstance(v, str):
-            try:
-                return date.fromisoformat(v)
-            except (ValueError, AttributeError):
-                return None
-        return v
-
-    @field_serializer("report_date")
-    def serialize_report_date(self, value: Optional[date]) -> Optional[str]:
-        """Serialize date fields to ISO format string."""
-        if value is None:
-            return None
-        return value.isoformat()
+    response: Optional[Any] = Field(None, description="Response data from the API")
 
 
-class KpisSegmentsEquityInfo(BaseModel):
-    """Equity information in KPIs/segments response."""
+class GetSectorsSubsectorsResponse(BaseAieraResponse):
+    """Response for get_sectors_and_subsectors tool - passes through the API response structure."""
 
-    equity_id: Optional[int] = Field(None, description="Unique equity identifier")
-    company_id: Optional[int] = Field(None, description="Company ID")
-    name: Optional[str] = Field(None, description="Company name")
-    bloomberg_ticker: Optional[str] = Field(None, description="Bloomberg ticker")
-    sector_id: Optional[int] = Field(None, description="Sector ID")
-    subsector_id: Optional[int] = Field(None, description="Subsector ID")
+    response: Optional[Any] = Field(None, description="Response data from the API")
 
 
-class KpisSegmentsResponseData(BaseModel):
-    """Response data containing equity and KPIs/segments."""
+class GetAvailableIndexesResponse(BaseAieraResponse):
+    """Response for get_available_indexes tool - passes through the API response structure."""
 
-    equity: Optional[KpisSegmentsEquityInfo] = Field(
-        None, description="Equity information"
-    )
-    periods: Optional[List[KpiSegmentPeriodItem]] = Field(
-        None, description="List of KPI and segment period data"
-    )
+    response: Optional[Any] = Field(None, description="Response data from the API")
 
 
-class GetKpisAndSegmentsResponse(BaseModel):
-    """Response for get_kpis_and_segments tool."""
+class GetIndexConstituentsResponse(BaseAieraResponse):
+    """Response for get_index_constituents tool - passes through the API response structure."""
 
-    instructions: Optional[List[str]] = Field(None, description="API instructions")
-    response: Optional[List[KpisSegmentsResponseData]] = Field(
-        None, description="List of response data with equity and KPIs/segments"
-    )
-    error: Optional[str] = Field(None, description="Error message if request failed")
+    response: Optional[Any] = Field(None, description="Response data from the API")
+
+
+class GetAvailableWatchlistsResponse(BaseAieraResponse):
+    """Response for get_available_watchlists tool - passes through the API response structure."""
+
+    response: Optional[Any] = Field(None, description="Response data from the API")
+
+
+class GetWatchlistConstituentsResponse(BaseAieraResponse):
+    """Response for get_watchlist_constituents tool - passes through the API response structure."""
+
+    response: Optional[Any] = Field(None, description="Response data from the API")
+
+
+class GetFinancialsResponse(BaseAieraResponse):
+    """Response for get_financials tool - passes through the API response structure."""
+
+    response: Optional[Any] = Field(None, description="Response data from the API")
+
+
+class GetRatiosResponse(BaseAieraResponse):
+    """Response for get_ratios tool - passes through the API response structure."""
+
+    response: Optional[Any] = Field(None, description="Response data from the API")
+
+
+class GetKpisAndSegmentsResponse(BaseAieraResponse):
+    """Response for get_kpis_and_segments tool - passes through the API response structure."""
+
+    response: Optional[Any] = Field(None, description="Response data from the API")

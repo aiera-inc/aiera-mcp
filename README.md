@@ -27,7 +27,6 @@ This package exposes Aiera API endpoints as MCP tools, providing access to compr
 - **Financials**: Income statements, balance sheets, and cash flow statements
 - **Third Bridge**: Expert insight events
 - **Search**: Semantic search within transcripts, SEC filing content, company documents, etc.
-- **Transcrippets**: Create, manage, and retrieve transcript excerpts
 
 ## Installation
 
@@ -81,7 +80,7 @@ The package uses Pydantic BaseSettings for configuration management. All setting
 
 | Setting                   | Environment Variable             | Default                         | Description                      |
 |---------------------------|----------------------------------|---------------------------------|----------------------------------|
-| Base URL                  | `AIERA_BASE_URL`                 | `https://premium.aiera.com/api` | Aiera API base URL               |
+| Base URL                  | `AIERA_BASE_URL`                 | `https://graphql.aiera.com/api` | Aiera API base URL               |
 | API Key                   | `AIERA_API_KEY`                  | None                            | Your Aiera API key (required)    |
 | Page Size                 | `DEFAULT_PAGE_SIZE`              | `50`                            | Default number of items per page |
 | Max Page Size             | `DEFAULT_MAX_PAGE_SIZE`          | `100`                           | Maximum allowed page size        |
@@ -101,7 +100,7 @@ cp .env.example .env
 
 # Edit with your values
 AIERA_API_KEY=your-api-key-here
-AIERA_BASE_URL=https://premium.aiera.com/api  # Optional: override default
+AIERA_BASE_URL=https://graphql.aiera.com/api  # Optional: override default
 DEFAULT_PAGE_SIZE=100  # Optional: override default
 ```
 
@@ -168,8 +167,6 @@ from aiera_mcp import find_events, make_aiera_request, correct_bloomberg_ticker
 - **Search**: `search_transcripts`, `search_filings`
 - **Equities**: `find_equities`, `get_equity_summaries`, `get_sectors_and_subsectors`, `get_financials`
 - **Indexes & Watchlists**: `get_available_indexes`, `get_index_constituents`, `get_available_watchlists`, `get_watchlist_constituents`
-- **Transcrippets**: `find_transcrippets`, `create_transcrippet`, `delete_transcrippet`
-
 ### Utilities
 - **API Functions**: `make_aiera_request`
 - **Registration**: `register_aiera_tools` - Configure API key provider and get tool registry
@@ -305,7 +302,6 @@ AIERA_API_KEY=your_api_key_here uv run python scripts/manual_test.py
 # Test specific tool categories
 AIERA_API_KEY=your_api_key_here uv run python scripts/manual_test.py find_events
 AIERA_API_KEY=your_api_key_here uv run python scripts/manual_test.py find_filings
-AIERA_API_KEY=your_api_key_here uv run python scripts/manual_test.py create_transcrippet
 ```
 
 The manual test script:

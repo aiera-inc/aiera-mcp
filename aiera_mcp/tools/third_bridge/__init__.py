@@ -8,8 +8,6 @@ from .models import (
     GetThirdBridgeEventArgs,
     FindThirdBridgeEventsResponse,
     GetThirdBridgeEventResponse,
-    ThirdBridgeEventItem,
-    ThirdBridgeEventDetails,
 )
 
 __all__ = [
@@ -22,7 +20,4 @@ __all__ = [
     # Response models
     "FindThirdBridgeEventsResponse",
     "GetThirdBridgeEventResponse",
-    # Data models
-    "ThirdBridgeEventItem",
-    "ThirdBridgeEventDetails",
 ]

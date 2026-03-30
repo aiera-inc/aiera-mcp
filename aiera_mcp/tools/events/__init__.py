@@ -12,14 +12,6 @@ from .models import (
     FindConferencesResponse,
     GetEventResponse,
     GetUpcomingEventsResponse,
-    EventItem,
-    EventDetails,
-    EventType,
-    TranscriptItem,
-    EstimatedEventItem,
-    UpcomingActualEventItem,
-    EstimateInfo,
-    ActualInfo,
 )
 
 __all__ = [
@@ -38,13 +30,4 @@ __all__ = [
     "FindConferencesResponse",
     "GetEventResponse",
     "GetUpcomingEventsResponse",
-    # Data models
-    "EventItem",
-    "EventDetails",
-    "EventType",
-    "TranscriptItem",
-    "EstimatedEventItem",
-    "UpcomingActualEventItem",
-    "EstimateInfo",
-    "ActualInfo",
 ]
