@@ -58,7 +58,6 @@ class FindResearchArgs(BaseToolArgs):
     - Use this to browse and discover research reports
     - Use this to find research by specific author IDs, organizations, or regions
     - Use this to find research within a date range
-    - Use this to find research related to specific companies, sectors, indexes, or watchlists
 
     MULTIPLE FILTERS: All filter parameters are optional. Combine them to narrow results.
     """
