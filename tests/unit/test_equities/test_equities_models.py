@@ -79,12 +79,13 @@ class TestFindEquitiesArgs:
         with pytest.raises(ValidationError):
             FindEquitiesArgs(page=0)
 
-        # Page size must be between 1 and 100
+        # Page size must be >= 1
         with pytest.raises(ValidationError):
             FindEquitiesArgs(page_size=0)
 
-        with pytest.raises(ValidationError):
-            FindEquitiesArgs(page_size=26)
+        # page_size above 25 is accepted (capped server-side)
+        args = FindEquitiesArgs(page_size=26)
+        assert args.page_size == 26
 
     def test_find_equities_args_numeric_field_serialization(self):
         """Test that numeric fields are serialized as strings."""

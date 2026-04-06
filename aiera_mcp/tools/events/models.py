@@ -173,7 +173,9 @@ class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
     )
 
     page_size: Union[int, str] = Field(
-        default=25, ge=1, le=25, description="Number of items per page (1-25)."
+        default=25,
+        ge=1,
+        description="Number of items per page (max 25). Values above 25 are capped server-side.",
     )
 
     @field_validator("event_type")
@@ -239,7 +241,9 @@ class FindConferencesArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
     )
 
     page_size: Union[int, str] = Field(
-        default=25, ge=1, le=25, description="Number of items per page (1-25)."
+        default=25,
+        ge=1,
+        description="Number of items per page (max 25). Values above 25 are capped server-side.",
     )
 
 
