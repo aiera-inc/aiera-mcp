@@ -51,21 +51,7 @@ class BaseToolArgs(BaseModel):
         return str(value)
 
 
-class BloombergTickerMixin(BaseModel):
-    """Mixin for models with bloomberg_ticker field."""
-
-    @field_validator("bloomberg_ticker", mode="before", check_fields=False)
-    @classmethod
-    def validate_bloomberg_ticker(cls, v):
-        """Automatically correct Bloomberg ticker format."""
-        if v is None:
-            return v
-        from ..utils import correct_bloomberg_ticker
-
-        return correct_bloomberg_ticker(v)
-
-
-class FindResearchArgs(BaseToolArgs, BloombergTickerMixin):
+class FindResearchArgs(BaseToolArgs):
     """Find research reports filtered by optional search terms, author IDs, organizations, regions, and date range.
 
     WHEN TO USE:
@@ -105,31 +91,6 @@ class FindResearchArgs(BaseToolArgs, BloombergTickerMixin):
     end_date: Optional[str] = Field(
         default=None,
         description="End date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET). Defaults to now on the server.",
-    )
-
-    bloomberg_ticker: Optional[str] = Field(
-        default=None,
-        description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces (e.g., 'AAPL:US,MSFT:US'). Defaults to ':US' if country code omitted.",
-    )
-
-    sector_id: Optional[Union[int, str]] = Field(
-        default=None,
-        description="ID of a specific GICS sector. Use get_sectors_and_subsectors to find valid IDs.",
-    )
-
-    subsector_id: Optional[Union[int, str]] = Field(
-        default=None,
-        description="ID of a specific GICS subsector. Use get_sectors_and_subsectors to find valid IDs.",
-    )
-
-    index_id: Optional[Union[int, str]] = Field(
-        default=None,
-        description="ID of a specific market index. Use get_available_indexes to find valid IDs.",
-    )
-
-    watchlist_id: Optional[Union[int, str]] = Field(
-        default=None,
-        description="ID of a specific user watchlist. Use get_available_watchlists to find valid IDs.",
     )
 
     author_ids: Optional[List[str]] = Field(

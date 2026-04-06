@@ -170,7 +170,6 @@ class TestSearchResearchArgs:
         args = SearchResearchArgs(query_text="test query")
 
         assert args.document_ids is None
-        assert args.bloomberg_ticker is None
         assert args.start_date == ""
         assert args.end_date == ""
         assert args.author_ids is None
@@ -178,20 +177,6 @@ class TestSearchResearchArgs:
         assert args.asset_classes is None
         assert args.asset_types is None
         assert args.size == 25
-
-    def test_search_research_args_with_bloomberg_ticker(self):
-        """Test SearchResearchArgs with bloomberg_ticker parameter."""
-        args = SearchResearchArgs(
-            query_text="price target changes",
-            bloomberg_ticker="MA:US",
-            start_date="2025-07-01",
-            end_date="2025-12-31",
-        )
-
-        assert args.query_text == "price target changes"
-        assert args.bloomberg_ticker == "MA:US"
-        assert args.start_date == "2025-07-01"
-        assert args.end_date == "2025-12-31"
 
     def test_search_research_args_required_fields(self):
         """Test that query_text is required."""
@@ -201,7 +186,6 @@ class TestSearchResearchArgs:
         args = SearchResearchArgs(query_text="test")
         assert args.query_text == "test"
         assert args.document_ids is None
-        assert args.bloomberg_ticker is None
 
 
 @pytest.mark.unit
