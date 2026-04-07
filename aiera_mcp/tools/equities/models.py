@@ -122,7 +122,9 @@ class FindEquitiesArgs(BaseToolArgs, BloombergTickerMixin):
     )
 
     page_size: Union[int, str] = Field(
-        default=25, ge=1, le=25, description="Number of items per page (1-25)."
+        default=25,
+        ge=1,
+        description="Number of items per page (max 25). Values above 25 are capped server-side.",
     )
 
 
@@ -184,7 +186,9 @@ class GetIndexConstituentsArgs(BaseToolArgs):
     )
 
     page_size: Union[int, str] = Field(
-        default=25, ge=1, le=25, description="Number of items per page (1-25)."
+        default=25,
+        ge=1,
+        description="Number of items per page (max 25). Values above 25 are capped server-side.",
     )
 
 
@@ -215,7 +219,9 @@ class GetWatchlistConstituentsArgs(BaseToolArgs):
     )
 
     page_size: Union[int, str] = Field(
-        default=25, ge=1, le=25, description="Number of items per page (1-25)."
+        default=25,
+        ge=1,
+        description="Number of items per page (max 25). Values above 25 are capped server-side.",
     )
 
 
@@ -242,7 +248,9 @@ class GetAvailableWatchlistsArgs(BaseToolArgs):
     )
 
     page_size: Union[int, str] = Field(
-        default=25, ge=1, le=25, description="Number of items per page (1-25)."
+        default=25,
+        ge=1,
+        description="Number of items per page (max 25). Values above 25 are capped server-side.",
     )
 
 
@@ -293,7 +301,9 @@ class GetSectorsAndSubsectorsArgs(BaseToolArgs):
     )
 
     page_size: Union[int, str] = Field(
-        default=25, ge=1, le=25, description="Number of items per page (1-25)."
+        default=25,
+        ge=1,
+        description="Number of items per page (max 25). Values above 25 are capped server-side.",
     )
 
 

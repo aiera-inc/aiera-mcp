@@ -530,6 +530,7 @@ async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
             "boost": 1.5,
         }
     }
+
     if filter_clause:
         text_query = {
             "bool": {
@@ -545,7 +546,12 @@ async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
         "query": {
             "hybrid": {
                 "queries": [
-                    {"neural": {"passage_chunk.knn": neural_inner}},
+                    {
+                        "nested": {
+                            "path": "passage_chunk",
+                            "query": {"neural": {"passage_chunk.knn": neural_inner}},
+                        }
+                    },
                     text_query,
                 ]
             }
@@ -735,7 +741,12 @@ async def search_company_docs(args: SearchCompanyDocsArgs) -> SearchCompanyDocsR
         "query": {
             "hybrid": {
                 "queries": [
-                    {"neural": {"passage_chunk.knn": neural_inner}},
+                    {
+                        "nested": {
+                            "path": "passage_chunk",
+                            "query": {"neural": {"passage_chunk.knn": neural_inner}},
+                        }
+                    },
                     text_query,
                 ]
             }

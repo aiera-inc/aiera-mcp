@@ -89,16 +89,17 @@ class TestFindThirdBridgeEventsArgs:
                 start_date="2023-10-01", end_date="2023-10-31", page=0
             )
 
-        # Page size must be between 1 and 100
+        # Page size must be >= 1
         with pytest.raises(ValidationError):
             FindThirdBridgeEventsArgs(
                 start_date="2023-10-01", end_date="2023-10-31", page_size=0
             )
 
-        with pytest.raises(ValidationError):
-            FindThirdBridgeEventsArgs(
-                start_date="2023-10-01", end_date="2023-10-31", page_size=26
-            )
+        # page_size above 25 is accepted (capped server-side)
+        args = FindThirdBridgeEventsArgs(
+            start_date="2023-10-01", end_date="2023-10-31", page_size=26
+        )
+        assert args.page_size == 26
 
     @pytest.mark.parametrize(
         "field_name,field_value",
@@ -304,9 +305,10 @@ class TestThirdBridgeModelValidation:
         assert "end_date" in schema["properties"]
         assert "bloomberg_ticker" in schema["properties"]
 
-        # Check that required fields are marked as required
-        assert "start_date" in schema["required"]
-        assert "end_date" in schema["required"]
+        # start_date and end_date are optional (server defaults to last 4 weeks)
+        required = schema.get("required", [])
+        assert "start_date" not in required
+        assert "end_date" not in required
 
     def test_third_bridge_response_json_serialization(self):
         """Test that complete Third Bridge response models can be serialized to JSON."""

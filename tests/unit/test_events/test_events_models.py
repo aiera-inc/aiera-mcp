@@ -114,12 +114,15 @@ class TestFindEventsArgs:
         with pytest.raises(ValidationError):
             FindEventsArgs(start_date="2023-10-01", end_date="2023-10-31", page=0)
 
-        # Page size must be between 1 and 100
+        # Page size must be >= 1
         with pytest.raises(ValidationError):
             FindEventsArgs(start_date="2023-10-01", end_date="2023-10-31", page_size=0)
 
-        with pytest.raises(ValidationError):
-            FindEventsArgs(start_date="2023-10-01", end_date="2023-10-31", page_size=26)
+        # page_size above 25 is accepted (capped server-side)
+        args = FindEventsArgs(
+            start_date="2023-10-01", end_date="2023-10-31", page_size=26
+        )
+        assert args.page_size == 26
 
     @pytest.mark.parametrize(
         "field_name,field_value",

@@ -105,13 +105,15 @@ class FindThirdBridgeEventsArgs(BaseToolArgs, BloombergTickerMixin):
         description="Whether to exclude all instructions from the tool response.",
     )
 
-    start_date: str = Field(
-        description="Start date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET).",
+    start_date: Optional[str] = Field(
+        default=None,
+        description="Start date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET). Defaults to 4 weeks ago on the server if not provided.",
         pattern=r"^\d{4}-\d{2}-\d{2}$",
     )
 
-    end_date: str = Field(
-        description="End date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET).",
+    end_date: Optional[str] = Field(
+        default=None,
+        description="End date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET). Defaults to today on the server if not provided.",
         pattern=r"^\d{4}-\d{2}-\d{2}$",
     )
 
@@ -155,7 +157,9 @@ class FindThirdBridgeEventsArgs(BaseToolArgs, BloombergTickerMixin):
     )
 
     page_size: Union[int, str] = Field(
-        default=25, ge=1, le=25, description="Number of items per page (1-25)."
+        default=25,
+        ge=1,
+        description="Number of items per page (max 25). Values above 25 are capped server-side.",
     )
 
 

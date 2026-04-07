@@ -148,7 +148,9 @@ class FindResearchArgs(BaseToolArgs):
     )
 
     page_size: Union[int, str] = Field(
-        default=25, ge=1, le=25, description="Number of items per page (1-25)."
+        default=25,
+        ge=1,
+        description="Number of items per page (max 25). Values above 25 are capped server-side.",
     )
 
 
@@ -187,7 +189,8 @@ class GetResearchArgs(BaseAieraArgs):
     )
 
     document_id: str = Field(
-        description="Unique identifier for the research report. Obtain document_id from find_research or search_research results."
+        min_length=1,
+        description="Unique identifier for the research report. Obtain document_id from find_research or search_research results.",
     )
 
 
@@ -219,7 +222,9 @@ class GetResearchProvidersArgs(BaseToolArgs):
     )
 
     page_size: Union[int, str] = Field(
-        default=25, ge=1, le=25, description="Number of items per page (1-25)."
+        default=25,
+        ge=1,
+        description="Number of items per page (max 25). Values above 25 are capped server-side.",
     )
 
 
@@ -268,7 +273,9 @@ class GetResearchAuthorsArgs(BaseToolArgs):
     )
 
     page_size: Union[int, str] = Field(
-        default=25, ge=1, le=25, description="Number of items per page (1-25)."
+        default=25,
+        ge=1,
+        description="Number of items per page (max 25). Values above 25 are capped server-side.",
     )
 
 
@@ -312,7 +319,9 @@ class GetResearchAssetClassesArgs(BaseToolArgs):
     )
 
     page_size: Union[int, str] = Field(
-        default=25, ge=1, le=25, description="Number of items per page (1-25)."
+        default=25,
+        ge=1,
+        description="Number of items per page (max 25). Values above 25 are capped server-side.",
     )
 
 
@@ -356,7 +365,9 @@ class GetResearchAssetTypesArgs(BaseToolArgs):
     )
 
     page_size: Union[int, str] = Field(
-        default=25, ge=1, le=25, description="Number of items per page (1-25)."
+        default=25,
+        ge=1,
+        description="Number of items per page (max 25). Values above 25 are capped server-side.",
     )
 
 
@@ -400,7 +411,9 @@ class GetResearchSubjectsArgs(BaseToolArgs):
     )
 
     page_size: Union[int, str] = Field(
-        default=25, ge=1, le=25, description="Number of items per page (1-25)."
+        default=25,
+        ge=1,
+        description="Number of items per page (max 25). Values above 25 are capped server-side.",
     )
 
 
@@ -444,7 +457,9 @@ class GetResearchProductFocusesArgs(BaseToolArgs):
     )
 
     page_size: Union[int, str] = Field(
-        default=25, ge=1, le=25, description="Number of items per page (1-25)."
+        default=25,
+        ge=1,
+        description="Number of items per page (max 25). Values above 25 are capped server-side.",
     )
 
 
@@ -488,7 +503,9 @@ class GetResearchRegionTypesArgs(BaseToolArgs):
     )
 
     page_size: Union[int, str] = Field(
-        default=25, ge=1, le=25, description="Number of items per page (1-25)."
+        default=25,
+        ge=1,
+        description="Number of items per page (max 25). Values above 25 are capped server-side.",
     )
 
 
@@ -532,7 +549,9 @@ class GetResearchCountryCodesArgs(BaseToolArgs):
     )
 
     page_size: Union[int, str] = Field(
-        default=25, ge=1, le=25, description="Number of items per page (1-25)."
+        default=25,
+        ge=1,
+        description="Number of items per page (max 25). Values above 25 are capped server-side.",
     )
 
 

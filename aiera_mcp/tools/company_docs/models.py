@@ -195,7 +195,9 @@ class FindCompanyDocsArgs(BaseToolArgs, BloombergTickerMixin, CategoriesKeywords
     )
 
     page_size: Union[int, str] = Field(
-        default=25, ge=1, le=25, description="Number of items per page (1-25)."
+        default=25,
+        ge=1,
+        description="Number of items per page (max 25). Values above 25 are capped server-side.",
     )
 
 
@@ -296,7 +298,9 @@ class GetCompanyDocCategoriesArgs(BaseToolArgs, BloombergTickerMixin):
     )
 
     page_size: Union[int, str] = Field(
-        default=25, ge=1, le=25, description="Number of items per page (1-25)."
+        default=25,
+        ge=1,
+        description="Number of items per page (max 25). Values above 25 are capped server-side.",
     )
 
 
@@ -358,7 +362,9 @@ class GetCompanyDocKeywordsArgs(BaseToolArgs, BloombergTickerMixin):
     )
 
     page_size: Union[int, str] = Field(
-        default=25, ge=1, le=25, description="Number of items per page (1-25)."
+        default=25,
+        ge=1,
+        description="Number of items per page (max 25). Values above 25 are capped server-side.",
     )
 
 
