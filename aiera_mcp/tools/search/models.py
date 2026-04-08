@@ -3,7 +3,7 @@
 """Pydantic models for Aiera search tools."""
 
 from typing import List, Optional, Any
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from ..common.models import BaseAieraArgs, BaseAieraResponse
 
@@ -48,8 +48,17 @@ class SearchTranscriptsArgs(BaseAieraArgs):
     )
 
     query_text: str = Field(
-        description="Search query for semantic matching within transcripts. Examples: 'earnings guidance', 'regulatory concerns', 'revenue growth'"
+        min_length=1,
+        description="Search query for semantic matching within transcripts. Examples: 'earnings guidance', 'regulatory concerns', 'revenue growth'",
     )
+
+    @field_validator("query_text", mode="before")
+    @classmethod
+    def strip_query_text(cls, v):
+        """Strip whitespace and reject empty queries."""
+        if isinstance(v, str):
+            v = v.strip()
+        return v
 
     event_ids: Optional[List[int]] = Field(
         default=None,
@@ -132,8 +141,17 @@ class SearchFilingsArgs(BaseAieraArgs):
     )
 
     query_text: str = Field(
+        min_length=1,
         description="Search query for semantic matching within filing chunks. Examples: 'revenue guidance', 'risk factors', 'acquisition strategy'. Optional if company_name or filing_type is provided.",
     )
+
+    @field_validator("query_text", mode="before")
+    @classmethod
+    def strip_query_text(cls, v):
+        """Strip whitespace and reject empty queries."""
+        if isinstance(v, str):
+            v = v.strip()
+        return v
 
     filing_ids: Optional[List[str]] = Field(
         default=None,
@@ -205,8 +223,17 @@ class SearchResearchArgs(BaseAieraArgs):
     )
 
     query_text: str = Field(
+        min_length=1,
         description="Search query for semantic matching within research chunks. Examples: 'earnings outlook', 'competitive analysis', 'market trends'.",
     )
+
+    @field_validator("query_text", mode="before")
+    @classmethod
+    def strip_query_text(cls, v):
+        """Strip whitespace and reject empty queries."""
+        if isinstance(v, str):
+            v = v.strip()
+        return v
 
     document_ids: Optional[List[str]] = Field(
         default=None,
@@ -294,8 +321,17 @@ class SearchCompanyDocsArgs(BaseAieraArgs):
     )
 
     query_text: str = Field(
+        min_length=1,
         description="Search query for semantic matching within company document chunks. Examples: 'sustainability initiatives', 'capital allocation', 'product roadmap'.",
     )
+
+    @field_validator("query_text", mode="before")
+    @classmethod
+    def strip_query_text(cls, v):
+        """Strip whitespace and reject empty queries."""
+        if isinstance(v, str):
+            v = v.strip()
+        return v
 
     company_doc_ids: Optional[List[int]] = Field(
         default=None,
@@ -378,8 +414,17 @@ class SearchThirdbridgeArgs(BaseAieraArgs):
     )
 
     query_text: str = Field(
+        min_length=1,
         description="Search query for semantic matching within Third Bridge transcripts. Examples: 'competitive landscape', 'pricing trends', 'market share dynamics'.",
     )
+
+    @field_validator("query_text", mode="before")
+    @classmethod
+    def strip_query_text(cls, v):
+        """Strip whitespace and reject empty queries."""
+        if isinstance(v, str):
+            v = v.strip()
+        return v
 
     company_ids: Optional[List[int]] = Field(
         default=None,
