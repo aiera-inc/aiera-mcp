@@ -180,9 +180,17 @@ class GetFilingArgs(BaseToolArgs):
         description="Whether to exclude all instructions from the tool response.",
     )
 
-    filing_id: str = Field(
+    filing_id: Union[str, int] = Field(
         description="Unique identifier for the SEC filing. Obtain filing_id from find_filings or search_filings results. Example: '98765'"
     )
+
+    @field_validator("filing_id", mode="before")
+    @classmethod
+    def coerce_filing_id_to_str(cls, v):
+        """Accept both string and int filing IDs."""
+        if v is not None:
+            return str(v)
+        return v
 
 
 # Response models - pass through API response structure

@@ -286,9 +286,17 @@ class GetEventArgs(BaseToolArgs):
         description="Whether to exclude all instructions from the tool response.",
     )
 
-    event_id: str = Field(
+    event_id: Union[str, int] = Field(
         description="Unique identifier for the event. Obtain event_id from find_events or search_transcripts results. Example: '12345'"
     )
+
+    @field_validator("event_id", mode="before")
+    @classmethod
+    def coerce_event_id_to_str(cls, v):
+        """Accept both string and int event IDs."""
+        if v is not None:
+            return str(v)
+        return v
 
 
 class GetUpcomingEventsArgs(BaseToolArgs, BloombergTickerMixin):
