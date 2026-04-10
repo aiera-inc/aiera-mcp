@@ -122,9 +122,8 @@ class GetGrammarTemplateResponse(BaseAieraResponse):
 class GetCoreInstructionsArgs(BaseAieraArgs):
     """Retrieve core instructions that define how to use Aiera tools and data effectively.
 
-    WHEN TO USE:
-    - Call this tool at least once per session to retrieve baseline instructions for working with Aiera data.
-    - Core instructions provide guidance on tool selection, data interpretation, and response composition.
+    CRITICAL — CALL THIS TOOL BEFORE ANY TOOLS ARE CALLED:
+    - You MUST call this tool at the beginning of each session to retrieve baseline instructions for working with Aiera data, and guidance on tool selection, data interpretation, and response composition.
     """
 
     originating_prompt: Optional[str] = Field(
