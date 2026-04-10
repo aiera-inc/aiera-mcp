@@ -9,6 +9,8 @@ from ... import get_api_key
 from .models import (
     GetGrammarTemplateArgs,
     GetGrammarTemplateResponse,
+    GetCoreInstructionsArgs,
+    GetCoreInstructionsResponse,
 )
 
 # Setup logging
@@ -35,6 +37,27 @@ async def get_grammar_template(
     )
 
     response = GetGrammarTemplateResponse.model_validate(raw_response)
-    if args.exclude_instructions:
-        response.instructions = []
+    return response
+
+
+async def get_core_instructions(
+    args: GetCoreInstructionsArgs,
+) -> GetCoreInstructionsResponse:
+    """Retrieve core instructions for working with Aiera tools and data."""
+    logger.info("tool called: get_core_instructions")
+
+    client = await get_http_client(None)
+    api_key = get_api_key()
+
+    params = args.model_dump(exclude_none=True)
+
+    raw_response = await make_aiera_request(
+        client=client,
+        method="GET",
+        endpoint="/chat-support/get-core-instructions",
+        api_key=api_key,
+        params=params,
+    )
+
+    response = GetCoreInstructionsResponse.model_validate(raw_response)
     return response

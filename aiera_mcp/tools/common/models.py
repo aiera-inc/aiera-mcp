@@ -102,16 +102,6 @@ class GetGrammarTemplateArgs(BaseAieraArgs):
         description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
     )
 
-    include_base_instructions: Optional[bool] = Field(
-        default=True,
-        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
-    )
-
-    exclude_instructions: Optional[bool] = Field(
-        default=False,
-        description="Whether to exclude all instructions from the tool response.",
-    )
-
     template_type: str = Field(
         default="general",
         description="Template type to retrieve. Options: 'general' (broad guidance), 'topic' (topic-specific), 'provider' (provider-specific), 'sector' (sector-specific), 'subsector' (subsector-specific).",
@@ -125,5 +115,30 @@ class GetGrammarTemplateArgs(BaseAieraArgs):
 
 class GetGrammarTemplateResponse(BaseAieraResponse):
     """Response for get_grammar_template tool - passes through the API response structure."""
+
+    response: Optional[Any] = Field(None, description="Response data from the API")
+
+
+class GetCoreInstructionsArgs(BaseAieraArgs):
+    """Retrieve core instructions that define how to use Aiera tools and data effectively.
+
+    WHEN TO USE:
+    - Call this tool at least once per session to retrieve baseline instructions for working with Aiera data.
+    - Core instructions provide guidance on tool selection, data interpretation, and response composition.
+    """
+
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
+    )
+
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
+    )
+
+
+class GetCoreInstructionsResponse(BaseAieraResponse):
+    """Response for get_core_instructions tool - passes through the API response structure."""
 
     response: Optional[Any] = Field(None, description="Response data from the API")
