@@ -170,6 +170,52 @@ def send_tool_log(
     task.add_done_callback(_background_tasks.discard)
 
 
+MAX_PARAM_VALUE_CHARS = 2000
+PARAM_TRUNCATION_SUFFIX = "...[truncated]"
+
+# Only these informational fields are eligible for silent truncation. They carry
+# context text (user prompts, caller identification) that can be multi-KB and
+# would push GET URLs past nginx's 4094-byte request-line limit. Any other
+# over-long param should fail loudly rather than be silently shortened, since
+# it likely indicates a caller bug.
+TRUNCATABLE_PARAMS = frozenset({"originating_prompt", "self_identification"})
+
+
+def _truncate_long_params(
+    params: Optional[Dict[str, Any]],
+) -> Optional[Dict[str, Any]]:
+    """Cap long string values for known-safe context fields to keep the URL under nginx's 4KB limit.
+
+    Only fields in ``TRUNCATABLE_PARAMS`` are considered — these are informational
+    context (routing/analytics) rather than load-bearing data, so truncating them
+    preserves enough signal while preventing the upstream ``400 Request Line is
+    too large`` from nginx. Everything else passes through untouched so a genuine
+    caller bug (e.g. shoving content into a query param) surfaces as an error
+    rather than silently losing data.
+    """
+    if not params:
+        return params
+
+    truncated: Dict[str, Any] = {}
+    for key, value in params.items():
+        if (
+            key in TRUNCATABLE_PARAMS
+            and isinstance(value, str)
+            and len(value) > MAX_PARAM_VALUE_CHARS
+        ):
+            head_len = MAX_PARAM_VALUE_CHARS - len(PARAM_TRUNCATION_SUFFIX)
+            truncated[key] = value[:head_len] + PARAM_TRUNCATION_SUFFIX
+            logger.info(
+                "Truncated param '%s' from %d to %d chars to stay under URL length limit",
+                key,
+                len(value),
+                MAX_PARAM_VALUE_CHARS,
+            )
+        else:
+            truncated[key] = value
+    return truncated
+
+
 async def make_aiera_request(
     client: httpx.AsyncClient,
     method: str,
@@ -197,6 +243,9 @@ async def make_aiera_request(
     """
     # Import context functions (deferred to avoid circular imports)
     from ..context import get_request_context
+
+    # Truncate any over-long string params so the serialized URL stays under nginx's 4KB limit.
+    params = _truncate_long_params(params)
 
     # Build base headers
     headers = DEFAULT_HEADERS.copy()

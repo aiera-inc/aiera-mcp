@@ -52,10 +52,11 @@ def get_api_key() -> Optional[str]:
                 logger.debug(f"Got API key from provider (length: {len(key)})")
                 return key
             else:
-                # Provider returned None - this is a configuration error
-                logger.error(
-                    "API key provider returned None. This indicates a configuration issue. "
-                    "Falling back to environment variable."
+                # Provider is configured but returned None — the request is unauthenticated
+                # or mis-scoped. Do NOT fall back to the env var: that would silently run
+                # unauthenticated callers on the server's identity. Fail hard instead.
+                raise ValueError(
+                    "API key provider returned None — request is missing a user API key"
                 )
         except Exception as e:
             logger.error(f"API key provider failed with exception: {e}", exc_info=True)
