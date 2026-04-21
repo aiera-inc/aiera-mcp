@@ -18,8 +18,11 @@ from .models import (
     # Core instructions
     GetCoreInstructionsArgs,
     GetCoreInstructionsResponse,
+    # Available tools
+    AvailableToolsArgs,
+    AvailableToolsResponse,
 )
-from .tools import get_grammar_template, get_core_instructions
+from .tools import get_grammar_template, get_core_instructions, available_tools
 
 __all__ = [
     "BaseAieraArgs",
@@ -34,4 +37,7 @@ __all__ = [
     "GetCoreInstructionsArgs",
     "GetCoreInstructionsResponse",
     "get_core_instructions",
+    "AvailableToolsArgs",
+    "AvailableToolsResponse",
+    "available_tools",
 ]
