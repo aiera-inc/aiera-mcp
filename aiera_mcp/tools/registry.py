@@ -44,7 +44,7 @@ from .research import (
     get_research_country_codes,
 )
 from .web import trusted_web_search
-from .common import get_grammar_template, get_core_instructions
+from .common import get_grammar_template, get_core_instructions, available_tools
 from .search import (
     search_transcripts,
     search_filings,
@@ -93,7 +93,7 @@ from .research import (
     GetResearchCountryCodesArgs,
 )
 from .web import TrustedWebSearchArgs
-from .common import GetGrammarTemplateArgs, GetCoreInstructionsArgs
+from .common import GetGrammarTemplateArgs, GetCoreInstructionsArgs, AvailableToolsArgs
 from .search import (
     SearchTranscriptsArgs,
     SearchFilingsArgs,
@@ -459,6 +459,15 @@ TOOL_REGISTRY = {
         "input_schema": GetCoreInstructionsArgs.model_json_schema(),
         "function": get_core_instructions,
         "args_model": GetCoreInstructionsArgs,
+        "category": "common",
+        "read_only": True,
+        "destructive": False,
+    },
+    "available_tools": {
+        "display_name": "Available Tools",
+        "input_schema": AvailableToolsArgs.model_json_schema(),
+        "function": available_tools,
+        "args_model": AvailableToolsArgs,
         "category": "common",
         "read_only": True,
         "destructive": False,

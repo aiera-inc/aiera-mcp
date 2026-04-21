@@ -141,3 +141,23 @@ class GetCoreInstructionsResponse(BaseAieraResponse):
     """Response for get_core_instructions tool - passes through the API response structure."""
 
     response: Optional[Any] = Field(None, description="Response data from the API")
+
+
+class AvailableToolsArgs(BaseAieraArgs):
+    """Retrieve the list of tools available to the current user based on their permissions.
+
+    WHEN TO USE:
+    - Call this tool to discover which tools the current user has access to.
+    - Use this to check permissions before calling other tools.
+    """
+
+    pass
+
+
+class AvailableToolsResponse(BaseAieraResponse):
+    """Response for available_tools tool."""
+
+    available_tools: List[str] = Field(
+        default=[],
+        description="List of tool names available to the current user",
+    )
