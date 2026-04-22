@@ -385,6 +385,8 @@ class SearchThirdbridgeArgs(BaseAieraArgs):
     RETURNS: Relevant Third Bridge transcript segments with speaker attribution, event metadata, and relevance scores.
     Results are individual paragraphs/chunks, not full transcripts. Use get_third_bridge_event for complete transcripts.
 
+    OPEN-ENDED QUERIES: For queries with no user-specified time period, OMIT start_date and end_date. Third Bridge content is valuable across its full historical corpus — only apply date filters when the user explicitly requests a specific time window.
+
     WORKFLOW EXAMPLE:
     1. User asks: "What do experts say about semiconductor supply chains?"
     2. First call find_third_bridge_events to get relevant event IDs
@@ -443,12 +445,12 @@ class SearchThirdbridgeArgs(BaseAieraArgs):
 
     start_date: str = Field(
         default="",
-        description="Start date for Third Bridge transcript search in YYYY-MM-DD format. Filters on event_date. Example: '2024-01-01'.",
+        description="Start date for Third Bridge transcript search in YYYY-MM-DD format. Filters on event_date. For open-ended queries (no user-specified time period), OMIT this field to search the full historical corpus.",
     )
 
     end_date: str = Field(
         default="",
-        description="End date for Third Bridge transcript search in YYYY-MM-DD format. Filters on event_date. Example: '2024-12-31'.",
+        description="End date for Third Bridge transcript search in YYYY-MM-DD format. Filters on event_date. For open-ended queries, OMIT this field.",
     )
 
     event_content_type: str = Field(

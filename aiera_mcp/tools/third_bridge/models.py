@@ -79,6 +79,10 @@ class FindThirdBridgeEventsArgs(BaseToolArgs, BloombergTickerMixin):
     with industry experts, former executives, and specialists who provide unique perspectives
     on companies, industries, and market trends. These are NOT earnings calls but expert interviews.
 
+    RETURNS METADATA AND SUMMARIES ONLY — NOT full transcripts. To retrieve full interview content, call get_third_bridge_event with the event_id from these results. For keyword-level search across many interviews, use search_thirdbridge instead.
+
+    OPEN-ENDED QUERIES: For queries with no user-specified time period, OMIT start_date and end_date. Third Bridge content is valuable across its full historical corpus — only apply date filters when the user explicitly requests a specific time window.
+
     WHEN TO USE: Use this when you need expert/industry perspectives rather than official company communications.
     For official company events (earnings calls, presentations), use find_events instead.
 
@@ -107,13 +111,13 @@ class FindThirdBridgeEventsArgs(BaseToolArgs, BloombergTickerMixin):
 
     start_date: Optional[str] = Field(
         default=None,
-        description="Start date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET). Defaults to 4 weeks ago on the server if not provided.",
+        description="Start date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET). For open-ended queries (no user-specified time period), OMIT this field to search the full historical corpus — do not default to a narrow window.",
         pattern=r"^\d{4}-\d{2}-\d{2}$",
     )
 
     end_date: Optional[str] = Field(
         default=None,
-        description="End date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET). Defaults to today on the server if not provided.",
+        description="End date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET). For open-ended queries (no user-specified time period), OMIT this field.",
         pattern=r"^\d{4}-\d{2}-\d{2}$",
     )
 

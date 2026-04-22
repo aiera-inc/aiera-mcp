@@ -48,74 +48,26 @@ def get_lambda_http_client() -> httpx.AsyncClient:
     return _lambda_http_client
 
 
+def get_instructions() -> str:
+    """Provide server-level instructions for the Aiera MCP server."""
+    return """Aiera financial data API for institutional finance professionals.
+
+CRITICAL — Before calling any other tools, you MUST:
+1. Call `get_core_instructions` to retrieve baseline instructions for tool selection, data interpretation, and response composition.
+2. Call `get_grammar_template` with `template_type='general'` to retrieve response formatting rules.
+
+These two calls provide all the guidance needed to use the remaining tools effectively.
+"""
+
+
 # Initialize standard MCP server
-server = Server("Aiera")
+server = Server("Aiera", instructions=get_instructions())
 
 # Base configuration - these are now loaded from settings
 # but kept as module-level constants for backward compatibility
 _settings = get_settings()
 DEFAULT_PAGE_SIZE = _settings.default_page_size
 DEFAULT_MAX_PAGE_SIZE = _settings.default_max_page_size
-
-
-def get_api_documentation() -> str:
-    """Provide overview documentation for the Aiera API."""
-    return f"""
-    # Aiera Financial Data API
-
-    This MCP server provides access to Aiera's comprehensive financial data API for institutional finance professionals.
-
-    ## Grammar Templates (Response Formatting)
-
-    Before producing any response that uses Aiera data, you MUST call the `get_grammar_template` tool to retrieve formatting instructions. These templates define how you should structure, format, and present your responses — including tone, style, and common language patterns.
-
-    - **At the start of each session**, call `get_grammar_template` with `template_type='general'` to get baseline formatting rules.
-    - Follow the instructions returned in the template when composing your response.
-
-    ## Tool Categories
-
-    **Research**: Find, retrieve, and search within sell-side research content (analyst reports, research notes, market analysis, etc.)
-
-    **Events & Transcripts**: Find, retrieve, and search within corporate events (earnings calls, conferences, M&A announcements, etc.).
-
-    **SEC Filings**: Find, retrieve, and search within SEC filings (10-K, 10-Q, 8-K, etc.).
-
-    **Company Documents**: Find and retrieve company publications (press releases, regulatory filings, announcements, etc.).
-
-    **Expert Insights**: Find and retrieve Third Bridge expert interview events and insights.
-
-    **Company Data**: Access company financials and KPIs, sector classifications, index constituents, and watchlists.
-
-    **Utility**: Grammar templates for response formatting guidance.
-
-    ## Key Features
-
-    - **Comprehensive Coverage**: Access to events, filings, documents, and expert insights across all major markets.
-    - **Rich Metadata**: Detailed summaries, speaker information, and structured data for all content.
-    - **Flexible Filtering**: Search by date ranges, tickers, sectors, indices, watchlists, and custom criteria.
-    - **Pagination Support**: Handle large result sets efficiently with pagination.
-    - **Citation Ready**: All responses include citation information for professional use.
-
-    ## Authentication & Usage
-
-    - Requires `AIERA_API_KEY` environment variable.
-    - Bloomberg tickers use format "TICKER:COUNTRY" (e.g., "AAPL:US").
-    - Multiple values in comma-separated lists (no spaces).
-
-    ## Tool Parameters
-
-    Each tool provides detailed parameter descriptions and validation through its input schema. Common patterns include:
-
-    - **Date ranges**: ISO format (YYYY-MM-DD) with start_date and end_date.
-    - **Entity filtering**: Filter by tickers, watchlists, indices, sectors, or subsectors.
-    - **Pagination**: Page number and page size parameters where applicable.
-    - **Content filtering**: Categories, keywords, form types for targeted searches.
-
-    Use tool argument schemas for complete parameter documentation and validation.
-
-    **Be aware:** certain tools (get_event, get_filing, get_document) may return large text fields. Ensure your client can handle large responses.
-    If you need to fetch multiple documents, it is recommended to favor the search tools, or use tools that return summaries.
-    """
 
 
 def register_aiera_tools(
