@@ -139,4 +139,13 @@ async def available_tools(
     # Always include available_tools itself
     tool_names.add("available_tools")
 
-    return AvailableToolsResponse(available_tools=sorted(tool_names))
+    # Compute hidden tools as the difference from all registered tools
+    from ..registry import TOOL_REGISTRY
+
+    all_tools = set(TOOL_REGISTRY.keys())
+    hidden_tools = all_tools - tool_names
+
+    return AvailableToolsResponse(
+        available_tools=sorted(tool_names),
+        hidden_tools=sorted(hidden_tools),
+    )
