@@ -83,6 +83,8 @@ class EventTypeMixin(BaseModel):
 class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
     """Search for corporate events including earnings calls, investor presentations, shareholder meetings, and more. Search across all companies by date range, or filter by specific companies using bloomberg_tickers, watchlists, indexes, sectors, or subsectors.
 
+    RETURNS METADATA AND SUMMARIES ONLY — NOT full transcripts. To retrieve actual transcript text, call get_event with the event_id from these results. Never summarize a document from metadata alone; always retrieve full content first. The workflow is: find_events → identify the event → get_event(event_id=...) → summarize from the transcript. For keyword-level search across many events, use search_transcripts instead.
+
     EVENT TYPE MAPPING - CRITICAL:
     - "earnings calls" or "earnings" → use event_type='earnings' (ONE call)
     - "conference calls" or "presentations" → use event_type='presentation' (ONE call)

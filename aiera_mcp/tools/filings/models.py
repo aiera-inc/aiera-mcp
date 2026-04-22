@@ -67,7 +67,12 @@ class BloombergTickerMixin(BaseModel):
 
 # Parameter models (extracted from params.py)
 class FindFilingsArgs(BaseToolArgs, BloombergTickerMixin):
-    """Find SEC filings filtered by date range and optional filters. To find filings for multiple companies, provide a comma-separated list of bloomberg_tickers. You do not need to make multiple calls."""
+    """Find SEC filings filtered by date range and optional filters. To find filings for multiple companies, provide a comma-separated list of bloomberg_tickers. You do not need to make multiple calls.
+
+    RETURNS METADATA AND SUMMARIES ONLY — NOT full filing text. To retrieve the actual filing content, call get_filing with the filing_id from these results. Never summarize a filing from metadata alone; always retrieve full content first. For keyword-level search across many filings, use search_filings instead.
+
+    US COMPANIES ONLY: SEC filings are only available for US-listed companies. For non-US companies, use find_company_docs or transcript tools instead.
+    """
 
     originating_prompt: Optional[str] = Field(
         default=None,

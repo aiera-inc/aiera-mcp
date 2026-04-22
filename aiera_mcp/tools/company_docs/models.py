@@ -93,6 +93,8 @@ class CategoriesKeywordsMixin(BaseModel):
 class FindCompanyDocsArgs(BaseToolArgs, BloombergTickerMixin, CategoriesKeywordsMixin):
     """Find company-published documents (press releases, annual reports, earnings releases, etc.) filtered by date range and optional filters.
 
+    RETURNS METADATA AND SUMMARIES ONLY — NOT full document text. To retrieve the actual document content, call get_company_doc with the company_doc_id from these results. For keyword-level search across many documents, use search_company_docs instead.
+
     DOCUMENT TYPE MAPPING - CRITICAL:
     When users request specific document types, ALWAYS use the 'categories' parameter:
     - "press releases" → use categories='press_release'
