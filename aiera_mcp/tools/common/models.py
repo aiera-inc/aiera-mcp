@@ -161,3 +161,8 @@ class AvailableToolsResponse(BaseAieraResponse):
         default=[],
         description="List of tool names available to the current user",
     )
+
+    hidden_tools: List[str] = Field(
+        default=[],
+        description="List of tool names the current user does not have access to",
+    )
