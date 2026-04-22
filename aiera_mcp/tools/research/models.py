@@ -146,7 +146,7 @@ class FindResearchArgs(BaseToolArgs):
 
     search: Optional[str] = Field(
         default=None,
-        description="Free-text search term — STRONGLY RECOMMENDED. Matches against title, abstract, and description. Many providers do not tag documents with equity tickers, so text-based search is the most reliable way to find relevant reports. Typical values: a company name or ticker symbol (e.g., 'Netflix', 'NFLX').",
+        description="Free-text search term. Matches against title, abstract, and description. Many providers do not tag documents with equity tickers, so text-based search is the most reliable way to find relevant reports. Typical values: a company name or ticker symbol (e.g., 'Netflix', 'NFLX').",
     )
 
     search_after: Optional[List[Any]] = Field(

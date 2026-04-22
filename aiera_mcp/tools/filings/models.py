@@ -71,7 +71,7 @@ class FindFilingsArgs(BaseToolArgs, BloombergTickerMixin):
 
     RETURNS METADATA AND SUMMARIES ONLY — NOT full filing text. To retrieve the actual filing content, call get_filing with the filing_id from these results. Never summarize a filing from metadata alone; always retrieve full content first. For keyword-level search across many filings, use search_filings instead.
 
-    US COMPANIES ONLY: SEC filings are only available for US-listed companies. For non-US companies, use find_company_docs or transcript tools instead.
+    US COMPANIES ONLY: SEC filings are only available for US-listed companies.
     """
 
     originating_prompt: Optional[str] = Field(
