@@ -193,8 +193,9 @@ class SearchResearchArgs(BaseAieraArgs):
     """Semantic search within research content for specific topics, analyses, or insights.
 
     WHEN TO USE THIS TOOL:
-    - Use this when you need to find specific content (analyses, insights, recommendations) within research documents
+    - Use this for broad queries where many documents are expected — it returns relevant text chunks across the research corpus
     - Use this for targeted content extraction from research reports
+    - For narrow queries (≤5 relevant documents), prefer find_research → get_research instead, which returns complete documents rather than chunks
 
     RETURNS: Relevant research chunks with context, metadata, and relevance scores.
     Results are individual sections/chunks, not full research documents.
