@@ -14,10 +14,16 @@ class TrustedWebSearchArgs(BaseAieraArgs):
     By default, searches across trusted sources will include cnbc.com, bloomberg.com, reuters.com, wsj.com,
     apnews.com, and other Aiera-approved domains. Optionally restrict or expand to specific domains.
 
-    WHEN TO USE:
-    - Use this to find recent news articles about companies, markets, or financial topics
-    - Use this when you need current information from trusted financial news sources
-    - Use this to supplement event transcripts and filings with news coverage
+    USE THIS TOOL WHEN THE USER ASKS FOR:
+    - "news articles" / "news" / "headlines" / "latest news" / "recent news"
+    - "media coverage" / "press coverage" / "what is being reported"
+    - "articles about" a company, market, or financial topic
+    - Current/breaking information that would only appear in news outlets
+    - External commentary or analyst quotes outside of Aiera's research/transcripts/filings corpus
+
+    DO NOT USE for company press releases or earnings releases — those are first-party documents and live in find_company_docs / get_company_doc (categories: press_release, earnings_release).
+
+    DO NOT USE as a fallback for company-published content (use find_filings, find_events, find_research first). Per system policy, web search is reserved for genuine media-coverage queries OR when domain tools have been exhausted.
 
     NOTE: If no allowed_domains are provided, the search uses Aiera's curated list of trusted domains.
     """

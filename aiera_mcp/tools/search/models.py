@@ -9,11 +9,25 @@ from ..common.models import BaseAieraArgs, BaseAieraResponse
 
 
 class SearchTranscriptsArgs(BaseAieraArgs):
-    """Semantic search within event transcripts for specific topics, quotes, or discussions.
+    """Semantic search within event transcripts (earnings calls, investor presentations, shareholder meetings, etc.) for specific topics, quotes, or discussions.
+
+    USE THIS TOOL WHEN THE USER ASKS:
+    - "How was X discussed in earnings calls?" / "What was said about X on earnings calls?"
+    - "What did [executive/CEO/CFO] say about X?"
+    - "How is management talking about X?" / "What is management's view on X?"
+    - "Find quotes / statements / commentary on X" across transcripts
+    - "What are companies saying about [topic, e.g. inflation, AI, tariffs]?"
+    - Anything about earnings call content, Q&A discussions, prepared remarks, management guidance language, or analyst questions
+
+    DO NOT USE for:
+    - Structured financial metrics (revenue, EPS, margins) — use get_financials, get_ratios, get_kpis_and_segments
+    - SEC filing text — use search_filings
+    - Research/analyst report content — use search_research
+    - News articles or media coverage — use trusted_web_search
 
     WHEN TO USE THIS TOOL:
     - Use this when you need to find specific content (quotes, topics, discussions) within transcripts
-    - Use find_events FIRST to identify relevant events by date/company, then use this tool to search within their transcript content
+    - Use find_events FIRST to identify relevant events by date/company when scoping to specific events; use this tool directly with no event_ids to search across all transcripts
     - Use this for targeted content extraction rather than reading full transcripts
 
     RETURNS: Relevant transcript segments with speaker attribution, timestamps, and relevance scores.

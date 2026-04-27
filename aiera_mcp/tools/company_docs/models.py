@@ -243,7 +243,10 @@ class GetCompanyDocArgs(BaseToolArgs):
 
 
 class GetCompanyDocCategoriesArgs(BaseToolArgs, BloombergTickerMixin):
-    """Retrieve all available document categories for filtering company documents. Requires at least one company filter (bloomberg_ticker, isin, ric, permid, sector_id, or subsector_id). Used to find valid category values for find_company_docs."""
+    """Retrieve all available document categories for filtering company documents. Used to find valid category values for find_company_docs.
+
+    Call without filters to see categories available across the full corpus. Optionally narrow the result by passing a company filter (bloomberg_ticker, isin, ric, permid, sector_id, or subsector_id) to see only the categories that exist for that company or sector.
+    """
 
     originating_prompt: Optional[str] = Field(
         default=None,
@@ -267,32 +270,32 @@ class GetCompanyDocCategoriesArgs(BaseToolArgs, BloombergTickerMixin):
 
     bloomberg_ticker: Optional[str] = Field(
         default=None,
-        description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). At least one company filter is required.",
+        description="Optional Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US') to scope categories to a specific company. Omit to see all categories globally.",
     )
 
     isin: Optional[str] = Field(
         default=None,
-        description="International Securities Identification Number (ISIN).",
+        description="Optional International Securities Identification Number (ISIN) to scope categories to a specific company.",
     )
 
     ric: Optional[str] = Field(
         default=None,
-        description="Reuters Instrument Code (RIC).",
+        description="Optional Reuters Instrument Code (RIC) to scope categories to a specific company.",
     )
 
     permid: Optional[str] = Field(
         default=None,
-        description="Refinitiv Permanent Identifier (PermID).",
+        description="Optional Refinitiv Permanent Identifier (PermID) to scope categories to a specific company.",
     )
 
     sector_id: Optional[Union[int, str]] = Field(
         default=None,
-        description="ID of a specific sector. Use get_sectors_and_subsectors to find valid IDs.",
+        description="Optional sector ID to scope categories to companies in a specific sector. Use get_sectors_and_subsectors to find valid IDs.",
     )
 
     subsector_id: Optional[Union[int, str]] = Field(
         default=None,
-        description="ID of a specific subsector. Use get_sectors_and_subsectors to find valid IDs.",
+        description="Optional subsector ID to scope categories to companies in a specific subsector. Use get_sectors_and_subsectors to find valid IDs.",
     )
 
     page: Union[int, str] = Field(
@@ -307,7 +310,10 @@ class GetCompanyDocCategoriesArgs(BaseToolArgs, BloombergTickerMixin):
 
 
 class GetCompanyDocKeywordsArgs(BaseToolArgs, BloombergTickerMixin):
-    """Retrieve all available keywords for filtering company documents. Requires at least one company filter (bloomberg_ticker, isin, ric, permid, sector_id, or subsector_id). Used to find valid keyword values for find_company_docs."""
+    """Retrieve all available keywords for filtering company documents. Used to find valid keyword values for find_company_docs.
+
+    Call without filters to see keywords available across the full corpus. Optionally narrow the result by passing a company filter (bloomberg_ticker, isin, ric, permid, sector_id, or subsector_id) to see only the keywords that exist for that company or sector.
+    """
 
     originating_prompt: Optional[str] = Field(
         default=None,
@@ -331,32 +337,32 @@ class GetCompanyDocKeywordsArgs(BaseToolArgs, BloombergTickerMixin):
 
     bloomberg_ticker: Optional[str] = Field(
         default=None,
-        description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). At least one company filter is required.",
+        description="Optional Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US') to scope keywords to a specific company. Omit to see all keywords globally.",
     )
 
     isin: Optional[str] = Field(
         default=None,
-        description="International Securities Identification Number (ISIN).",
+        description="Optional International Securities Identification Number (ISIN) to scope keywords to a specific company.",
     )
 
     ric: Optional[str] = Field(
         default=None,
-        description="Reuters Instrument Code (RIC).",
+        description="Optional Reuters Instrument Code (RIC) to scope keywords to a specific company.",
     )
 
     permid: Optional[str] = Field(
         default=None,
-        description="Refinitiv Permanent Identifier (PermID).",
+        description="Optional Refinitiv Permanent Identifier (PermID) to scope keywords to a specific company.",
     )
 
     sector_id: Optional[Union[int, str]] = Field(
         default=None,
-        description="ID of a specific sector. Use get_sectors_and_subsectors to find valid IDs.",
+        description="Optional sector ID to scope keywords to companies in a specific sector. Use get_sectors_and_subsectors to find valid IDs.",
     )
 
     subsector_id: Optional[Union[int, str]] = Field(
         default=None,
-        description="ID of a specific subsector. Use get_sectors_and_subsectors to find valid IDs.",
+        description="Optional subsector ID to scope keywords to companies in a specific subsector. Use get_sectors_and_subsectors to find valid IDs.",
     )
 
     page: Union[int, str] = Field(
