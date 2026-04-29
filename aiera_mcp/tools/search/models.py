@@ -402,6 +402,10 @@ class SearchThirdbridgeArgs(BaseAieraArgs):
 
     OPEN-ENDED QUERIES: For queries with no user-specified time period, OMIT start_date and end_date. Third Bridge content is valuable across its full historical corpus — only apply date filters when the user explicitly requests a specific time window.
 
+    PAGINATION FOR EXPERT-LANDSCAPE QUERIES:
+    - For "what do experts think about X" queries where X is a specific named entity (a clinical trial, a pipeline drug, a deal, a specific event, a named study), prefer paginated retrieval over a single-page result. Continue paging via search_after / next_search_after until the next page's results are clearly off-topic — not after the first 25 hits. These questions imply the user wants the expert landscape on that entity, not a single authoritative source.
+    - For broad topical or thematic queries that span multiple companies or an entire industry (e.g., "competitive impact of AI on software", "trends in semiconductor supply chains", "how are retailers responding to tariffs"), paginate and collect a diverse candidate pool rather than relying on the first page. Third Bridge interviews are long and dense, so hybrid relevance scoring clusters heavily on 2–3 deep-dive events whose chunks flood the top of the rankings. A first page of 25 chunks may all come from a handful of events — which produces a narrow, over-weighted synthesis. For these queries, page at least 2–3 times and prefer candidate pools that span 8+ distinct events before synthesizing.
+
     WORKFLOW EXAMPLE:
     1. User asks: "What do experts say about semiconductor supply chains?"
     2. First call find_third_bridge_events to get relevant event IDs
