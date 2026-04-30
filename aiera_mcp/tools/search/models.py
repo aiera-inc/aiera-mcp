@@ -9,11 +9,25 @@ from ..common.models import BaseAieraArgs, BaseAieraResponse
 
 
 class SearchTranscriptsArgs(BaseAieraArgs):
-    """Semantic search within event transcripts for specific topics, quotes, or discussions.
+    """Semantic search within event transcripts (earnings calls, investor presentations, shareholder meetings, etc.) for specific topics, quotes, or discussions.
+
+    USE THIS TOOL WHEN THE USER ASKS:
+    - "How was X discussed in earnings calls?" / "What was said about X on earnings calls?"
+    - "What did [executive/CEO/CFO] say about X?"
+    - "How is management talking about X?" / "What is management's view on X?"
+    - "Find quotes / statements / commentary on X" across transcripts
+    - "What are companies saying about [topic, e.g. inflation, AI, tariffs]?"
+    - Anything about earnings call content, Q&A discussions, prepared remarks, management guidance language, or analyst questions
+
+    DO NOT USE for:
+    - Structured financial metrics (revenue, EPS, margins) — use get_financials, get_ratios, get_kpis_and_segments
+    - SEC filing text — use search_filings
+    - Research/analyst report content — use search_research
+    - News articles or media coverage — use trusted_web_search
 
     WHEN TO USE THIS TOOL:
     - Use this when you need to find specific content (quotes, topics, discussions) within transcripts
-    - Use find_events FIRST to identify relevant events by date/company, then use this tool to search within their transcript content
+    - Use find_events FIRST to identify relevant events by date/company when scoping to specific events; use this tool directly with no event_ids to search across all transcripts
     - Use this for targeted content extraction rather than reading full transcripts
 
     RETURNS: Relevant transcript segments with speaker attribution, timestamps, and relevance scores.
@@ -387,6 +401,10 @@ class SearchThirdbridgeArgs(BaseAieraArgs):
     Results are individual paragraphs/chunks, not full transcripts. Use get_third_bridge_event for complete transcripts.
 
     OPEN-ENDED QUERIES: For queries with no user-specified time period, OMIT start_date and end_date. Third Bridge content is valuable across its full historical corpus — only apply date filters when the user explicitly requests a specific time window.
+
+    PAGINATION FOR EXPERT-LANDSCAPE QUERIES:
+    - For "what do experts think about X" queries where X is a specific named entity (a clinical trial, a pipeline drug, a deal, a specific event, a named study), prefer paginated retrieval over a single-page result. Continue paging via search_after / next_search_after until the next page's results are clearly off-topic — not after the first 25 hits. These questions imply the user wants the expert landscape on that entity, not a single authoritative source.
+    - For broad topical or thematic queries that span multiple companies or an entire industry (e.g., "competitive impact of AI on software", "trends in semiconductor supply chains", "how are retailers responding to tariffs"), paginate and collect a diverse candidate pool rather than relying on the first page. Third Bridge interviews are long and dense, so hybrid relevance scoring clusters heavily on 2–3 deep-dive events whose chunks flood the top of the rankings. A first page of 25 chunks may all come from a handful of events — which produces a narrow, over-weighted synthesis. For these queries, page at least 2–3 times and prefer candidate pools that span 8+ distinct events before synthesizing.
 
     WORKFLOW EXAMPLE:
     1. User asks: "What do experts say about semiconductor supply chains?"
