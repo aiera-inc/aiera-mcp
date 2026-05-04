@@ -33,10 +33,9 @@ class SearchTranscriptsArgs(BaseAieraArgs):
     RETURNS: Relevant transcript segments with speaker attribution, timestamps, and relevance scores.
     Results are individual chunks, not full transcripts. Use get_event for complete transcripts.
 
-    WORKFLOW EXAMPLE:
-    1. User asks: "What did Apple's CEO say about AI?"
-    2. First call find_events with bloomberg_ticker='AAPL:US' to get recent event IDs
-    3. Then call search_transcripts with query_text='AI artificial intelligence' and the event_ids
+    WORKFLOW EXAMPLES:
+    - **Broad topical query** (e.g. "What are companies saying about AI capex?"): call search_transcripts directly with no event_ids — searches across all transcripts.
+    - **Targeted single-company query** (e.g. "What did Apple's CEO say about AI?"): optionally narrow first with find_events(bloomberg_ticker='AAPL:US') → pass the resulting event_ids into search_transcripts. The pre-filter is OPTIONAL; if scope is unclear, skip find_events and call search_transcripts directly.
 
     NOTE: This tool uses hybrid semantic + keyword search for high-quality results.
     """
@@ -126,10 +125,9 @@ class SearchFilingsArgs(BaseAieraArgs):
     RETURNS: Relevant filing chunks with context, filing metadata, and relevance scores.
     Results are individual sections/chunks, not full filings. Use get_filing for complete filing content.
 
-    WORKFLOW EXAMPLE:
-    1. User asks: "What are Tesla's main risk factors?"
-    2. First call find_filings with bloomberg_ticker='TSLA:US' and form_number='10-K' to get recent filing IDs
-    3. Then call search_filings with query_text='risk factors' and the filing_ids
+    WORKFLOW EXAMPLES:
+    - **Broad topical query** (e.g. "What are companies saying about supply chain risk in 10-Ks?"): call search_filings directly with query_text and form_number — the pre-filter via find_filings is unnecessary.
+    - **Targeted single-company query** (e.g. "What are Tesla's main risk factors?"): optionally narrow first with find_filings(bloomberg_ticker='TSLA:US', form_number='10-K') → pass the resulting filing_ids into search_filings. The pre-filter is OPTIONAL; if scope is unclear, skip find_filings and call search_filings directly.
 
     NOTE: This tool uses hybrid semantic + keyword search for high-quality results.
     """

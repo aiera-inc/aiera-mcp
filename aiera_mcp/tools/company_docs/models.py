@@ -107,7 +107,7 @@ class FindCompanyDocsArgs(BaseToolArgs, BloombergTickerMixin, CategoriesKeywords
 
     MULTIPLE DOCUMENT TYPES: For multiple document types, provide comma-separated categories without spaces (e.g., 'press_release,earnings_release').
 
-    MULTIPLE COMPANIES: To find documents for multiple companies, provide a comma-separated list of bloomberg_tickers in a SINGLE call. You do NOT need multiple calls for multiple companies.
+    MULTIPLE COMPANIES: For multiple companies, pass bloomberg_ticker as a single comma-separated string (e.g. "AAPL:US,MSFT:US") in one call.
 
     This tool provides access to company-published documents with summaries and metadata.
     """

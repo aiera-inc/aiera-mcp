@@ -67,7 +67,7 @@ class BloombergTickerMixin(BaseModel):
 
 # Parameter models (extracted from params.py)
 class FindEquitiesArgs(BaseToolArgs, BloombergTickerMixin):
-    """Find companies and equities using various identifiers or search. To find equities for multiple companies, provide a comma-separated list of bloomberg_tickers, isins, rics, or a search term. You do not need to make multiple calls."""
+    """Find companies and equities using various identifiers or search. For multiple companies, pass bloomberg_ticker, isin, or ric as a single comma-separated string, or use a search term. One call handles the full set."""
 
     originating_prompt: Optional[str] = Field(
         default=None,
@@ -129,9 +129,9 @@ class FindEquitiesArgs(BaseToolArgs, BloombergTickerMixin):
 
 
 class GetEquitySummariesArgs(BaseToolArgs, BloombergTickerMixin):
-    """Retrieve detailed summary(s) about one or more equities, filtered by bloomberg_tickers (a comma-separated list).
+    """Retrieve detailed summary(s) about one or more equities, filtered by bloomberg_ticker (comma-separated string).
     Summaries will include past and upcoming events, information about company leadership, recent financials, and within which indices the equity is included.
-    To find summaries for multiple companies, provide a comma-separated list of bloomberg_tickers. You do not need to make multiple calls.
+    For multiple companies, pass bloomberg_ticker as a single comma-separated string (e.g. "AAPL:US,MSFT:US") in one call.
     """
 
     originating_prompt: Optional[str] = Field(

@@ -36,8 +36,7 @@ aiera_mcp/
     third_bridge/      # find_third_bridge_events, get_third_bridge_event
     research/          # find_research, get_research, get_research_providers, get_research_authors,
                        # get_research_asset_classes, get_research_asset_types, get_research_subjects,
-                       # get_research_product_focuses, get_research_discipline_types,
-                       # get_research_region_types, get_research_country_codes
+                       # get_research_product_focuses, get_research_region_types, get_research_country_codes
     search/            # search_transcripts, search_filings, search_research, search_company_docs, search_thirdbridge
     web/               # trusted_web_search
 entrypoint.py          # CLI entrypoint, transport selection
