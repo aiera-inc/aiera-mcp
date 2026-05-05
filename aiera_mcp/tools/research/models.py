@@ -139,11 +139,6 @@ class FindResearchArgs(BaseToolArgs):
         description="Filter by one or more product focus values. Obtain valid values from get_research_product_focuses. Example: ['Equity Research', 'Credit Research'].",
     )
 
-    discipline_types: Optional[List[str]] = Field(
-        default=None,
-        description="Filter by one or more discipline types. Example: ['Fundamental', 'Quantitative'].",
-    )
-
     search: Optional[str] = Field(
         default=None,
         description="Free-text search term. Matches against title, abstract, and description. Many providers do not tag documents with equity tickers, so text-based search is the most reliable way to find relevant reports. Typical values: a company name or ticker symbol (e.g., 'Netflix', 'NFLX').",

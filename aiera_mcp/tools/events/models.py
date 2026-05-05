@@ -81,7 +81,7 @@ class EventTypeMixin(BaseModel):
 
 # Parameter models (extracted from params.py)
 class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
-    """Search for corporate events including earnings calls, investor presentations, shareholder meetings, and more. Search across all companies by date range, or filter by specific companies using bloomberg_tickers, watchlists, indexes, sectors, or subsectors.
+    """Search for corporate events including earnings calls, investor presentations, shareholder meetings, and more. Search across all companies by date range, or filter by specific companies using bloomberg_ticker, watchlists, indexes, sectors, or subsectors.
 
     RETURNS METADATA AND SUMMARIES ONLY — NOT full transcripts. To retrieve actual transcript text, call get_event with the event_id from these results. Never summarize a document from metadata alone; always retrieve full content first. The workflow is: find_events → identify the event → get_event(event_id=...) → summarize from the transcript. For keyword-level search across many events, use search_transcripts instead.
 
@@ -95,7 +95,7 @@ class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
 
     MULTIPLE EVENT TYPES: This tool only accepts ONE event_type per call. To search multiple event types, you MUST make separate calls for each event_type and combine the results yourself.
 
-    MULTIPLE COMPANIES: To find events for multiple companies, provide a comma-separated list of bloomberg_tickers in a SINGLE call. You do NOT need multiple calls for multiple companies.
+    MULTIPLE COMPANIES: To find events for multiple companies, pass bloomberg_ticker as a single comma-separated string (e.g. "AAPL:US,MSFT:US,GOOGL:US") in one call — do not make per-company calls.
 
     This tool provides access to a comprehensive database of corporate events with transcripts and summaries.
     """
@@ -263,7 +263,7 @@ class GetEventArgs(BaseToolArgs):
 
     LIMITATIONS:
     - Transcripts are not available for future events
-    - If you need multiple events, make separate sequential calls (one event_id per call)
+    - This tool accepts one event_id per call. For multiple events, issue the calls in parallel where possible rather than sequentially — each call is independent. For broad keyword search across many events, use search_transcripts instead.
 
     WORKFLOW: Use find_events first to obtain valid event_ids.
     """
@@ -302,9 +302,8 @@ class GetEventArgs(BaseToolArgs):
 
 
 class GetUpcomingEventsArgs(BaseToolArgs, BloombergTickerMixin):
-    """Get confirmed and estimated upcoming events within a date range. Requires one of the following: bloomberg_tickers (a comma-separated list of tickers),
-    a watchlist_id, an index_id, a sector_id, or a subsector_id.
-    To find upcoming events for multiple companies, provide a comma-separated list of bloomberg_tickers. You do not need to make multiple calls.
+    """Get confirmed and estimated upcoming events within a date range. Requires one of the following: bloomberg_ticker (comma-separated string), watchlist_id, index_id, sector_id, or subsector_id.
+    For multiple companies, pass bloomberg_ticker as a single comma-separated string (e.g. "AAPL:US,MSFT:US") in one call.
     """
 
     originating_prompt: Optional[str] = Field(

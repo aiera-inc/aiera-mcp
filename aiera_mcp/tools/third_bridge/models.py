@@ -86,7 +86,7 @@ class FindThirdBridgeEventsArgs(BaseToolArgs, BloombergTickerMixin):
     WHEN TO USE: Use this when you need expert/industry perspectives rather than official company communications.
     For official company events (earnings calls, presentations), use find_events instead.
 
-    To find events for multiple companies, provide a comma-separated list of bloomberg_tickers in a single call.
+    For multiple companies, pass bloomberg_ticker as a single comma-separated string (e.g. "AAPL:US,MSFT:US") in one call.
     """
 
     originating_prompt: Optional[str] = Field(

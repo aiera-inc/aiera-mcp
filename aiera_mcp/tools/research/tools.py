@@ -72,9 +72,6 @@ async def find_research(args: FindResearchArgs) -> FindResearchResponse:
     if "product_focuses" in params:
         params["product_focuses"] = ",".join(params["product_focuses"])
 
-    if "discipline_types" in params:
-        params["discipline_types"] = ",".join(params["discipline_types"])
-
     # Convert search_after array to comma-separated string for the GET endpoint
     if "search_after" in params:
         params["search_after"] = ",".join(str(v) for v in params["search_after"])
