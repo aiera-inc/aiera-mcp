@@ -67,7 +67,7 @@ class BloombergTickerMixin(BaseModel):
 
 # Parameter models (extracted from params.py)
 class FindEquitiesArgs(BaseToolArgs, BloombergTickerMixin):
-    """Find companies and equities using various identifiers or search. For multiple companies, pass bloomberg_ticker, isin, or ric as a single comma-separated string, or use a search term. One call handles the full set."""
+    """Find companies and equities using various identifiers or search. For multiple companies, pass bloomberg_ticker, isin, or ric as a single comma-separated string; or, use a search term. One call handles the full set."""
 
     originating_prompt: Optional[str] = Field(
         default=None,
