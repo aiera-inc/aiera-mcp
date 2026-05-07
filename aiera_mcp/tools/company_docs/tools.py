@@ -83,7 +83,7 @@ async def get_company_doc(args: GetCompanyDocArgs) -> GetCompanyDocResponse:
 async def get_company_doc_categories(
     args: GetCompanyDocCategoriesArgs,
 ) -> GetCompanyDocCategoriesResponse:
-    """Retrieve a list of all categories associated with company documents."""
+    """Retrieve document categories within a company or sector scope (a scoping filter is required)."""
     logger.info("tool called: get_company_doc_categories")
 
     # Get client and API key (no context needed for standard MCP)
@@ -109,7 +109,7 @@ async def get_company_doc_categories(
 async def get_company_doc_keywords(
     args: GetCompanyDocKeywordsArgs,
 ) -> GetCompanyDocKeywordsResponse:
-    """Retrieve a list of all keywords associated with company documents."""
+    """Retrieve document keywords within a company or sector scope (a scoping filter is required)."""
     logger.info("tool called: get_company_doc_keywords")
 
     # Get client and API key (no context needed for standard MCP)
