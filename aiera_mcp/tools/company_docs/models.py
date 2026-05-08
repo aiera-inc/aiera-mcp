@@ -243,9 +243,9 @@ class GetCompanyDocArgs(BaseToolArgs):
 
 
 class GetCompanyDocCategoriesArgs(BaseToolArgs, BloombergTickerMixin):
-    """Retrieve all available document categories for filtering company documents. Used to find valid category values for find_company_docs.
+    """Retrieve document categories for filtering company documents. Used to find valid category values for find_company_docs.
 
-    Call without filters to see categories available across the full corpus. Optionally narrow the result by passing a company filter (bloomberg_ticker, isin, ric, permid, sector_id, or subsector_id) to see only the categories that exist for that company or sector.
+    Requires at least one company-scoping filter: bloomberg_ticker, isin, ric, permid, sector_id, or subsector_id. The returned categories are the ones that exist for documents within that scope. Global (unscoped) aggregation is not supported.
     """
 
     originating_prompt: Optional[str] = Field(
@@ -270,32 +270,32 @@ class GetCompanyDocCategoriesArgs(BaseToolArgs, BloombergTickerMixin):
 
     bloomberg_ticker: Optional[str] = Field(
         default=None,
-        description="Optional Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US') to scope categories to a specific company. Omit to see all categories globally.",
+        description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US') to scope categories to a specific company. At least one company-scoping filter is required.",
     )
 
     isin: Optional[str] = Field(
         default=None,
-        description="Optional International Securities Identification Number (ISIN) to scope categories to a specific company.",
+        description="International Securities Identification Number (ISIN) to scope categories to a specific company. At least one company-scoping filter is required.",
     )
 
     ric: Optional[str] = Field(
         default=None,
-        description="Optional Reuters Instrument Code (RIC) to scope categories to a specific company.",
+        description="Reuters Instrument Code (RIC) to scope categories to a specific company. At least one company-scoping filter is required.",
     )
 
     permid: Optional[str] = Field(
         default=None,
-        description="Optional Refinitiv Permanent Identifier (PermID) to scope categories to a specific company.",
+        description="Refinitiv Permanent Identifier (PermID) to scope categories to a specific company. At least one company-scoping filter is required.",
     )
 
     sector_id: Optional[Union[int, str]] = Field(
         default=None,
-        description="Optional sector ID to scope categories to companies in a specific sector. Use get_sectors_and_subsectors to find valid IDs.",
+        description="Sector ID to scope categories to companies in a specific sector. Use get_sectors_and_subsectors to find valid IDs. At least one company-scoping filter is required.",
     )
 
     subsector_id: Optional[Union[int, str]] = Field(
         default=None,
-        description="Optional subsector ID to scope categories to companies in a specific subsector. Use get_sectors_and_subsectors to find valid IDs.",
+        description="Subsector ID to scope categories to companies in a specific subsector. Use get_sectors_and_subsectors to find valid IDs. At least one company-scoping filter is required.",
     )
 
     page: Union[int, str] = Field(
@@ -310,9 +310,9 @@ class GetCompanyDocCategoriesArgs(BaseToolArgs, BloombergTickerMixin):
 
 
 class GetCompanyDocKeywordsArgs(BaseToolArgs, BloombergTickerMixin):
-    """Retrieve all available keywords for filtering company documents. Used to find valid keyword values for find_company_docs.
+    """Retrieve keywords for filtering company documents. Used to find valid keyword values for find_company_docs.
 
-    Call without filters to see keywords available across the full corpus. Optionally narrow the result by passing a company filter (bloomberg_ticker, isin, ric, permid, sector_id, or subsector_id) to see only the keywords that exist for that company or sector.
+    Requires at least one company-scoping filter: bloomberg_ticker, isin, ric, permid, sector_id, or subsector_id. The returned keywords are the ones that exist for documents within that scope. Global (unscoped) aggregation is not supported.
     """
 
     originating_prompt: Optional[str] = Field(
@@ -337,32 +337,32 @@ class GetCompanyDocKeywordsArgs(BaseToolArgs, BloombergTickerMixin):
 
     bloomberg_ticker: Optional[str] = Field(
         default=None,
-        description="Optional Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US') to scope keywords to a specific company. Omit to see all keywords globally.",
+        description="Bloomberg ticker(s) in format 'TICKER:COUNTRY' (e.g., 'AAPL:US') to scope keywords to a specific company. At least one company-scoping filter is required.",
     )
 
     isin: Optional[str] = Field(
         default=None,
-        description="Optional International Securities Identification Number (ISIN) to scope keywords to a specific company.",
+        description="International Securities Identification Number (ISIN) to scope keywords to a specific company. At least one company-scoping filter is required.",
     )
 
     ric: Optional[str] = Field(
         default=None,
-        description="Optional Reuters Instrument Code (RIC) to scope keywords to a specific company.",
+        description="Reuters Instrument Code (RIC) to scope keywords to a specific company. At least one company-scoping filter is required.",
     )
 
     permid: Optional[str] = Field(
         default=None,
-        description="Optional Refinitiv Permanent Identifier (PermID) to scope keywords to a specific company.",
+        description="Refinitiv Permanent Identifier (PermID) to scope keywords to a specific company. At least one company-scoping filter is required.",
     )
 
     sector_id: Optional[Union[int, str]] = Field(
         default=None,
-        description="Optional sector ID to scope keywords to companies in a specific sector. Use get_sectors_and_subsectors to find valid IDs.",
+        description="Sector ID to scope keywords to companies in a specific sector. Use get_sectors_and_subsectors to find valid IDs. At least one company-scoping filter is required.",
     )
 
     subsector_id: Optional[Union[int, str]] = Field(
         default=None,
-        description="Optional subsector ID to scope keywords to companies in a specific subsector. Use get_sectors_and_subsectors to find valid IDs.",
+        description="Subsector ID to scope keywords to companies in a specific subsector. Use get_sectors_and_subsectors to find valid IDs. At least one company-scoping filter is required.",
     )
 
     page: Union[int, str] = Field(
