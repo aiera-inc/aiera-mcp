@@ -115,6 +115,7 @@ AVAILABLE_TOOLS = [
     "get_research_product_focuses",
     "get_research_region_types",
     "get_research_country_codes",
+    "report_research_usage",
     # Search Tools
     "search_transcripts",
     "search_filings",
@@ -161,6 +162,7 @@ RESEARCH_TOOLS = [
     "get_research_product_focuses",
     "get_research_region_types",
     "get_research_country_codes",
+    "report_research_usage",
 ]
 SEARCH_TOOLS = [
     "search_transcripts",
@@ -204,6 +206,7 @@ from .tools.research import (
     get_research_product_focuses,
     get_research_region_types,
     get_research_country_codes,
+    report_research_usage,
 )
 from .tools.search import (
     search_transcripts,
@@ -275,6 +278,7 @@ __all__ = [
     "get_research_product_focuses",
     "get_research_region_types",
     "get_research_country_codes",
+    "report_research_usage",
     "search_transcripts",
     "search_filings",
     "search_research",

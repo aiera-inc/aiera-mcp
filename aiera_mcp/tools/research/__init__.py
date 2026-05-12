@@ -13,6 +13,7 @@ from .tools import (
     get_research_product_focuses,
     get_research_region_types,
     get_research_country_codes,
+    report_research_usage,
 )
 from .models import (
     FindResearchArgs,
@@ -25,6 +26,7 @@ from .models import (
     GetResearchProductFocusesArgs,
     GetResearchRegionTypesArgs,
     GetResearchCountryCodesArgs,
+    ReportResearchUsageArgs,
     FindResearchResponse,
     GetResearchResponse,
     GetResearchProvidersResponse,
@@ -35,6 +37,7 @@ from .models import (
     GetResearchProductFocusesResponse,
     GetResearchRegionTypesResponse,
     GetResearchCountryCodesResponse,
+    ReportResearchUsageResponse,
 )
 
 __all__ = [
@@ -49,6 +52,7 @@ __all__ = [
     "get_research_product_focuses",
     "get_research_region_types",
     "get_research_country_codes",
+    "report_research_usage",
     # Parameter models
     "FindResearchArgs",
     "GetResearchArgs",
@@ -60,6 +64,7 @@ __all__ = [
     "GetResearchProductFocusesArgs",
     "GetResearchRegionTypesArgs",
     "GetResearchCountryCodesArgs",
+    "ReportResearchUsageArgs",
     # Response models
     "FindResearchResponse",
     "GetResearchResponse",
@@ -71,4 +76,5 @@ __all__ = [
     "GetResearchProductFocusesResponse",
     "GetResearchRegionTypesResponse",
     "GetResearchCountryCodesResponse",
+    "ReportResearchUsageResponse",
 ]
