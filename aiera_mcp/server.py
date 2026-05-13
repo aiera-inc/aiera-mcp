@@ -62,7 +62,7 @@ CRITICAL — Before calling any other tools, you MUST:
 1. Call `get_core_instructions` to retrieve baseline instructions for tool selection, data interpretation, and response composition.
 2. Call `get_grammar_template` with `template_type='general'` to retrieve response formatting rules.
 
-These two calls provide all the guidance needed to use the remaining tools effectively.
+These two tools will provide all the guidance needed to use the remaining tools effectively.
 """
 
 
