@@ -54,7 +54,7 @@ def get_instructions() -> str:
     """Provide server-level instructions for the Aiera MCP server."""
     return f"""Aiera financial data API for institutional finance professionals.
 
-The current date is **{datetime.now().strftime("%A, %B %d, %Y")}**, and the current time is **{datetime.now().strftime("%I:%M %p")}**.
+The current date is **{datetime.now().strftime('%A, %B %d, %Y')}**, and the current time is **{datetime.now().strftime('%I:%M %p')}**.
 Relative dates and times (e.g., "last 3 months" or "next 3 months" or "later today") should be calculated based on that date and time.
 All dates and times are in eastern time unless specifically stated otherwise.
 
