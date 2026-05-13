@@ -42,6 +42,7 @@ from .research import (
     get_research_product_focuses,
     get_research_region_types,
     get_research_country_codes,
+    report_research_usage,
 )
 from .web import trusted_web_search
 from .common import get_grammar_template, get_core_instructions, available_tools
@@ -91,6 +92,7 @@ from .research import (
     GetResearchProductFocusesArgs,
     GetResearchRegionTypesArgs,
     GetResearchCountryCodesArgs,
+    ReportResearchUsageArgs,
 )
 from .web import TrustedWebSearchArgs
 from .common import GetGrammarTemplateArgs, GetCoreInstructionsArgs, AvailableToolsArgs
@@ -387,6 +389,15 @@ TOOL_REGISTRY = {
         "input_schema": GetResearchCountryCodesArgs.model_json_schema(),
         "function": get_research_country_codes,
         "args_model": GetResearchCountryCodesArgs,
+        "category": "research",
+        "read_only": True,
+        "destructive": False,
+    },
+    "report_research_usage": {
+        "display_name": "Report Research Usage",
+        "input_schema": ReportResearchUsageArgs.model_json_schema(),
+        "function": report_research_usage,
+        "args_model": ReportResearchUsageArgs,
         "category": "research",
         "read_only": True,
         "destructive": False,

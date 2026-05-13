@@ -17,6 +17,7 @@ from .models import (
     GetResearchProductFocusesArgs,
     GetResearchRegionTypesArgs,
     GetResearchCountryCodesArgs,
+    ReportResearchUsageArgs,
     FindResearchResponse,
     GetResearchResponse,
     GetResearchProvidersResponse,
@@ -27,6 +28,7 @@ from .models import (
     GetResearchProductFocusesResponse,
     GetResearchRegionTypesResponse,
     GetResearchCountryCodesResponse,
+    ReportResearchUsageResponse,
 )
 
 # Setup logging
@@ -318,6 +320,50 @@ async def get_research(args: GetResearchArgs) -> GetResearchResponse:
     )
 
     response = GetResearchResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
+
+
+async def report_research_usage(
+    args: ReportResearchUsageArgs,
+) -> ReportResearchUsageResponse:
+    """Report research documents that informed the final answer via
+    /chat-support/report-readership. ``access_type`` is internally fixed to
+    ``summarize``; the model only supplies the document IDs.
+    """
+    logger.info("tool called: report_research_usage")
+
+    client = await get_http_client(None)
+    api_key = get_api_key()
+
+    # Parse the model-supplied comma-separated IDs into the items-array shape
+    # the endpoint expects. Drop blanks so a trailing comma or stray whitespace
+    # doesn't produce a validation failure server-side.
+    raw_ids = [rid.strip() for rid in (args.research_ids or "").split(",")]
+    ids = [rid for rid in raw_ids if rid]
+
+    body = {
+        "items": [{"research_id": rid, "access_type": "summarize"} for rid in ids],
+    }
+
+    # Forward any prompt-tracking metadata the base tool args expose.
+    params: dict = {}
+    if args.originating_prompt:
+        params["originating_prompt"] = args.originating_prompt
+    if args.self_identification:
+        params["self_identification"] = args.self_identification
+
+    raw_response = await make_aiera_request(
+        client=client,
+        method="POST",
+        endpoint="/chat-support/report-readership",
+        api_key=api_key,
+        params=params or None,
+        data=body,
+    )
+
+    response = ReportResearchUsageResponse.model_validate(raw_response)
     if args.exclude_instructions:
         response.instructions = []
     return response

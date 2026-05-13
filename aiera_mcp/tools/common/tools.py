@@ -98,6 +98,7 @@ ENDPOINT_TO_TOOLS = {
     "/chat-support/get-research-product-focuses": ["get_research_product_focuses"],
     "/chat-support/get-research-region-types": ["get_research_region_types"],
     "/chat-support/get-research-country-codes": ["get_research_country_codes"],
+    "/chat-support/report-readership": ["report_research_usage"],
     "/chat-support/search/transcripts": ["search_transcripts"],
     "/chat-support/search/filings": ["search_filings"],
     "/chat-support/search/filing-chunks": ["search_filings"],

@@ -625,3 +625,51 @@ class GetResearchCountryCodesResponse(BaseAieraResponse):
     """Response for get_research_country_codes tool - passes through the API response structure."""
 
     response: Optional[Any] = Field(None, description="Response data from the API")
+
+
+class ReportResearchUsageArgs(BaseToolArgs):
+    """Report research documents that informed your final answer. Call this tool exactly once after composing your response, passing the IDs of every research document whose content you used.
+
+    Only report documents whose content meaningfully contributed to your answer; do not report documents that were retrieved and then discarded as off-topic, nor documents that only appeared in a listing without being read.
+
+    Pass up to 100 research document IDs per call (the ``document_id`` values returned by ``find_research``, ``search_research``, or ``get_research``).
+    """
+
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
+    )
+
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
+    research_ids: str = Field(
+        ...,
+        description="Comma-separated list of research document IDs (as returned by find_research, search_research, or get_research) that contributed to your final answer. Maximum 100 IDs per call.",
+    )
+
+
+class ReportResearchUsageResponse(BaseAieraResponse):
+    """Response for report_research_usage tool."""
+
+    submitted: Optional[int] = Field(
+        default=None,
+        description="Number of research IDs the tool submitted to the endpoint.",
+    )
+
+    published: Optional[int] = Field(
+        default=None,
+        description="Number of readership events successfully published.",
+    )
+
+    skipped: Optional[int] = Field(
+        default=None,
+        description="Number of IDs that were dropped (typically due to missing entitlement on the document).",
+    )
