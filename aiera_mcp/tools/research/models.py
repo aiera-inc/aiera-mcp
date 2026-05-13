@@ -630,7 +630,7 @@ class GetResearchCountryCodesResponse(BaseAieraResponse):
 class ReportResearchUsageArgs(BaseToolArgs):
     """Report research documents that informed your final answer. Call this tool exactly once after composing your response, passing the IDs of every research document whose content you used.
 
-    Only report documents whose content meaningfully contributed to your answer — do not report documents that were retrieved and then discarded as off-topic, nor documents that only appeared in a listing without being read.
+    Only report documents whose content meaningfully contributed to your answer; do not report documents that were retrieved and then discarded as off-topic, nor documents that only appeared in a listing without being read.
 
     Pass up to 100 research document IDs per call (the ``document_id`` values returned by ``find_research``, ``search_research``, or ``get_research``).
     """

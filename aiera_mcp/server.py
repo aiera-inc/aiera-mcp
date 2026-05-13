@@ -3,6 +3,8 @@
 import json
 import httpx
 import logging
+
+from datetime import datetime
 from typing import Any, Dict, Optional, Callable, List
 
 from mcp.server import Server
@@ -50,7 +52,11 @@ def get_lambda_http_client() -> httpx.AsyncClient:
 
 def get_instructions() -> str:
     """Provide server-level instructions for the Aiera MCP server."""
-    return """Aiera financial data API for institutional finance professionals.
+    return f"""Aiera financial data API for institutional finance professionals.
+
+The current date is **{datetime.now().strftime("%A, %B %d, %Y")}**, and the current time is **{datetime.now().strftime("%I:%M %p")}**.
+Relative dates and times (e.g., "last 3 months" or "next 3 months" or "later today") should be calculated based on that date and time.
+All dates and times are in eastern time unless specifically stated otherwise.
 
 CRITICAL — Before calling any other tools, you MUST:
 1. Call `get_core_instructions` to retrieve baseline instructions for tool selection, data interpretation, and response composition.
