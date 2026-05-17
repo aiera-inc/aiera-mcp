@@ -228,6 +228,8 @@ async def make_aiera_request(
 ) -> Dict[str, Any]:
     """Make a request to the Aiera API with enhanced error handling and logging.
 
+    Protected by circuit breaker to prevent cascade failures during backend outages.
+
     Args:
         client: HTTP client instance
         method: HTTP method (GET, POST, etc.)
@@ -240,6 +242,54 @@ async def make_aiera_request(
 
     Returns:
         JSON response data with instructions
+
+    Raises:
+        CircuitBreakerError: When circuit is open due to repeated failures
+    """
+    # Import circuit breaker and context functions (deferred to avoid circular imports)
+    from ..circuit_breaker import get_aiera_api_breaker, CircuitBreakerError
+    from ..context import get_request_context
+
+    # Wrap the actual request in circuit breaker
+    breaker = get_aiera_api_breaker()
+
+    try:
+        return await breaker.call_async(
+            _make_aiera_request_impl,
+            client,
+            method,
+            endpoint,
+            api_key,
+            params,
+            data,
+            return_type,
+            request_context,
+        )
+    except CircuitBreakerError:
+        logger.error(
+            f"Circuit breaker open for {endpoint} - Aiera API is experiencing issues. "
+            f"Failing fast to prevent cascade failure."
+        )
+        raise Exception(
+            "The Aiera API is temporarily unavailable due to repeated failures. "
+            "Please try again in a moment."
+        )
+
+
+async def _make_aiera_request_impl(
+    client: httpx.AsyncClient,
+    method: str,
+    endpoint: str,
+    api_key: str,
+    params: Optional[Dict[str, Any]] = None,
+    data: Optional[Dict[str, Any]] = None,
+    return_type: str = "json",
+    request_context: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Internal implementation of make_aiera_request, called by circuit breaker.
+
+    This is the actual HTTP request logic, protected by the circuit breaker in
+    make_aiera_request(). Do not call directly - use make_aiera_request() instead.
     """
     # Import context functions (deferred to avoid circular imports)
     from ..context import get_request_context
@@ -284,11 +334,12 @@ async def make_aiera_request(
     # Use configured timeout from settings
     timeout = httpx.Timeout(settings.http_timeout, connect=5.0)
 
-    # Retry logic for transient errors (connection errors, timeouts)
-    max_retries = 2  # Original attempt + 1 retry
-    last_error = None
+    # Retry only ConnectError (transient network failures). Do not retry timeouts —
+    # if the API is slow due to load, retrying compounds it; if the query is genuinely
+    # expensive, the retry will also time out.
+    MAX_ATTEMPTS = 2
 
-    for attempt in range(max_retries):
+    for attempt in range(MAX_ATTEMPTS):
         try:
             response = await client.request(
                 method=method,
@@ -298,34 +349,42 @@ async def make_aiera_request(
                 headers=headers,
                 timeout=timeout,
             )
-            break  # Success, exit retry loop
+            if attempt > 0:
+                logger.info(
+                    f"Request succeeded on attempt {attempt + 1}/{MAX_ATTEMPTS} for {endpoint}"
+                )
+            break
 
-        except (httpx.ConnectError, httpx.TimeoutException) as e:
-            last_error = e
-            if attempt < max_retries - 1:
-                # Exponential backoff: 1s, 2s
+        except httpx.ConnectError as e:
+            if attempt < MAX_ATTEMPTS - 1:
                 wait_time = 2**attempt
                 logger.warning(
-                    f"Transient error on attempt {attempt + 1}/{max_retries} for {endpoint}: "
+                    f"Connect error on attempt {attempt + 1}/{MAX_ATTEMPTS} for {endpoint}: "
                     f"{type(e).__name__}: {e}. Retrying in {wait_time}s..."
                 )
                 await asyncio.sleep(wait_time)
             else:
                 logger.error(
-                    f"Request failed after {max_retries} attempts for {endpoint}: {type(e).__name__}: {e}"
+                    f"Request failed after {MAX_ATTEMPTS} attempts for {endpoint}: {type(e).__name__}: {e}"
                 )
                 logger.error(f"Request URL was: {url}")
                 logger.error(f"Request headers were: {headers}")
                 if params:
                     logger.error(f"Request params were: {params}")
+                raise Exception(f"Network error calling Aiera API: {str(e)}")
 
-                if isinstance(e, httpx.TimeoutException):
-                    raise Exception(
-                        f"Aiera API request timed out after {settings.http_timeout}s. "
-                        f"The API may be experiencing heavy load. Please retry in a moment."
-                    )
-                else:
-                    raise Exception(f"Network error calling Aiera API: {str(e)}")
+        except httpx.TimeoutException as e:
+            logger.error(
+                f"Request timed out after {settings.http_timeout}s for {endpoint}: {type(e).__name__}: {e}"
+            )
+            logger.error(f"Request URL was: {url}")
+            logger.error(f"Request headers were: {headers}")
+            if params:
+                logger.error(f"Request params were: {params}")
+            raise Exception(
+                f"Aiera API request timed out after {settings.http_timeout}s. "
+                f"The API may be experiencing heavy load. Please retry in a moment."
+            )
 
         except httpx.RequestError as e:
             # Other request errors (not transient) - fail immediately
