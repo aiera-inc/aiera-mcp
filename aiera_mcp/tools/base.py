@@ -281,23 +281,59 @@ async def make_aiera_request(
     settings = get_settings()
     url = f"{settings.aiera_base_url}{endpoint}"
 
-    try:
-        response = await client.request(
-            method=method,
-            url=url,
-            params=params,
-            json=data,
-            headers=headers,
-            timeout=60.0,
-        )
+    # Use configured timeout from settings
+    timeout = httpx.Timeout(settings.http_timeout, connect=5.0)
 
-    except httpx.RequestError as e:
-        logger.error(f"Request URL was: {url}")
-        logger.error(f"Request headers were: {headers}")
-        if params:
-            logger.error(f"Request params were: {params}")
+    # Retry logic for transient errors (connection errors, timeouts)
+    max_retries = 2  # Original attempt + 1 retry
+    last_error = None
 
-        raise Exception(f"Network error calling Aiera API: {str(e)}")
+    for attempt in range(max_retries):
+        try:
+            response = await client.request(
+                method=method,
+                url=url,
+                params=params,
+                json=data,
+                headers=headers,
+                timeout=timeout,
+            )
+            break  # Success, exit retry loop
+
+        except (httpx.ConnectError, httpx.TimeoutException) as e:
+            last_error = e
+            if attempt < max_retries - 1:
+                # Exponential backoff: 1s, 2s
+                wait_time = 2**attempt
+                logger.warning(
+                    f"Transient error on attempt {attempt + 1}/{max_retries} for {endpoint}: "
+                    f"{type(e).__name__}: {e}. Retrying in {wait_time}s..."
+                )
+                await asyncio.sleep(wait_time)
+            else:
+                logger.error(
+                    f"Request failed after {max_retries} attempts for {endpoint}: {type(e).__name__}: {e}"
+                )
+                logger.error(f"Request URL was: {url}")
+                logger.error(f"Request headers were: {headers}")
+                if params:
+                    logger.error(f"Request params were: {params}")
+
+                if isinstance(e, httpx.TimeoutException):
+                    raise Exception(
+                        f"Aiera API request timed out after {settings.http_timeout}s. "
+                        f"The API may be experiencing heavy load. Please retry in a moment."
+                    )
+                else:
+                    raise Exception(f"Network error calling Aiera API: {str(e)}")
+
+        except httpx.RequestError as e:
+            # Other request errors (not transient) - fail immediately
+            logger.error(f"Request URL was: {url}")
+            logger.error(f"Request headers were: {headers}")
+            if params:
+                logger.error(f"Request params were: {params}")
+            raise Exception(f"Network error calling Aiera API: {str(e)}")
 
     if response.status_code not in [200, 201]:
         logger.error(f"API error: {response.status_code} - {response.text}")
