@@ -228,8 +228,6 @@ async def make_aiera_request(
 ) -> Dict[str, Any]:
     """Make a request to the Aiera API with enhanced error handling and logging.
 
-    Protected by circuit breaker to prevent cascade failures during backend outages.
-
     Args:
         client: HTTP client instance
         method: HTTP method (GET, POST, etc.)
@@ -242,54 +240,6 @@ async def make_aiera_request(
 
     Returns:
         JSON response data with instructions
-
-    Raises:
-        CircuitBreakerError: When circuit is open due to repeated failures
-    """
-    # Import circuit breaker and context functions (deferred to avoid circular imports)
-    from ..circuit_breaker import get_aiera_api_breaker, CircuitBreakerError
-    from ..context import get_request_context
-
-    # Wrap the actual request in circuit breaker
-    breaker = get_aiera_api_breaker()
-
-    try:
-        return await breaker.call_async(
-            _make_aiera_request_impl,
-            client,
-            method,
-            endpoint,
-            api_key,
-            params,
-            data,
-            return_type,
-            request_context,
-        )
-    except CircuitBreakerError:
-        logger.error(
-            f"Circuit breaker open for {endpoint} - Aiera API is experiencing issues. "
-            f"Failing fast to prevent cascade failure."
-        )
-        raise Exception(
-            "The Aiera API is temporarily unavailable due to repeated failures. "
-            "Please try again in a moment."
-        )
-
-
-async def _make_aiera_request_impl(
-    client: httpx.AsyncClient,
-    method: str,
-    endpoint: str,
-    api_key: str,
-    params: Optional[Dict[str, Any]] = None,
-    data: Optional[Dict[str, Any]] = None,
-    return_type: str = "json",
-    request_context: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
-    """Internal implementation of make_aiera_request, called by circuit breaker.
-
-    This is the actual HTTP request logic, protected by the circuit breaker in
-    make_aiera_request(). Do not call directly - use make_aiera_request() instead.
     """
     # Import context functions (deferred to avoid circular imports)
     from ..context import get_request_context
