@@ -27,7 +27,10 @@ class AieraSettings(BaseSettings):
     default_max_page_size: int = 25
 
     # HTTP Client Configuration
-    http_timeout: float = 30.0
+    # Timeout per API request (not per Lambda/workflow). Complex queries can take time,
+    # but we want to fail fast when the backend is down. 60s allows legitimate
+    # long-running queries while preventing 300s hangs when API is unavailable.
+    http_timeout: float = 60.0
     http_max_keepalive_connections: int = 10
     http_max_connections: int = 20
     http_keepalive_expiry: float = 30.0
