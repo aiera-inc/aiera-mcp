@@ -299,10 +299,12 @@ async def make_aiera_request(
                 headers=headers,
                 timeout=timeout,
             )
+
             if attempt > 0:
                 logger.info(
                     f"Request succeeded on attempt {attempt + 1}/{MAX_ATTEMPTS} for {endpoint}"
                 )
+
             break
 
         except httpx.ConnectError as e:
@@ -312,7 +314,9 @@ async def make_aiera_request(
                     f"Connect error on attempt {attempt + 1}/{MAX_ATTEMPTS} for {endpoint}: "
                     f"{type(e).__name__}: {e}. Retrying in {wait_time}s..."
                 )
+
                 await asyncio.sleep(wait_time)
+
             else:
                 logger.error(
                     f"Request failed after {MAX_ATTEMPTS} attempts for {endpoint}: {type(e).__name__}: {e}"
@@ -321,6 +325,7 @@ async def make_aiera_request(
                 logger.error(f"Request headers were: {headers}")
                 if params:
                     logger.error(f"Request params were: {params}")
+
                 raise Exception(f"Network error calling Aiera API: {str(e)}")
 
         except httpx.TimeoutException as e:
@@ -331,6 +336,7 @@ async def make_aiera_request(
             logger.error(f"Request headers were: {headers}")
             if params:
                 logger.error(f"Request params were: {params}")
+
             raise Exception(
                 f"Aiera API request timed out after {settings.http_timeout}s. "
                 f"The API may be experiencing heavy load. Please retry in a moment."
@@ -342,6 +348,7 @@ async def make_aiera_request(
             logger.error(f"Request headers were: {headers}")
             if params:
                 logger.error(f"Request params were: {params}")
+
             raise Exception(f"Network error calling Aiera API: {str(e)}")
 
     if response.status_code not in [200, 201]:
