@@ -146,6 +146,7 @@ async def _send_tool_log(
         except Exception as e:
             logger.debug("MCP tool log: skipping, no API key available (%s)", e)
             return
+
         if not api_key:
             logger.warning("MCP tool log: skipping, no API key available")
             return
