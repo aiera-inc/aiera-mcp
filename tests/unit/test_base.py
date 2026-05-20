@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock
 import httpx
 import pytest
 
-from aiera_mcp.tools.base import make_aiera_request
+from aiera_mcp.tools.base import _redact_headers, make_aiera_request
 
 
 def _ok_response(json_payload=None):
@@ -125,3 +125,110 @@ class TestMakeAieraRequestRetries:
             )
 
         assert client.request.await_count == 1
+
+
+@pytest.mark.unit
+class TestRedactHeaders:
+    def test_redacts_api_key(self):
+        out = _redact_headers(
+            {"X-API-Key": "sekret", "Content-Type": "application/json"}
+        )
+        assert out["X-API-Key"] == "***REDACTED***"
+        assert out["Content-Type"] == "application/json"
+
+    def test_redacts_authorization_and_cookie(self):
+        out = _redact_headers(
+            {"Authorization": "Bearer abc", "Cookie": "session=xyz", "User-Agent": "ua"}
+        )
+        assert out["Authorization"] == "***REDACTED***"
+        assert out["Cookie"] == "***REDACTED***"
+        assert out["User-Agent"] == "ua"
+
+    def test_does_not_mutate_input(self):
+        original = {"X-API-Key": "sekret"}
+        _redact_headers(original)
+        assert original["X-API-Key"] == "sekret"
+
+    def test_case_insensitive_match(self):
+        out = _redact_headers(
+            {
+                "x-api-key": "sekret-lower",
+                "X-Api-Key": "sekret-mixed",
+                "AUTHORIZATION": "Bearer xyz",
+            }
+        )
+        assert out["x-api-key"] == "***REDACTED***"
+        assert out["X-Api-Key"] == "***REDACTED***"
+        assert out["AUTHORIZATION"] == "***REDACTED***"
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+class TestApiKeyNeverLogged:
+    async def test_api_key_not_in_error_logs_on_timeout(self, caplog):
+        import logging
+
+        client = MagicMock()
+        client.request = AsyncMock(side_effect=httpx.ReadTimeout("slow"))
+
+        api_key = "this-key-must-not-leak-abc123"
+        with caplog.at_level(logging.ERROR), pytest.raises(Exception):
+            await make_aiera_request(
+                client=client,
+                method="GET",
+                endpoint="/test",
+                api_key=api_key,
+            )
+
+        full_log = "\n".join(record.getMessage() for record in caplog.records)
+        assert api_key not in full_log
+        assert "***REDACTED***" in full_log
+
+    async def test_api_key_not_in_error_logs_on_connect_error(
+        self, caplog, monkeypatch
+    ):
+        import logging
+
+        async def fast_sleep(_):
+            return None
+
+        monkeypatch.setattr("aiera_mcp.tools.base.asyncio.sleep", fast_sleep)
+
+        client = MagicMock()
+        client.request = AsyncMock(side_effect=httpx.ConnectError("refused"))
+
+        api_key = "this-key-must-not-leak-xyz456"
+        with caplog.at_level(logging.ERROR), pytest.raises(Exception):
+            await make_aiera_request(
+                client=client,
+                method="GET",
+                endpoint="/test",
+                api_key=api_key,
+            )
+
+        full_log = "\n".join(record.getMessage() for record in caplog.records)
+        assert api_key not in full_log
+        assert "***REDACTED***" in full_log
+
+    async def test_api_key_not_in_error_logs_on_non_2xx(self, caplog):
+        import logging
+
+        bad_response = MagicMock()
+        bad_response.status_code = 500
+        bad_response.text = "boom"
+
+        client = MagicMock()
+        client.request = AsyncMock(return_value=bad_response)
+
+        api_key = "this-key-must-not-leak-pqr789"
+        with caplog.at_level(logging.ERROR), pytest.raises(Exception):
+            await make_aiera_request(
+                client=client,
+                method="GET",
+                endpoint="/test",
+                api_key=api_key,
+            )
+
+        full_log = "\n".join(record.getMessage() for record in caplog.records)
+        assert api_key not in full_log
+        assert "***REDACTED***" in full_log

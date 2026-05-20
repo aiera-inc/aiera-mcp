@@ -20,6 +20,19 @@ DEFAULT_HEADERS = {
     "X-MCP-Origin": "local_mcp",
 }
 
+# Headers containing credentials — never log raw values. Compared case-insensitively
+# since HTTP header names are case-insensitive per RFC 7230.
+SENSITIVE_HEADERS = {"x-api-key", "authorization", "cookie"}
+
+
+def _redact_headers(headers: Dict[str, Any]) -> Dict[str, Any]:
+    """Return a copy of headers with sensitive values replaced by a marker."""
+    return {
+        key: ("***REDACTED***" if key.lower() in SENSITIVE_HEADERS else value)
+        for key, value in headers.items()
+    }
+
+
 # Public constant for backward compatibility
 # Note: This is evaluated at import time; for dynamic access use get_settings().aiera_base_url
 AIERA_BASE_URL = get_settings().aiera_base_url
@@ -322,7 +335,7 @@ async def make_aiera_request(
                     f"Request failed after {MAX_ATTEMPTS} attempts for {endpoint}: {type(e).__name__}: {e}"
                 )
                 logger.error(f"Request URL was: {url}")
-                logger.error(f"Request headers were: {headers}")
+                logger.error(f"Request headers were: {_redact_headers(headers)}")
                 if params:
                     logger.error(f"Request params were: {params}")
 
@@ -333,7 +346,7 @@ async def make_aiera_request(
                 f"Request timed out after {settings.http_timeout}s for {endpoint}: {type(e).__name__}: {e}"
             )
             logger.error(f"Request URL was: {url}")
-            logger.error(f"Request headers were: {headers}")
+            logger.error(f"Request headers were: {_redact_headers(headers)}")
             if params:
                 logger.error(f"Request params were: {params}")
 
@@ -345,7 +358,7 @@ async def make_aiera_request(
         except httpx.RequestError as e:
             # Other request errors (not transient) - fail immediately
             logger.error(f"Request URL was: {url}")
-            logger.error(f"Request headers were: {headers}")
+            logger.error(f"Request headers were: {_redact_headers(headers)}")
             if params:
                 logger.error(f"Request params were: {params}")
 
@@ -354,7 +367,7 @@ async def make_aiera_request(
     if response.status_code not in [200, 201]:
         logger.error(f"API error: {response.status_code} - {response.text}")
         logger.error(f"Request URL: {url}")
-        logger.error(f"Request headers were: {headers}")
+        logger.error(f"Request headers were: {_redact_headers(headers)}")
         if params:
             logger.error(f"Request params: {params}")
 
