@@ -20,14 +20,15 @@ DEFAULT_HEADERS = {
     "X-MCP-Origin": "local_mcp",
 }
 
-# Headers containing credentials — never log raw values.
-SENSITIVE_HEADERS = {"X-API-Key", "Authorization", "Cookie"}
+# Headers containing credentials — never log raw values. Compared case-insensitively
+# since HTTP header names are case-insensitive per RFC 7230.
+SENSITIVE_HEADERS = {"x-api-key", "authorization", "cookie"}
 
 
 def _redact_headers(headers: Dict[str, Any]) -> Dict[str, Any]:
     """Return a copy of headers with sensitive values replaced by a marker."""
     return {
-        key: ("***REDACTED***" if key in SENSITIVE_HEADERS else value)
+        key: ("***REDACTED***" if key.lower() in SENSITIVE_HEADERS else value)
         for key, value in headers.items()
     }
 

@@ -149,6 +149,18 @@ class TestRedactHeaders:
         _redact_headers(original)
         assert original["X-API-Key"] == "sekret"
 
+    def test_case_insensitive_match(self):
+        out = _redact_headers(
+            {
+                "x-api-key": "sekret-lower",
+                "X-Api-Key": "sekret-mixed",
+                "AUTHORIZATION": "Bearer xyz",
+            }
+        )
+        assert out["x-api-key"] == "***REDACTED***"
+        assert out["X-Api-Key"] == "***REDACTED***"
+        assert out["AUTHORIZATION"] == "***REDACTED***"
+
 
 @pytest.mark.unit
 @pytest.mark.asyncio
