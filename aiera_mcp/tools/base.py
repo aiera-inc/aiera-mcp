@@ -136,7 +136,16 @@ async def _send_tool_log(
             "MCP tool log: starting for tool=%s is_error=%s", tool_name, is_error
         )
 
-        api_key = get_api_key()
+        # If the configured provider raises (e.g. unauthenticated request with
+        # no api_key in context), fire-and-forget logging should silently skip
+        # rather than dump its own traceback on top of the tool's failure. The
+        # outer except below also catches this, but it emits exc_info=True and
+        # was historically the source of doubled tracebacks per failed call.
+        try:
+            api_key = get_api_key()
+        except Exception as e:
+            logger.debug("MCP tool log: skipping, no API key available (%s)", e)
+            return
         if not api_key:
             logger.warning("MCP tool log: skipping, no API key available")
             return

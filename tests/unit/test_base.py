@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock
 import httpx
 import pytest
 
-from aiera_mcp.tools.base import _redact_headers, make_aiera_request
+from aiera_mcp.tools.base import _redact_headers, _send_tool_log, make_aiera_request
 
 
 def _ok_response(json_payload=None):
@@ -232,3 +232,49 @@ class TestApiKeyNeverLogged:
         full_log = "\n".join(record.getMessage() for record in caplog.records)
         assert api_key not in full_log
         assert "***REDACTED***" in full_log
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+class TestSendToolLogAuthFailureIsSilent:
+    """`_send_tool_log` runs as fire-and-forget telemetry. When the configured
+    api_key provider raises (unauthenticated request reaches the tool layer),
+    the log helper must NOT itself emit a warning/error or traceback — one
+    misbehaving client otherwise multiplies each failed tool call into stacked
+    duplicate errors in Datadog."""
+
+    async def test_silent_when_api_key_provider_raises(self, caplog):
+        import logging
+
+        from aiera_mcp import clear_api_key_provider, set_api_key_provider
+
+        def raising_provider():
+            raise ValueError("No user API key in request context")
+
+        set_api_key_provider(raising_provider)
+        try:
+            with caplog.at_level(logging.WARNING):
+                await _send_tool_log(
+                    tool_name="find_events",
+                    parameters={"q": "x"},
+                    response=None,
+                    is_error=True,
+                )
+        finally:
+            clear_api_key_provider()
+
+        # `get_api_key` itself emits one concise warning for the unauth case
+        # (by design — see aiera_mcp/__init__.py). We only care that the
+        # telemetry helper doesn't pile on with its own "MCP tool log: failed"
+        # error + traceback, which was producing 2-3x duplicate stacked
+        # tracebacks per failed call.
+        bad = [
+            r
+            for r in caplog.records
+            if r.levelno >= logging.WARNING
+            and r.name.startswith("aiera_mcp.tools.base")
+        ]
+        assert not bad, (
+            "_send_tool_log should fail silently when the api-key provider "
+            f"raises, got: {[r.getMessage() for r in bad]}"
+        )
