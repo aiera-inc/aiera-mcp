@@ -67,6 +67,7 @@ def get_api_key() -> Optional[str]:
                 logger.error(
                     f"API key provider failed with exception: {e}", exc_info=True
                 )
+
             # Re-raise to surface the actual error instead of silently falling back
             raise ValueError(f"Failed to get API key from configured provider: {e}")
 
