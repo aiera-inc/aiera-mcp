@@ -58,7 +58,16 @@ def get_api_key() -> Optional[str]:
                     "Falling back to environment variable."
                 )
         except Exception as e:
-            logger.error(f"API key provider failed with exception: {e}", exc_info=True)
+            # Unauthenticated requests are an expected upstream signal, not a bug
+            # in this layer. Log a concise warning without a traceback to avoid
+            # flooding error logs with the same known failure mode.
+            if "No user API key in request context" in str(e):
+                logger.warning(f"API key provider: {e}")
+            else:
+                logger.error(
+                    f"API key provider failed with exception: {e}", exc_info=True
+                )
+
             # Re-raise to surface the actual error instead of silently falling back
             raise ValueError(f"Failed to get API key from configured provider: {e}")
 
