@@ -33,6 +33,37 @@ def _redact_headers(headers: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+# Cap response-body snippets in error logs to avoid dumping multi-KB HTML pages.
+MAX_RESPONSE_TEXT_IN_LOG = 500
+
+
+def _log_request_error(
+    msg: str,
+    url: str,
+    headers: Dict[str, Any],
+    params: Optional[Dict[str, Any]] = None,
+    response_text: Optional[str] = None,
+) -> None:
+    """Emit a single structured ERROR log for a failed upstream request.
+
+    Consolidates what used to be 4 separate logger.error calls (URL, headers,
+    params, body) into one entry. Context fields land under `extra` so they
+    surface as Datadog facets, and response body snippets are capped.
+    """
+    extra: Dict[str, Any] = {
+        "request_url": url,
+        "request_headers": _redact_headers(headers),
+    }
+    if params:
+        extra["request_params"] = params
+    if response_text:
+        snippet = response_text[:MAX_RESPONSE_TEXT_IN_LOG]
+        if len(response_text) > MAX_RESPONSE_TEXT_IN_LOG:
+            snippet += "...[truncated]"
+        extra["response_text"] = snippet
+    logger.error(msg, extra=extra)
+
+
 # Public constant for backward compatibility
 # Note: This is evaluated at import time; for dynamic access use get_settings().aiera_base_url
 AIERA_BASE_URL = get_settings().aiera_base_url
@@ -341,25 +372,23 @@ async def make_aiera_request(
                 await asyncio.sleep(wait_time)
 
             else:
-                logger.error(
-                    f"Request failed after {MAX_ATTEMPTS} attempts for {endpoint}: {type(e).__name__}: {e}"
+                _log_request_error(
+                    f"Request failed after {MAX_ATTEMPTS} attempts for {endpoint}: "
+                    f"{type(e).__name__}: {e}",
+                    url=url,
+                    headers=headers,
+                    params=params,
                 )
-                logger.error(f"Request URL was: {url}")
-                logger.error(f"Request headers were: {_redact_headers(headers)}")
-                if params:
-                    logger.error(f"Request params were: {params}")
-
                 raise Exception(f"Network error calling Aiera API: {str(e)}")
 
         except httpx.TimeoutException as e:
-            logger.error(
-                f"Request timed out after {settings.http_timeout}s for {endpoint}: {type(e).__name__}: {e}"
+            _log_request_error(
+                f"Request timed out after {settings.http_timeout}s for {endpoint}: "
+                f"{type(e).__name__}: {e}",
+                url=url,
+                headers=headers,
+                params=params,
             )
-            logger.error(f"Request URL was: {url}")
-            logger.error(f"Request headers were: {_redact_headers(headers)}")
-            if params:
-                logger.error(f"Request params were: {params}")
-
             raise Exception(
                 f"Aiera API request timed out after {settings.http_timeout}s. "
                 f"The API may be experiencing heavy load. Please retry in a moment."
@@ -367,19 +396,22 @@ async def make_aiera_request(
 
         except httpx.RequestError as e:
             # Other request errors (not transient) - fail immediately
-            logger.error(f"Request URL was: {url}")
-            logger.error(f"Request headers were: {_redact_headers(headers)}")
-            if params:
-                logger.error(f"Request params were: {params}")
-
+            _log_request_error(
+                f"Request error for {endpoint}: {type(e).__name__}: {e}",
+                url=url,
+                headers=headers,
+                params=params,
+            )
             raise Exception(f"Network error calling Aiera API: {str(e)}")
 
     if response.status_code not in [200, 201]:
-        logger.error(f"API error: {response.status_code} - {response.text}")
-        logger.error(f"Request URL: {url}")
-        logger.error(f"Request headers were: {_redact_headers(headers)}")
-        if params:
-            logger.error(f"Request params: {params}")
+        _log_request_error(
+            f"API error: {response.status_code} for {endpoint}",
+            url=url,
+            headers=headers,
+            params=params,
+            response_text=response.text,
+        )
 
         # Use custom error handler if configured, otherwise use default
         from ..context import handle_api_error
