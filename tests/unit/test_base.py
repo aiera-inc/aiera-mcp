@@ -7,7 +7,13 @@ from unittest.mock import AsyncMock, MagicMock
 import httpx
 import pytest
 
-from aiera_mcp.tools.base import _redact_headers, _send_tool_log, make_aiera_request
+from aiera_mcp.tools.base import (
+    MAX_RESPONSE_TEXT_IN_LOG,
+    _log_request_error,
+    _redact_headers,
+    _send_tool_log,
+    make_aiera_request,
+)
 
 
 def _ok_response(json_payload=None):
@@ -180,9 +186,7 @@ class TestApiKeyNeverLogged:
                 api_key=api_key,
             )
 
-        full_log = "\n".join(record.getMessage() for record in caplog.records)
-        assert api_key not in full_log
-        assert "***REDACTED***" in full_log
+        _assert_api_key_redacted_across_records(caplog.records, api_key)
 
     async def test_api_key_not_in_error_logs_on_connect_error(
         self, caplog, monkeypatch
@@ -206,9 +210,7 @@ class TestApiKeyNeverLogged:
                 api_key=api_key,
             )
 
-        full_log = "\n".join(record.getMessage() for record in caplog.records)
-        assert api_key not in full_log
-        assert "***REDACTED***" in full_log
+        _assert_api_key_redacted_across_records(caplog.records, api_key)
 
     async def test_api_key_not_in_error_logs_on_non_2xx(self, caplog):
         import logging
@@ -229,9 +231,22 @@ class TestApiKeyNeverLogged:
                 api_key=api_key,
             )
 
-        full_log = "\n".join(record.getMessage() for record in caplog.records)
-        assert api_key not in full_log
-        assert "***REDACTED***" in full_log
+        _assert_api_key_redacted_across_records(caplog.records, api_key)
+
+
+def _assert_api_key_redacted_across_records(records, api_key):
+    """Verify the raw API key never appears in any log record (message or extra),
+    and that redaction did actually run (***REDACTED*** present somewhere)."""
+    saw_redaction = False
+    for record in records:
+        assert api_key not in record.getMessage()
+        headers = getattr(record, "request_headers", None)
+        if headers:
+            for value in headers.values():
+                assert api_key != value
+                if value == "***REDACTED***":
+                    saw_redaction = True
+    assert saw_redaction, "expected at least one redacted header in log records"
 
 
 @pytest.mark.unit
@@ -278,3 +293,171 @@ class TestSendToolLogAuthFailureIsSilent:
             "_send_tool_log should fail silently when the api-key provider "
             f"raises, got: {[r.getMessage() for r in bad]}"
         )
+
+
+@pytest.mark.unit
+class TestLogRequestError:
+    def test_emits_single_error_log(self, caplog):
+        import logging
+
+        with caplog.at_level(logging.ERROR, logger="aiera_mcp.tools.base"):
+            _log_request_error(
+                "boom",
+                url="https://api.example.com/x",
+                headers={"X-API-Key": "sekret"},
+                params={"page": 1},
+                response_text="oops",
+            )
+
+        error_records = [r for r in caplog.records if r.name == "aiera_mcp.tools.base"]
+        assert len(error_records) == 1
+
+    def test_redacts_headers_in_extra(self, caplog):
+        import logging
+
+        with caplog.at_level(logging.ERROR, logger="aiera_mcp.tools.base"):
+            _log_request_error(
+                "boom",
+                url="https://api.example.com/x",
+                headers={"X-API-Key": "leak-me", "User-Agent": "ua"},
+            )
+
+        record = caplog.records[-1]
+        assert record.request_headers == {
+            "X-API-Key": "***REDACTED***",
+            "User-Agent": "ua",
+        }
+        assert "leak-me" not in record.getMessage()
+
+    def test_truncates_long_response_text(self, caplog):
+        import logging
+
+        long_body = "x" * (MAX_RESPONSE_TEXT_IN_LOG + 50)
+        with caplog.at_level(logging.ERROR, logger="aiera_mcp.tools.base"):
+            _log_request_error(
+                "boom",
+                url="https://api.example.com/x",
+                headers={},
+                response_text=long_body,
+            )
+
+        record = caplog.records[-1]
+        snippet = record.response_text
+        assert len(snippet) <= MAX_RESPONSE_TEXT_IN_LOG + len("...[truncated]")
+        assert snippet.endswith("...[truncated]")
+
+    def test_omits_params_and_response_text_when_absent(self, caplog):
+        import logging
+
+        with caplog.at_level(logging.ERROR, logger="aiera_mcp.tools.base"):
+            _log_request_error(
+                "boom",
+                url="https://api.example.com/x",
+                headers={},
+            )
+
+        record = caplog.records[-1]
+        assert not hasattr(record, "request_params")
+        assert not hasattr(record, "response_text")
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+class TestConsolidatedErrorLogging:
+    async def test_non_2xx_emits_single_error_log(self, caplog):
+        import logging
+
+        bad_response = MagicMock()
+        bad_response.status_code = 502
+        bad_response.text = "<html>502 Bad Gateway</html>"
+
+        client = MagicMock()
+        client.request = AsyncMock(return_value=bad_response)
+
+        with (
+            caplog.at_level(logging.ERROR, logger="aiera_mcp.tools.base"),
+            pytest.raises(Exception),
+        ):
+            await make_aiera_request(
+                client=client,
+                method="GET",
+                endpoint="/test",
+                api_key="key",
+                params={"foo": "bar"},
+            )
+
+        error_records = [r for r in caplog.records if r.name == "aiera_mcp.tools.base"]
+        assert len(error_records) == 1
+        rec = error_records[0]
+        assert "502" in rec.getMessage()
+        assert rec.request_url.endswith("/test")
+        assert rec.request_headers["X-API-Key"] == "***REDACTED***"
+        assert rec.request_params == {"foo": "bar"}
+        assert "502" in rec.response_text
+
+    async def test_timeout_emits_single_error_log(self, caplog):
+        import logging
+
+        client = MagicMock()
+        client.request = AsyncMock(side_effect=httpx.ReadTimeout("slow"))
+
+        with (
+            caplog.at_level(logging.ERROR, logger="aiera_mcp.tools.base"),
+            pytest.raises(Exception),
+        ):
+            await make_aiera_request(
+                client=client,
+                method="GET",
+                endpoint="/test",
+                api_key="key",
+            )
+
+        error_records = [r for r in caplog.records if r.name == "aiera_mcp.tools.base"]
+        assert len(error_records) == 1
+
+    async def test_connect_error_emits_single_error_log(self, caplog, monkeypatch):
+        import logging
+
+        async def fast_sleep(_):
+            return None
+
+        monkeypatch.setattr("aiera_mcp.tools.base.asyncio.sleep", fast_sleep)
+
+        client = MagicMock()
+        client.request = AsyncMock(side_effect=httpx.ConnectError("refused"))
+
+        with (
+            caplog.at_level(logging.ERROR, logger="aiera_mcp.tools.base"),
+            pytest.raises(Exception),
+        ):
+            await make_aiera_request(
+                client=client,
+                method="GET",
+                endpoint="/test",
+                api_key="key",
+            )
+
+        error_records = [r for r in caplog.records if r.name == "aiera_mcp.tools.base"]
+        assert len(error_records) == 1
+
+    async def test_other_request_error_emits_single_error_log(self, caplog):
+        import logging
+
+        client = MagicMock()
+        client.request = AsyncMock(
+            side_effect=httpx.RemoteProtocolError("disconnected")
+        )
+
+        with (
+            caplog.at_level(logging.ERROR, logger="aiera_mcp.tools.base"),
+            pytest.raises(Exception),
+        ):
+            await make_aiera_request(
+                client=client,
+                method="GET",
+                endpoint="/test",
+                api_key="key",
+            )
+
+        error_records = [r for r in caplog.records if r.name == "aiera_mcp.tools.base"]
+        assert len(error_records) == 1
