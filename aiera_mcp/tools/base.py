@@ -36,6 +36,11 @@ def _redact_headers(headers: Dict[str, Any]) -> Dict[str, Any]:
 # Cap response-body snippets in error logs to avoid dumping multi-KB HTML pages.
 MAX_RESPONSE_TEXT_IN_LOG = 500
 
+# Connection-establishment budget. Kept short so we fail fast on an unreachable
+# backend rather than waiting out the full read timeout. Separate from the read
+# timeout (settings.http_timeout) so connect failures are reported accurately.
+CONNECT_TIMEOUT = 5.0
+
 
 def _log_request_error(
     msg: str,
@@ -336,11 +341,12 @@ async def make_aiera_request(
     url = f"{settings.aiera_base_url}{endpoint}"
 
     # Use configured timeout from settings
-    timeout = httpx.Timeout(settings.http_timeout, connect=5.0)
+    timeout = httpx.Timeout(settings.http_timeout, connect=CONNECT_TIMEOUT)
 
-    # Retry only ConnectError (transient network failures). Do not retry timeouts —
-    # if the API is slow due to load, retrying compounds it; if the query is genuinely
-    # expensive, the retry will also time out.
+    # Retry transient connection-establishment failures (ConnectError +
+    # ConnectTimeout) — the backend was briefly unreachable, so a retry may
+    # succeed. Do NOT retry read/write/pool timeouts: those mean the connection
+    # was established but the server is slow, and retrying compounds the load.
     MAX_ATTEMPTS = 2
 
     for attempt in range(MAX_ATTEMPTS):
@@ -361,11 +367,15 @@ async def make_aiera_request(
 
             break
 
-        except httpx.ConnectError as e:
+        # ConnectTimeout is a TimeoutException subclass, not a ConnectError, so
+        # it must be caught here explicitly to be treated as a (retryable)
+        # connection failure rather than falling through to the read-timeout
+        # branch below.
+        except (httpx.ConnectError, httpx.ConnectTimeout) as e:
             if attempt < MAX_ATTEMPTS - 1:
                 wait_time = 2**attempt
                 logger.warning(
-                    f"Connect error on attempt {attempt + 1}/{MAX_ATTEMPTS} for {endpoint}: "
+                    f"Connection error on attempt {attempt + 1}/{MAX_ATTEMPTS} for {endpoint}: "
                     f"{type(e).__name__}: {e}. Retrying in {wait_time}s..."
                 )
 
@@ -373,8 +383,8 @@ async def make_aiera_request(
 
             else:
                 _log_request_error(
-                    f"Request failed after {MAX_ATTEMPTS} attempts for {endpoint}: "
-                    f"{type(e).__name__}: {e}",
+                    f"Request failed after {MAX_ATTEMPTS} attempts for {endpoint} "
+                    f"(connect timeout {CONNECT_TIMEOUT}s): {type(e).__name__}: {e}",
                     url=url,
                     headers=headers,
                     params=params,
@@ -382,6 +392,8 @@ async def make_aiera_request(
                 raise Exception(f"Network error calling Aiera API: {str(e)}")
 
         except httpx.TimeoutException as e:
+            # Read/write/pool timeout — the connection was established but the
+            # server did not respond within the read budget.
             _log_request_error(
                 f"Request timed out after {settings.http_timeout}s for {endpoint}: "
                 f"{type(e).__name__}: {e}",
