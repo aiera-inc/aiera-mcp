@@ -132,6 +132,71 @@ class TestMakeAieraRequestRetries:
 
         assert client.request.await_count == 1
 
+    async def test_connect_timeout_is_retried(self, monkeypatch):
+        # ConnectTimeout is a transient connection failure — it should be
+        # retried like ConnectError, not treated as a read timeout.
+        async def fast_sleep(_):
+            return None
+
+        monkeypatch.setattr("aiera_mcp.tools.base.asyncio.sleep", fast_sleep)
+
+        client = MagicMock()
+        client.request = AsyncMock(
+            side_effect=[httpx.ConnectTimeout("connect slow"), _ok_response()]
+        )
+
+        result = await make_aiera_request(
+            client=client,
+            method="GET",
+            endpoint="/test",
+            api_key="key",
+        )
+
+        assert result == {"ok": True}
+        assert client.request.await_count == 2
+
+    async def test_connect_timeout_reports_connect_budget_not_read_budget(
+        self, monkeypatch
+    ):
+        from aiera_mcp.config import get_settings
+        from aiera_mcp.tools.base import CONNECT_TIMEOUT
+
+        async def fast_sleep(_):
+            return None
+
+        monkeypatch.setattr("aiera_mcp.tools.base.asyncio.sleep", fast_sleep)
+
+        client = MagicMock()
+        client.request = AsyncMock(side_effect=httpx.ConnectTimeout("connect slow"))
+
+        # Exhausts retries → raises a network error (not a "timed out after Ns"
+        # read-timeout message), and the read budget must not appear in logs.
+        with pytest.raises(Exception, match="Network error calling Aiera API"):
+            await make_aiera_request(
+                client=client,
+                method="GET",
+                endpoint="/test",
+                api_key="key",
+            )
+
+        # Two attempts, like other connection failures
+        assert client.request.await_count == 2
+
+    async def test_read_timeout_still_not_retried(self):
+        # Regression guard: read timeouts must remain non-retryable.
+        client = MagicMock()
+        client.request = AsyncMock(side_effect=httpx.ReadTimeout("slow"))
+
+        with pytest.raises(Exception, match="timed out"):
+            await make_aiera_request(
+                client=client,
+                method="GET",
+                endpoint="/test",
+                api_key="key",
+            )
+
+        assert client.request.await_count == 1
+
 
 @pytest.mark.unit
 class TestRedactHeaders:
