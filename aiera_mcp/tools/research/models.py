@@ -5,7 +5,7 @@
 from pydantic import BaseModel, Field, field_validator, field_serializer
 from typing import List, Optional, Any, Union
 
-from ..common.models import BaseAieraArgs, BaseAieraResponse
+from ..common.models import BaseAieraArgs, BaseAieraResponse, CompactArgsMixin
 
 
 # Mixins for validation (same pattern as events/filings domains)
@@ -51,7 +51,7 @@ class BaseToolArgs(BaseModel):
         return str(value)
 
 
-class FindResearchArgs(BaseToolArgs):
+class FindResearchArgs(BaseToolArgs, CompactArgsMixin):
     """Find research reports filtered by optional search terms, author IDs, organizations, regions, and date range.
 
     RETURNS METADATA AND SUMMARIES ONLY — NOT full report content. To retrieve the actual report, call get_research with the document_id from these results.
@@ -156,7 +156,7 @@ class FindResearchArgs(BaseToolArgs):
     )
 
 
-class GetResearchArgs(BaseAieraArgs):
+class GetResearchArgs(BaseAieraArgs, CompactArgsMixin):
     """Get detailed information about a specific research report including summary and content.
 
     RESPONSE SIZE WARNING: This tool returns full research content which can be extensive.

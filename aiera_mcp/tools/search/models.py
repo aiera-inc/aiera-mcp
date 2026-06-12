@@ -5,10 +5,10 @@
 from typing import List, Optional, Any
 from pydantic import Field, field_validator
 
-from ..common.models import BaseAieraArgs, BaseAieraResponse
+from ..common.models import BaseAieraArgs, BaseAieraResponse, CompactArgsMixin
 
 
-class SearchTranscriptsArgs(BaseAieraArgs):
+class SearchTranscriptsArgs(BaseAieraArgs, CompactArgsMixin):
     """Semantic search within event transcripts (earnings calls, investor presentations, shareholder meetings, etc.) for specific topics, quotes, or discussions.
 
     USE THIS TOOL WHEN THE USER ASKS:
@@ -114,7 +114,7 @@ class SearchTranscriptsArgs(BaseAieraArgs):
     )
 
 
-class SearchFilingsArgs(BaseAieraArgs):
+class SearchFilingsArgs(BaseAieraArgs, CompactArgsMixin):
     """Semantic search within SEC filing content for specific topics, disclosures, or risk factors.
 
     WHEN TO USE THIS TOOL:
@@ -201,7 +201,7 @@ class SearchFilingsArgs(BaseAieraArgs):
     )
 
 
-class SearchResearchArgs(BaseAieraArgs):
+class SearchResearchArgs(BaseAieraArgs, CompactArgsMixin):
     """Semantic search within research content for specific topics, analyses, or insights.
 
     WHEN TO USE THIS TOOL:
@@ -294,7 +294,7 @@ class SearchResearchArgs(BaseAieraArgs):
     )
 
 
-class SearchCompanyDocsArgs(BaseAieraArgs):
+class SearchCompanyDocsArgs(BaseAieraArgs, CompactArgsMixin):
     """Semantic search within company document chunks for specific content, disclosures, or topics.
 
     WHEN TO USE THIS TOOL:
@@ -387,7 +387,7 @@ class SearchCompanyDocsArgs(BaseAieraArgs):
     )
 
 
-class SearchThirdbridgeArgs(BaseAieraArgs):
+class SearchThirdbridgeArgs(BaseAieraArgs, CompactArgsMixin):
     """Semantic search within Third Bridge expert interview transcripts for specific topics, insights, or discussions.
 
     WHEN TO USE THIS TOOL:

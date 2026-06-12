@@ -97,6 +97,8 @@ All settings via env vars or `.env` file (see `.env.example`):
 | `DEFAULT_PAGE_SIZE`     | `25`                            | Default pagination size (aiera-api clamps to 25 regardless) |
 | `DEFAULT_MAX_PAGE_SIZE` | `25`                            | Max pagination size (aiera-api enforces this server-side)   |
 | `HTTP_TIMEOUT`          | `30.0`                          | Request timeout (seconds)                                   |
+| `COMPACT_RESPONSES`     | `false`                         | Ask the API to LLM-compact response bodies (lossy; per-call `compact` arg overrides) |
+| `COMPACT_TARGET_TOKENS` | (unset)                         | Soft target size in tokens for compacted summaries          |
 | `LOG_LEVEL`             | `INFO`                          | Logging level                                               |
 
 ## Pre-commit Hooks

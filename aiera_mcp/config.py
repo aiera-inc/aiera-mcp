@@ -35,6 +35,14 @@ class AieraSettings(BaseSettings):
     http_max_connections: int = 20
     http_keepalive_expiry: float = 30.0
 
+    # Response Compaction Configuration
+    # When true, every aiera-api request is sent with compact=true so the API
+    # compacts large response bodies with an LLM into a lossy summary plus
+    # verbatim 'preserved' fields (citations, pagination cursors, ids).
+    # Per-call tool args (compact=true/false) always override this default.
+    compact_responses: bool = False
+    compact_target_tokens: Optional[int] = None
+
     # Logging Configuration
     log_level: str = "INFO"
 
