@@ -52,12 +52,11 @@ class CompactArgsMixin(BaseModel):
     """Mixin adding the opt-in LLM response-compaction argument to a tool."""
 
     compact: Optional[bool] = Field(
-        default=None,
+        default=False,
         description=(
             "If true, the API compacts the response body with an LLM into a short summary plus "
             "verbatim 'preserved' fields (citations, pagination cursors, and ids). The summary is "
-            "LOSSY — re-call with compact=false when you need the complete data. When unset, the "
-            "server-level default applies."
+            "LOSSY — re-call with compact=false when you need the complete data."
         ),
     )
 
