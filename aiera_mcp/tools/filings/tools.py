@@ -5,6 +5,7 @@
 import logging
 
 from ..base import get_http_client, make_aiera_request
+from ..common.models import is_compacted_response
 from ... import get_api_key
 from .models import (
     FindFilingsArgs,
@@ -69,11 +70,14 @@ async def get_filing(args: GetFilingArgs) -> GetFilingResponse:
 
     response = GetFilingResponse.model_validate(raw_response)
 
-    # Check if the requested filing was found
-    response_data = response.response or {}
-    data = response_data.get("data", []) if isinstance(response_data, dict) else []
-    if not data:
-        response.error = f"Filing not found for filing_id '{args.filing_id}'. The filing may not exist or the ID may be invalid. Use find_filings or search_filings to discover valid filing IDs."
+    # Check if the requested filing was found. Skip when the body was compacted:
+    # a compacted response carries a summary/preserved shape (no `data` key), so
+    # the not-found heuristic would misfire on a filing that WAS found.
+    if not is_compacted_response(raw_response):
+        response_data = response.response or {}
+        data = response_data.get("data", []) if isinstance(response_data, dict) else []
+        if not data:
+            response.error = f"Filing not found for filing_id '{args.filing_id}'. The filing may not exist or the ID may be invalid. Use find_filings or search_filings to discover valid filing IDs."
 
     if args.exclude_instructions:
         response.instructions = []

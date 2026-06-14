@@ -5,7 +5,7 @@
 from pydantic import BaseModel, Field, field_validator, field_serializer
 from typing import Optional, Any, Union
 
-from ..common.models import BaseAieraResponse
+from ..common.models import BaseAieraResponse, CompactArgsMixin
 
 
 # Mixins for validation (extracted from original params.py)
@@ -203,7 +203,7 @@ class FindCompanyDocsArgs(BaseToolArgs, BloombergTickerMixin, CategoriesKeywords
     )
 
 
-class GetCompanyDocArgs(BaseToolArgs):
+class GetCompanyDocArgs(BaseToolArgs, CompactArgsMixin):
     """Get detailed information about specific company documents including summary, content, and metadata.
 
     RESPONSE SIZE WARNING: This tool returns full document content which can be extensive,

@@ -51,10 +51,18 @@ class CitationInfo(BaseModel):
 class CompactArgsMixin(BaseModel):
     """Mixin adding the opt-in LLM response-compaction argument to a tool."""
 
+    # Runtime default is None (not False) on purpose: make_aiera_request applies
+    # the server-wide COMPACT_RESPONSES default only when `compact` is ABSENT from
+    # the params, and an explicit per-call value must override it. A None default
+    # means model_dump(exclude_none=True) omits the field when the caller didn't
+    # set it, preserving that contract. The model-facing default ("off") is
+    # advertised to the LLM via json_schema_extra so the schema still reads
+    # default=false without forcing the field onto every request.
     compact: Optional[bool] = Field(
-        default=False,
+        default=None,
+        json_schema_extra={"default": False},
         description=(
-            "If true, the API compacts the response body with an LLM into a short summary plus "
+            "Defaults to no compaction. If true, the API compacts the response body with an LLM into a short summary plus "
             "verbatim 'preserved' fields (citations, pagination cursors, and ids). The summary is "
             "LOSSY — re-call with compact=false when you need the complete data."
         ),

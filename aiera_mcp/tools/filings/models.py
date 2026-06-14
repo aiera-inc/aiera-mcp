@@ -5,7 +5,7 @@
 from pydantic import BaseModel, Field, field_validator, field_serializer
 from typing import Optional, Any, Union
 
-from ..common.models import BaseAieraResponse
+from ..common.models import BaseAieraResponse, CompactArgsMixin
 
 
 # Mixins for validation (extracted from original params.py)
@@ -150,7 +150,7 @@ class FindFilingsArgs(BaseToolArgs, BloombergTickerMixin):
     )
 
 
-class GetFilingArgs(BaseToolArgs):
+class GetFilingArgs(BaseToolArgs, CompactArgsMixin):
     """Get detailed information about a specific SEC filing including summary and content.
 
     RESPONSE SIZE WARNING: This tool returns large text content. SEC filings (especially 10-K and 10-Q)

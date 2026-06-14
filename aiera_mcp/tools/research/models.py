@@ -51,7 +51,7 @@ class BaseToolArgs(BaseModel):
         return str(value)
 
 
-class FindResearchArgs(BaseToolArgs, CompactArgsMixin):
+class FindResearchArgs(BaseToolArgs):
     """Find research reports filtered by optional search terms, author IDs, organizations, regions, and date range.
 
     RETURNS METADATA AND SUMMARIES ONLY — NOT full report content. To retrieve the actual report, call get_research with the document_id from these results.
