@@ -9,7 +9,11 @@ from aiera_mcp.tools.common.models import (
     CompactedResponseBody,
     is_compacted_response,
 )
-from aiera_mcp.tools.research.models import FindResearchArgs, FindResearchResponse
+from aiera_mcp.tools.research.models import FindResearchArgs, FindResearchResponse, GetResearchArgs
+from aiera_mcp.tools.filings.models import GetFilingArgs
+from aiera_mcp.tools.company_docs.models import GetCompanyDocArgs
+from aiera_mcp.tools.events.models import GetEventArgs
+from aiera_mcp.tools.third_bridge.models import GetThirdBridgeEventArgs
 from aiera_mcp.tools.search.models import SearchTranscriptsArgs
 
 COMPACTED_RAW_RESPONSE = {
@@ -73,18 +77,47 @@ class TestCompactedEnvelopePassthrough:
 
 @pytest.mark.unit
 class TestCompactArgsExposure:
+    # Compaction is opt-in on the tools that return large bodies: the document /
+    # transcript get_ tools and the chunk-returning search_ tools. find_ tools
+    # return lightweight metadata lists, so compacting them is pointless and
+    # would obscure the per-item structure callers chain on — they must NOT
+    # expose the flag.
+    COMPACT_TOOLS = (
+        GetFilingArgs,
+        GetCompanyDocArgs,
+        GetEventArgs,
+        GetThirdBridgeEventArgs,
+        GetResearchArgs,
+        SearchTranscriptsArgs,
+    )
+    NON_COMPACT_TOOLS = (FindResearchArgs,)
+
     def test_compact_in_input_schema(self):
-        for args_model in (FindResearchArgs, SearchTranscriptsArgs):
+        for args_model in self.COMPACT_TOOLS:
             schema = args_model.model_json_schema()
             assert "compact" in schema["properties"], args_model.__name__
 
-    def test_unset_compact_excluded_from_params(self):
-        args = FindResearchArgs()
-        assert "compact" not in args.model_dump(exclude_none=True)
+    def test_find_tools_do_not_expose_compact(self):
+        for args_model in self.NON_COMPACT_TOOLS:
+            schema = args_model.model_json_schema()
+            assert "compact" not in schema["properties"], args_model.__name__
 
     def test_set_compact_included_in_params(self):
-        args = FindResearchArgs(compact=True)
+        args = GetFilingArgs(filing_id=123, compact=True)
         assert args.model_dump(exclude_none=True)["compact"] is True
+
+    # The runtime default must be None so an unset `compact` is omitted from the
+    # request, letting make_aiera_request apply the server-wide COMPACT_RESPONSES
+    # default and letting an explicit per-call value override it.
+    def test_unset_compact_excluded_from_params(self):
+        args = GetFilingArgs(filing_id=123)
+        assert "compact" not in args.model_dump(exclude_none=True)
 
     def test_mixin_default_is_none(self):
         assert CompactArgsMixin().compact is None
+
+    def test_schema_advertises_off_by_default(self):
+        # Runtime default is None, but the LLM-facing schema still reads false so
+        # the model treats compaction as opt-in.
+        schema = GetFilingArgs.model_json_schema()
+        assert schema["properties"]["compact"]["default"] is False
