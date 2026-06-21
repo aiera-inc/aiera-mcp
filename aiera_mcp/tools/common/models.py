@@ -2,7 +2,7 @@
 
 """Common base models for Aiera MCP tools."""
 
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field, field_serializer
 
 
@@ -46,6 +46,57 @@ class CitationInfo(BaseModel):
     metadata: Optional[CitationMetadata] = Field(
         None, description="Additional metadata about the citation"
     )
+
+
+class CompactArgsMixin(BaseModel):
+    """Mixin adding the opt-in LLM response-compaction argument to a tool."""
+
+    # Runtime default is None (not False) on purpose: make_aiera_request applies
+    # the server-wide COMPACT_RESPONSES default only when `compact` is ABSENT from
+    # the params, and an explicit per-call value must override it. A None default
+    # means model_dump(exclude_none=True) omits the field when the caller didn't
+    # set it, preserving that contract. The model-facing default ("off") is
+    # advertised to the LLM via json_schema_extra so the schema still reads
+    # default=false without forcing the field onto every request.
+    compact: Optional[bool] = Field(
+        default=None,
+        json_schema_extra={"default": False},
+        description=(
+            "Defaults to no compaction. If true, the API compacts the response body with an LLM into a short summary plus "
+            "verbatim 'preserved' fields (citations, pagination cursors, and ids). The summary is "
+            "LOSSY — re-call with compact=false when you need the complete data."
+        ),
+    )
+
+
+class CompactedResponseBody(BaseModel):
+    """Shape of the `response` field when the API compacted it (compact=true).
+
+    The `summary` is a lossy LLM digest of the full payload. Everything under
+    `preserved` (citations, pagination cursors, ids) is verbatim from the full
+    response and is authoritative for tool chaining.
+    """
+
+    compacted: bool = Field(description="Always true for compacted responses")
+    compaction_note: Optional[str] = Field(
+        None, description="Guidance from the API about the compacted payload"
+    )
+    summary: Optional[str] = Field(
+        None, description="Lossy LLM digest of the full response (markdown)"
+    )
+    preserved: Optional[Dict[str, Any]] = Field(
+        None,
+        description="Verbatim machine-critical fields: citations, pagination, next_search_after, ids",
+    )
+
+
+def is_compacted_response(raw_response: Any) -> bool:
+    """True when an aiera-api reply carries a compacted body in its `response` field."""
+    if not isinstance(raw_response, dict):
+        return False
+
+    body = raw_response.get("response")
+    return isinstance(body, dict) and body.get("compacted") is True
 
 
 class BaseAieraResponse(BaseModel):

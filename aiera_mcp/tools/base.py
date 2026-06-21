@@ -306,6 +306,22 @@ async def make_aiera_request(
     # Truncate any over-long string params so the serialized URL stays under nginx's 4KB limit.
     params = _truncate_long_params(params)
 
+    # Apply the server-level response-compaction default (COMPACT_RESPONSES env).
+    # A caller-supplied compact value (true OR false) always wins over the default.
+    settings = get_settings()
+    if settings.compact_responses and (not params or "compact" not in params):
+        params = dict(params) if params else {}
+        params["compact"] = True
+
+    if (
+        params
+        and params.get("compact")
+        and settings.compact_target_tokens
+        and "compact_target_tokens" not in params
+    ):
+        params = dict(params)
+        params["compact_target_tokens"] = settings.compact_target_tokens
+
     # Build base headers
     headers = DEFAULT_HEADERS.copy()
     headers["X-API-Key"] = api_key
@@ -337,7 +353,6 @@ async def make_aiera_request(
     logger.info("\n".join(log_parts))
 
     # Get base URL from settings dynamically
-    settings = get_settings()
     url = f"{settings.aiera_base_url}{endpoint}"
 
     # Use configured timeout from settings

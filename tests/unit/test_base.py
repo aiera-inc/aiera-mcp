@@ -526,3 +526,119 @@ class TestConsolidatedErrorLogging:
 
         error_records = [r for r in caplog.records if r.name == "aiera_mcp.tools.base"]
         assert len(error_records) == 1
+
+
+@pytest.fixture
+def compact_env(monkeypatch):
+    """Apply COMPACT_* env vars and reload settings; restores defaults on teardown."""
+    from aiera_mcp.config import reload_settings
+
+    def _apply(**env):
+        for key, value in env.items():
+            monkeypatch.setenv(key, value)
+        return reload_settings()
+
+    yield _apply
+    monkeypatch.undo()
+    reload_settings()
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+class TestCompactionParamInjection:
+    async def test_default_off_leaves_params_untouched(self, compact_env):
+        compact_env()  # defaults: compact_responses=False
+
+        client = MagicMock()
+        client.request = AsyncMock(return_value=_ok_response())
+
+        await make_aiera_request(
+            client=client, method="GET", endpoint="/test", api_key="key", params={"search": "AAPL"}
+        )
+
+        sent = client.request.await_args.kwargs["params"]
+        assert "compact" not in sent
+
+    async def test_server_default_injects_compact(self, compact_env):
+        compact_env(COMPACT_RESPONSES="true")
+
+        client = MagicMock()
+        client.request = AsyncMock(return_value=_ok_response())
+
+        await make_aiera_request(
+            client=client, method="GET", endpoint="/test", api_key="key", params={"search": "AAPL"}
+        )
+
+        sent = client.request.await_args.kwargs["params"]
+        assert sent["compact"] is True
+        assert sent["search"] == "AAPL"
+
+    async def test_server_default_injects_into_empty_params(self, compact_env):
+        compact_env(COMPACT_RESPONSES="true")
+
+        client = MagicMock()
+        client.request = AsyncMock(return_value=_ok_response())
+
+        await make_aiera_request(client=client, method="GET", endpoint="/test", api_key="key")
+
+        sent = client.request.await_args.kwargs["params"]
+        assert sent["compact"] is True
+
+    async def test_explicit_false_overrides_server_default(self, compact_env):
+        compact_env(COMPACT_RESPONSES="true", COMPACT_TARGET_TOKENS="900")
+
+        client = MagicMock()
+        client.request = AsyncMock(return_value=_ok_response())
+
+        await make_aiera_request(
+            client=client, method="GET", endpoint="/test", api_key="key", params={"compact": False}
+        )
+
+        sent = client.request.await_args.kwargs["params"]
+        assert sent["compact"] is False
+        # target tokens must not ride along when compaction is disabled for the call
+        assert "compact_target_tokens" not in sent
+
+    async def test_target_tokens_injected_when_compacting(self, compact_env):
+        compact_env(COMPACT_RESPONSES="true", COMPACT_TARGET_TOKENS="900")
+
+        client = MagicMock()
+        client.request = AsyncMock(return_value=_ok_response())
+
+        await make_aiera_request(client=client, method="GET", endpoint="/test", api_key="key")
+
+        sent = client.request.await_args.kwargs["params"]
+        assert sent["compact"] is True
+        assert sent["compact_target_tokens"] == 900
+
+    async def test_target_tokens_applies_to_per_call_opt_in(self, compact_env):
+        # server default off, but the tool args opted in — target tokens still apply
+        compact_env(COMPACT_TARGET_TOKENS="700")
+
+        client = MagicMock()
+        client.request = AsyncMock(return_value=_ok_response())
+
+        await make_aiera_request(
+            client=client, method="GET", endpoint="/test", api_key="key", params={"compact": True}
+        )
+
+        sent = client.request.await_args.kwargs["params"]
+        assert sent["compact"] is True
+        assert sent["compact_target_tokens"] == 700
+
+    async def test_caller_target_tokens_not_overridden(self, compact_env):
+        compact_env(COMPACT_RESPONSES="true", COMPACT_TARGET_TOKENS="900")
+
+        client = MagicMock()
+        client.request = AsyncMock(return_value=_ok_response())
+
+        await make_aiera_request(
+            client=client,
+            method="GET",
+            endpoint="/test",
+            api_key="key",
+            params={"compact": True, "compact_target_tokens": 250},
+        )
+
+        sent = client.request.await_args.kwargs["params"]
+        assert sent["compact_target_tokens"] == 250

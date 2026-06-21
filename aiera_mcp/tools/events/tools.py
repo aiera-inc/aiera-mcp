@@ -15,6 +15,7 @@ from .models import (
     GetUpcomingEventsResponse,
 )
 from ..base import get_http_client, make_aiera_request
+from ..common.models import is_compacted_response
 from ... import get_api_key
 
 # Setup logging
@@ -98,11 +99,14 @@ async def get_event(args: GetEventArgs) -> GetEventResponse:
 
     response = GetEventResponse.model_validate(raw_response)
 
-    # Check if the requested event was found
-    response_data = response.response or {}
-    data = response_data.get("data", []) if isinstance(response_data, dict) else []
-    if not data:
-        response.error = f"Event not found for event_id '{args.event_id}'. The event may not exist or the ID may be invalid. Use find_events or search_transcripts to discover valid event IDs."
+    # Check if the requested event was found. Skip when the body was compacted:
+    # a compacted response carries a summary/preserved shape (no `data` key), so
+    # the not-found heuristic would misfire on an event that WAS found.
+    if not is_compacted_response(raw_response):
+        response_data = response.response or {}
+        data = response_data.get("data", []) if isinstance(response_data, dict) else []
+        if not data:
+            response.error = f"Event not found for event_id '{args.event_id}'. The event may not exist or the ID may be invalid. Use find_events or search_transcripts to discover valid event IDs."
 
     if args.exclude_instructions:
         response.instructions = []

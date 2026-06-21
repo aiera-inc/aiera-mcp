@@ -9,6 +9,10 @@ from .models import (
     PaginatedResponse,
     # Common models
     CitationInfo,
+    # Response compaction
+    CompactArgsMixin,
+    CompactedResponseBody,
+    is_compacted_response,
     # Common argument types
     EmptyArgs,
     SearchArgs,
@@ -29,6 +33,9 @@ __all__ = [
     "BaseAieraResponse",
     "PaginatedResponse",
     "CitationInfo",
+    "CompactArgsMixin",
+    "CompactedResponseBody",
+    "is_compacted_response",
     "EmptyArgs",
     "SearchArgs",
     "GetGrammarTemplateArgs",

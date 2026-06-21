@@ -5,7 +5,7 @@
 from pydantic import BaseModel, Field, field_validator, field_serializer
 from typing import Optional, Any, Union
 
-from ..common.models import BaseAieraResponse
+from ..common.models import BaseAieraResponse, CompactArgsMixin
 
 
 # Mixins for validation (extracted from original params.py)
@@ -249,7 +249,7 @@ class FindConferencesArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
     )
 
 
-class GetEventArgs(BaseToolArgs):
+class GetEventArgs(BaseToolArgs, CompactArgsMixin):
     """Get detailed information about a specific event including the full transcript.
 
     RESPONSE SIZE WARNING: This tool returns large text content. The transcript field can contain

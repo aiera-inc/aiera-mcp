@@ -11,7 +11,7 @@ from pydantic import (
 )
 from typing import Optional, Any, Union
 
-from ..common.models import BaseAieraResponse
+from ..common.models import BaseAieraResponse, CompactArgsMixin
 
 
 # Mixins for validation (extracted from original params.py)
@@ -167,7 +167,7 @@ class FindThirdBridgeEventsArgs(BaseToolArgs, BloombergTickerMixin):
     )
 
 
-class GetThirdBridgeEventArgs(BaseToolArgs):
+class GetThirdBridgeEventArgs(BaseToolArgs, CompactArgsMixin):
     """Get detailed information about a specific Third Bridge expert insight event.
 
     ABOUT THIRD BRIDGE: Third Bridge provides expert network insights - interviews and forums
