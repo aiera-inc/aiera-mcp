@@ -121,12 +121,27 @@ class FindResearchArgs(BaseToolArgs):
 
     asset_classes: Optional[List[str]] = Field(
         default=None,
-        description="Filter by one or more asset classes. Obtain valid values from get_research_asset_classes. Example: ['Equity', 'Fixed Income'].",
+        description=(
+            "Filter by one or more asset classes. Exactly four valid values: "
+            "'Equity', 'FixedIncome', 'Currency', 'Commodity'. "
+            "Reflects the ISSUER's asset class, not subject matter — credit-themed research "
+            "covering an equity issuer is tagged 'Equity'. Do not use this filter to discover "
+            "credit/fixed-income themes (use a text search instead). Common mistake: passing "
+            "'Credit' / 'CorporateHighYieldCredit' here returns zero results — those are "
+            "asset_types values, not asset_classes."
+        ),
     )
 
     asset_types: Optional[List[str]] = Field(
         default=None,
-        description="Filter by one or more asset types. Obtain valid values from get_research_asset_types. Example: ['Common Stock', 'Corporate Bond'].",
+        description=(
+            "Filter by one or more asset types (e.g., 'Stock', 'Credit', "
+            "'CorporateHighYieldCredit', 'InterestRates', 'USTreasuries'). "
+            "Obtain valid values from get_research_asset_types. "
+            "NOTE: Some providers (notably Deutsche) do not populate asset_types on their "
+            "documents at all — adding ['Stock'] silently excludes their entire corpus. "
+            "When the user just wants 'equity research', prefer a text search over this filter."
+        ),
     )
 
     subjects: Optional[List[str]] = Field(
@@ -168,6 +183,13 @@ class GetResearchArgs(BaseAieraArgs, CompactArgsMixin):
     - For finding specific topics across research, prefer search_research instead
 
     WORKFLOW: Use find_research first to obtain valid document_ids.
+
+    EXTRACTION STATUS: The response includes ``prose_available`` (bool) and
+    ``content_length`` (int) fields per document. Some research notes are chart-only
+    or table-only and extract no meaningful prose — in that case ``prose_available``
+    is ``false`` and ``content_length`` is small. When ``prose_available`` is false,
+    do NOT attempt to summarize the document's content; the title/abstract/authors
+    are still trustworthy for identification purposes, but the body itself is empty.
     """
 
     originating_prompt: Optional[str] = Field(
@@ -192,7 +214,12 @@ class GetResearchArgs(BaseAieraArgs, CompactArgsMixin):
 
     document_id: str = Field(
         min_length=1,
-        description="Unique identifier for the research report. Obtain document_id from find_research or search_research results.",
+        description=(
+            "Unique identifier for the research report. Pass the document_id returned by "
+            "find_research / search_research VERBATIM — do not strip suffixes (e.g., the "
+            "trailing '_604' on Deutsche IDs is part of the canonical ID, not an optional "
+            "chunk marker). A malformed or partial ID returns a misleading 'not entitled' error."
+        ),
     )
 
 

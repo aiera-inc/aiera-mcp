@@ -2,6 +2,9 @@
 
 """Utility functions for Aiera MCP tools."""
 
+import re
+
+
 # Mapping of commonly-used Bloomberg ticker aliases to the canonical ticker
 # recognized by the Aiera platform. Applied after format normalization.
 TICKER_ALIASES = {
@@ -111,3 +114,27 @@ def correct_provided_types(provided_types: str) -> str:
         provided_type.strip() for provided_type in provided_types.split(",")
     ]
     return ",".join(cleaned_types)
+
+
+# Matches a Bloomberg-style exchange suffix on a ticker token: ``MSFT:US``, ``HSBA:LN``,
+# ``BHP:AU``. Two letters preceded by a colon, attached to a token of word characters.
+# Restricted to two letters so we don't accidentally strip URLs (``http://``) or other
+# colon-bearing text in a natural-language search string.
+_TICKER_SUFFIX_RE = re.compile(r"(\b\w+):[A-Z]{2}\b")
+
+
+def strip_ticker_exchange_suffix(text: str) -> str:
+    """Remove Bloomberg-style ``:XX`` exchange suffixes from a free-text search string.
+
+    The research index analyzer doesn't currently tokenize the colon cleanly, so a
+    search string containing ``MSFT:US`` produces zero results on multiple providers
+    even though ``MSFT`` alone returns a healthy match set. This helper strips the
+    suffix defensively before the text is sent to ``find_research`` / ``search_research``
+    so client templates that emit Bloomberg-formatted tickers don't silently fail.
+
+    Only the two-letter exchange code is stripped (``:US``, ``:LN``, ``:AU``, etc.).
+    Other colon-bearing content (URLs, dates, identifiers) is left untouched.
+    """
+    if not text:
+        return text
+    return _TICKER_SUFFIX_RE.sub(r"\1", text)

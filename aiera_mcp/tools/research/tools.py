@@ -5,6 +5,7 @@
 import logging
 
 from ..base import get_http_client, make_aiera_request
+from ..utils import strip_ticker_exchange_suffix
 from ... import get_api_key
 from .models import (
     FindResearchArgs,
@@ -48,6 +49,14 @@ async def find_research(args: FindResearchArgs) -> FindResearchResponse:
     api_key = get_api_key()
 
     params = args.model_dump(exclude_none=True)
+
+    # Strip Bloomberg-style exchange suffixes (``MSFT:US``) from the free-text search
+    # before sending it upstream. The research index analyzer doesn't tokenize the
+    # colon cleanly, so suffixed tickers silently return zero results. Client
+    # templates that emit Bloomberg-formatted identifiers (e.g. NB Equities) rely on
+    # this normalization to get useful matches.
+    if params.get("search"):
+        params["search"] = strip_ticker_exchange_suffix(params["search"])
 
     # Map tool parameter names to API parameter names (comma-separated strings)
     if "author_ids" in params:
