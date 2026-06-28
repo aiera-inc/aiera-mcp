@@ -6,6 +6,7 @@ import logging
 import asyncio
 
 from ..base import get_http_client, make_aiera_request
+from ..utils import strip_ticker_exchange_suffix
 from ... import get_api_key
 from .models import (
     SearchTranscriptsArgs,
@@ -472,6 +473,13 @@ async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
     # Get client and API key (no context needed for standard MCP)
     client = await get_http_client(None)
     api_key = get_api_key()
+
+    # Strip Bloomberg-style exchange suffixes from query_text (``MSFT:US`` -> ``MSFT``).
+    # The OpenSearch text analyzer doesn't tokenize the colon cleanly, so suffixed
+    # tickers in the query silently return zero results. Mutating ``args.query_text``
+    # in place keeps the downstream multi-match / fallback queries consistent.
+    if args.query_text:
+        args.query_text = strip_ticker_exchange_suffix(args.query_text)
 
     must_clauses = []
 
