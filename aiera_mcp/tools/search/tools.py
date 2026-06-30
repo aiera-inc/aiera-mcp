@@ -4,10 +4,24 @@
 
 import logging
 import asyncio
+from datetime import datetime, timedelta, timezone
 
 from ..base import get_http_client, make_aiera_request
 from ..utils import strip_ticker_exchange_suffix
 from ... import get_api_key
+
+# Default trailing window for research semantic search when the caller supplies
+# no start_date. search_research is relevance-ranked with no recency component,
+# so without a floor it surfaces multi-year-old reports for broad "what is X
+# writing about Y" queries. 52 weeks mirrors find_research's server-side default.
+DEFAULT_RESEARCH_RECENCY_WEEKS = 52
+
+
+def _default_research_start_date() -> str:
+    """ISO date 52 weeks before now (UTC) — the default research freshness floor."""
+    return (
+        datetime.now(timezone.utc) - timedelta(weeks=DEFAULT_RESEARCH_RECENCY_WEEKS)
+    ).date().isoformat()
 from .models import (
     SearchTranscriptsArgs,
     SearchFilingsArgs,
@@ -493,13 +507,16 @@ async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
             }
         )
 
-    # add date range filter...
-    if args.start_date:
-        range = {"gte": args.start_date}
-        if args.end_date:
-            range["lte"] = args.end_date
-
-        must_clauses.append({"range": {"published_datetime": range}})
+    # add date range filter. Default to a trailing recency window when the caller
+    # didn't specify a start_date, so broad "what is X writing about Y" queries
+    # return current research rather than stale (multi-year-old) reports. The agent
+    # overrides with an explicit start_date for historical / "how has the view
+    # evolved" queries. Mirrors find_research's server-side 52-week default.
+    effective_start_date = args.start_date or _default_research_start_date()
+    date_range = {"gte": effective_start_date}
+    if args.end_date:
+        date_range["lte"] = args.end_date
+    must_clauses.append({"range": {"published_datetime": date_range}})
 
     # add author filter...
     if args.author_ids:

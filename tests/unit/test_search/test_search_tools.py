@@ -13,6 +13,7 @@ from aiera_mcp.tools.search.tools import (
     search_research,
     search_company_docs,
     search_thirdbridge,
+    _default_research_start_date,
 )
 from aiera_mcp.tools.search.models import (
     SearchTranscriptsArgs,
@@ -522,6 +523,57 @@ class TestSearchResearch:
         must_clauses = neural_filter["bool"]["must"]
         date_filter = [c for c in must_clauses if "range" in str(c)]
         assert len(date_filter) > 0
+
+    @staticmethod
+    def _published_gte(data):
+        """Extract the published_datetime range 'gte' from the hybrid query body."""
+        must = data["query"]["hybrid"]["queries"][0]["nested"]["query"]["neural"][
+            "passage_chunk.knn"
+        ]["filter"]["bool"]["must"]
+        ranges = [
+            c["range"]["published_datetime"]
+            for c in must
+            if "range" in c and "published_datetime" in c.get("range", {})
+        ]
+        assert ranges, "no published_datetime range filter present"
+        return ranges[0]["gte"]
+
+    @pytest.mark.asyncio
+    async def test_search_research_defaults_recency_window_when_unset(
+        self, mock_http_dependencies, sample_api_responses
+    ):
+        """UBS feedback: with no start_date, search must floor at ~52 weeks so
+        broad queries don't return multi-year-old (stale) research."""
+        search_responses = sample_api_responses.get("search", {})
+        mock_http_dependencies["mock_make_request"].return_value = search_responses[
+            "search_research_chunks_success"
+        ]
+
+        args = SearchResearchArgs(query_text="price of oil", size=25)  # no start_date
+        await search_research(args)
+
+        data = mock_http_dependencies["mock_make_request"].call_args[1]["data"]
+        assert self._published_gte(data) == _default_research_start_date()
+
+    @pytest.mark.asyncio
+    async def test_search_research_explicit_start_date_overrides_default(
+        self, mock_http_dependencies, sample_api_responses
+    ):
+        """An explicit start_date (e.g. historical query) is used as-is, not floored."""
+        search_responses = sample_api_responses.get("search", {})
+        mock_http_dependencies["mock_make_request"].return_value = search_responses[
+            "search_research_chunks_success"
+        ]
+
+        args = SearchResearchArgs(
+            query_text="price of oil", start_date="2019-01-01", size=25
+        )
+        await search_research(args)
+
+        data = mock_http_dependencies["mock_make_request"].call_args[1]["data"]
+        gte = self._published_gte(data)
+        assert gte == "2019-01-01"
+        assert gte != _default_research_start_date()
 
     @pytest.mark.asyncio
     async def test_search_research_with_document_ids(
