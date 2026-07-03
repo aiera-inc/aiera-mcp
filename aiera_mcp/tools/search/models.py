@@ -255,7 +255,12 @@ class SearchResearchArgs(BaseAieraArgs, CompactArgsMixin):
 
     start_date: str = Field(
         default="",
-        description="Start date for research chunks search in YYYY-MM-DD format. Example: '2024-01-01'.",
+        description=(
+            "Start date for research chunks search in YYYY-MM-DD format. Example: '2024-01-01'. "
+            "If omitted, search defaults to a trailing ~52-week window so results are recent "
+            "rather than stale. To search further back (e.g. historical / how-the-view-evolved "
+            "queries), pass an explicit earlier start_date."
+        ),
     )
 
     end_date: str = Field(

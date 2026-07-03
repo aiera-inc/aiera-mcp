@@ -170,6 +170,18 @@ class FindResearchArgs(BaseToolArgs):
         description="Number of items per page (max 25). Values above 25 are capped server-side.",
     )
 
+    sort_by_date: bool = Field(
+        default=False,
+        description=(
+            "When true, results are sorted strictly by published_datetime (most recent first), "
+            "ignoring text-search relevance. Use this when the user is explicitly asking for "
+            "the LATEST / MOST RECENT / THIS WEEK / TODAY publications and freshness matters "
+            "more than topical fit. Leave false (default) for general topic questions — the "
+            "server already applies a recency decay to the relevance score, so you don't need "
+            "this for ordinary 'current view' style queries."
+        ),
+    )
+
 
 class GetResearchArgs(BaseAieraArgs, CompactArgsMixin):
     """Get detailed information about a specific research report including summary and content.
