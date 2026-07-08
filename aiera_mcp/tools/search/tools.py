@@ -582,7 +582,7 @@ async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
             }
         },
         "size": args.size,
-        "search_pipeline": "hybrid_search_pipeline",
+        "search_pipeline": "research_chunks_search_pipeline",
         "include_base_instructions": args.include_base_instructions,
         "originating_prompt": args.originating_prompt,
         "self_identification": args.self_identification,
