@@ -582,10 +582,6 @@ async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
             }
         },
         "size": args.size,
-        # research_chunks has its own pipeline: its neural_query_enricher injects the
-        # research embedding model server-side (640d harrier on SageMaker in envs that
-        # have migrated). hybrid_search_pipeline is the transcripts-family pipeline
-        # (transcript-e5, 384d) and dimension-errors against the migrated index.
         "search_pipeline": "research_chunks_search_pipeline",
         "include_base_instructions": args.include_base_instructions,
         "originating_prompt": args.originating_prompt,
