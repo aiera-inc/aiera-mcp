@@ -171,17 +171,19 @@ class GetGrammarTemplateResponse(BaseAieraResponse):
 
 
 class GetCreationTemplatesArgs(BaseAieraArgs):
-    """Retrieve content creation templates prior to executing a content creation workflow.
+    """Retrieve content creation templates prior to writing first-party research content.
 
-    Call this before running a creation task to fetch the relevant templates (global guidance,
-    task-specific, and style templates). Requires the content-creation capability to be enabled
-    for the user.
+    IMPORTANT: this is distinct from the grammar templates used for formatting standard chat responses.
+    Creation templates provide guidance on how to structure and compose first-party research content in
+    the tone and style of an institutional analyst.
+
+    These templates are not designed for general-purpose chat or summarization tasks.
 
     TEMPLATE TYPES:
     - 'global': Baseline creation guidance applied to all creation workflows
-    - 'task': Task-specific templates (keyed by template_subtype)
-    - 'style': Style/tone templates (keyed by template_subtype)
-    - 'user': User-specific templates
+    - 'style': Style/tone template only (extracted from the global template)
+    - 'task': Task-specific templates (keyed by template_subtype, which can be pulled from the global template)
+    - 'analyst': Analyst-specific templates (requires entitlement)
     """
 
     originating_prompt: Optional[str] = Field(
@@ -196,12 +198,12 @@ class GetCreationTemplatesArgs(BaseAieraArgs):
 
     template_type: Optional[str] = Field(
         default=None,
-        description="Optional filter by template type: 'global', 'task', 'style', or 'user'. Omit to retrieve the full latest set for a workflow.",
+        description="Optional filter by template type: 'global', 'task', 'style', or 'analyst'. Default is 'global' if not specified. ",
     )
 
     template_subtype: Optional[str] = Field(
         default=None,
-        description="Optional filter by template subtype (e.g. a specific task or style name).",
+        description="Optional filter by template subtype (e.g. a specific task or analyst).",
     )
 
 
