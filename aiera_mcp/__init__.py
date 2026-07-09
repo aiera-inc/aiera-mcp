@@ -135,6 +135,7 @@ AVAILABLE_TOOLS = [
     "trusted_web_search",
     # Common/Utility Tools
     "get_grammar_template",
+    "get_creation_templates",
     "get_core_instructions",
     "available_tools",
 ]
@@ -181,7 +182,7 @@ SEARCH_TOOLS = [
     "search_thirdbridge",
 ]
 WEB_TOOLS = ["trusted_web_search"]
-COMMON_TOOLS = ["get_grammar_template", "get_core_instructions", "available_tools"]
+COMMON_TOOLS = ["get_grammar_template", "get_creation_templates", "get_core_instructions", "available_tools"]
 EMBEDDING_SEARCH_PIPELINE = "embedding_pipeline"
 HYBRID_SEARCH_PIPELINE = "hybrid_search_pipeline"
 
@@ -225,7 +226,7 @@ from .tools.search import (
     search_thirdbridge,
 )
 from .tools.web import trusted_web_search
-from .tools.common import get_grammar_template, get_core_instructions, available_tools
+from .tools.common import get_grammar_template, get_creation_templates, get_core_instructions, available_tools
 
 # Import configuration
 from .config import get_settings, reload_settings, AieraSettings
@@ -295,6 +296,7 @@ __all__ = [
     "search_thirdbridge",
     "trusted_web_search",
     "get_grammar_template",
+    "get_creation_templates",
     "get_core_instructions",
     "available_tools",
     # Utilities

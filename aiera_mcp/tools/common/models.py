@@ -170,6 +170,47 @@ class GetGrammarTemplateResponse(BaseAieraResponse):
     response: Optional[Any] = Field(None, description="Response data from the API")
 
 
+class GetCreationTemplatesArgs(BaseAieraArgs):
+    """Retrieve content creation templates prior to executing a content creation workflow.
+
+    Call this before running a creation task to fetch the relevant templates (global guidance,
+    task-specific, and style templates). Requires the content-creation capability to be enabled
+    for the user.
+
+    TEMPLATE TYPES:
+    - 'global': Baseline creation guidance applied to all creation workflows
+    - 'task': Task-specific templates (keyed by template_subtype)
+    - 'style': Style/tone templates (keyed by template_subtype)
+    - 'user': User-specific templates
+    """
+
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context and analytics. If more than 500 characters, it may be truncated or summarized.",
+    )
+
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
+    )
+
+    template_type: Optional[str] = Field(
+        default=None,
+        description="Optional filter by template type: 'global', 'task', 'style', or 'user'. Omit to retrieve the full latest set for a workflow.",
+    )
+
+    template_subtype: Optional[str] = Field(
+        default=None,
+        description="Optional filter by template subtype (e.g. a specific task or style name).",
+    )
+
+
+class GetCreationTemplatesResponse(BaseAieraResponse):
+    """Response for get_creation_templates tool - passes through the API response structure."""
+
+    response: Optional[Any] = Field(None, description="Response data from the API")
+
+
 class GetCoreInstructionsArgs(BaseAieraArgs):
     """Retrieve core instructions that define how to use Aiera tools and data effectively.
 

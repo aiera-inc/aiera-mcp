@@ -19,6 +19,9 @@ from .models import (
     # Grammar template
     GetGrammarTemplateArgs,
     GetGrammarTemplateResponse,
+    # Creation templates
+    GetCreationTemplatesArgs,
+    GetCreationTemplatesResponse,
     # Core instructions
     GetCoreInstructionsArgs,
     GetCoreInstructionsResponse,
@@ -26,7 +29,12 @@ from .models import (
     AvailableToolsArgs,
     AvailableToolsResponse,
 )
-from .tools import get_grammar_template, get_core_instructions, available_tools
+from .tools import (
+    get_grammar_template,
+    get_creation_templates,
+    get_core_instructions,
+    available_tools,
+)
 
 __all__ = [
     "BaseAieraArgs",
@@ -41,6 +49,9 @@ __all__ = [
     "GetGrammarTemplateArgs",
     "GetGrammarTemplateResponse",
     "get_grammar_template",
+    "GetCreationTemplatesArgs",
+    "GetCreationTemplatesResponse",
+    "get_creation_templates",
     "GetCoreInstructionsArgs",
     "GetCoreInstructionsResponse",
     "get_core_instructions",

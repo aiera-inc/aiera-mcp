@@ -9,6 +9,8 @@ from ... import get_api_key
 from .models import (
     GetGrammarTemplateArgs,
     GetGrammarTemplateResponse,
+    GetCreationTemplatesArgs,
+    GetCreationTemplatesResponse,
     GetCoreInstructionsArgs,
     GetCoreInstructionsResponse,
     AvailableToolsArgs,
@@ -65,6 +67,29 @@ async def get_core_instructions(
     return response
 
 
+async def get_creation_templates(
+    args: GetCreationTemplatesArgs,
+) -> GetCreationTemplatesResponse:
+    """Retrieve content creation templates prior to executing a creation workflow."""
+    logger.info("tool called: get_creation_templates")
+
+    client = await get_http_client(None)
+    api_key = get_api_key()
+
+    params = args.model_dump(exclude_none=True)
+
+    raw_response = await make_aiera_request(
+        client=client,
+        method="GET",
+        endpoint="/chat-support/get-creation-templates",
+        api_key=api_key,
+        params=params,
+    )
+
+    response = GetCreationTemplatesResponse.model_validate(raw_response)
+    return response
+
+
 # Mapping from API endpoint paths to tool names.
 # Some endpoints map to multiple tools (e.g. get_event reuses the find-events endpoint).
 ENDPOINT_TO_TOOLS = {
@@ -110,6 +135,7 @@ ENDPOINT_TO_TOOLS = {
     "/chat-support/trusted-web": ["trusted_web_search"],
     "/chat-support/get-grammar-template": ["get_grammar_template"],
     "/chat-support/get-core-instructions": ["get_core_instructions"],
+    "/chat-support/get-creation-templates": ["get_creation_templates"],
 }
 
 
