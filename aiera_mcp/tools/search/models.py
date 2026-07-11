@@ -213,6 +213,8 @@ class SearchResearchArgs(BaseAieraArgs, CompactArgsMixin):
     Results are individual sections/chunks, not full research documents.
 
     NOTE: This tool uses hybrid semantic + keyword search for high-quality results.
+
+    ANALYST RATINGS: Result chunks may include analyst rating fields — `security_ratings_primary`/`_secondary` (security-level, e.g. "Overweight", "Equal Weight", "Outperform"), `issuer_ratings_primary`/`_secondary`, and `sector_industry_ratings_primary`/`_secondary`. Values are the provider's own rating labels, passed through verbatim, so compare within a provider, not across.
     """
 
     originating_prompt: Optional[str] = Field(

@@ -170,6 +170,49 @@ class GetGrammarTemplateResponse(BaseAieraResponse):
     response: Optional[Any] = Field(None, description="Response data from the API")
 
 
+class GetCreationTemplatesArgs(BaseAieraArgs):
+    """Retrieve content creation templates prior to writing first-party research content.
+
+    IMPORTANT: this is distinct from the grammar templates used for formatting standard chat responses.
+    Creation templates provide guidance on how to structure and compose first-party research content in
+    the tone and style of an institutional analyst.
+
+    These templates are not designed for general-purpose chat or summarization tasks.
+
+    TEMPLATE TYPES:
+    - 'global': Baseline creation guidance applied to all creation workflows
+    - 'style': Style/tone template only (extracted from the global template)
+    - 'task': Task-specific templates (keyed by template_subtype, which can be pulled from the global template)
+    - 'analyst': Analyst-specific templates (requires entitlement)
+    """
+
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context and analytics. If more than 500 characters, it may be truncated or summarized.",
+    )
+
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
+    )
+
+    template_type: Optional[str] = Field(
+        default=None,
+        description="Optional filter by template type: 'global', 'task', 'style', or 'analyst'. Default is 'global' if not specified. ",
+    )
+
+    template_subtype: Optional[str] = Field(
+        default=None,
+        description="Optional filter by template subtype (e.g. a specific task or analyst).",
+    )
+
+
+class GetCreationTemplatesResponse(BaseAieraResponse):
+    """Response for get_creation_templates tool - passes through the API response structure."""
+
+    response: Optional[Any] = Field(None, description="Response data from the API")
+
+
 class GetCoreInstructionsArgs(BaseAieraArgs):
     """Retrieve core instructions that define how to use Aiera tools and data effectively.
 

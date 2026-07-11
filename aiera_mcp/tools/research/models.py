@@ -67,6 +67,8 @@ class FindResearchArgs(BaseToolArgs):
     DO NOT GUESS ENUMERATED FILTERS: For `asset_classes`, `asset_types`, `subjects`, `product_focuses`, `regions`, `countries`, call the corresponding lookup tool (e.g., get_research_asset_classes) first to discover valid values.
 
     MULTIPLE FILTERS: All filter parameters are optional. Combine them to narrow results.
+
+    ANALYST RATINGS: Result items may include analyst rating fields — `security_ratings_primary`/`_secondary` (security-level, e.g. "Overweight", "Equal Weight", "Outperform"), `issuer_ratings_primary`/`_secondary`, and `sector_industry_ratings_primary`/`_secondary`. Values are the provider's own rating labels, passed through verbatim, so compare within a provider, not across.
     """
 
     originating_prompt: Optional[str] = Field(
