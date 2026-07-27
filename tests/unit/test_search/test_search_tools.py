@@ -13,7 +13,6 @@ from aiera_mcp.tools.search.tools import (
     search_research,
     search_company_docs,
     search_thirdbridge,
-    _default_research_start_date,
 )
 from aiera_mcp.tools.search.models import (
     SearchTranscriptsArgs,
@@ -430,389 +429,133 @@ class TestSearchFilings:
 
 @pytest.mark.unit
 class TestSearchResearch:
-    """Test the search_research tool."""
+    """search_research is now a thin pass-through to POST /chat-support/search-research.
+
+    Query construction (neural k-NN, filters, recency default, ticker-suffix handling)
+    lives in aiera-api, so these tests assert only that parameters are forwarded and the
+    response is parsed — not the OpenSearch query shape.
+    """
+
+    @staticmethod
+    def _payload(mock_http_dependencies):
+        return mock_http_dependencies["mock_make_request"].call_args[1]["data"]
 
     @pytest.mark.asyncio
-    async def test_search_research_success(
+    async def test_search_research_calls_new_endpoint(
         self, mock_http_dependencies, sample_api_responses
     ):
-        """Test successful research search."""
-        # Setup
-        search_responses = sample_api_responses.get("search", {})
-        mock_http_dependencies["mock_make_request"].return_value = search_responses[
-            "search_research_chunks_success"
-        ]
+        mock_http_dependencies["mock_make_request"].return_value = sample_api_responses[
+            "search"
+        ]["search_research_chunks_success"]
 
-        args = SearchResearchArgs(
-            query_text="cloud computing growth",
-            start_date="2024-01-01",
-            end_date="2024-12-31",
-            size=25,
+        result = await search_research(
+            SearchResearchArgs(query_text="cloud computing growth", size=25)
         )
 
-        # Execute
-        result = await search_research(args)
-
-        # Verify
         assert isinstance(result, SearchResearchResponse)
-        assert result.response is not None
-        assert len(result.response["result"]) == 1
-
-        # Check first result
-        first_result = result.response["result"][0]
-        assert first_result["_score"] > 0
-        assert first_result["title"] == "Amazon.com Inc - Research Report"
-
-        # Check API call was made correctly
-        mock_http_dependencies["mock_make_request"].assert_called()
-        call_args = mock_http_dependencies["mock_make_request"].call_args
-        assert call_args[1]["method"] == "POST"
-        assert call_args[1]["endpoint"] == "/chat-support/search/research-chunks"
+        call = mock_http_dependencies["mock_make_request"].call_args
+        assert call[1]["method"] == "POST"
+        assert call[1]["endpoint"] == "/chat-support/search-research"
+        # single call — no client-side hybrid fallback anymore
+        assert mock_http_dependencies["mock_make_request"].call_count == 1
 
     @pytest.mark.asyncio
     async def test_search_research_empty_results(self, mock_http_dependencies):
-        """Test search_research with no results."""
-        # Setup
-        empty_response = {
+        mock_http_dependencies["mock_make_request"].return_value = {
             "instructions": [],
             "response": {"result": []},
         }
-        mock_http_dependencies["mock_make_request"].return_value = empty_response
 
-        args = SearchResearchArgs(
-            query_text="nonexistent xyz123",
-            size=25,
+        result = await search_research(
+            SearchResearchArgs(query_text="nonexistent xyz123", size=25)
         )
 
-        # Execute
-        result = await search_research(args)
-
-        # Verify
         assert isinstance(result, SearchResearchResponse)
-        assert result.response is not None
         assert len(result.response["result"]) == 0
 
     @pytest.mark.asyncio
-    async def test_search_research_with_date_range(
+    async def test_forwards_query_text_and_size(
         self, mock_http_dependencies, sample_api_responses
     ):
-        """Test search_research with date range filter."""
-        # Setup
-        search_responses = sample_api_responses.get("search", {})
-        mock_http_dependencies["mock_make_request"].return_value = search_responses[
-            "search_research_chunks_success"
-        ]
+        mock_http_dependencies["mock_make_request"].return_value = sample_api_responses[
+            "search"
+        ]["search_research_chunks_success"]
 
-        args = SearchResearchArgs(
-            query_text="revenue",
-            start_date="2024-01-01",
-            end_date="2024-12-31",
-            size=25,
-        )
+        await search_research(SearchResearchArgs(query_text="revenue", size=25))
 
-        # Execute
-        result = await search_research(args)
-
-        # Verify the call included the date range filter
-        assert isinstance(result, SearchResearchResponse)
-        call_args = mock_http_dependencies["mock_make_request"].call_args
-        data = call_args[1]["data"]
-        neural_filter = data["query"]["hybrid"]["queries"][0]["nested"]["query"][
-            "neural"
-        ]["passage_chunk.knn"]["filter"]
-        must_clauses = neural_filter["bool"]["must"]
-        date_filter = [c for c in must_clauses if "range" in str(c)]
-        assert len(date_filter) > 0
-
-    @staticmethod
-    def _published_gte(data):
-        """Extract the published_datetime range 'gte' from the hybrid query body."""
-        must = data["query"]["hybrid"]["queries"][0]["nested"]["query"]["neural"][
-            "passage_chunk.knn"
-        ]["filter"]["bool"]["must"]
-        ranges = [
-            c["range"]["published_datetime"]
-            for c in must
-            if "range" in c and "published_datetime" in c.get("range", {})
-        ]
-        assert ranges, "no published_datetime range filter present"
-        return ranges[0]["gte"]
+        payload = self._payload(mock_http_dependencies)
+        assert payload["query_text"] == "revenue"
+        assert payload["size"] == 25
 
     @pytest.mark.asyncio
-    async def test_search_research_defaults_recency_window_when_unset(
+    async def test_omits_unset_filters(
         self, mock_http_dependencies, sample_api_responses
     ):
-        """UBS feedback: with no start_date, search must floor at ~52 weeks so
-        broad queries don't return multi-year-old (stale) research."""
-        search_responses = sample_api_responses.get("search", {})
-        mock_http_dependencies["mock_make_request"].return_value = search_responses[
-            "search_research_chunks_success"
-        ]
+        # the tool only forwards params that were set; aiera-api applies the defaults
+        mock_http_dependencies["mock_make_request"].return_value = sample_api_responses[
+            "search"
+        ]["search_research_chunks_success"]
 
-        args = SearchResearchArgs(query_text="price of oil", size=25)  # no start_date
-        await search_research(args)
+        await search_research(SearchResearchArgs(query_text="price of oil", size=25))
 
-        data = mock_http_dependencies["mock_make_request"].call_args[1]["data"]
-        assert self._published_gte(data) == _default_research_start_date()
+        payload = self._payload(mock_http_dependencies)
+        for key in (
+            "start_date",
+            "end_date",
+            "document_ids",
+            "author_ids",
+            "aiera_provider_ids",
+            "asset_classes",
+            "asset_types",
+        ):
+            assert key not in payload
 
     @pytest.mark.asyncio
-    async def test_search_research_explicit_start_date_overrides_default(
+    async def test_forwards_all_filters(
         self, mock_http_dependencies, sample_api_responses
     ):
-        """An explicit start_date (e.g. historical query) is used as-is, not floored."""
-        search_responses = sample_api_responses.get("search", {})
-        mock_http_dependencies["mock_make_request"].return_value = search_responses[
-            "search_research_chunks_success"
-        ]
+        mock_http_dependencies["mock_make_request"].return_value = sample_api_responses[
+            "search"
+        ]["search_research_chunks_success"]
 
-        args = SearchResearchArgs(
-            query_text="price of oil", start_date="2019-01-01", size=25
+        await search_research(
+            SearchResearchArgs(
+                query_text="credit outlook",
+                document_ids=["8001234"],
+                start_date="2024-01-01",
+                end_date="2024-12-31",
+                author_ids=["12345"],
+                aiera_provider_ids=["krypton"],
+                asset_classes=["Equity"],
+                asset_types=["Common Stock"],
+                size=25,
+            )
         )
-        await search_research(args)
 
-        data = mock_http_dependencies["mock_make_request"].call_args[1]["data"]
-        gte = self._published_gte(data)
-        assert gte == "2019-01-01"
-        assert gte != _default_research_start_date()
+        payload = self._payload(mock_http_dependencies)
+        assert payload["document_ids"] == ["8001234"]
+        assert payload["start_date"] == "2024-01-01"
+        assert payload["end_date"] == "2024-12-31"
+        assert payload["author_ids"] == ["12345"]
+        assert payload["aiera_provider_ids"] == ["krypton"]
+        assert payload["asset_classes"] == ["Equity"]
+        assert payload["asset_types"] == ["Common Stock"]
 
     @pytest.mark.asyncio
-    async def test_search_research_with_document_ids(
+    async def test_exclude_instructions(
         self, mock_http_dependencies, sample_api_responses
     ):
-        """Test search_research with document_ids filter."""
-        # Setup
-        search_responses = sample_api_responses.get("search", {})
-        mock_http_dependencies["mock_make_request"].return_value = search_responses[
-            "search_research_chunks_success"
-        ]
+        mock_http_dependencies["mock_make_request"].return_value = sample_api_responses[
+            "search"
+        ]["search_research_chunks_success"]
 
-        args = SearchResearchArgs(
-            query_text="market analysis",
-            document_ids=["8001234", "8001235"],
-            size=25,
+        result = await search_research(
+            SearchResearchArgs(
+                query_text="cloud computing", exclude_instructions=True, size=25
+            )
         )
 
-        # Execute
-        result = await search_research(args)
-
-        # Verify the call included the document_ids filter
-        assert isinstance(result, SearchResearchResponse)
-        call_args = mock_http_dependencies["mock_make_request"].call_args
-        data = call_args[1]["data"]
-        neural_filter = data["query"]["hybrid"]["queries"][0]["nested"]["query"][
-            "neural"
-        ]["passage_chunk.knn"]["filter"]
-        must_clauses = neural_filter["bool"]["must"]
-        document_id_filter = [c for c in must_clauses if "parent_research_id" in str(c)]
-        assert len(document_id_filter) > 0
-
-    @pytest.mark.asyncio
-    async def test_search_research_with_author_id(
-        self, mock_http_dependencies, sample_api_responses
-    ):
-        """Test search_research with author_id filter."""
-        # Setup
-        search_responses = sample_api_responses.get("search", {})
-        mock_http_dependencies["mock_make_request"].return_value = search_responses[
-            "search_research_chunks_success"
-        ]
-
-        args = SearchResearchArgs(
-            query_text="macro strategy",
-            author_ids=["12345"],
-            size=25,
-        )
-
-        # Execute
-        result = await search_research(args)
-
-        # Verify the call included the author_ids filter
-        assert isinstance(result, SearchResearchResponse)
-        call_args = mock_http_dependencies["mock_make_request"].call_args
-        data = call_args[1]["data"]
-        neural_filter = data["query"]["hybrid"]["queries"][0]["nested"]["query"][
-            "neural"
-        ]["passage_chunk.knn"]["filter"]
-        must_clauses = neural_filter["bool"]["must"]
-        author_filter = [c for c in must_clauses if "authors.person_id" in str(c)]
-        assert len(author_filter) == 1
-        assert author_filter[0]["terms"]["authors.person_id"] == ["12345"]
-
-    @pytest.mark.asyncio
-    async def test_search_research_with_all_filters(
-        self, mock_http_dependencies, sample_api_responses
-    ):
-        """Test search_research with all filter parameters combined."""
-        # Setup
-        search_responses = sample_api_responses.get("search", {})
-        mock_http_dependencies["mock_make_request"].return_value = search_responses[
-            "search_research_chunks_success"
-        ]
-
-        args = SearchResearchArgs(
-            query_text="credit outlook",
-            document_ids=["8001234"],
-            start_date="2024-01-01",
-            end_date="2024-12-31",
-            author_ids=["12345"],
-            aiera_provider_ids=["krypton"],
-            asset_classes=["Equity"],
-            asset_types=["Common Stock"],
-            size=25,
-        )
-
-        # Execute
-        result = await search_research(args)
-
-        # Verify all filters are present
-        assert isinstance(result, SearchResearchResponse)
-        call_args = mock_http_dependencies["mock_make_request"].call_args
-        data = call_args[1]["data"]
-        neural_filter = data["query"]["hybrid"]["queries"][0]["nested"]["query"][
-            "neural"
-        ]["passage_chunk.knn"]["filter"]
-        must_clauses = neural_filter["bool"]["must"]
-        # Should have 6 filters: parent_research_id, date range, author, aiera_provider_id, asset_classes, asset_types
-        assert len(must_clauses) == 6
-
-    @pytest.mark.asyncio
-    async def test_search_research_with_asset_classes(
-        self, mock_http_dependencies, sample_api_responses
-    ):
-        """Test search_research with asset_classes filter."""
-        # Setup
-        search_responses = sample_api_responses.get("search", {})
-        mock_http_dependencies["mock_make_request"].return_value = search_responses[
-            "search_research_chunks_success"
-        ]
-
-        args = SearchResearchArgs(
-            query_text="equity analysis",
-            asset_classes=["Equity", "Fixed Income"],
-            size=25,
-        )
-
-        # Execute
-        result = await search_research(args)
-
-        # Verify the call included the asset_classes filter
-        assert isinstance(result, SearchResearchResponse)
-        call_args = mock_http_dependencies["mock_make_request"].call_args
-        data = call_args[1]["data"]
-        neural_filter = data["query"]["hybrid"]["queries"][0]["nested"]["query"][
-            "neural"
-        ]["passage_chunk.knn"]["filter"]
-        must_clauses = neural_filter["bool"]["must"]
-        asset_classes_filter = [c for c in must_clauses if "asset_classes" in str(c)]
-        assert len(asset_classes_filter) == 1
-        assert asset_classes_filter[0]["terms"]["asset_classes"] == [
-            "Equity",
-            "Fixed Income",
-        ]
-
-    @pytest.mark.asyncio
-    async def test_search_research_with_asset_types(
-        self, mock_http_dependencies, sample_api_responses
-    ):
-        """Test search_research with asset_types filter."""
-        # Setup
-        search_responses = sample_api_responses.get("search", {})
-        mock_http_dependencies["mock_make_request"].return_value = search_responses[
-            "search_research_chunks_success"
-        ]
-
-        args = SearchResearchArgs(
-            query_text="stock analysis",
-            asset_types=["Common Stock"],
-            size=25,
-        )
-
-        # Execute
-        result = await search_research(args)
-
-        # Verify the call included the asset_types filter
-        assert isinstance(result, SearchResearchResponse)
-        call_args = mock_http_dependencies["mock_make_request"].call_args
-        data = call_args[1]["data"]
-        neural_filter = data["query"]["hybrid"]["queries"][0]["nested"]["query"][
-            "neural"
-        ]["passage_chunk.knn"]["filter"]
-        must_clauses = neural_filter["bool"]["must"]
-        asset_types_filter = [c for c in must_clauses if "asset_types" in str(c)]
-        assert len(asset_types_filter) == 1
-        assert asset_types_filter[0]["terms"]["asset_types"] == ["Common Stock"]
-
-    @pytest.mark.asyncio
-    async def test_search_research_exclude_instructions(
-        self, mock_http_dependencies, sample_api_responses
-    ):
-        """Test search_research with exclude_instructions."""
-        # Setup
-        search_responses = sample_api_responses.get("search", {})
-        mock_http_dependencies["mock_make_request"].return_value = search_responses[
-            "search_research_chunks_success"
-        ]
-
-        args = SearchResearchArgs(
-            query_text="cloud computing",
-            exclude_instructions=True,
-            size=25,
-        )
-
-        # Execute
-        result = await search_research(args)
-
-        # Verify instructions are empty
         assert result.instructions == []
-
-    @pytest.mark.asyncio
-    async def test_search_research_fallback_on_timeout(self, mock_http_dependencies):
-        """Test that search_research falls back to standard search on timeout."""
-        # Setup - first call times out, second succeeds
-        fallback_response = {
-            "instructions": [],
-            "response": {"result": []},
-        }
-        mock_http_dependencies["mock_make_request"].side_effect = [
-            asyncio.TimeoutError("ML inference timed out"),
-            fallback_response,
-        ]
-
-        args = SearchResearchArgs(
-            query_text="test query",
-            size=25,
-        )
-
-        # Execute
-        result = await search_research(args)
-
-        # Verify fallback was used (2 calls made)
-        assert mock_http_dependencies["mock_make_request"].call_count == 2
-        assert isinstance(result, SearchResearchResponse)
-
-    @pytest.mark.asyncio
-    async def test_search_research_fallback_uses_correct_endpoint(
-        self, mock_http_dependencies
-    ):
-        """Test that search_research fallback uses the correct research-chunks endpoint."""
-        # Setup - first call returns empty, triggering fallback
-        mock_http_dependencies["mock_make_request"].side_effect = [
-            {"response": {}},  # Empty response triggers fallback
-            {"instructions": [], "response": {"result": []}},
-        ]
-
-        args = SearchResearchArgs(
-            query_text="test query",
-            size=25,
-        )
-
-        # Execute
-        result = await search_research(args)
-
-        # Verify both calls used research-chunks endpoint
-        assert mock_http_dependencies["mock_make_request"].call_count == 2
-        for call in mock_http_dependencies["mock_make_request"].call_args_list:
-            assert call[1]["endpoint"] == "/chat-support/search/research-chunks"
 
 
 @pytest.mark.unit
