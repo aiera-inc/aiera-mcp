@@ -183,8 +183,6 @@ SEARCH_TOOLS = [
 ]
 WEB_TOOLS = ["trusted_web_search"]
 COMMON_TOOLS = ["get_grammar_template", "get_creation_templates", "get_core_instructions", "available_tools"]
-EMBEDDING_SEARCH_PIPELINE = "embedding_pipeline"
-HYBRID_SEARCH_PIPELINE = "hybrid_search_pipeline"
 
 # Import tool functions from domain modules
 from .tools.events import find_events, find_conferences, get_event, get_upcoming_events
