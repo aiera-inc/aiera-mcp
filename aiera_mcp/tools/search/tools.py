@@ -7,7 +7,6 @@ import asyncio
 from datetime import datetime, timedelta, timezone
 
 from ..base import get_http_client, make_aiera_request
-from ..utils import strip_ticker_exchange_suffix
 from ... import get_api_key
 
 # Default trailing window for research semantic search when the caller supplies
@@ -476,207 +475,69 @@ async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
 
 
 async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
-    """Semantic search within research document chunks using embedding-based matching.
+    """Semantic search within research documents.
 
-    Uses per-sub-query filters within the hybrid query for efficient pre-filtering.
-    Neural queries use the filter parameter for kNN pre-filtering, and text queries
-    are wrapped in a bool with a filter clause.
+    Finds the most relevant research passages for a query, with optional filtering
+    by date range, author, provider, asset class/type, or specific documents. When
+    no start date is given, results are limited to roughly the past year so broad
+    queries return current rather than stale research.
     """
     logger.info("tool called: search_research")
 
-    # Get client and API key (no context needed for standard MCP)
     client = await get_http_client(None)
     api_key = get_api_key()
 
-    # Strip Bloomberg-style exchange suffixes from query_text (``MSFT:US`` -> ``MSFT``).
-    # The OpenSearch text analyzer doesn't tokenize the colon cleanly, so suffixed
-    # tickers in the query silently return zero results. Mutating ``args.query_text``
-    # in place keeps the downstream multi-match / fallback queries consistent.
-    if args.query_text:
-        args.query_text = strip_ticker_exchange_suffix(args.query_text)
-
-    must_clauses = []
-
-    # add document ID filter...
-    if args.document_ids:
-        must_clauses.append(
-            {
-                "terms": {
-                    "parent_research_id": args.document_ids,
-                }
-            }
-        )
-
-    # add date range filter. Default to a trailing recency window when the caller
-    # didn't specify a start_date, so broad "what is X writing about Y" queries
-    # return current research rather than stale (multi-year-old) reports. The agent
-    # overrides with an explicit start_date for historical / "how has the view
-    # evolved" queries. Mirrors find_research's server-side 52-week default.
-    effective_start_date = args.start_date or _default_research_start_date()
-    date_range = {"gte": effective_start_date}
-    if args.end_date:
-        date_range["lte"] = args.end_date
-    must_clauses.append({"range": {"published_datetime": date_range}})
-
-    # add author filter...
-    if args.author_ids:
-        must_clauses.append({"terms": {"authors.person_id": args.author_ids}})
-
-    # add aiera provider ID filter...
-    if args.aiera_provider_ids:
-        must_clauses.append({"terms": {"aiera_provider_id": args.aiera_provider_ids}})
-
-    # add asset classes filter...
-    if args.asset_classes:
-        must_clauses.append({"terms": {"asset_classes": args.asset_classes}})
-
-    # add asset types filter...
-    if args.asset_types:
-        must_clauses.append({"terms": {"asset_types": args.asset_types}})
-
-    filter_clause = _build_filter_clause(must_clauses)
-
-    k_value = min(args.size * 2, 10000)
-
-    # build neural sub-query with pre-filter
-    neural_inner = {
+    # Only forward the parameters that were actually set; sensible defaults are
+    # applied for anything omitted.
+    payload = {
         "query_text": args.query_text,
-        "k": k_value,
-    }
-    if filter_clause:
-        neural_inner["filter"] = filter_clause
-
-    # build text sub-query with filter
-    multi_match_query = {
-        "multi_match": {
-            "query": args.query_text,
-            "fields": ["text^2", "title"],
-            "type": "best_fields",
-            "boost": 1.5,
-        }
-    }
-
-    if filter_clause:
-        text_query = {
-            "bool": {
-                "must": [multi_match_query],
-                "filter": [filter_clause],
-            }
-        }
-    else:
-        text_query = multi_match_query
-
-    # first, try ML-based search...
-    query = {
-        "query": {
-            "hybrid": {
-                "queries": [
-                    {
-                        "nested": {
-                            "path": "passage_chunk",
-                            "query": {"neural": {"passage_chunk.knn": neural_inner}},
-                        }
-                    },
-                    text_query,
-                ]
-            }
-        },
         "size": args.size,
-        "search_pipeline": "research_chunks_search_pipeline",
         "include_base_instructions": args.include_base_instructions,
-        "originating_prompt": args.originating_prompt,
-        "self_identification": args.self_identification,
     }
+
+    if args.document_ids:
+        payload["document_ids"] = args.document_ids
+
+    if args.start_date:
+        payload["start_date"] = args.start_date
+
+    if args.end_date:
+        payload["end_date"] = args.end_date
+
+    if args.author_ids:
+        payload["author_ids"] = args.author_ids
+
+    if args.aiera_provider_ids:
+        payload["aiera_provider_ids"] = args.aiera_provider_ids
+
+    if args.asset_classes:
+        payload["asset_classes"] = args.asset_classes
+
+    if args.asset_types:
+        payload["asset_types"] = args.asset_types
 
     if args.search_after is not None:
-        query["search_after"] = args.search_after
+        payload["search_after"] = args.search_after
 
-    # Try ML-inference search...
-    try:
-        raw_response = await asyncio.wait_for(
-            make_aiera_request(
-                client=client,
-                method="POST",
-                endpoint="/chat-support/search/research-chunks",
-                api_key=api_key,
-                params={},
-                data=query,
-            ),
-            timeout=15.0,
-        )
+    if args.originating_prompt:
+        payload["originating_prompt"] = args.originating_prompt
 
-        if _has_search_results(raw_response):
-            logger.info("search_research ML inference successful")
-            response = SearchResearchResponse.model_validate(raw_response)
-            if args.exclude_instructions:
-                response.instructions = []
-            return response
+    if args.self_identification:
+        payload["self_identification"] = args.self_identification
 
-    except asyncio.TimeoutError:
-        logger.warning(
-            "search_research: ML inference timed out, falling back to standard search"
-        )
-        raw_response = None
+    raw_response = await make_aiera_request(
+        client=client,
+        method="POST",
+        endpoint="/chat-support/search-research",
+        api_key=api_key,
+        params={},
+        data=payload,
+    )
 
-    # Fall back to standard text-based search with pipeline
-    if not _has_search_results(raw_response):
-        try:
-            query = {
-                "query": {
-                    "bool": {
-                        "must": must_clauses,
-                        "should": [
-                            {
-                                "match": {
-                                    "text": {
-                                        "query": args.query_text,
-                                        "boost": 2.0,
-                                    }
-                                }
-                            },
-                            {
-                                "multi_match": {
-                                    "query": args.query_text,
-                                    "fields": ["text", "title"],
-                                    "type": "best_fields",
-                                    "boost": 1.5,
-                                }
-                            },
-                        ],
-                    }
-                },
-                "size": args.size,
-                "include_base_instructions": args.include_base_instructions,
-                "originating_prompt": args.originating_prompt,
-                "self_identification": args.self_identification,
-            }
-
-            if args.search_after is not None:
-                query["search_after"] = args.search_after
-
-            raw_response = await make_aiera_request(
-                client=client,
-                method="POST",
-                endpoint="/chat-support/search/research-chunks",
-                api_key=api_key,
-                params={},
-                data=query,
-            )
-
-            if raw_response and "response" in raw_response:
-                logger.info("search_research standard pipeline search successful")
-                response = SearchResearchResponse.model_validate(raw_response)
-                if args.exclude_instructions:
-                    response.instructions = []
-                return response
-
-        except Exception as pipeline_error:
-            logger.info(
-                f"search_research: Standard pipeline search failed: {str(pipeline_error)}"
-            )
-
-    # if failed, send empty response...
-    return _get_empty_research_response()
+    response = SearchResearchResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
 
 
 async def search_company_docs(args: SearchCompanyDocsArgs) -> SearchCompanyDocsResponse:
