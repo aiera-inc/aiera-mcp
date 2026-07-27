@@ -25,12 +25,10 @@ logger = logging.getLogger(__name__)
 
 
 async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsResponse:
-    """Hybrid semantic + keyword search over event transcripts.
+    """Smart search over event transcripts.
 
     Finds the most relevant transcript segments for a query, with optional
     filtering by event, equity, date range, event type, or transcript section.
-    Query construction and ranking are handled server-side; this tool forwards
-    the caller's parameters and parses the response.
     """
     logger.info("tool called: search_transcripts")
 
@@ -86,12 +84,10 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
 
 
 async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
-    """Hybrid semantic + keyword search over SEC filing document chunks.
+    """Smart search over SEC filing document chunks.
 
     Finds the most relevant filing passages for a query, with optional filtering
-    by filing, equity, date range, or filing type. Query construction and ranking
-    are handled server-side; this tool forwards the caller's parameters and parses
-    the response.
+    by filing, equity, date range, or filing type.
     """
     logger.info("tool called: search_filings")
 
@@ -144,7 +140,7 @@ async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
 
 
 async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
-    """Semantic search within research documents.
+    """Smart search within research documents.
 
     Finds the most relevant research passages for a query, with optional filtering
     by date range, author, provider, asset class/type, or specific documents. When
@@ -210,12 +206,10 @@ async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
 
 
 async def search_company_docs(args: SearchCompanyDocsArgs) -> SearchCompanyDocsResponse:
-    """Hybrid semantic + keyword search over company document chunks.
+    """Smart search over company document chunks.
 
     Finds the most relevant company-document passages for a query, with optional
-    filtering by document, company, category, keywords, or date range. Query
-    construction and ranking are handled server-side; this tool forwards the
-    caller's parameters and parses the response.
+    filtering by document, company, category, keywords, or date range.
     """
     logger.info("tool called: search_company_docs")
 
@@ -271,12 +265,10 @@ async def search_company_docs(args: SearchCompanyDocsArgs) -> SearchCompanyDocsR
 
 
 async def search_thirdbridge(args: SearchThirdbridgeArgs) -> SearchThirdbridgeResponse:
-    """Hybrid semantic + keyword search over Third Bridge expert interview transcripts.
+    """Smart search over Third Bridge expert interview transcripts.
 
     Finds the most relevant expert-interview passages for a query, with optional
-    filtering by company, Third Bridge ID, Aiera event, date range, or content
-    type. Query construction and ranking are handled server-side; this tool
-    forwards the caller's parameters and parses the response.
+    filtering by company, Third Bridge ID, Aiera event, date range, or content type.
     """
     logger.info("tool called: search_thirdbridge")
 
