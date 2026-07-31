@@ -198,9 +198,14 @@ class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
 
 # Parameter models (extracted from params.py)
 class FindConferencesArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
-    """Search for conferences. Search across all conferences by date range.
+    """Find investor/industry conferences by date range, and optionally by hosting company
+    (bloomberg_ticker) or event type.
 
-    This tool provides access to a comprehensive database of upcoming and historical conferences.
+    WHEN TO USE: use this for multi-company conference events (industry conferences,
+    broker-hosted summits). For a single company's own events (earnings calls,
+    presentations, shareholder meetings), use find_events instead.
+
+    Covers both upcoming and historical conferences.
     """
 
     originating_prompt: Optional[str] = Field(

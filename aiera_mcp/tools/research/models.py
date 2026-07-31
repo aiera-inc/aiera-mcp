@@ -701,24 +701,22 @@ class ReportResearchUsageResponse(BaseAieraResponse):
 
 
 class GetResearchMetadataArgs(BaseAieraArgs):
-    """Retrieve the complete source metadata record for a research document — the full
-    publication metadata beyond what the standard research tools return.
+    """Retrieve the complete source metadata record for a research document.
 
     RETURNS: structured metadata including publication status and dates, publisher
-    organization and author roles, covered issuers and securities with ratings,
+    organization and author roles, covered issuers and securities with ratings, price targets,
     subject/sector/region/country classifications, product series, and file details.
-    Analyst contact details and internal plumbing are removed automatically.
 
     WHEN TO USE:
     - When the user asks about a report's coverage (which issuers, securities, or
-      ratings it spans), its classifications, product series, or publication details
+      ratings or price targets it spans), its classifications, product series, or publication details
       not present in find_research / get_research results.
-    - For a targeted slice, pass ``fields`` with dot-paths — call
-      get_research_metadata_fields first to discover valid paths.
+    - For a targeted slice, pass ``fields`` with dot-paths (call
+      get_research_metadata_fields first to discover valid paths).
 
     WORKFLOW: find_research or search_research -> document_id -> get_research_metadata.
     Repeated elements beyond ``max_list_items`` are truncated with a ``<key>__truncated``
-    marker showing shown/total counts.
+    marker of shown/total counts.
     """
 
     originating_prompt: Optional[str] = Field(

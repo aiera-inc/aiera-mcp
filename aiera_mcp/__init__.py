@@ -97,6 +97,9 @@ AVAILABLE_TOOLS = [
     # Equity Tools
     "find_equities",
     "get_equity_summaries",
+    "get_financials",
+    "get_ratios",
+    "get_kpis_and_segments",
     "get_sectors_and_subsectors",
     # Index/Watchlist Tools
     "get_available_indexes",
@@ -146,6 +149,9 @@ FILING_TOOLS = ["find_filings", "get_filing"]
 EQUITY_TOOLS = [
     "find_equities",
     "get_equity_summaries",
+    "get_financials",
+    "get_ratios",
+    "get_kpis_and_segments",
     "get_sectors_and_subsectors",
 ]
 INDEX_WATCHLIST_TOOLS = [
@@ -192,6 +198,9 @@ from .tools.filings import find_filings, get_filing
 from .tools.equities import (
     find_equities,
     get_equity_summaries,
+    get_financials,
+    get_ratios,
+    get_kpis_and_segments,
     get_sectors_and_subsectors,
     get_available_indexes,
     get_index_constituents,
@@ -269,6 +278,9 @@ __all__ = [
     "get_filing",
     "find_equities",
     "get_equity_summaries",
+    "get_financials",
+    "get_ratios",
+    "get_kpis_and_segments",
     "get_sectors_and_subsectors",
     "get_available_indexes",
     "get_index_constituents",
