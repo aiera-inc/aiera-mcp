@@ -64,9 +64,7 @@ def get_api_key() -> Optional[str]:
             if "No user API key in request context" in str(e):
                 logger.warning(f"API key provider: {e}")
             else:
-                logger.error(
-                    f"API key provider failed with exception: {e}", exc_info=True
-                )
+                logger.error(f"API key provider failed with exception: {e}", exc_info=True)
 
             # Re-raise to surface the actual error instead of silently falling back
             raise ValueError(f"Failed to get API key from configured provider: {e}")
@@ -125,6 +123,8 @@ AVAILABLE_TOOLS = [
     "get_research_region_types",
     "get_research_country_codes",
     "report_research_usage",
+    "get_research_metadata",
+    "get_research_metadata_fields",
     # Search Tools
     "search_transcripts",
     "search_filings",
@@ -173,6 +173,8 @@ RESEARCH_TOOLS = [
     "get_research_region_types",
     "get_research_country_codes",
     "report_research_usage",
+    "get_research_metadata",
+    "get_research_metadata_fields",
 ]
 SEARCH_TOOLS = [
     "search_transcripts",
@@ -206,6 +208,8 @@ from .tools.third_bridge import find_third_bridge_events, get_third_bridge_event
 from .tools.research import (
     find_research,
     get_research,
+    get_research_metadata,
+    get_research_metadata_fields,
     get_research_providers,
     get_research_authors,
     get_research_asset_classes,
@@ -287,6 +291,8 @@ __all__ = [
     "get_research_region_types",
     "get_research_country_codes",
     "report_research_usage",
+    "get_research_metadata",
+    "get_research_metadata_fields",
     "search_transcripts",
     "search_filings",
     "search_research",

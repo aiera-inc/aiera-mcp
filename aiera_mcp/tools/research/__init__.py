@@ -4,6 +4,8 @@
 
 from .tools import (
     find_research,
+    get_research_metadata,
+    get_research_metadata_fields,
     get_research,
     get_research_providers,
     get_research_authors,
@@ -27,6 +29,8 @@ from .models import (
     GetResearchRegionTypesArgs,
     GetResearchCountryCodesArgs,
     ReportResearchUsageArgs,
+    GetResearchMetadataArgs,
+    GetResearchMetadataFieldsArgs,
     FindResearchResponse,
     GetResearchResponse,
     GetResearchProvidersResponse,
@@ -38,6 +42,8 @@ from .models import (
     GetResearchRegionTypesResponse,
     GetResearchCountryCodesResponse,
     ReportResearchUsageResponse,
+    GetResearchMetadataResponse,
+    GetResearchMetadataFieldsResponse,
 )
 
 __all__ = [
@@ -53,6 +59,8 @@ __all__ = [
     "get_research_region_types",
     "get_research_country_codes",
     "report_research_usage",
+    "get_research_metadata",
+    "get_research_metadata_fields",
     # Parameter models
     "FindResearchArgs",
     "GetResearchArgs",
@@ -65,6 +73,8 @@ __all__ = [
     "GetResearchRegionTypesArgs",
     "GetResearchCountryCodesArgs",
     "ReportResearchUsageArgs",
+    "GetResearchMetadataArgs",
+    "GetResearchMetadataFieldsArgs",
     # Response models
     "FindResearchResponse",
     "GetResearchResponse",
@@ -77,4 +87,6 @@ __all__ = [
     "GetResearchRegionTypesResponse",
     "GetResearchCountryCodesResponse",
     "ReportResearchUsageResponse",
+    "GetResearchMetadataResponse",
+    "GetResearchMetadataFieldsResponse",
 ]

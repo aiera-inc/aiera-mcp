@@ -19,6 +19,8 @@ from .models import (
     GetResearchRegionTypesArgs,
     GetResearchCountryCodesArgs,
     ReportResearchUsageArgs,
+    GetResearchMetadataArgs,
+    GetResearchMetadataFieldsArgs,
     FindResearchResponse,
     GetResearchResponse,
     GetResearchProvidersResponse,
@@ -30,6 +32,8 @@ from .models import (
     GetResearchRegionTypesResponse,
     GetResearchCountryCodesResponse,
     ReportResearchUsageResponse,
+    GetResearchMetadataResponse,
+    GetResearchMetadataFieldsResponse,
 )
 
 # Setup logging
@@ -373,6 +377,59 @@ async def report_research_usage(
     )
 
     response = ReportResearchUsageResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
+
+
+async def get_research_metadata(args: GetResearchMetadataArgs) -> GetResearchMetadataResponse:
+    """Retrieve the complete source metadata record for a research document.
+
+    Optional ``fields`` dot-path projection and ``max_list_items`` truncation keep the
+    response bounded; discover valid paths with get_research_metadata_fields.
+    """
+    logger.info("tool called: get_research_metadata")
+
+    client = await get_http_client(None)
+    api_key = get_api_key()
+
+    params = args.model_dump(exclude_none=True)
+
+    raw_response = await make_aiera_request(
+        client=client,
+        method="GET",
+        endpoint="/chat-support/get-research-metadata",
+        api_key=api_key,
+        params=params,
+    )
+
+    response = GetResearchMetadataResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
+
+
+async def get_research_metadata_fields(
+    args: GetResearchMetadataFieldsArgs,
+) -> GetResearchMetadataFieldsResponse:
+    """List the available metadata field paths (with coverage and size stats) for
+    get_research_metadata's ``fields`` parameter."""
+    logger.info("tool called: get_research_metadata_fields")
+
+    client = await get_http_client(None)
+    api_key = get_api_key()
+
+    params = args.model_dump(exclude_none=True)
+
+    raw_response = await make_aiera_request(
+        client=client,
+        method="GET",
+        endpoint="/chat-support/get-research-metadata-fields",
+        api_key=api_key,
+        params=params,
+    )
+
+    response = GetResearchMetadataFieldsResponse.model_validate(raw_response)
     if args.exclude_instructions:
         response.instructions = []
     return response

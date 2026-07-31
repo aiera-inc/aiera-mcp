@@ -43,6 +43,10 @@ from .research import (
     get_research_region_types,
     get_research_country_codes,
     report_research_usage,
+    get_research_metadata,
+    get_research_metadata_fields,
+    GetResearchMetadataArgs,
+    GetResearchMetadataFieldsArgs,
 )
 from .web import trusted_web_search
 from .common import get_grammar_template, get_creation_templates, get_core_instructions, available_tools
@@ -407,6 +411,24 @@ TOOL_REGISTRY = {
         "read_only": True,
         "destructive": False,
     },
+    "get_research_metadata": {
+        "display_name": "Get Research Metadata",
+        "input_schema": GetResearchMetadataArgs.model_json_schema(),
+        "function": get_research_metadata,
+        "args_model": GetResearchMetadataArgs,
+        "category": "research",
+        "read_only": True,
+        "destructive": False,
+    },
+    "get_research_metadata_fields": {
+        "display_name": "Get Research Metadata Fields",
+        "input_schema": GetResearchMetadataFieldsArgs.model_json_schema(),
+        "function": get_research_metadata_fields,
+        "args_model": GetResearchMetadataFieldsArgs,
+        "category": "research",
+        "read_only": True,
+        "destructive": False,
+    },
     "search_transcripts": {
         "display_name": "Search Transcripts",
         "input_schema": SearchTranscriptsArgs.model_json_schema(),
@@ -530,16 +552,10 @@ def _wrap_with_logging(func: Any, tool_name: str) -> Any:
                 params = args.model_dump() if hasattr(args, "model_dump") else None
                 resp = None
                 if result is not None:
-                    resp = (
-                        result.model_dump() if hasattr(result, "model_dump") else result
-                    )
-                send_tool_log(
-                    tool_name, params, resp, is_error=is_error, duration_ms=duration_ms
-                )
+                    resp = result.model_dump() if hasattr(result, "model_dump") else result
+                send_tool_log(tool_name, params, resp, is_error=is_error, duration_ms=duration_ms)
             except Exception:
-                logger.debug(
-                    "Failed to schedule MCP tool log for %s", tool_name, exc_info=True
-                )
+                logger.debug("Failed to schedule MCP tool log for %s", tool_name, exc_info=True)
 
     return wrapper
 
@@ -552,11 +568,7 @@ for _tool_name, _tool_config in TOOL_REGISTRY.items():
 # Helper function to get tools by category
 def get_tools_by_category(category: str) -> dict:
     """Get all tools in a specific category."""
-    return {
-        name: tool
-        for name, tool in TOOL_REGISTRY.items()
-        if tool["category"] == category
-    }
+    return {name: tool for name, tool in TOOL_REGISTRY.items() if tool["category"] == category}
 
 
 # Helper function to get all categories
@@ -593,26 +605,16 @@ def suggest_similar_tools(invalid_name: str, max_suggestions: int = 3) -> list:
     from difflib import get_close_matches
 
     available_tools = list(TOOL_REGISTRY.keys())
-    return get_close_matches(
-        invalid_name, available_tools, n=max_suggestions, cutoff=0.6
-    )
+    return get_close_matches(invalid_name, available_tools, n=max_suggestions, cutoff=0.6)
 
 
 # Helper function to get tools by read-only status
 def get_tools_by_read_only(read_only: bool = True) -> dict:
     """Get all tools filtered by read-only status."""
-    return {
-        name: tool
-        for name, tool in TOOL_REGISTRY.items()
-        if tool["read_only"] == read_only
-    }
+    return {name: tool for name, tool in TOOL_REGISTRY.items() if tool["read_only"] == read_only}
 
 
 # Helper function to get destructive tools
 def get_destructive_tools() -> dict:
     """Get all tools that are marked as destructive."""
-    return {
-        name: tool
-        for name, tool in TOOL_REGISTRY.items()
-        if tool["destructive"] == True
-    }
+    return {name: tool for name, tool in TOOL_REGISTRY.items() if tool["destructive"] == True}

@@ -265,9 +265,7 @@ class GetResearchProvidersArgs(BaseToolArgs):
         description="Search term to filter providers by name.",
     )
 
-    page: Union[int, str] = Field(
-        default=1, ge=1, description="Page number for pagination (1-based)."
-    )
+    page: Union[int, str] = Field(default=1, ge=1, description="Page number for pagination (1-based).")
 
     page_size: Union[int, str] = Field(
         default=25,
@@ -320,9 +318,7 @@ class GetResearchAuthorsArgs(BaseToolArgs):
         description="Filter authors by Aiera provider ID. Obtain provider IDs from get_research_providers results.",
     )
 
-    page: Union[int, str] = Field(
-        default=1, ge=1, description="Page number for pagination (1-based)."
-    )
+    page: Union[int, str] = Field(default=1, ge=1, description="Page number for pagination (1-based).")
 
     page_size: Union[int, str] = Field(
         default=25,
@@ -366,9 +362,7 @@ class GetResearchAssetClassesArgs(BaseToolArgs):
         description="Search term to filter asset classes by name.",
     )
 
-    page: Union[int, str] = Field(
-        default=1, ge=1, description="Page number for pagination (1-based)."
-    )
+    page: Union[int, str] = Field(default=1, ge=1, description="Page number for pagination (1-based).")
 
     page_size: Union[int, str] = Field(
         default=25,
@@ -412,9 +406,7 @@ class GetResearchAssetTypesArgs(BaseToolArgs):
         description="Search term to filter asset types by name.",
     )
 
-    page: Union[int, str] = Field(
-        default=1, ge=1, description="Page number for pagination (1-based)."
-    )
+    page: Union[int, str] = Field(default=1, ge=1, description="Page number for pagination (1-based).")
 
     page_size: Union[int, str] = Field(
         default=25,
@@ -458,9 +450,7 @@ class GetResearchSubjectsArgs(BaseToolArgs):
         description="Search term to filter subjects by name.",
     )
 
-    page: Union[int, str] = Field(
-        default=1, ge=1, description="Page number for pagination (1-based)."
-    )
+    page: Union[int, str] = Field(default=1, ge=1, description="Page number for pagination (1-based).")
 
     page_size: Union[int, str] = Field(
         default=25,
@@ -504,9 +494,7 @@ class GetResearchProductFocusesArgs(BaseToolArgs):
         description="Search term to filter product focuses by name.",
     )
 
-    page: Union[int, str] = Field(
-        default=1, ge=1, description="Page number for pagination (1-based)."
-    )
+    page: Union[int, str] = Field(default=1, ge=1, description="Page number for pagination (1-based).")
 
     page_size: Union[int, str] = Field(
         default=25,
@@ -550,9 +538,7 @@ class GetResearchRegionTypesArgs(BaseToolArgs):
         description="Search term to filter region types by name.",
     )
 
-    page: Union[int, str] = Field(
-        default=1, ge=1, description="Page number for pagination (1-based)."
-    )
+    page: Union[int, str] = Field(default=1, ge=1, description="Page number for pagination (1-based).")
 
     page_size: Union[int, str] = Field(
         default=25,
@@ -596,9 +582,7 @@ class GetResearchCountryCodesArgs(BaseToolArgs):
         description="Search term to filter country codes by name.",
     )
 
-    page: Union[int, str] = Field(
-        default=1, ge=1, description="Page number for pagination (1-based)."
-    )
+    page: Union[int, str] = Field(default=1, ge=1, description="Page number for pagination (1-based).")
 
     page_size: Union[int, str] = Field(
         default=25,
@@ -714,3 +698,120 @@ class ReportResearchUsageResponse(BaseAieraResponse):
         default=None,
         description="Number of IDs that were dropped (typically due to missing entitlement on the document).",
     )
+
+
+class GetResearchMetadataArgs(BaseAieraArgs):
+    """Retrieve the complete source metadata record for a research document — the full
+    publication metadata beyond what the standard research tools return.
+
+    RETURNS: structured metadata including publication status and dates, publisher
+    organization and author roles, covered issuers and securities with ratings,
+    subject/sector/region/country classifications, product series, and file details.
+    Analyst contact details and internal plumbing are removed automatically.
+
+    WHEN TO USE:
+    - When the user asks about a report's coverage (which issuers, securities, or
+      ratings it spans), its classifications, product series, or publication details
+      not present in find_research / get_research results.
+    - For a targeted slice, pass ``fields`` with dot-paths — call
+      get_research_metadata_fields first to discover valid paths.
+
+    WORKFLOW: find_research or search_research -> document_id -> get_research_metadata.
+    Repeated elements beyond ``max_list_items`` are truncated with a ``<key>__truncated``
+    marker showing shown/total counts.
+    """
+
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
+    )
+
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
+    document_id: str = Field(
+        min_length=1,
+        description=(
+            "Unique identifier for the research report. Pass the document_id returned by "
+            "find_research / search_research VERBATIM — do not strip prefixes or suffixes."
+        ),
+    )
+
+    fields: Optional[str] = Field(
+        default=None,
+        description=(
+            "Comma-separated dot-paths to return (e.g. "
+            "'Research.Product.Content,Research.Product.Context.ProductClassifications'). "
+            "Discover valid paths with get_research_metadata_fields. Omit to receive the "
+            "full metadata document."
+        ),
+    )
+
+    max_list_items: Optional[int] = Field(
+        default=None,
+        ge=1,
+        le=500,
+        description=(
+            "Truncate repeated elements beyond this count (default 50, max 500). Raise it "
+            "when complete issuer/security coverage lists are needed."
+        ),
+    )
+
+
+class GetResearchMetadataFieldsArgs(BaseAieraArgs):
+    """List every available metadata field path for get_research_metadata, with per-field
+    coverage and typical size share.
+
+    RETURNS: a catalog of dot-paths (elements and @attributes), each with docs_pct (how
+    often the field is present across documents) and mean_size_pct (its typical share of
+    document bytes), plus the node names hidden by default and usage notes for the
+    ``fields`` and ``max_list_items`` parameters.
+
+    WHEN TO USE: call once before using get_research_metadata's ``fields`` parameter to
+    choose paths. Prefer high-coverage paths; avoid or cap large ones (e.g. issuer lists)
+    unless the user needs them.
+    """
+
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
+    )
+
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
+
+class GetResearchMetadataResponse(BaseAieraResponse):
+    """Response for get_research_metadata tool - passes through the API response structure."""
+
+    response: Optional[Any] = Field(None, description="Response data from the API")
+
+
+class GetResearchMetadataFieldsResponse(BaseAieraResponse):
+    """Response for get_research_metadata_fields tool - passes through the API response structure."""
+
+    response: Optional[Any] = Field(None, description="Response data from the API")
