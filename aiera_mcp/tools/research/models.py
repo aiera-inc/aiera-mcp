@@ -704,13 +704,16 @@ class GetResearchMetadataArgs(BaseAieraArgs):
     """Retrieve the complete source metadata record for a research document.
 
     RETURNS: structured metadata including publication status and dates, publisher
-    organization and author roles, covered issuers and securities with ratings, price targets,
+    organization and author roles, covered issuers and securities,
     subject/sector/region/country classifications, product series, and file details.
 
     WHEN TO USE:
-    - When the user asks about a report's coverage (which issuers, securities, or
-      ratings or price targets it spans), its classifications, product series, or publication details
-      not present in find_research / get_research results.
+    - Use for complete or esoteric metadata needs — classifications, product series,
+      publisher/author roles, coverage lists, or publication details not present in
+      find_research / get_research results.
+    - For ONLY the analyst rating or price target, use get_research_ratings instead: it
+      returns a compact rating/target payload (a few hundred bytes) rather than this
+      full metadata document.
     - For a targeted slice, pass ``fields`` with dot-paths (call
       get_research_metadata_fields first to discover valid paths).
 
@@ -828,8 +831,10 @@ class GetResearchRatingsArgs(BaseAieraArgs):
     each with their own rating and target.
 
     WHEN TO USE:
-    - Prefer this over get_research_metadata for rating / price-target questions — the
+    - Prefer this over get_research_metadata for ANY rating / price-target question — the
       response is a few hundred bytes instead of the full metadata document.
+    - For other metadata (classifications, coverage lists, product series, publication
+      details), use get_research_metadata instead.
     - An empty ``issuers`` list means the publisher did not include structured ratings
       in this document (common for macro/economics notes).
 
