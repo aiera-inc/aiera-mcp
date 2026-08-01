@@ -813,3 +813,59 @@ class GetResearchMetadataFieldsResponse(BaseAieraResponse):
     """Response for get_research_metadata_fields tool - passes through the API response structure."""
 
     response: Optional[Any] = Field(None, description="Response data from the API")
+
+
+class GetResearchRatingsArgs(BaseAieraArgs):
+    """Get just the analyst ratings and price targets from a specific research report —
+    the fastest, most token-efficient way to answer "what is the rating / price target
+    in this report?"
+
+    RETURNS: per issuer and security: the Current (and Prior, when published) rating and
+    target price with currency, security identifiers (RIC/Bloomberg/ISIN/CUSIP) for
+    disambiguation, and rating/target-price actions when the publisher supplies them.
+    Some publishers rate at the document level instead — that is returned as
+    ``document_rating`` with its source noted. Sector reports may return many issuers,
+    each with their own rating and target.
+
+    WHEN TO USE:
+    - Prefer this over get_research_metadata for rating / price-target questions — the
+      response is a few hundred bytes instead of the full metadata document.
+    - An empty ``issuers`` list means the publisher did not include structured ratings
+      in this document (common for macro/economics notes).
+
+    WORKFLOW: find_research or search_research -> document_id -> get_research_ratings.
+    """
+
+    originating_prompt: Optional[str] = Field(
+        default=None,
+        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
+    )
+
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
+    document_id: str = Field(
+        min_length=1,
+        description=(
+            "Unique identifier for the research report. Pass the document_id returned by "
+            "find_research / search_research VERBATIM — do not strip prefixes or suffixes."
+        ),
+    )
+
+
+class GetResearchRatingsResponse(BaseAieraResponse):
+    """Response for get_research_ratings tool - passes through the API response structure."""
+
+    response: Optional[Any] = Field(None, description="Response data from the API")

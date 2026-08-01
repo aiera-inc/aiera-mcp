@@ -128,6 +128,7 @@ AVAILABLE_TOOLS = [
     "report_research_usage",
     "get_research_metadata",
     "get_research_metadata_fields",
+    "get_research_ratings",
     # Search Tools
     "search_transcripts",
     "search_filings",
@@ -181,6 +182,7 @@ RESEARCH_TOOLS = [
     "report_research_usage",
     "get_research_metadata",
     "get_research_metadata_fields",
+    "get_research_ratings",
 ]
 SEARCH_TOOLS = [
     "search_transcripts",
@@ -190,7 +192,12 @@ SEARCH_TOOLS = [
     "search_thirdbridge",
 ]
 WEB_TOOLS = ["trusted_web_search"]
-COMMON_TOOLS = ["get_grammar_template", "get_creation_templates", "get_core_instructions", "available_tools"]
+COMMON_TOOLS = [
+    "get_grammar_template",
+    "get_creation_templates",
+    "get_core_instructions",
+    "available_tools",
+]
 
 # Import tool functions from domain modules
 from .tools.events import find_events, find_conferences, get_event, get_upcoming_events
@@ -219,6 +226,7 @@ from .tools.research import (
     get_research,
     get_research_metadata,
     get_research_metadata_fields,
+    get_research_ratings,
     get_research_providers,
     get_research_authors,
     get_research_asset_classes,
@@ -237,7 +245,12 @@ from .tools.search import (
     search_thirdbridge,
 )
 from .tools.web import trusted_web_search
-from .tools.common import get_grammar_template, get_creation_templates, get_core_instructions, available_tools
+from .tools.common import (
+    get_grammar_template,
+    get_creation_templates,
+    get_core_instructions,
+    available_tools,
+)
 
 # Import configuration
 from .config import get_settings, reload_settings, AieraSettings
@@ -305,6 +318,7 @@ __all__ = [
     "report_research_usage",
     "get_research_metadata",
     "get_research_metadata_fields",
+    "get_research_ratings",
     "search_transcripts",
     "search_filings",
     "search_research",

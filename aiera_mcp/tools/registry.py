@@ -45,11 +45,18 @@ from .research import (
     report_research_usage,
     get_research_metadata,
     get_research_metadata_fields,
+    get_research_ratings,
     GetResearchMetadataArgs,
     GetResearchMetadataFieldsArgs,
+    GetResearchRatingsArgs,
 )
 from .web import trusted_web_search
-from .common import get_grammar_template, get_creation_templates, get_core_instructions, available_tools
+from .common import (
+    get_grammar_template,
+    get_creation_templates,
+    get_core_instructions,
+    available_tools,
+)
 from .search import (
     search_transcripts,
     search_filings,
@@ -425,6 +432,15 @@ TOOL_REGISTRY = {
         "input_schema": GetResearchMetadataFieldsArgs.model_json_schema(),
         "function": get_research_metadata_fields,
         "args_model": GetResearchMetadataFieldsArgs,
+        "category": "research",
+        "read_only": True,
+        "destructive": False,
+    },
+    "get_research_ratings": {
+        "display_name": "Get Research Ratings",
+        "input_schema": GetResearchRatingsArgs.model_json_schema(),
+        "function": get_research_ratings,
+        "args_model": GetResearchRatingsArgs,
         "category": "research",
         "read_only": True,
         "destructive": False,

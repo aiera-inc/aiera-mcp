@@ -125,6 +125,7 @@ ENDPOINT_TO_TOOLS = {
     "/chat-support/get-research-country-codes": ["get_research_country_codes"],
     "/chat-support/get-research-metadata": ["get_research_metadata"],
     "/chat-support/get-research-metadata-fields": ["get_research_metadata_fields"],
+    "/chat-support/get-research-ratings": ["get_research_ratings"],
     "/chat-support/report-readership": ["report_research_usage"],
     "/chat-support/search/transcripts": ["search_transcripts"],
     "/chat-support/search/filings": ["search_filings"],

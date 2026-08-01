@@ -475,7 +475,12 @@ METADATA_FIELDS_RESPONSE = {
     "instructions": [],
     "response": {
         "fields": [
-            {"path": "Research.Product.Content.Title", "kind": "element", "docs_pct": 100.0, "mean_size_pct": 0.5}
+            {
+                "path": "Research.Product.Content.Title",
+                "kind": "element",
+                "docs_pct": 100.0,
+                "mean_size_pct": 0.5,
+            }
         ],
         "hidden_by_default": ["ContactInfo", "EntitlementGroup", "Legal"],
         "usage": {"fields": "...", "max_list_items": "..."},
@@ -558,4 +563,61 @@ class TestGetResearchMetadataFields:
         mock_http_dependencies["mock_make_request"].return_value = METADATA_FIELDS_RESPONSE
 
         result = await get_research_metadata_fields(GetResearchMetadataFieldsArgs(exclude_instructions=True))
+        assert result.instructions == []
+
+
+RATINGS_RESPONSE = {
+    "instructions": [],
+    "response": {
+        "document_id": "bernsteinsg_249187",
+        "title": "European HPC: Pricing Power Rankings",
+        "issuers": [
+            {
+                "name": "Beiersdorf",
+                "primary": True,
+                "securities": [
+                    {
+                        "ids": {"RIC": "BEIG.DE"},
+                        "rating": {"current": "Outperform"},
+                        "target_price": {"current": {"value": "129.00", "currency": "EUR"}},
+                    }
+                ],
+            }
+        ],
+    },
+}
+
+
+@pytest.mark.unit
+class TestGetResearchRatings:
+    """get_research_ratings is a thin pass-through returning compact rating/target data."""
+
+    @pytest.mark.asyncio
+    async def test_calls_endpoint_and_parses(self, mock_http_dependencies):
+        from aiera_mcp.tools.research.tools import get_research_ratings
+        from aiera_mcp.tools.research.models import (
+            GetResearchRatingsArgs,
+            GetResearchRatingsResponse,
+        )
+
+        mock_http_dependencies["mock_make_request"].return_value = RATINGS_RESPONSE
+
+        result = await get_research_ratings(GetResearchRatingsArgs(document_id="bernsteinsg_249187"))
+
+        assert isinstance(result, GetResearchRatingsResponse)
+        call = mock_http_dependencies["mock_make_request"].call_args
+        assert call[1]["method"] == "GET"
+        assert call[1]["endpoint"] == "/chat-support/get-research-ratings"
+        assert call[1]["params"]["document_id"] == "bernsteinsg_249187"
+        sec = result.response["issuers"][0]["securities"][0]
+        assert sec["rating"] == {"current": "Outperform"}
+        assert sec["target_price"]["current"]["value"] == "129.00"
+
+    @pytest.mark.asyncio
+    async def test_exclude_instructions(self, mock_http_dependencies):
+        from aiera_mcp.tools.research.tools import get_research_ratings
+        from aiera_mcp.tools.research.models import GetResearchRatingsArgs
+
+        mock_http_dependencies["mock_make_request"].return_value = RATINGS_RESPONSE
+        result = await get_research_ratings(GetResearchRatingsArgs(document_id="x", exclude_instructions=True))
         assert result.instructions == []
