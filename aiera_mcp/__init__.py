@@ -64,9 +64,7 @@ def get_api_key() -> Optional[str]:
             if "No user API key in request context" in str(e):
                 logger.warning(f"API key provider: {e}")
             else:
-                logger.error(
-                    f"API key provider failed with exception: {e}", exc_info=True
-                )
+                logger.error(f"API key provider failed with exception: {e}", exc_info=True)
 
             # Re-raise to surface the actual error instead of silently falling back
             raise ValueError(f"Failed to get API key from configured provider: {e}")
@@ -99,6 +97,9 @@ AVAILABLE_TOOLS = [
     # Equity Tools
     "find_equities",
     "get_equity_summaries",
+    "get_financials",
+    "get_ratios",
+    "get_kpis_and_segments",
     "get_sectors_and_subsectors",
     # Index/Watchlist Tools
     "get_available_indexes",
@@ -125,6 +126,9 @@ AVAILABLE_TOOLS = [
     "get_research_region_types",
     "get_research_country_codes",
     "report_research_usage",
+    "get_research_metadata",
+    "get_research_metadata_fields",
+    "get_research_ratings",
     # Search Tools
     "search_transcripts",
     "search_filings",
@@ -146,6 +150,9 @@ FILING_TOOLS = ["find_filings", "get_filing"]
 EQUITY_TOOLS = [
     "find_equities",
     "get_equity_summaries",
+    "get_financials",
+    "get_ratios",
+    "get_kpis_and_segments",
     "get_sectors_and_subsectors",
 ]
 INDEX_WATCHLIST_TOOLS = [
@@ -173,6 +180,9 @@ RESEARCH_TOOLS = [
     "get_research_region_types",
     "get_research_country_codes",
     "report_research_usage",
+    "get_research_metadata",
+    "get_research_metadata_fields",
+    "get_research_ratings",
 ]
 SEARCH_TOOLS = [
     "search_transcripts",
@@ -182,9 +192,12 @@ SEARCH_TOOLS = [
     "search_thirdbridge",
 ]
 WEB_TOOLS = ["trusted_web_search"]
-COMMON_TOOLS = ["get_grammar_template", "get_creation_templates", "get_core_instructions", "available_tools"]
-EMBEDDING_SEARCH_PIPELINE = "embedding_pipeline"
-HYBRID_SEARCH_PIPELINE = "hybrid_search_pipeline"
+COMMON_TOOLS = [
+    "get_grammar_template",
+    "get_creation_templates",
+    "get_core_instructions",
+    "available_tools",
+]
 
 # Import tool functions from domain modules
 from .tools.events import find_events, find_conferences, get_event, get_upcoming_events
@@ -192,6 +205,9 @@ from .tools.filings import find_filings, get_filing
 from .tools.equities import (
     find_equities,
     get_equity_summaries,
+    get_financials,
+    get_ratios,
+    get_kpis_and_segments,
     get_sectors_and_subsectors,
     get_available_indexes,
     get_index_constituents,
@@ -208,6 +224,9 @@ from .tools.third_bridge import find_third_bridge_events, get_third_bridge_event
 from .tools.research import (
     find_research,
     get_research,
+    get_research_metadata,
+    get_research_metadata_fields,
+    get_research_ratings,
     get_research_providers,
     get_research_authors,
     get_research_asset_classes,
@@ -226,7 +245,12 @@ from .tools.search import (
     search_thirdbridge,
 )
 from .tools.web import trusted_web_search
-from .tools.common import get_grammar_template, get_creation_templates, get_core_instructions, available_tools
+from .tools.common import (
+    get_grammar_template,
+    get_creation_templates,
+    get_core_instructions,
+    available_tools,
+)
 
 # Import configuration
 from .config import get_settings, reload_settings, AieraSettings
@@ -267,6 +291,9 @@ __all__ = [
     "get_filing",
     "find_equities",
     "get_equity_summaries",
+    "get_financials",
+    "get_ratios",
+    "get_kpis_and_segments",
     "get_sectors_and_subsectors",
     "get_available_indexes",
     "get_index_constituents",
@@ -289,6 +316,9 @@ __all__ = [
     "get_research_region_types",
     "get_research_country_codes",
     "report_research_usage",
+    "get_research_metadata",
+    "get_research_metadata_fields",
+    "get_research_ratings",
     "search_transcripts",
     "search_filings",
     "search_research",

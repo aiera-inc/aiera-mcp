@@ -10,14 +10,20 @@ from aiera_mcp.tools.research.tools import (
     find_research,
     get_research,
     get_research_providers,
+    get_research_metadata,
+    get_research_metadata_fields,
 )
 from aiera_mcp.tools.research.models import (
     FindResearchArgs,
     GetResearchArgs,
     GetResearchProvidersArgs,
+    GetResearchMetadataArgs,
+    GetResearchMetadataFieldsArgs,
     FindResearchResponse,
     GetResearchResponse,
     GetResearchProvidersResponse,
+    GetResearchMetadataResponse,
+    GetResearchMetadataFieldsResponse,
 )
 
 
@@ -80,9 +86,7 @@ class TestFindResearch:
     @pytest.mark.asyncio
     async def test_find_research_success(self, mock_http_dependencies):
         """Test successful research search."""
-        mock_http_dependencies["mock_make_request"].return_value = (
-            FIND_RESEARCH_RESPONSE
-        )
+        mock_http_dependencies["mock_make_request"].return_value = FIND_RESEARCH_RESPONSE
 
         args = FindResearchArgs(
             start_date="2024-01-01",
@@ -109,9 +113,7 @@ class TestFindResearch:
     @pytest.mark.asyncio
     async def test_find_research_with_author_ids(self, mock_http_dependencies):
         """Test find_research maps author_ids to author_person_ids."""
-        mock_http_dependencies["mock_make_request"].return_value = (
-            FIND_RESEARCH_RESPONSE
-        )
+        mock_http_dependencies["mock_make_request"].return_value = FIND_RESEARCH_RESPONSE
 
         args = FindResearchArgs(
             author_ids=["12345", "67890"],
@@ -131,9 +133,7 @@ class TestFindResearch:
     @pytest.mark.asyncio
     async def test_find_research_with_provider_ids(self, mock_http_dependencies):
         """Test find_research maps aiera_provider_ids to provider_ids."""
-        mock_http_dependencies["mock_make_request"].return_value = (
-            FIND_RESEARCH_RESPONSE
-        )
+        mock_http_dependencies["mock_make_request"].return_value = FIND_RESEARCH_RESPONSE
 
         args = FindResearchArgs(
             aiera_provider_ids=["krypton", "krypton-test"],
@@ -151,13 +151,9 @@ class TestFindResearch:
         assert "aiera_provider_ids" not in params
 
     @pytest.mark.asyncio
-    async def test_find_research_with_regions_and_countries(
-        self, mock_http_dependencies
-    ):
+    async def test_find_research_with_regions_and_countries(self, mock_http_dependencies):
         """Test find_research maps regions and countries to comma-separated strings."""
-        mock_http_dependencies["mock_make_request"].return_value = (
-            FIND_RESEARCH_RESPONSE
-        )
+        mock_http_dependencies["mock_make_request"].return_value = FIND_RESEARCH_RESPONSE
 
         args = FindResearchArgs(
             regions=["Americas", "EMEA"],
@@ -175,9 +171,7 @@ class TestFindResearch:
     @pytest.mark.asyncio
     async def test_find_research_with_search_after(self, mock_http_dependencies):
         """Test find_research with search_after cursor pagination."""
-        mock_http_dependencies["mock_make_request"].return_value = (
-            FIND_RESEARCH_RESPONSE
-        )
+        mock_http_dependencies["mock_make_request"].return_value = FIND_RESEARCH_RESPONSE
 
         args = FindResearchArgs(
             search_after=["1234567890", "abc123"],
@@ -193,9 +187,7 @@ class TestFindResearch:
     @pytest.mark.asyncio
     async def test_find_research_with_all_filters(self, mock_http_dependencies):
         """Test find_research with all filter parameters."""
-        mock_http_dependencies["mock_make_request"].return_value = (
-            FIND_RESEARCH_RESPONSE
-        )
+        mock_http_dependencies["mock_make_request"].return_value = FIND_RESEARCH_RESPONSE
 
         args = FindResearchArgs(
             start_date="2024-01-01",
@@ -222,9 +214,7 @@ class TestFindResearch:
     @pytest.mark.asyncio
     async def test_find_research_no_filters(self, mock_http_dependencies):
         """Test find_research with no filters."""
-        mock_http_dependencies["mock_make_request"].return_value = (
-            FIND_RESEARCH_RESPONSE
-        )
+        mock_http_dependencies["mock_make_request"].return_value = FIND_RESEARCH_RESPONSE
 
         args = FindResearchArgs()
 
@@ -240,9 +230,7 @@ class TestFindResearch:
     @pytest.mark.asyncio
     async def test_find_research_exclude_instructions(self, mock_http_dependencies):
         """Test find_research with exclude_instructions."""
-        mock_http_dependencies["mock_make_request"].return_value = (
-            FIND_RESEARCH_RESPONSE
-        )
+        mock_http_dependencies["mock_make_request"].return_value = FIND_RESEARCH_RESPONSE
 
         args = FindResearchArgs(
             start_date="2024-01-01",
@@ -284,14 +272,10 @@ class TestGetResearch:
     """Test the get_research tool."""
 
     @pytest.mark.asyncio
-    async def test_get_research_success(
-        self, mock_http_dependencies, sample_api_responses
-    ):
+    async def test_get_research_success(self, mock_http_dependencies, sample_api_responses):
         """Test successful research retrieval."""
         research_responses = sample_api_responses.get("research", {})
-        mock_http_dependencies["mock_make_request"].return_value = research_responses[
-            "get_research_success"
-        ]
+        mock_http_dependencies["mock_make_request"].return_value = research_responses["get_research_success"]
 
         args = GetResearchArgs(document_id="8001234")
 
@@ -311,9 +295,7 @@ class TestGetResearch:
     ):
         """Test that get_research passes document_id and include_content in params."""
         research_responses = sample_api_responses.get("research", {})
-        mock_http_dependencies["mock_make_request"].return_value = research_responses[
-            "get_research_success"
-        ]
+        mock_http_dependencies["mock_make_request"].return_value = research_responses["get_research_success"]
 
         args = GetResearchArgs(document_id="8001234")
 
@@ -325,14 +307,10 @@ class TestGetResearch:
         assert params["include_content"] == "true"
 
     @pytest.mark.asyncio
-    async def test_get_research_exclude_instructions(
-        self, mock_http_dependencies, sample_api_responses
-    ):
+    async def test_get_research_exclude_instructions(self, mock_http_dependencies, sample_api_responses):
         """Test get_research with exclude_instructions."""
         research_responses = sample_api_responses.get("research", {})
-        mock_http_dependencies["mock_make_request"].return_value = research_responses[
-            "get_research_success"
-        ]
+        mock_http_dependencies["mock_make_request"].return_value = research_responses["get_research_success"]
 
         args = GetResearchArgs(
             document_id="8001234",
@@ -344,14 +322,10 @@ class TestGetResearch:
         assert result.instructions == []
 
     @pytest.mark.asyncio
-    async def test_get_research_with_originating_prompt(
-        self, mock_http_dependencies, sample_api_responses
-    ):
+    async def test_get_research_with_originating_prompt(self, mock_http_dependencies, sample_api_responses):
         """Test get_research with originating_prompt."""
         research_responses = sample_api_responses.get("research", {})
-        mock_http_dependencies["mock_make_request"].return_value = research_responses[
-            "get_research_success"
-        ]
+        mock_http_dependencies["mock_make_request"].return_value = research_responses["get_research_success"]
 
         args = GetResearchArgs(
             document_id="8001234",
@@ -370,16 +344,10 @@ class TestResearchToolsErrorHandling:
     """Test error handling for research tools."""
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        "exception_type", [ConnectionError, ValueError, TimeoutError]
-    )
-    async def test_find_research_network_errors_propagate(
-        self, mock_http_dependencies, exception_type
-    ):
+    @pytest.mark.parametrize("exception_type", [ConnectionError, ValueError, TimeoutError])
+    async def test_find_research_network_errors_propagate(self, mock_http_dependencies, exception_type):
         """Test that network errors are properly propagated from find_research."""
-        mock_http_dependencies["mock_make_request"].side_effect = exception_type(
-            "Test error"
-        )
+        mock_http_dependencies["mock_make_request"].side_effect = exception_type("Test error")
 
         args = FindResearchArgs(start_date="2024-01-01")
 
@@ -387,16 +355,10 @@ class TestResearchToolsErrorHandling:
             await find_research(args)
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        "exception_type", [ConnectionError, ValueError, TimeoutError]
-    )
-    async def test_get_research_network_errors_propagate(
-        self, mock_http_dependencies, exception_type
-    ):
+    @pytest.mark.parametrize("exception_type", [ConnectionError, ValueError, TimeoutError])
+    async def test_get_research_network_errors_propagate(self, mock_http_dependencies, exception_type):
         """Test that network errors are properly propagated from get_research."""
-        mock_http_dependencies["mock_make_request"].side_effect = exception_type(
-            "Test error"
-        )
+        mock_http_dependencies["mock_make_request"].side_effect = exception_type("Test error")
 
         args = GetResearchArgs(document_id="123")
 
@@ -447,9 +409,7 @@ class TestGetResearchProviders:
         assert call_args[1]["endpoint"] == "/chat-support/get-research-providers"
 
     @pytest.mark.asyncio
-    async def test_get_research_providers_exclude_instructions(
-        self, mock_http_dependencies
-    ):
+    async def test_get_research_providers_exclude_instructions(self, mock_http_dependencies):
         """Test get_research_providers with exclude_instructions."""
         providers_response = {
             "instructions": [
@@ -467,18 +427,14 @@ class TestGetResearchProviders:
         assert result.instructions == []
 
     @pytest.mark.asyncio
-    async def test_get_research_providers_with_originating_prompt(
-        self, mock_http_dependencies
-    ):
+    async def test_get_research_providers_with_originating_prompt(self, mock_http_dependencies):
         """Test get_research_providers passes originating_prompt."""
         mock_http_dependencies["mock_make_request"].return_value = {
             "instructions": [],
             "response": [],
         }
 
-        args = GetResearchProvidersArgs(
-            originating_prompt="What research providers are available?"
-        )
+        args = GetResearchProvidersArgs(originating_prompt="What research providers are available?")
 
         await get_research_providers(args)
 
@@ -500,3 +456,168 @@ class TestGetResearchProviders:
 
         assert isinstance(result, GetResearchProvidersResponse)
         assert result.response == []
+
+
+METADATA_RESPONSE = {
+    "instructions": [],
+    "response": {
+        "document_id": "deutsche_abc123",
+        "rixml": {
+            "Research": {
+                "@researchID": "abc123",
+                "Product": {"Content": {"Title": "Test Report"}},
+            }
+        },
+    },
+}
+
+METADATA_FIELDS_RESPONSE = {
+    "instructions": [],
+    "response": {
+        "fields": [
+            {
+                "path": "Research.Product.Content.Title",
+                "kind": "element",
+                "docs_pct": 100.0,
+                "mean_size_pct": 0.5,
+            }
+        ],
+        "hidden_by_default": ["ContactInfo", "EntitlementGroup", "Legal"],
+        "usage": {"fields": "...", "max_list_items": "..."},
+    },
+}
+
+
+@pytest.mark.unit
+class TestGetResearchMetadata:
+    """get_research_metadata is a thin pass-through returning the full source metadata record."""
+
+    @pytest.mark.asyncio
+    async def test_calls_endpoint_and_forwards_document_id(self, mock_http_dependencies):
+        mock_http_dependencies["mock_make_request"].return_value = METADATA_RESPONSE
+
+        result = await get_research_metadata(GetResearchMetadataArgs(document_id="deutsche_abc123"))
+
+        assert isinstance(result, GetResearchMetadataResponse)
+        call = mock_http_dependencies["mock_make_request"].call_args
+        assert call[1]["method"] == "GET"
+        assert call[1]["endpoint"] == "/chat-support/get-research-metadata"
+        assert call[1]["params"]["document_id"] == "deutsche_abc123"
+        assert result.response["rixml"]["Research"]["@researchID"] == "abc123"
+
+    @pytest.mark.asyncio
+    async def test_forwards_fields_and_max_list_items(self, mock_http_dependencies):
+        mock_http_dependencies["mock_make_request"].return_value = METADATA_RESPONSE
+
+        await get_research_metadata(
+            GetResearchMetadataArgs(
+                document_id="deutsche_abc123",
+                fields="Research.Product.Content,Research.Product.Context.ProductClassifications",
+                max_list_items=100,
+            )
+        )
+
+        params = mock_http_dependencies["mock_make_request"].call_args[1]["params"]
+        assert params["fields"] == "Research.Product.Content,Research.Product.Context.ProductClassifications"
+        assert params["max_list_items"] == 100
+
+    @pytest.mark.asyncio
+    async def test_omits_unset_optional_params(self, mock_http_dependencies):
+        mock_http_dependencies["mock_make_request"].return_value = METADATA_RESPONSE
+
+        await get_research_metadata(GetResearchMetadataArgs(document_id="deutsche_abc123"))
+
+        params = mock_http_dependencies["mock_make_request"].call_args[1]["params"]
+        assert "fields" not in params
+        assert "max_list_items" not in params
+
+    @pytest.mark.asyncio
+    async def test_exclude_instructions(self, mock_http_dependencies):
+        mock_http_dependencies["mock_make_request"].return_value = METADATA_RESPONSE
+
+        result = await get_research_metadata(
+            GetResearchMetadataArgs(document_id="deutsche_abc123", exclude_instructions=True)
+        )
+        assert result.instructions == []
+
+
+@pytest.mark.unit
+class TestGetResearchMetadataFields:
+    """get_research_metadata_fields returns the field-path catalog for fields= selection."""
+
+    @pytest.mark.asyncio
+    async def test_calls_endpoint_and_parses_catalog(self, mock_http_dependencies):
+        mock_http_dependencies["mock_make_request"].return_value = METADATA_FIELDS_RESPONSE
+
+        result = await get_research_metadata_fields(GetResearchMetadataFieldsArgs())
+
+        assert isinstance(result, GetResearchMetadataFieldsResponse)
+        call = mock_http_dependencies["mock_make_request"].call_args
+        assert call[1]["method"] == "GET"
+        assert call[1]["endpoint"] == "/chat-support/get-research-metadata-fields"
+        assert result.response["fields"][0]["path"] == "Research.Product.Content.Title"
+        assert "ContactInfo" in result.response["hidden_by_default"]
+
+    @pytest.mark.asyncio
+    async def test_exclude_instructions(self, mock_http_dependencies):
+        mock_http_dependencies["mock_make_request"].return_value = METADATA_FIELDS_RESPONSE
+
+        result = await get_research_metadata_fields(GetResearchMetadataFieldsArgs(exclude_instructions=True))
+        assert result.instructions == []
+
+
+RATINGS_RESPONSE = {
+    "instructions": [],
+    "response": {
+        "document_id": "bernsteinsg_249187",
+        "title": "European HPC: Pricing Power Rankings",
+        "issuers": [
+            {
+                "name": "Beiersdorf",
+                "primary": True,
+                "securities": [
+                    {
+                        "ids": {"RIC": "BEIG.DE"},
+                        "rating": {"current": "Outperform"},
+                        "target_price": {"current": {"value": "129.00", "currency": "EUR"}},
+                    }
+                ],
+            }
+        ],
+    },
+}
+
+
+@pytest.mark.unit
+class TestGetResearchRatings:
+    """get_research_ratings is a thin pass-through returning compact rating/target data."""
+
+    @pytest.mark.asyncio
+    async def test_calls_endpoint_and_parses(self, mock_http_dependencies):
+        from aiera_mcp.tools.research.tools import get_research_ratings
+        from aiera_mcp.tools.research.models import (
+            GetResearchRatingsArgs,
+            GetResearchRatingsResponse,
+        )
+
+        mock_http_dependencies["mock_make_request"].return_value = RATINGS_RESPONSE
+
+        result = await get_research_ratings(GetResearchRatingsArgs(document_id="bernsteinsg_249187"))
+
+        assert isinstance(result, GetResearchRatingsResponse)
+        call = mock_http_dependencies["mock_make_request"].call_args
+        assert call[1]["method"] == "GET"
+        assert call[1]["endpoint"] == "/chat-support/get-research-ratings"
+        assert call[1]["params"]["document_id"] == "bernsteinsg_249187"
+        sec = result.response["issuers"][0]["securities"][0]
+        assert sec["rating"] == {"current": "Outperform"}
+        assert sec["target_price"]["current"]["value"] == "129.00"
+
+    @pytest.mark.asyncio
+    async def test_exclude_instructions(self, mock_http_dependencies):
+        from aiera_mcp.tools.research.tools import get_research_ratings
+        from aiera_mcp.tools.research.models import GetResearchRatingsArgs
+
+        mock_http_dependencies["mock_make_request"].return_value = RATINGS_RESPONSE
+        result = await get_research_ratings(GetResearchRatingsArgs(document_id="x", exclude_instructions=True))
+        assert result.instructions == []

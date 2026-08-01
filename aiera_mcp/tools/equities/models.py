@@ -160,7 +160,14 @@ class GetEquitySummariesArgs(BaseToolArgs, BloombergTickerMixin):
 
 
 class GetIndexConstituentsArgs(BaseToolArgs):
-    """Get all equities within a specific stock market index."""
+    """Get all equities that are members of a specific stock market index (e.g. S&P 500).
+
+    WORKFLOW: call get_available_indexes first to resolve the index name into a valid
+    index id or short_name, then pass it here. Do not guess index ids.
+
+    Results are paginated (25 per page) — page through to retrieve full membership for
+    large indices.
+    """
 
     originating_prompt: Optional[str] = Field(
         default=None,
@@ -193,7 +200,13 @@ class GetIndexConstituentsArgs(BaseToolArgs):
 
 
 class GetWatchlistConstituentsArgs(BaseToolArgs):
-    """Get all equities within a specific watchlist."""
+    """Get all equities that are members of a specific watchlist.
+
+    WORKFLOW: call get_available_watchlists first to resolve the watchlist into a valid
+    watchlist_id, then pass it here. Do not guess watchlist ids.
+
+    Results are paginated (25 per page) — page through to retrieve full membership.
+    """
 
     originating_prompt: Optional[str] = Field(
         default=None,
