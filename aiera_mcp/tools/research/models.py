@@ -71,11 +71,6 @@ class FindResearchArgs(BaseToolArgs):
     ANALYST RATINGS: Result items may include analyst rating fields — `security_ratings_primary`/`_secondary` (security-level, e.g. "Overweight", "Equal Weight", "Outperform"), `issuer_ratings_primary`/`_secondary`, and `sector_industry_ratings_primary`/`_secondary`. Values are the provider's own rating labels, passed through verbatim, so compare within a provider, not across.
     """
 
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
-
     self_identification: Optional[str] = Field(
         default=None,
         description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
@@ -206,11 +201,6 @@ class GetResearchArgs(BaseAieraArgs, CompactArgsMixin):
     are still trustworthy for identification purposes, but the body itself is empty.
     """
 
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
-
     self_identification: Optional[str] = Field(
         default=None,
         description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
@@ -244,11 +234,6 @@ class GetResearchProvidersArgs(BaseToolArgs):
 
     BANK DISAMBIGUATION: When a bank or financial institution is named, default to treating it as a research provider (search for reports authored BY the bank) rather than as a company being researched. Only treat the bank as the research subject if the user explicitly asks about the bank's own financials, earnings, or business operations.
     """
-
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
 
     self_identification: Optional[str] = Field(
         default=None,
@@ -287,11 +272,6 @@ class GetResearchAuthorsArgs(BaseToolArgs):
 
     WORKFLOW: Use this tool to obtain author_ids, then pass them to find_research or search_research.
     """
-
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
 
     self_identification: Optional[str] = Field(
         default=None,
@@ -337,11 +317,6 @@ class GetResearchAssetClassesArgs(BaseToolArgs):
     WORKFLOW: Use this tool to obtain asset class names, then pass them to find_research or search_research.
     """
 
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
-
     self_identification: Optional[str] = Field(
         default=None,
         description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
@@ -380,11 +355,6 @@ class GetResearchAssetTypesArgs(BaseToolArgs):
 
     WORKFLOW: Use this tool to obtain asset type names, then pass them to find_research or search_research.
     """
-
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
 
     self_identification: Optional[str] = Field(
         default=None,
@@ -425,11 +395,6 @@ class GetResearchSubjectsArgs(BaseToolArgs):
     WORKFLOW: Use this tool to obtain subject names, then pass them to find_research or search_research.
     """
 
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
-
     self_identification: Optional[str] = Field(
         default=None,
         description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
@@ -468,11 +433,6 @@ class GetResearchProductFocusesArgs(BaseToolArgs):
 
     WORKFLOW: Use this tool to obtain product focus names, then pass them to find_research or search_research.
     """
-
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
 
     self_identification: Optional[str] = Field(
         default=None,
@@ -513,11 +473,6 @@ class GetResearchRegionTypesArgs(BaseToolArgs):
     WORKFLOW: Use this tool to obtain region type names, then pass them to find_research or search_research.
     """
 
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
-
     self_identification: Optional[str] = Field(
         default=None,
         description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
@@ -556,11 +511,6 @@ class GetResearchCountryCodesArgs(BaseToolArgs):
 
     WORKFLOW: Use this tool to obtain country code names, then pass them to find_research or search_research.
     """
-
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
 
     self_identification: Optional[str] = Field(
         default=None,
@@ -660,11 +610,6 @@ class ReportResearchUsageArgs(BaseToolArgs):
     Pass up to 100 research document IDs per call (the ``document_id`` values returned by ``find_research``, ``search_research``, or ``get_research``).
     """
 
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
-
     self_identification: Optional[str] = Field(
         default=None,
         description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
@@ -721,11 +666,6 @@ class GetResearchMetadataArgs(BaseAieraArgs):
     Repeated elements beyond ``max_list_items`` are truncated with a ``<key>__truncated``
     marker of shown/total counts.
     """
-
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
 
     self_identification: Optional[str] = Field(
         default=None,
@@ -785,11 +725,6 @@ class GetResearchMetadataFieldsArgs(BaseAieraArgs):
     unless the user needs them.
     """
 
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
-
     self_identification: Optional[str] = Field(
         default=None,
         description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
@@ -840,11 +775,6 @@ class GetResearchRatingsArgs(BaseAieraArgs):
 
     WORKFLOW: find_research or search_research -> document_id -> get_research_ratings.
     """
-
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
 
     self_identification: Optional[str] = Field(
         default=None,

@@ -321,24 +321,6 @@ class TestGetResearch:
 
         assert result.instructions == []
 
-    @pytest.mark.asyncio
-    async def test_get_research_with_originating_prompt(self, mock_http_dependencies, sample_api_responses):
-        """Test get_research with originating_prompt."""
-        research_responses = sample_api_responses.get("research", {})
-        mock_http_dependencies["mock_make_request"].return_value = research_responses["get_research_success"]
-
-        args = GetResearchArgs(
-            document_id="8001234",
-            originating_prompt="What does this research report say?",
-        )
-
-        await get_research(args)
-
-        call_args = mock_http_dependencies["mock_make_request"].call_args
-        params = call_args[1]["params"]
-        assert params["originating_prompt"] == "What does this research report say?"
-
-
 @pytest.mark.unit
 class TestResearchToolsErrorHandling:
     """Test error handling for research tools."""
@@ -425,22 +407,6 @@ class TestGetResearchProviders:
 
         assert isinstance(result, GetResearchProvidersResponse)
         assert result.instructions == []
-
-    @pytest.mark.asyncio
-    async def test_get_research_providers_with_originating_prompt(self, mock_http_dependencies):
-        """Test get_research_providers passes originating_prompt."""
-        mock_http_dependencies["mock_make_request"].return_value = {
-            "instructions": [],
-            "response": [],
-        }
-
-        args = GetResearchProvidersArgs(originating_prompt="What research providers are available?")
-
-        await get_research_providers(args)
-
-        call_args = mock_http_dependencies["mock_make_request"].call_args
-        params = call_args[1]["params"]
-        assert params["originating_prompt"] == "What research providers are available?"
 
     @pytest.mark.asyncio
     async def test_get_research_providers_empty_response(self, mock_http_dependencies):

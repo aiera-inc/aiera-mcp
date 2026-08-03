@@ -362,10 +362,8 @@ async def report_research_usage(
         "items": [{"research_id": rid, "access_type": "summarize"} for rid in ids],
     }
 
-    # Forward any prompt-tracking metadata the base tool args expose.
+    # Forward any caller-identification metadata the base tool args expose.
     params: dict = {}
-    if args.originating_prompt:
-        params["originating_prompt"] = args.originating_prompt
     if args.self_identification:
         params["self_identification"] = args.self_identification
 

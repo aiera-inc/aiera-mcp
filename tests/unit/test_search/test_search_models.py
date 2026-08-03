@@ -60,22 +60,8 @@ class TestSearchTranscriptsArgs:
         assert args.event_type == "earnings"
         assert args.size == 25
         assert args.search_after is None
-        assert args.originating_prompt is None
         assert args.include_base_instructions is True
         assert args.exclude_instructions is False
-
-    def test_search_transcripts_args_with_originating_prompt(self):
-        """Test SearchTranscriptsArgs with originating_prompt field."""
-        args = SearchTranscriptsArgs(
-            query_text="earnings",
-            event_ids=[1],
-            equity_ids=[1],
-            originating_prompt="What did management say about inflation?",
-            include_base_instructions=False,
-        )
-
-        assert args.originating_prompt == "What did management say about inflation?"
-        assert args.include_base_instructions is False
 
     def test_search_transcripts_args_required_fields(self):
         """Test that query_text is required."""

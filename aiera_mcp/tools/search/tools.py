@@ -62,9 +62,6 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
     if args.search_after is not None:
         payload["search_after"] = args.search_after
 
-    if args.originating_prompt:
-        payload["originating_prompt"] = args.originating_prompt
-
     if args.self_identification:
         payload["self_identification"] = args.self_identification
 
@@ -117,9 +114,6 @@ async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
 
     if args.search_after is not None:
         payload["search_after"] = args.search_after
-
-    if args.originating_prompt:
-        payload["originating_prompt"] = args.originating_prompt
 
     if args.self_identification:
         payload["self_identification"] = args.self_identification
@@ -184,9 +178,6 @@ async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
     if args.search_after is not None:
         payload["search_after"] = args.search_after
 
-    if args.originating_prompt:
-        payload["originating_prompt"] = args.originating_prompt
-
     if args.self_identification:
         payload["self_identification"] = args.self_identification
 
@@ -243,9 +234,6 @@ async def search_company_docs(args: SearchCompanyDocsArgs) -> SearchCompanyDocsR
     if args.search_after is not None:
         payload["search_after"] = args.search_after
 
-    if args.originating_prompt:
-        payload["originating_prompt"] = args.originating_prompt
-
     if args.self_identification:
         payload["self_identification"] = args.self_identification
 
@@ -301,9 +289,6 @@ async def search_thirdbridge(args: SearchThirdbridgeArgs) -> SearchThirdbridgeRe
 
     if args.search_after is not None:
         payload["search_after"] = args.search_after
-
-    if args.originating_prompt:
-        payload["originating_prompt"] = args.originating_prompt
 
     if args.self_identification:
         payload["self_identification"] = args.self_identification

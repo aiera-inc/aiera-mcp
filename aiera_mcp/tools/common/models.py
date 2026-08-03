@@ -143,11 +143,6 @@ class GetGrammarTemplateArgs(BaseAieraArgs):
     - 'general': Baseline formatting instructions applicable to all Aiera data responses (default)
     """
 
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
-
     self_identification: Optional[str] = Field(
         default=None,
         description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
@@ -186,11 +181,6 @@ class GetCreationTemplatesArgs(BaseAieraArgs):
     - 'analyst': Analyst-specific templates (requires entitlement)
     """
 
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context and analytics. If more than 500 characters, it may be truncated or summarized.",
-    )
-
     self_identification: Optional[str] = Field(
         default=None,
         description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
@@ -219,11 +209,6 @@ class GetCoreInstructionsArgs(BaseAieraArgs):
     CRITICAL — CALL THIS TOOL FIRST BEFORE ANY OTHER TOOLS ARE CALLED:
     - You MUST call this tool at the beginning of each session to retrieve baseline instructions for working with Aiera data, and guidance on tool selection, data interpretation, and response composition.
     """
-
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
 
     self_identification: Optional[str] = Field(
         default=None,

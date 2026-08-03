@@ -48,20 +48,7 @@ class TestFindEventsArgs:
         assert args.page_size == 25  # Default value
         assert args.bloomberg_ticker is None
         assert args.watchlist_id is None
-        assert args.originating_prompt is None  # Default value
         assert args.include_base_instructions is True  # Default value
-
-    def test_find_events_args_with_originating_prompt(self):
-        """Test FindEventsArgs with originating_prompt field."""
-        args = FindEventsArgs(
-            start_date="2023-10-01",
-            end_date="2023-10-31",
-            originating_prompt="Find all earnings calls for Apple",
-            include_base_instructions=False,
-        )
-
-        assert args.originating_prompt == "Find all earnings calls for Apple"
-        assert args.include_base_instructions is False
 
     def test_find_events_args_date_format_validation(self):
         """Test date format validation."""
@@ -157,19 +144,7 @@ class TestGetEventArgs:
         """Test valid GetEventArgs creation."""
         args = GetEventArgs(event_id="12345")
         assert args.event_id == "12345"
-        assert args.originating_prompt is None
         assert args.include_base_instructions is True
-
-    def test_get_event_args_with_originating_prompt(self):
-        """Test GetEventArgs with originating_prompt field."""
-        args = GetEventArgs(
-            event_id="12345",
-            originating_prompt="Get details for this earnings call",
-            include_base_instructions=False,
-        )
-        assert args.originating_prompt == "Get details for this earnings call"
-        assert args.include_base_instructions is False
-
 
 @pytest.mark.unit
 class TestGetUpcomingEventsArgs:
@@ -193,20 +168,7 @@ class TestGetUpcomingEventsArgs:
         assert args.end_date == "2023-11-30"
         assert args.bloomberg_ticker is None
         assert args.watchlist_id is None
-        assert args.originating_prompt is None
         assert args.include_base_instructions is True
-
-    def test_upcoming_events_args_with_originating_prompt(self):
-        """Test GetUpcomingEventsArgs with originating_prompt field."""
-        args = GetUpcomingEventsArgs(
-            start_date="2023-11-01",
-            end_date="2023-11-30",
-            originating_prompt="Find upcoming events for tech companies",
-            include_base_instructions=False,
-        )
-        assert args.originating_prompt == "Find upcoming events for tech companies"
-        assert args.include_base_instructions is False
-
 
 @pytest.mark.unit
 class TestEventsResponses:
