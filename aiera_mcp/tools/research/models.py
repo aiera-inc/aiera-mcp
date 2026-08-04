@@ -62,6 +62,8 @@ class FindResearchArgs(BaseToolArgs):
 
     ALWAYS PROVIDE A SEARCH TERM: Use the `search` parameter (ticker symbol or company name) whenever possible. Many research providers do not link their documents to equity tickers, so text-based search is the most reliable way to surface relevant reports across all providers.
 
+    CURRENT RATING / PRICE TARGET QUESTIONS: Use an equity-identifier filter (`bloomberg_ticker` / `isin` / `ric`) with `sort_by_date=true` (plus the provider filter). Identifier filtering matches every document tagged with that security — INCLUDING multi-company sector/industry notes, where rating and price-target changes often land first and which a company-name text search will miss. The newest covering document is the authoritative source for the current rating; pass its document_id to get_research_ratings.
+
     RESOLVE PROVIDER AND AUTHOR NAMES FIRST: If the user names a specific provider (e.g., HSBC, Goldman Sachs, BofA) or analyst/team (e.g., "economics team", "Stan Shipley"), call get_research_providers or get_research_authors first to resolve the name into IDs, then pass them as aiera_provider_ids or author_ids. Never guess these IDs.
 
     DO NOT GUESS ENUMERATED FILTERS: For `asset_classes`, `asset_types`, `subjects`, `product_focuses`, `regions`, `countries`, call the corresponding lookup tool (e.g., get_research_asset_classes) first to discover valid values.
@@ -763,7 +765,8 @@ class GetResearchRatingsArgs(BaseAieraArgs):
     disambiguation, and rating/target-price actions when the publisher supplies them.
     Some publishers rate at the document level instead — that is returned as
     ``document_rating`` with its source noted. Sector reports may return many issuers,
-    each with their own rating and target.
+    each with their own rating and target — match the requested company by name or
+    security identifier in the response.
 
     WHEN TO USE:
     - Prefer this over get_research_metadata for ANY rating / price-target question — the
@@ -772,8 +775,17 @@ class GetResearchRatingsArgs(BaseAieraArgs):
       details), use get_research_metadata instead.
     - An empty ``issuers`` list means the publisher did not include structured ratings
       in this document (common for macro/economics notes).
+    - ``"target_price": null`` means the publisher omits target prices from this
+      document's structured data — NOT that the report lacks one. Where possible the tool
+      recovers the value from the document itself (returned with
+      ``"source": "document_text"``); if it is still null, check the same document's full
+      text via get_research before reporting the target as unavailable. Never substitute
+      a target from an older document.
 
     WORKFLOW: find_research or search_research -> document_id -> get_research_ratings.
+    Current rating/target questions: find the newest document COVERING the company (an
+    equity-identifier find_research with sort_by_date=true — rating changes often land in
+    multi-company sector notes), then call this tool on it.
     """
 
     self_identification: Optional[str] = Field(
@@ -798,7 +810,6 @@ class GetResearchRatingsArgs(BaseAieraArgs):
             "find_research / search_research VERBATIM — do not strip prefixes or suffixes."
         ),
     )
-
 
 class GetResearchRatingsResponse(BaseAieraResponse):
     """Response for get_research_ratings tool - passes through the API response structure."""
