@@ -556,25 +556,25 @@ RATINGS_RESPONSE = {
 
 
 @pytest.mark.unit
-class TestGetResearchRatings:
-    """get_research_ratings is a thin pass-through returning compact rating/target data."""
+class TestGetResearchMetadataRatings:
+    """get_research_metadata_ratings is a thin pass-through returning compact rating/target data."""
 
     @pytest.mark.asyncio
     async def test_calls_endpoint_and_parses(self, mock_http_dependencies):
-        from aiera_mcp.tools.research.tools import get_research_ratings
+        from aiera_mcp.tools.research.tools import get_research_metadata_ratings
         from aiera_mcp.tools.research.models import (
-            GetResearchRatingsArgs,
-            GetResearchRatingsResponse,
+            GetResearchMetadataRatingsArgs,
+            GetResearchMetadataRatingsResponse,
         )
 
         mock_http_dependencies["mock_make_request"].return_value = RATINGS_RESPONSE
 
-        result = await get_research_ratings(GetResearchRatingsArgs(document_id="bernsteinsg_249187"))
+        result = await get_research_metadata_ratings(GetResearchMetadataRatingsArgs(document_id="bernsteinsg_249187"))
 
-        assert isinstance(result, GetResearchRatingsResponse)
+        assert isinstance(result, GetResearchMetadataRatingsResponse)
         call = mock_http_dependencies["mock_make_request"].call_args
         assert call[1]["method"] == "GET"
-        assert call[1]["endpoint"] == "/chat-support/get-research-ratings"
+        assert call[1]["endpoint"] == "/chat-support/get-research-metadata-ratings"
         assert call[1]["params"]["document_id"] == "bernsteinsg_249187"
         sec = result.response["issuers"][0]["securities"][0]
         assert sec["rating"] == {"current": "Outperform"}
@@ -582,11 +582,11 @@ class TestGetResearchRatings:
 
     @pytest.mark.asyncio
     async def test_exclude_instructions(self, mock_http_dependencies):
-        from aiera_mcp.tools.research.tools import get_research_ratings
-        from aiera_mcp.tools.research.models import GetResearchRatingsArgs
+        from aiera_mcp.tools.research.tools import get_research_metadata_ratings
+        from aiera_mcp.tools.research.models import GetResearchMetadataRatingsArgs
 
         mock_http_dependencies["mock_make_request"].return_value = RATINGS_RESPONSE
-        result = await get_research_ratings(GetResearchRatingsArgs(document_id="x", exclude_instructions=True))
+        result = await get_research_metadata_ratings(GetResearchMetadataRatingsArgs(document_id="x", exclude_instructions=True))
         assert result.instructions == []
 
 

@@ -128,7 +128,7 @@ AVAILABLE_TOOLS = [
     "report_research_usage",
     "get_research_metadata",
     "get_research_metadata_fields",
-    "get_research_ratings",
+    "get_research_metadata_ratings",
     "get_current_ratings",
     # Search Tools
     "search_transcripts",
@@ -183,7 +183,7 @@ RESEARCH_TOOLS = [
     "report_research_usage",
     "get_research_metadata",
     "get_research_metadata_fields",
-    "get_research_ratings",
+    "get_research_metadata_ratings",
     "get_current_ratings",
 ]
 SEARCH_TOOLS = [
@@ -228,7 +228,7 @@ from .tools.research import (
     get_research,
     get_research_metadata,
     get_research_metadata_fields,
-    get_research_ratings,
+    get_research_metadata_ratings,
     get_current_ratings,
     get_research_providers,
     get_research_authors,
@@ -321,7 +321,7 @@ __all__ = [
     "report_research_usage",
     "get_research_metadata",
     "get_research_metadata_fields",
-    "get_research_ratings",
+    "get_research_metadata_ratings",
     "get_current_ratings",
     "search_transcripts",
     "search_filings",

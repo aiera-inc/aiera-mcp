@@ -62,7 +62,7 @@ class FindResearchArgs(BaseToolArgs):
 
     ALWAYS PROVIDE A SEARCH TERM: Use the `search` parameter (ticker symbol or company name) whenever possible. Many research providers do not link their documents to equity tickers, so text-based search is the most reliable way to surface relevant reports across all providers.
 
-    CURRENT RATING / PRICE TARGET QUESTIONS: Use an equity-identifier filter (`bloomberg_ticker` / `isin` / `ric`) with `sort_by_date=true` (plus the provider filter). Identifier filtering matches every document tagged with that security — INCLUDING multi-company sector/industry notes, where rating and price-target changes often land first and which a company-name text search will miss. The newest covering document is the authoritative source for the current rating; pass its document_id to get_research_ratings.
+    CURRENT RATING / PRICE TARGET QUESTIONS: Prefer get_current_ratings — it answers directly for one or more companies without a manual document workflow. Use find_research only as a fallback (an identifier get_current_ratings could not match, or when the user wants the underlying report): filter by equity identifier (`bloomberg_ticker` / `isin` / `ric`) with `sort_by_date=true` (plus any provider filter) to surface the newest covering document — INCLUDING multi-company sector/industry notes, where rating and price-target changes often land first and which a company-name text search will miss — then pass its document_id to get_research_metadata_ratings.
 
     RESOLVE PROVIDER AND AUTHOR NAMES FIRST: If the user names a specific provider (e.g., HSBC, Goldman Sachs, BofA) or analyst/team (e.g., "economics team", "Stan Shipley"), call get_research_providers or get_research_authors first to resolve the name into IDs, then pass them as aiera_provider_ids or author_ids. Never guess these IDs.
 
@@ -658,7 +658,7 @@ class GetResearchMetadataArgs(BaseAieraArgs):
     - Use for complete or esoteric metadata needs — classifications, product series,
       publisher/author roles, coverage lists, or publication details not present in
       find_research / get_research results.
-    - For ONLY the analyst rating or price target, use get_research_ratings instead: it
+    - For ONLY the analyst rating or price target, use get_research_metadata_ratings instead: it
       returns a compact rating/target payload (a few hundred bytes) rather than this
       full metadata document.
     - For a targeted slice, pass ``fields`` with dot-paths (call
@@ -755,10 +755,10 @@ class GetResearchMetadataFieldsResponse(BaseAieraResponse):
     response: Optional[Any] = Field(None, description="Response data from the API")
 
 
-class GetResearchRatingsArgs(BaseAieraArgs):
-    """Get just the analyst ratings and price targets from a specific research report —
-    the fastest, most token-efficient way to answer "what is the rating / price target
-    in this report?"
+class GetResearchMetadataRatingsArgs(BaseAieraArgs):
+    """Get just the analyst ratings and price targets from a specific research report — a
+    focused subset of get_research_metadata, and the fastest, most token-efficient way to
+    answer "what is the rating / price target in this report?"
 
     RETURNS: per issuer and security: the Current (and Prior, when published) rating and
     target price with currency, security identifiers (RIC/Bloomberg/ISIN/CUSIP) for
@@ -782,10 +782,9 @@ class GetResearchRatingsArgs(BaseAieraArgs):
       text via get_research before reporting the target as unavailable. Never substitute
       a target from an older document.
 
-    WORKFLOW: find_research or search_research -> document_id -> get_research_ratings.
-    Current rating/target questions: find the newest document COVERING the company (an
-    equity-identifier find_research with sort_by_date=true — rating changes often land in
-    multi-company sector notes), then call this tool on it.
+    WORKFLOW: find_research or search_research -> document_id -> get_research_metadata_ratings.
+    For a company's CURRENT rating/target (not a specific report), use get_current_ratings
+    instead — it answers directly without a manual document lookup.
     """
 
     self_identification: Optional[str] = Field(
@@ -812,36 +811,42 @@ class GetResearchRatingsArgs(BaseAieraArgs):
     )
 
 
-class GetResearchRatingsResponse(BaseAieraResponse):
-    """Response for get_research_ratings tool - passes through the API response structure."""
+class GetResearchMetadataRatingsResponse(BaseAieraResponse):
+    """Response for get_research_metadata_ratings tool - passes through the API response structure."""
 
     response: Optional[Any] = Field(None, description="Response data from the API")
 
 
 class GetCurrentRatingsArgs(BaseAieraArgs):
-    """Get the CURRENT analyst rating and price target for one or more companies, straight
-    from the publisher's own hourly-updated coverage data — the authoritative answer to
-    "what is [provider]'s current rating / price target on [company]?"
+    """Get the CURRENT analyst rating and price target for one or more companies — THE
+    tool for "what is [provider]'s current rating / price target on [company]?", for any
+    entitled provider.
 
-    RETURNS: per requested identifier, the matching coverage entries: company name,
-    security identifiers, current rating, sector view, price target with currency,
-    covering analyst, and the date the values were last changed — plus a per-provider
-    ``as_of`` timestamp for the underlying data snapshot. Identifiers with no coverage
-    match are listed under ``unmatched``.
+    Answers from the provider's own frequently-updated coverage data where available and
+    automatically falls back to the provider's newest covering research document
+    (sector/industry notes included) otherwise — no manual document workflow needed.
+
+    RETURNS: per requested identifier, the matching entries: company name, security
+    identifiers, current rating, price target with currency, and the date the values
+    last changed. Each entry carries a ``source``:
+    - ``"coverage_feed"``: live provider coverage data; attribute in text with the
+      per-provider ``as_of`` timestamp (e.g. "per Barclays coverage as of Aug 4").
+      There is no citable document — do not fabricate a citation link.
+    - ``"document"``: extracted from the provider's newest covering note
+      (``document_id`` / ``document_title`` identify it). ALWAYS state the note's
+      ``published_date`` with the value — it is as-of that note, not live.
+    Identifiers with no match from any queried provider are listed under ``unmatched``.
 
     WHEN TO USE:
-    - PREFER THIS over the document workflow for any "current rating / price target"
-      question: values update on the publisher's own cadence and reflect changes no
-      matter which report carried them (including sector/industry notes).
+    - Any "current rating / price target" question, regardless of provider.
     - Batch companies into ONE call (up to 50 identifiers) instead of calling per company.
-    - Coverage is per publisher and entitlement-gated; if the response says no feed is
-      available for a provider (or an identifier is unmatched), fall back to the document
-      workflow: find_research (newest covering document) -> get_research_ratings.
-    - There is no citable document for these values; attribute them to the provider with
-      the ``as_of`` timestamp (e.g. "per Barclays coverage data as of Aug 4").
+    - Omit provider_ids for every provider with a view; pass it when the user names firms.
+    - Use get_research_metadata_ratings instead when the question is about a SPECIFIC
+      report ("what rating is in this note?").
 
-    WORKFLOW: get_current_ratings(identifiers=[...]) -> answer; document workflow only
-    as fallback or when the user wants the underlying report.
+    WORKFLOW: get_current_ratings(identifiers=[...]) -> answer. The manual document
+    workflow (find_research -> get_research_metadata_ratings) is only for unmatched
+    identifiers, historical/prior values, or reading the underlying report.
     """
 
     self_identification: Optional[str] = Field(
@@ -871,7 +876,7 @@ class GetCurrentRatingsArgs(BaseAieraArgs):
         default=None,
         description=(
             "Optional research provider IDs (resolve via get_research_providers) to restrict "
-            "the lookup. Omit to query every feed-capable provider the user is entitled to."
+            "the lookup. Omit to query all providers the user is entitled to."
         ),
     )
 
