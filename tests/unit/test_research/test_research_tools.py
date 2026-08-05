@@ -321,6 +321,7 @@ class TestGetResearch:
 
         assert result.instructions == []
 
+
 @pytest.mark.unit
 class TestResearchToolsErrorHandling:
     """Test error handling for research tools."""
@@ -586,4 +587,80 @@ class TestGetResearchRatings:
 
         mock_http_dependencies["mock_make_request"].return_value = RATINGS_RESPONSE
         result = await get_research_ratings(GetResearchRatingsArgs(document_id="x", exclude_instructions=True))
+        assert result.instructions == []
+
+
+CURRENT_RATINGS_RESPONSE = {
+    "instructions": [],
+    "response": {
+        "as_of": {"barclays": "2026-08-04T16:00:09Z"},
+        "results": [
+            {
+                "identifier": "FIBK",
+                "matches": [
+                    {
+                        "provider_id": "barclays",
+                        "company": "First Interstate BancSystem, Inc.",
+                        "ids": {"ticker": "FIBK", "isin": "US32055Y2019"},
+                        "rating": "Underweight",
+                        "sector_view": "Positive",
+                        "price_target": {"value": "37.0", "currency": "USD"},
+                        "analyst": "Jared Shaw",
+                        "published_date": "2026-08-03",
+                    }
+                ],
+            }
+        ],
+        "unmatched": ["ZZZQX"],
+    },
+}
+
+
+@pytest.mark.unit
+class TestGetCurrentRatings:
+    """get_current_ratings is a thin pass-through over provider structured coverage feeds."""
+
+    @pytest.mark.asyncio
+    async def test_joins_identifiers_and_providers_into_params(self, mock_http_dependencies):
+        from aiera_mcp.tools.research.tools import get_current_ratings
+        from aiera_mcp.tools.research.models import (
+            GetCurrentRatingsArgs,
+            GetCurrentRatingsResponse,
+        )
+
+        mock_http_dependencies["mock_make_request"].return_value = CURRENT_RATINGS_RESPONSE
+
+        result = await get_current_ratings(
+            GetCurrentRatingsArgs(identifiers=["FIBK", "TEL NO", "ZZZQX"], provider_ids=["barclays"])
+        )
+
+        assert isinstance(result, GetCurrentRatingsResponse)
+        call = mock_http_dependencies["mock_make_request"].call_args
+        assert call[1]["method"] == "GET"
+        assert call[1]["endpoint"] == "/chat-support/get-current-ratings"
+        assert call[1]["params"]["identifiers"] == "FIBK,TEL NO,ZZZQX"
+        assert call[1]["params"]["provider_ids"] == "barclays"
+        match = result.response["results"][0]["matches"][0]
+        assert match["rating"] == "Underweight"
+        assert match["price_target"] == {"value": "37.0", "currency": "USD"}
+        assert result.response["unmatched"] == ["ZZZQX"]
+
+    @pytest.mark.asyncio
+    async def test_providers_default_omitted(self, mock_http_dependencies):
+        from aiera_mcp.tools.research.tools import get_current_ratings
+        from aiera_mcp.tools.research.models import GetCurrentRatingsArgs
+
+        mock_http_dependencies["mock_make_request"].return_value = CURRENT_RATINGS_RESPONSE
+        await get_current_ratings(GetCurrentRatingsArgs(identifiers=["FIBK"]))
+        params = mock_http_dependencies["mock_make_request"].call_args[1]["params"]
+        assert params["identifiers"] == "FIBK"
+        assert "provider_ids" not in params
+
+    @pytest.mark.asyncio
+    async def test_exclude_instructions(self, mock_http_dependencies):
+        from aiera_mcp.tools.research.tools import get_current_ratings
+        from aiera_mcp.tools.research.models import GetCurrentRatingsArgs
+
+        mock_http_dependencies["mock_make_request"].return_value = CURRENT_RATINGS_RESPONSE
+        result = await get_current_ratings(GetCurrentRatingsArgs(identifiers=["x"], exclude_instructions=True))
         assert result.instructions == []

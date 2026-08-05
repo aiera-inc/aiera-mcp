@@ -811,7 +811,72 @@ class GetResearchRatingsArgs(BaseAieraArgs):
         ),
     )
 
+
 class GetResearchRatingsResponse(BaseAieraResponse):
     """Response for get_research_ratings tool - passes through the API response structure."""
+
+    response: Optional[Any] = Field(None, description="Response data from the API")
+
+
+class GetCurrentRatingsArgs(BaseAieraArgs):
+    """Get the CURRENT analyst rating and price target for one or more companies, straight
+    from the publisher's own hourly-updated coverage data — the authoritative answer to
+    "what is [provider]'s current rating / price target on [company]?"
+
+    RETURNS: per requested identifier, the matching coverage entries: company name,
+    security identifiers, current rating, sector view, price target with currency,
+    covering analyst, and the date the values were last changed — plus a per-provider
+    ``as_of`` timestamp for the underlying data snapshot. Identifiers with no coverage
+    match are listed under ``unmatched``.
+
+    WHEN TO USE:
+    - PREFER THIS over the document workflow for any "current rating / price target"
+      question: values update on the publisher's own cadence and reflect changes no
+      matter which report carried them (including sector/industry notes).
+    - Batch companies into ONE call (up to 50 identifiers) instead of calling per company.
+    - Coverage is per publisher and entitlement-gated; if the response says no feed is
+      available for a provider (or an identifier is unmatched), fall back to the document
+      workflow: find_research (newest covering document) -> get_research_ratings.
+    - There is no citable document for these values; attribute them to the provider with
+      the ``as_of`` timestamp (e.g. "per Barclays coverage data as of Aug 4").
+
+    WORKFLOW: get_current_ratings(identifiers=[...]) -> answer; document workflow only
+    as fallback or when the user wants the underlying report.
+    """
+
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
+    identifiers: List[str] = Field(
+        min_length=1,
+        description=(
+            "One or more companies to look up — ticker (any exchange format), ISIN, CUSIP, "
+            "SEDOL, or company name. Batch all companies for the question into one call."
+        ),
+    )
+
+    provider_ids: Optional[List[str]] = Field(
+        default=None,
+        description=(
+            "Optional research provider IDs (resolve via get_research_providers) to restrict "
+            "the lookup. Omit to query every feed-capable provider the user is entitled to."
+        ),
+    )
+
+
+class GetCurrentRatingsResponse(BaseAieraResponse):
+    """Response for get_current_ratings tool - passes through the API response structure."""
 
     response: Optional[Any] = Field(None, description="Response data from the API")

@@ -126,6 +126,7 @@ ENDPOINT_TO_TOOLS = {
     "/chat-support/get-research-metadata": ["get_research_metadata"],
     "/chat-support/get-research-metadata-fields": ["get_research_metadata_fields"],
     "/chat-support/get-research-ratings": ["get_research_ratings"],
+    "/chat-support/get-current-ratings": ["get_current_ratings"],
     "/chat-support/report-readership": ["report_research_usage"],
     "/chat-support/search/transcripts": ["search_transcripts"],
     "/chat-support/search/filings": ["search_filings"],

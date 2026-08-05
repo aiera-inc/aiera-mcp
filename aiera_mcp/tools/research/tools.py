@@ -22,6 +22,7 @@ from .models import (
     GetResearchMetadataArgs,
     GetResearchMetadataFieldsArgs,
     GetResearchRatingsArgs,
+    GetCurrentRatingsArgs,
     FindResearchResponse,
     GetResearchResponse,
     GetResearchProvidersResponse,
@@ -36,6 +37,7 @@ from .models import (
     GetResearchMetadataResponse,
     GetResearchMetadataFieldsResponse,
     GetResearchRatingsResponse,
+    GetCurrentRatingsResponse,
 )
 
 # Setup logging
@@ -457,6 +459,37 @@ async def get_research_ratings(
     )
 
     response = GetResearchRatingsResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
+
+
+async def get_current_ratings(
+    args: GetCurrentRatingsArgs,
+) -> GetCurrentRatingsResponse:
+    """Get current analyst ratings and price targets for one or more companies from
+    provider coverage data."""
+    logger.info("tool called: get_current_ratings")
+
+    client = await get_http_client(None)
+    api_key = get_api_key()
+
+    params = args.model_dump(exclude_none=True)
+
+    # Map tool parameter names to API parameter names (comma-separated strings)
+    params["identifiers"] = ",".join(params["identifiers"])
+    if "provider_ids" in params:
+        params["provider_ids"] = ",".join(params["provider_ids"])
+
+    raw_response = await make_aiera_request(
+        client=client,
+        method="GET",
+        endpoint="/chat-support/get-current-ratings",
+        api_key=api_key,
+        params=params,
+    )
+
+    response = GetCurrentRatingsResponse.model_validate(raw_response)
     if args.exclude_instructions:
         response.instructions = []
     return response
