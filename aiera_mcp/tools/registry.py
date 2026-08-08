@@ -45,10 +45,12 @@ from .research import (
     report_research_usage,
     get_research_metadata,
     get_research_metadata_fields,
-    get_research_ratings,
+    get_research_metadata_ratings,
+    get_current_ratings,
     GetResearchMetadataArgs,
     GetResearchMetadataFieldsArgs,
-    GetResearchRatingsArgs,
+    GetResearchMetadataRatingsArgs,
+    GetCurrentRatingsArgs,
 )
 from .web import trusted_web_search
 from .common import (
@@ -436,11 +438,20 @@ TOOL_REGISTRY = {
         "read_only": True,
         "destructive": False,
     },
-    "get_research_ratings": {
-        "display_name": "Get Research Ratings",
-        "input_schema": GetResearchRatingsArgs.model_json_schema(),
-        "function": get_research_ratings,
-        "args_model": GetResearchRatingsArgs,
+    "get_research_metadata_ratings": {
+        "display_name": "Get Research Metadata Ratings",
+        "input_schema": GetResearchMetadataRatingsArgs.model_json_schema(),
+        "function": get_research_metadata_ratings,
+        "args_model": GetResearchMetadataRatingsArgs,
+        "category": "research",
+        "read_only": True,
+        "destructive": False,
+    },
+    "get_current_ratings": {
+        "display_name": "Get Current Ratings",
+        "input_schema": GetCurrentRatingsArgs.model_json_schema(),
+        "function": get_current_ratings,
+        "args_model": GetCurrentRatingsArgs,
         "category": "research",
         "read_only": True,
         "destructive": False,

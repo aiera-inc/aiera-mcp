@@ -100,11 +100,6 @@ class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
     This tool provides access to a comprehensive database of corporate events with transcripts and summaries.
     """
 
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
-
     self_identification: Optional[str] = Field(
         default=None,
         description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
@@ -208,11 +203,6 @@ class FindConferencesArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
     Covers both upcoming and historical conferences.
     """
 
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
-
     self_identification: Optional[str] = Field(
         default=None,
         description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
@@ -273,11 +263,6 @@ class GetEventArgs(BaseToolArgs, CompactArgsMixin):
     WORKFLOW: Use find_events first to obtain valid event_ids.
     """
 
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
-
     self_identification: Optional[str] = Field(
         default=None,
         description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
@@ -310,11 +295,6 @@ class GetUpcomingEventsArgs(BaseToolArgs, BloombergTickerMixin):
     """Get confirmed and estimated upcoming events within a date range. Requires one of the following: bloomberg_ticker (comma-separated string), watchlist_id, index_id, sector_id, or subsector_id.
     For multiple companies, pass bloomberg_ticker as a single comma-separated string (e.g. "AAPL:US,MSFT:US") in one call.
     """
-
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
 
     self_identification: Optional[str] = Field(
         default=None,

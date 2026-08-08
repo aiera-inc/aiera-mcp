@@ -49,21 +49,10 @@ class TestFindResearchArgs:
         assert args.regions is None
         assert args.countries is None
         assert args.search_after is None
-        assert args.originating_prompt is None
         assert args.self_identification is None
         assert args.include_base_instructions is True
         assert args.exclude_instructions is False
         assert args.page_size == 25
-
-    def test_find_research_args_with_originating_prompt(self):
-        """Test FindResearchArgs with originating_prompt field."""
-        args = FindResearchArgs(
-            originating_prompt="Find recent research on AI trends",
-            include_base_instructions=False,
-        )
-
-        assert args.originating_prompt == "Find recent research on AI trends"
-        assert args.include_base_instructions is False
 
     def test_find_research_args_partial_filters(self):
         """Test FindResearchArgs with only some filters set."""
@@ -105,23 +94,10 @@ class TestGetResearchArgs:
         with pytest.raises(ValidationError):
             GetResearchArgs()
 
-    def test_get_research_args_with_originating_prompt(self):
-        """Test GetResearchArgs with originating_prompt field."""
-        args = GetResearchArgs(
-            document_id="8001234",
-            originating_prompt="Get details on this research report",
-            include_base_instructions=False,
-        )
-
-        assert args.document_id == "8001234"
-        assert args.originating_prompt == "Get details on this research report"
-        assert args.include_base_instructions is False
-
     def test_get_research_args_defaults(self):
         """Test GetResearchArgs default values."""
         args = GetResearchArgs(document_id="123")
 
-        assert args.originating_prompt is None
         assert args.self_identification is None
         assert args.include_base_instructions is True
         assert args.exclude_instructions is False

@@ -233,11 +233,11 @@ MAX_PARAM_VALUE_CHARS = 2000
 PARAM_TRUNCATION_SUFFIX = "...[truncated]"
 
 # Only these informational fields are eligible for silent truncation. They carry
-# context text (user prompts, caller identification) that can be multi-KB and
-# would push GET URLs past nginx's 4094-byte request-line limit. Any other
-# over-long param should fail loudly rather than be silently shortened, since
-# it likely indicates a caller bug.
-TRUNCATABLE_PARAMS = frozenset({"originating_prompt", "self_identification"})
+# context text (caller identification) that can be multi-KB and would push GET
+# URLs past nginx's 4094-byte request-line limit. Any other over-long param
+# should fail loudly rather than be silently shortened, since it likely
+# indicates a caller bug.
+TRUNCATABLE_PARAMS = frozenset({"self_identification"})
 
 
 def _truncate_long_params(

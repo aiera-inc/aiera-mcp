@@ -36,14 +36,7 @@ class SearchTranscriptsArgs(BaseAieraArgs, CompactArgsMixin):
     WORKFLOW EXAMPLES:
     - **Broad topical query** (e.g. "What are companies saying about AI capex?"): call search_transcripts directly with no event_ids — searches across all transcripts.
     - **Targeted single-company query** (e.g. "What did Apple's CEO say about AI?"): optionally narrow first with find_events(bloomberg_ticker='AAPL:US') → pass the resulting event_ids into search_transcripts. The pre-filter is OPTIONAL; if scope is unclear, skip find_events and call search_transcripts directly.
-
-    NOTE: This tool uses hybrid semantic + keyword search for high-quality results.
     """
-
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
 
     self_identification: Optional[str] = Field(
         default=None,
@@ -128,14 +121,7 @@ class SearchFilingsArgs(BaseAieraArgs, CompactArgsMixin):
     WORKFLOW EXAMPLES:
     - **Broad topical query** (e.g. "What are companies saying about supply chain risk in 10-Ks?"): call search_filings directly with query_text and form_number — the pre-filter via find_filings is unnecessary.
     - **Targeted single-company query** (e.g. "What are Tesla's main risk factors?"): optionally narrow first with find_filings(bloomberg_ticker='TSLA:US', form_number='10-K') → pass the resulting filing_ids into search_filings. The pre-filter is OPTIONAL; if scope is unclear, skip find_filings and call search_filings directly.
-
-    NOTE: This tool uses hybrid semantic + keyword search for high-quality results.
     """
-
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
 
     self_identification: Optional[str] = Field(
         default=None,
@@ -212,15 +198,8 @@ class SearchResearchArgs(BaseAieraArgs, CompactArgsMixin):
     RETURNS: Relevant research chunks with context, metadata, and relevance scores.
     Results are individual sections/chunks, not full research documents.
 
-    NOTE: This tool uses semantic (embedding-based) search for high-quality results.
-
     ANALYST RATINGS: Result chunks may include analyst rating fields — `security_ratings_primary`/`_secondary` (security-level, e.g. "Overweight", "Equal Weight", "Outperform"), `issuer_ratings_primary`/`_secondary`, and `sector_industry_ratings_primary`/`_secondary`. Values are the provider's own rating labels, passed through verbatim, so compare within a provider, not across.
     """
-
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
 
     self_identification: Optional[str] = Field(
         default=None,
@@ -316,14 +295,7 @@ class SearchCompanyDocsArgs(BaseAieraArgs, CompactArgsMixin):
     1. User asks: "What did Apple say about sustainability in their investor presentations?"
     2. First call find_company_docs with company_id to get relevant document IDs
     3. Then call search_company_docs with query_text='sustainability' and the company_doc_ids
-
-    NOTE: This tool uses hybrid semantic + keyword search for high-quality results.
     """
-
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
 
     self_identification: Optional[str] = Field(
         default=None,
@@ -409,20 +381,13 @@ class SearchThirdbridgeArgs(BaseAieraArgs, CompactArgsMixin):
 
     PAGINATION FOR EXPERT-LANDSCAPE QUERIES:
     - For "what do experts think about X" queries where X is a specific named entity (a clinical trial, a pipeline drug, a deal, a specific event, a named study), prefer paginated retrieval over a single-page result. Continue paging via search_after / next_search_after until the next page's results are clearly off-topic — not after the first 25 hits. These questions imply the user wants the expert landscape on that entity, not a single authoritative source.
-    - For broad topical or thematic queries that span multiple companies or an entire industry (e.g., "competitive impact of AI on software", "trends in semiconductor supply chains", "how are retailers responding to tariffs"), paginate and collect a diverse candidate pool rather than relying on the first page. Third Bridge interviews are long and dense, so hybrid relevance scoring clusters heavily on 2–3 deep-dive events whose chunks flood the top of the rankings. A first page of 25 chunks may all come from a handful of events — which produces a narrow, over-weighted synthesis. For these queries, page at least 2–3 times and prefer candidate pools that span 8+ distinct events before synthesizing.
+    - For broad topical or thematic queries that span multiple companies or an entire industry (e.g., "competitive impact of AI on software", "trends in semiconductor supply chains", "how are retailers responding to tariffs"), paginate and collect a diverse candidate pool rather than relying on the first page. Third Bridge interviews are long and dense, so top results tend to cluster on 2–3 deep-dive events whose chunks dominate the rankings. A first page of 25 chunks may all come from a handful of events — which produces a narrow, over-weighted synthesis. For these queries, page at least 2–3 times and prefer candidate pools that span 8+ distinct events before synthesizing.
 
     WORKFLOW EXAMPLE:
     1. User asks: "What do experts say about semiconductor supply chains?"
     2. First call find_third_bridge_events to get relevant event IDs
     3. Then call search_thirdbridge with query_text='semiconductor supply chain'
-
-    NOTE: This tool uses hybrid semantic + keyword search for high-quality results.
     """
-
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
 
     self_identification: Optional[str] = Field(
         default=None,

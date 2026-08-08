@@ -21,7 +21,8 @@ from .models import (
     ReportResearchUsageArgs,
     GetResearchMetadataArgs,
     GetResearchMetadataFieldsArgs,
-    GetResearchRatingsArgs,
+    GetResearchMetadataRatingsArgs,
+    GetCurrentRatingsArgs,
     FindResearchResponse,
     GetResearchResponse,
     GetResearchProvidersResponse,
@@ -35,7 +36,8 @@ from .models import (
     ReportResearchUsageResponse,
     GetResearchMetadataResponse,
     GetResearchMetadataFieldsResponse,
-    GetResearchRatingsResponse,
+    GetResearchMetadataRatingsResponse,
+    GetCurrentRatingsResponse,
 )
 
 # Setup logging
@@ -362,10 +364,8 @@ async def report_research_usage(
         "items": [{"research_id": rid, "access_type": "summarize"} for rid in ids],
     }
 
-    # Forward any prompt-tracking metadata the base tool args expose.
+    # Forward any caller-identification metadata the base tool args expose.
     params: dict = {}
-    if args.originating_prompt:
-        params["originating_prompt"] = args.originating_prompt
     if args.self_identification:
         params["self_identification"] = args.self_identification
 
@@ -439,11 +439,11 @@ async def get_research_metadata_fields(
     return response
 
 
-async def get_research_ratings(
-    args: GetResearchRatingsArgs,
-) -> GetResearchRatingsResponse:
+async def get_research_metadata_ratings(
+    args: GetResearchMetadataRatingsArgs,
+) -> GetResearchMetadataRatingsResponse:
     """Get the analyst ratings and price targets from a specific research report."""
-    logger.info("tool called: get_research_ratings")
+    logger.info("tool called: get_research_metadata_ratings")
 
     client = await get_http_client(None)
     api_key = get_api_key()
@@ -453,12 +453,43 @@ async def get_research_ratings(
     raw_response = await make_aiera_request(
         client=client,
         method="GET",
-        endpoint="/chat-support/get-research-ratings",
+        endpoint="/chat-support/get-research-metadata-ratings",
         api_key=api_key,
         params=params,
     )
 
-    response = GetResearchRatingsResponse.model_validate(raw_response)
+    response = GetResearchMetadataRatingsResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
+
+
+async def get_current_ratings(
+    args: GetCurrentRatingsArgs,
+) -> GetCurrentRatingsResponse:
+    """Get current analyst ratings and price targets for one or more companies from
+    provider coverage data."""
+    logger.info("tool called: get_current_ratings")
+
+    client = await get_http_client(None)
+    api_key = get_api_key()
+
+    params = args.model_dump(exclude_none=True)
+
+    # Map tool parameter names to API parameter names (comma-separated strings)
+    params["identifiers"] = ",".join(params["identifiers"])
+    if "provider_ids" in params:
+        params["provider_ids"] = ",".join(params["provider_ids"])
+
+    raw_response = await make_aiera_request(
+        client=client,
+        method="GET",
+        endpoint="/chat-support/get-current-ratings",
+        api_key=api_key,
+        params=params,
+    )
+
+    response = GetCurrentRatingsResponse.model_validate(raw_response)
     if args.exclude_instructions:
         response.instructions = []
     return response

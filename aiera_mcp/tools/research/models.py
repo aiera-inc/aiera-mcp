@@ -62,6 +62,8 @@ class FindResearchArgs(BaseToolArgs):
 
     ALWAYS PROVIDE A SEARCH TERM: Use the `search` parameter (ticker symbol or company name) whenever possible. Many research providers do not link their documents to equity tickers, so text-based search is the most reliable way to surface relevant reports across all providers.
 
+    CURRENT RATING / PRICE TARGET QUESTIONS: Prefer get_current_ratings — it answers directly for one or more companies without a manual document workflow. Use find_research only as a fallback (an identifier get_current_ratings could not match, or when the user wants the underlying report): filter by equity identifier (`bloomberg_ticker` / `isin` / `ric`) with `sort_by_date=true` (plus any provider filter) to surface the newest covering document — INCLUDING multi-company sector/industry notes, where rating and price-target changes often land first and which a company-name text search will miss — then pass its document_id to get_research_metadata_ratings.
+
     RESOLVE PROVIDER AND AUTHOR NAMES FIRST: If the user names a specific provider (e.g., HSBC, Goldman Sachs, BofA) or analyst/team (e.g., "economics team", "Stan Shipley"), call get_research_providers or get_research_authors first to resolve the name into IDs, then pass them as aiera_provider_ids or author_ids. Never guess these IDs.
 
     DO NOT GUESS ENUMERATED FILTERS: For `asset_classes`, `asset_types`, `subjects`, `product_focuses`, `regions`, `countries`, call the corresponding lookup tool (e.g., get_research_asset_classes) first to discover valid values.
@@ -70,11 +72,6 @@ class FindResearchArgs(BaseToolArgs):
 
     ANALYST RATINGS: Result items may include analyst rating fields — `security_ratings_primary`/`_secondary` (security-level, e.g. "Overweight", "Equal Weight", "Outperform"), `issuer_ratings_primary`/`_secondary`, and `sector_industry_ratings_primary`/`_secondary`. Values are the provider's own rating labels, passed through verbatim, so compare within a provider, not across.
     """
-
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
 
     self_identification: Optional[str] = Field(
         default=None,
@@ -206,11 +203,6 @@ class GetResearchArgs(BaseAieraArgs, CompactArgsMixin):
     are still trustworthy for identification purposes, but the body itself is empty.
     """
 
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
-
     self_identification: Optional[str] = Field(
         default=None,
         description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
@@ -244,11 +236,6 @@ class GetResearchProvidersArgs(BaseToolArgs):
 
     BANK DISAMBIGUATION: When a bank or financial institution is named, default to treating it as a research provider (search for reports authored BY the bank) rather than as a company being researched. Only treat the bank as the research subject if the user explicitly asks about the bank's own financials, earnings, or business operations.
     """
-
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
 
     self_identification: Optional[str] = Field(
         default=None,
@@ -287,11 +274,6 @@ class GetResearchAuthorsArgs(BaseToolArgs):
 
     WORKFLOW: Use this tool to obtain author_ids, then pass them to find_research or search_research.
     """
-
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
 
     self_identification: Optional[str] = Field(
         default=None,
@@ -337,11 +319,6 @@ class GetResearchAssetClassesArgs(BaseToolArgs):
     WORKFLOW: Use this tool to obtain asset class names, then pass them to find_research or search_research.
     """
 
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
-
     self_identification: Optional[str] = Field(
         default=None,
         description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
@@ -380,11 +357,6 @@ class GetResearchAssetTypesArgs(BaseToolArgs):
 
     WORKFLOW: Use this tool to obtain asset type names, then pass them to find_research or search_research.
     """
-
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
 
     self_identification: Optional[str] = Field(
         default=None,
@@ -425,11 +397,6 @@ class GetResearchSubjectsArgs(BaseToolArgs):
     WORKFLOW: Use this tool to obtain subject names, then pass them to find_research or search_research.
     """
 
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
-
     self_identification: Optional[str] = Field(
         default=None,
         description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
@@ -468,11 +435,6 @@ class GetResearchProductFocusesArgs(BaseToolArgs):
 
     WORKFLOW: Use this tool to obtain product focus names, then pass them to find_research or search_research.
     """
-
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
 
     self_identification: Optional[str] = Field(
         default=None,
@@ -513,11 +475,6 @@ class GetResearchRegionTypesArgs(BaseToolArgs):
     WORKFLOW: Use this tool to obtain region type names, then pass them to find_research or search_research.
     """
 
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
-
     self_identification: Optional[str] = Field(
         default=None,
         description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
@@ -556,11 +513,6 @@ class GetResearchCountryCodesArgs(BaseToolArgs):
 
     WORKFLOW: Use this tool to obtain country code names, then pass them to find_research or search_research.
     """
-
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
 
     self_identification: Optional[str] = Field(
         default=None,
@@ -660,11 +612,6 @@ class ReportResearchUsageArgs(BaseToolArgs):
     Pass up to 100 research document IDs per call (the ``document_id`` values returned by ``find_research``, ``search_research``, or ``get_research``).
     """
 
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
-
     self_identification: Optional[str] = Field(
         default=None,
         description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
@@ -711,7 +658,7 @@ class GetResearchMetadataArgs(BaseAieraArgs):
     - Use for complete or esoteric metadata needs — classifications, product series,
       publisher/author roles, coverage lists, or publication details not present in
       find_research / get_research results.
-    - For ONLY the analyst rating or price target, use get_research_ratings instead: it
+    - For ONLY the analyst rating or price target, use get_research_metadata_ratings instead: it
       returns a compact rating/target payload (a few hundred bytes) rather than this
       full metadata document.
     - For a targeted slice, pass ``fields`` with dot-paths (call
@@ -721,11 +668,6 @@ class GetResearchMetadataArgs(BaseAieraArgs):
     Repeated elements beyond ``max_list_items`` are truncated with a ``<key>__truncated``
     marker of shown/total counts.
     """
-
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
 
     self_identification: Optional[str] = Field(
         default=None,
@@ -785,11 +727,6 @@ class GetResearchMetadataFieldsArgs(BaseAieraArgs):
     unless the user needs them.
     """
 
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
-
     self_identification: Optional[str] = Field(
         default=None,
         description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
@@ -818,17 +755,18 @@ class GetResearchMetadataFieldsResponse(BaseAieraResponse):
     response: Optional[Any] = Field(None, description="Response data from the API")
 
 
-class GetResearchRatingsArgs(BaseAieraArgs):
-    """Get just the analyst ratings and price targets from a specific research report —
-    the fastest, most token-efficient way to answer "what is the rating / price target
-    in this report?"
+class GetResearchMetadataRatingsArgs(BaseAieraArgs):
+    """Get just the analyst ratings and price targets from a specific research report — a
+    focused subset of get_research_metadata, and the fastest, most token-efficient way to
+    answer "what is the rating / price target in this report?"
 
     RETURNS: per issuer and security: the Current (and Prior, when published) rating and
     target price with currency, security identifiers (RIC/Bloomberg/ISIN/CUSIP) for
     disambiguation, and rating/target-price actions when the publisher supplies them.
     Some publishers rate at the document level instead — that is returned as
     ``document_rating`` with its source noted. Sector reports may return many issuers,
-    each with their own rating and target.
+    each with their own rating and target — match the requested company by name or
+    security identifier in the response.
 
     WHEN TO USE:
     - Prefer this over get_research_metadata for ANY rating / price-target question — the
@@ -837,14 +775,17 @@ class GetResearchRatingsArgs(BaseAieraArgs):
       details), use get_research_metadata instead.
     - An empty ``issuers`` list means the publisher did not include structured ratings
       in this document (common for macro/economics notes).
+    - ``"target_price": null`` means the publisher omits target prices from this
+      document's structured data — NOT that the report lacks one. Where possible the tool
+      recovers the value from the document itself (returned with
+      ``"source": "document_text"``); if it is still null, check the same document's full
+      text via get_research before reporting the target as unavailable. Never substitute
+      a target from an older document.
 
-    WORKFLOW: find_research or search_research -> document_id -> get_research_ratings.
+    WORKFLOW: find_research or search_research -> document_id -> get_research_metadata_ratings.
+    For a company's CURRENT rating/target (not a specific report), use get_current_ratings
+    instead — it answers directly without a manual document lookup.
     """
-
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
 
     self_identification: Optional[str] = Field(
         default=None,
@@ -870,7 +811,77 @@ class GetResearchRatingsArgs(BaseAieraArgs):
     )
 
 
-class GetResearchRatingsResponse(BaseAieraResponse):
-    """Response for get_research_ratings tool - passes through the API response structure."""
+class GetResearchMetadataRatingsResponse(BaseAieraResponse):
+    """Response for get_research_metadata_ratings tool - passes through the API response structure."""
+
+    response: Optional[Any] = Field(None, description="Response data from the API")
+
+
+class GetCurrentRatingsArgs(BaseAieraArgs):
+    """Get the CURRENT analyst rating and price target for one or more companies — THE
+    tool for "what is [provider]'s current rating / price target on [company]?", for any
+    entitled provider.
+
+    Answers from the provider's own frequently-updated coverage data where available and
+    automatically falls back to the provider's newest covering research document
+    (sector/industry notes included) otherwise — no manual document workflow needed.
+
+    RETURNS: per requested identifier, the matching entries: company name, security
+    identifiers, current rating, price target with currency, and the date the values
+    last changed. Each entry carries a ``source``:
+    - ``"coverage_feed"``: live provider coverage data; attribute in text with the
+      per-provider ``as_of`` timestamp (e.g. "per Barclays coverage as of Aug 4").
+      There is no citable document — do not fabricate a citation link.
+    - ``"document"``: extracted from the provider's newest covering note
+      (``document_id`` / ``document_title`` identify it). ALWAYS state the note's
+      ``published_date`` with the value — it is as-of that note, not live.
+    Identifiers with no match from any queried provider are listed under ``unmatched``.
+
+    WHEN TO USE:
+    - Any "current rating / price target" question, regardless of provider.
+    - Batch companies into ONE call (up to 50 identifiers) instead of calling per company.
+    - Omit provider_ids for every provider with a view; pass it when the user names firms.
+    - Use get_research_metadata_ratings instead when the question is about a SPECIFIC
+      report ("what rating is in this note?").
+
+    WORKFLOW: get_current_ratings(identifiers=[...]) -> answer. The manual document
+    workflow (find_research -> get_research_metadata_ratings) is only for unmatched
+    identifiers, historical/prior values, or reading the underlying report.
+    """
+
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
+    identifiers: List[str] = Field(
+        min_length=1,
+        description=(
+            "One or more companies to look up — ticker (any exchange format), ISIN, CUSIP, "
+            "SEDOL, or company name. Batch all companies for the question into one call."
+        ),
+    )
+
+    provider_ids: Optional[List[str]] = Field(
+        default=None,
+        description=(
+            "Optional research provider IDs (resolve via get_research_providers) to restrict "
+            "the lookup. Omit to query all providers the user is entitled to."
+        ),
+    )
+
+
+class GetCurrentRatingsResponse(BaseAieraResponse):
+    """Response for get_current_ratings tool - passes through the API response structure."""
 
     response: Optional[Any] = Field(None, description="Response data from the API")

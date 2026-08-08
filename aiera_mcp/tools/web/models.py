@@ -28,11 +28,6 @@ class TrustedWebSearchArgs(BaseAieraArgs):
     NOTE: If no allowed_domains are provided, the search uses Aiera's curated list of trusted domains.
     """
 
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
-
     self_identification: Optional[str] = Field(
         default=None,
         description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",

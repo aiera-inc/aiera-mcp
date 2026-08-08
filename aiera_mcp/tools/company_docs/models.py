@@ -112,11 +112,6 @@ class FindCompanyDocsArgs(BaseToolArgs, BloombergTickerMixin, CategoriesKeywords
     This tool provides access to company-published documents with summaries and metadata.
     """
 
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
-
     self_identification: Optional[str] = Field(
         default=None,
         description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
@@ -217,11 +212,6 @@ class GetCompanyDocArgs(BaseToolArgs, CompactArgsMixin):
     WORKFLOW: Use find_company_docs first to obtain valid company_doc_ids.
     """
 
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
-
     self_identification: Optional[str] = Field(
         default=None,
         description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
@@ -247,11 +237,6 @@ class GetCompanyDocCategoriesArgs(BaseToolArgs, BloombergTickerMixin):
 
     Requires at least one company-scoping filter: bloomberg_ticker, isin, ric, permid, sector_id, or subsector_id. The returned categories are the ones that exist for documents within that scope. Global (unscoped) aggregation is not supported.
     """
-
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
 
     self_identification: Optional[str] = Field(
         default=None,
@@ -314,11 +299,6 @@ class GetCompanyDocKeywordsArgs(BaseToolArgs, BloombergTickerMixin):
 
     Requires at least one company-scoping filter: bloomberg_ticker, isin, ric, permid, sector_id, or subsector_id. The returned keywords are the ones that exist for documents within that scope. Global (unscoped) aggregation is not supported.
     """
-
-    originating_prompt: Optional[str] = Field(
-        default=None,
-        description="The original user prompt that led to this API call. Used for context, instruction generation, and to tailor responses appropriately. If the prompt is more than 500 characters, it can be truncated or summarized.",
-    )
 
     self_identification: Optional[str] = Field(
         default=None,
