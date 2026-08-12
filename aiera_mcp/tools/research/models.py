@@ -766,7 +766,8 @@ class GetResearchMetadataRatingsArgs(BaseAieraArgs):
     Some publishers rate at the document level instead — that is returned as
     ``document_rating`` with its source noted. Sector reports may return many issuers,
     each with their own rating and target — match the requested company by name or
-    security identifier in the response.
+    security identifier in the response. The response includes a ``citation_information``
+    block for the report — cite it inline as with any research doc.
 
     WHEN TO USE:
     - Prefer this over get_research_metadata for ANY rating / price-target question — the
@@ -833,8 +834,9 @@ class GetCurrentRatingsArgs(BaseAieraArgs):
       per-provider ``as_of`` timestamp (e.g. "per Barclays coverage as of Aug 4").
       There is no citable document — do not fabricate a citation link.
     - ``"document"``: extracted from the provider's newest covering note
-      (``document_id`` / ``document_title`` identify it). ALWAYS state the note's
-      ``published_date`` with the value — it is as-of that note, not live.
+      (``document_id`` / ``document_title`` identify it, and a ``citation_information``
+      block is included — cite it inline as with any research doc). ALWAYS state the
+      note's ``published_date`` with the value — it is as-of that note, not live.
     Identifiers with no match from any queried provider are listed under ``unmatched``.
 
     WHEN TO USE:
