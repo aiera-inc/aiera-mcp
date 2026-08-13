@@ -152,19 +152,12 @@ async def available_tools(
     client = await get_http_client(None)
     api_key = get_api_key()
 
-    # Forward self_identification so trusted surfaces (the chat service's
-    # "aierachat") pass the endpoint's MCP-access gate — chat must receive its
-    # full tool set even for users blocked from direct MCP access.
-    params = {}
-    if args.self_identification:
-        params["self_identification"] = args.self_identification
-
     raw_response = await make_aiera_request(
         client=client,
         method="GET",
         endpoint="/chat-support/available-endpoints",
         api_key=api_key,
-        params=params,
+        params={},
     )
 
     endpoints = raw_response.get("endpoints", [])

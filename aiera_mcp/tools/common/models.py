@@ -230,10 +230,7 @@ class AvailableToolsArgs(BaseAieraArgs):
     - Use this to check permissions before calling other tools.
     """
 
-    self_identification: Optional[str] = Field(
-        default=None,
-        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
-    )
+    pass
 
 
 class AvailableToolsResponse(BaseAieraResponse):
