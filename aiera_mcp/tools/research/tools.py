@@ -476,8 +476,13 @@ async def get_current_ratings(
 
     params = args.model_dump(exclude_none=True)
 
-    # Map tool parameter names to API parameter names (comma-separated strings)
-    params["identifiers"] = ",".join(params["identifiers"])
+    # Map tool parameter names to API parameter names (comma-separated strings).
+    # Commas INSIDE an identifier ("Under Armour, Inc.") would corrupt the
+    # comma-separated parameter — the API would split it into bogus identifiers
+    # ("Inc."), which can fan out to hundreds of irrelevant coverage rows.
+    params["identifiers"] = ",".join(
+        " ".join(i.replace(",", " ").split()) for i in params["identifiers"]
+    )
     if "provider_ids" in params:
         params["provider_ids"] = ",".join(params["provider_ids"])
 

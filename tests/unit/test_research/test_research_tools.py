@@ -646,6 +646,22 @@ class TestGetCurrentRatings:
         assert result.response["unmatched"] == ["ZZZQX"]
 
     @pytest.mark.asyncio
+    async def test_commas_inside_identifiers_are_sanitized(self, mock_http_dependencies):
+        # "Under Armour, Inc." must not be split by the API's comma-separated
+        # parameter into "Under Armour" + "Inc." — a bare "Inc." fans out to
+        # hundreds of irrelevant coverage rows (2026-08-17 fabricated-tables
+        # incident). Embedded commas are replaced with spaces before joining.
+        from aiera_mcp.tools.research.tools import get_current_ratings
+        from aiera_mcp.tools.research.models import GetCurrentRatingsArgs
+
+        mock_http_dependencies["mock_make_request"].return_value = CURRENT_RATINGS_RESPONSE
+        await get_current_ratings(
+            GetCurrentRatingsArgs(identifiers=["Under Armour, Inc.", "Arkema"])
+        )
+        params = mock_http_dependencies["mock_make_request"].call_args[1]["params"]
+        assert params["identifiers"] == "Under Armour Inc.,Arkema"
+
+    @pytest.mark.asyncio
     async def test_providers_default_omitted(self, mock_http_dependencies):
         from aiera_mcp.tools.research.tools import get_current_ratings
         from aiera_mcp.tools.research.models import GetCurrentRatingsArgs
