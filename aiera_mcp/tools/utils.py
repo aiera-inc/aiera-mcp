@@ -7,9 +7,14 @@ import re
 
 # Mapping of commonly-used Bloomberg ticker aliases to the canonical ticker
 # recognized by the Aiera platform. Applied after format normalization.
-TICKER_ALIASES = {
-    "GOOGL:US": "GOOG:US",
-}
+#
+# Historical note: GOOGL:US → GOOG:US used to be aliased here because the
+# equities table had a mis-mapped bloomberg_root on the Alphabet Class A
+# record. That data was corrected upstream (see CORE-2761), so the alias
+# now actively causes the bug it was meant to work around — resolving a
+# genuine GOOGL:US request to the wrong Class C security. Left as an empty
+# dict so the alias mechanism stays wired for future needs.
+TICKER_ALIASES: dict[str, str] = {}
 
 
 def _apply_ticker_alias(ticker: str) -> str:
