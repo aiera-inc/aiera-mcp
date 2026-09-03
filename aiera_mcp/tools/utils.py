@@ -22,36 +22,29 @@ def _apply_ticker_alias(ticker: str) -> str:
     return TICKER_ALIASES.get(ticker, ticker)
 
 
+def _correct_single_ticker(ticker: str) -> str:
+    """Normalize one ticker into the ticker:country_code format."""
+    ticker = ticker.strip()
+    if not ticker:
+        return ""
+
+    if ":" in ticker:
+        return _apply_ticker_alias(ticker)
+
+    # a space may have been substituted over the colon; otherwise default to US...
+    ticker_parts = ticker.split()
+    country_code = ticker_parts[1] if len(ticker_parts) > 1 else "US"
+
+    return _apply_ticker_alias(f"{ticker_parts[0]}:{country_code}")
+
+
 def correct_bloomberg_ticker(ticker: str) -> str:
     """Ensure bloomberg ticker is in the correct format (ticker:country_code)."""
     if "," in ticker:
-        tickers = ticker.split(",")
-        reticker = []
-        for ticker in tickers:
-            # if a space was substituted over colon...
-            if ":" not in ticker and " " in ticker:
-                ticker_parts = ticker.split()
-                reticker.append(f"{ticker_parts[0]}:{ticker_parts[1]}")
+        tickers = [t for t in ticker.split(",") if t.strip()]
+        return ",".join(_correct_single_ticker(t) for t in tickers)
 
-            # default to US if ticker doesn't include country code...
-            elif ":" not in ticker:
-                reticker.append(f"{ticker}:US")
-
-            else:
-                reticker.append(ticker)
-
-        return ",".join(_apply_ticker_alias(t) for t in reticker)
-
-    # if a space was substituted over colon...
-    elif ":" not in ticker and " " in ticker:
-        ticker_parts = ticker.split()
-        return _apply_ticker_alias(f"{ticker_parts[0]}:{ticker_parts[1]}")
-
-    # default to US if ticker doesn't include country code...
-    elif ":" not in ticker:
-        return _apply_ticker_alias(f"{ticker}:US")
-
-    return _apply_ticker_alias(ticker)
+    return _correct_single_ticker(ticker)
 
 
 def correct_keywords(keywords: str) -> str:
