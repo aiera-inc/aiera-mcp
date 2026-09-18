@@ -95,6 +95,8 @@ class FindCompanyDocsArgs(BaseToolArgs, BloombergTickerMixin, CategoriesKeywords
 
     RETURNS METADATA AND SUMMARIES ONLY — NOT full document text. To retrieve the actual document content, call get_company_doc with the company_doc_id from these results. For keyword-level search across many documents, use search_company_docs instead.
 
+    SCOPE REQUIRED: every call must include at least one company-scoping parameter (bloomberg_ticker, watchlist_id, index_id, sector_id, subsector_id) or explicit company_doc_ids. Calls without a scope are rejected by the API. If the company is unknown or the question is about a topic across the market, use search_company_docs instead.
+
     DOCUMENT TYPE MAPPING - CRITICAL:
     When users request specific document types, ALWAYS use the 'categories' parameter:
     - "press releases" → use categories='press_release'
@@ -139,12 +141,12 @@ class FindCompanyDocsArgs(BaseToolArgs, BloombergTickerMixin, CategoriesKeywords
 
     search: Optional[str] = Field(
         default=None,
-        description="Search term to filter docs by title or category.",
+        description="Optional substring filter on document title or category, applied within the selected company scope. Requires a company-scoping parameter (bloomberg_ticker, watchlist_id, index_id, sector_id, subsector_id) or company_doc_ids; unscoped calls are rejected. For topic or keyword discovery across all companies use search_company_docs with query_text instead.",
     )
 
     bloomberg_ticker: Optional[str] = Field(
         default=None,
-        description="Optional: Bloomberg ticker(s) to filter by specific companies in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces (e.g., 'AAPL:US,MSFT:US'). Defaults to ':US' if country code omitted. Leave empty to search across all companies.",
+        description="Optional: Bloomberg ticker(s) to filter by specific companies in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces (e.g., 'AAPL:US,MSFT:US'). Defaults to ':US' if country code omitted.",
     )
 
     watchlist_id: Optional[Union[int, str]] = Field(
