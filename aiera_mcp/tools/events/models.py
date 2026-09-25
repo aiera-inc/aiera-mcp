@@ -97,6 +97,11 @@ class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
 
     MULTIPLE COMPANIES: To find events for multiple companies, pass bloomberg_ticker as a single comma-separated string (e.g. "AAPL:US,MSFT:US,GOOGL:US") in one call — do not make per-company calls.
 
+    GOVERNMENT / REGULATORY ENTITIES (Fed, FOMC, SEC, ECB, etc.):
+    - These entities have no bloomberg_ticker. Do NOT try to search them by ticker.
+    - Resolve them first with find_equities(search="Federal Reserve", include_non_tradable=true, company_type="government"), then pass the resulting equity_id (or list of ids) here via the equity_ids parameter.
+    - Individual officials (e.g. "Waller", "Powell", "Warsh") do not have their own entities — their remarks appear in the parent institution's event titles. Combine equity_ids=<Fed> with search="<name>" to surface those events.
+
     This tool provides access to a comprehensive database of corporate events with transcripts and summaries.
     """
 
@@ -160,6 +165,30 @@ class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
         description="ID of a specific conference. Use find_conferences to find valid IDs.",
     )
 
+    equity_ids: Optional[str] = Field(
+        default=None,
+        description=(
+            "Comma-separated Aiera equity_id values (e.g. '24829' or '24829,25164'). "
+            "USE THIS for entities that have no bloomberg_ticker — most importantly "
+            "government/regulatory entities (Federal Reserve, SEC, ECB, etc.) surfaced "
+            "via find_equities(include_non_tradable=true). Takes precedence over "
+            "bloomberg_ticker/isin/permid/ric if both are supplied."
+        ),
+    )
+
+    company_type: Optional[str] = Field(
+        default=None,
+        description=(
+            "Filter events by the participating company's company_type. "
+            "Valid values: 'corporate' (public/private companies — the default universe), "
+            "'government' (Federal Reserve, Treasury, central banks, etc.), "
+            "'regulatory' (SEC, CFTC, FCA, etc.). Omit to include ALL types. "
+            "Note: government/regulatory entities are excluded from default "
+            "find_events results because they have no exchange listing — pass this "
+            "filter (or equity_ids for a specific entity) to surface them."
+        ),
+    )
+
     event_type: str = Field(
         default="earnings",
         description="Type of event to search for. ONLY ONE type per call - to search multiple types, make separate calls. Options: 'earnings' (quarterly earnings calls with Q&A), 'presentation' (investor conferences, company presentations at events - use this for 'conference calls'), 'investor_meeting' (investor day events, one-on-one meetings - use this for 'investor meetings'), 'shareholder_meeting' (annual/special shareholder meetings), 'special_situation' (M&A announcements, other corporate actions). Example: for 'conference calls AND meetings', make TWO calls: one with event_type='presentation' and one with event_type='investor_meeting'. Defaults to 'earnings'.",
@@ -189,6 +218,34 @@ class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
         if v not in valid_types:
             raise ValueError(f"event_type must be one of: {', '.join(valid_types)}")
         return v
+
+    @field_validator("company_type")
+    @classmethod
+    def validate_company_type_values(cls, v):
+        if v is None:
+            return v
+        valid = ("corporate", "government", "regulatory")
+        if v not in valid:
+            raise ValueError(f"company_type must be one of: {', '.join(valid)}")
+        return v
+
+    @field_validator("equity_ids", mode="before")
+    @classmethod
+    def validate_equity_ids(cls, v):
+        if v is None or v == "":
+            return None
+        if isinstance(v, (list, tuple)):
+            v = ",".join(str(x) for x in v)
+        s = str(v)
+        parts = [p.strip() for p in s.split(",") if p.strip()]
+        for p in parts:
+            try:
+                int(p)
+            except ValueError:
+                raise ValueError(
+                    f"equity_ids must be comma-separated integers, got: {p!r}"
+                )
+        return ",".join(parts)
 
 
 # Parameter models (extracted from params.py)

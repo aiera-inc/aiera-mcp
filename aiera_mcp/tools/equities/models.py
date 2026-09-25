@@ -67,7 +67,15 @@ class BloombergTickerMixin(BaseModel):
 
 # Parameter models (extracted from params.py)
 class FindEquitiesArgs(BaseToolArgs, BloombergTickerMixin):
-    """Find companies and equities using various identifiers or search. For multiple companies, pass bloomberg_ticker, isin, or ric as a single comma-separated string; or, use a search term. One call handles the full set."""
+    """Find companies and equities using various identifiers or search. For multiple companies, pass bloomberg_ticker, isin, or ric as a single comma-separated string; or, use a search term. One call handles the full set.
+
+    GOVERNMENT / REGULATORY ENTITIES (Federal Reserve, SEC, ECB, FOMC, etc.):
+    - These have no bloomberg_ticker and are EXCLUDED from default results.
+    - To find them: set include_non_tradable=true AND (typically) company_type='government' or 'regulatory'.
+    - Example: find_equities(search="Federal Reserve", include_non_tradable=true, company_type="government")
+      → returns the Fed entity with an equity_id you can then pass to find_events(equity_ids=...).
+    - Individual officials (Powell, Waller, Warsh, etc.) do NOT have their own entities. Find the parent institution first, then search event titles by name.
+    """
 
     self_identification: Optional[str] = Field(
         default=None,
@@ -112,6 +120,29 @@ class FindEquitiesArgs(BaseToolArgs, BloombergTickerMixin):
         description="ID of a specific subsector. Use get_sectors_and_subsectors to find valid IDs.",
     )
 
+    company_type: Optional[str] = Field(
+        default=None,
+        description=(
+            "Filter by company_type. Valid values: 'corporate' (public/private companies — "
+            "the default universe), 'government' (Federal Reserve, Treasury, central banks), "
+            "'regulatory' (SEC, CFTC, FCA). Omit to include ALL types. For government/regulatory "
+            "entities you almost always want to combine this with include_non_tradable=true, "
+            "since they have no exchange listing."
+        ),
+    )
+
+    include_non_tradable: Optional[bool] = Field(
+        default=False,
+        description=(
+            "By default, only tradable equities (listed on an exchange) are returned. "
+            "Set to true to also include non-tradable entities — required to surface "
+            "government/regulatory entities like the Federal Reserve, the SEC, central "
+            "banks, and similar institutions that lack a stock listing. "
+            "When true, bloomberg_ticker in the response will be NULL for entities "
+            "with no exchange."
+        ),
+    )
+
     page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
     )
@@ -121,6 +152,16 @@ class FindEquitiesArgs(BaseToolArgs, BloombergTickerMixin):
         ge=1,
         description="Number of items per page (max 25). Values above 25 are capped server-side.",
     )
+
+    @field_validator("company_type")
+    @classmethod
+    def validate_company_type_values(cls, v):
+        if v is None:
+            return v
+        valid = ("corporate", "government", "regulatory")
+        if v not in valid:
+            raise ValueError(f"company_type must be one of: {', '.join(valid)}")
+        return v
 
 
 class GetEquitySummariesArgs(BaseToolArgs, BloombergTickerMixin):
