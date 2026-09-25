@@ -180,7 +180,15 @@ class GetThirdBridgeEventArgs(BaseToolArgs, CompactArgsMixin):
     LIMITATIONS:
     - If you need multiple events, make separate sequential calls (one event_id per call)
 
-    WORKFLOW: Use find_third_bridge_events first to obtain valid thirdbridge_event_ids.
+    WORKFLOW / WHICH ID TO PASS:
+    - If the previous tool was ``find_third_bridge_events``: pass its ``event_id`` field as
+      ``thirdbridge_event_id`` (e.g. ``thirdbridge_event_id="9c73e90f758aeb839236cc555b80de86"``).
+      Note that ``find_third_bridge_events`` items ALSO contain ``aiera_event_id`` — both
+      identifiers refer to the same event, but ``thirdbridge_event_id`` is preferred here
+      because it's the provider's canonical id.
+    - If the previous tool was ``search_thirdbridge``: pass its ``aiera_event_id`` field as
+      ``aiera_event_id`` (integer). ``search_thirdbridge`` doesn't surface the Third-Bridge id.
+    - Only one of the two is required. Passing both is redundant; passing neither is an error.
     """
 
     self_identification: Optional[str] = Field(
@@ -201,12 +209,22 @@ class GetThirdBridgeEventArgs(BaseToolArgs, CompactArgsMixin):
     thirdbridge_event_id: Optional[str] = Field(
         default=None,
         serialization_alias="event_id",  # Serialize to API as "event_id"
-        description="Unique identifier for the Third Bridge event. Obtain from find_third_bridge_events results (returned as 'event_id' in the response). Example: 'TB-12345'",
+        description=(
+            "Third Bridge's canonical event identifier (hex string). PREFERRED when coming from "
+            "find_third_bridge_events — use its ``event_id`` field verbatim. "
+            "Example: 'thirdbridge_event_id=\"9c73e90f758aeb839236cc555b80de86\"'. "
+            "Exactly one of thirdbridge_event_id / aiera_event_id is required; do not pass both."
+        ),
     )
 
     aiera_event_id: Optional[Union[int, str]] = Field(
         default=None,
-        description="Aiera event ID (scheduled_audio_call_id) for the Third Bridge event. Obtain from search_thirdbridge results (returned as 'aiera_event_id').",
+        description=(
+            "Aiera event ID (scheduled_audio_call_id, integer). Use ONLY when coming from "
+            "search_thirdbridge (which returns aiera_event_id but not the Third-Bridge id). "
+            "If you have a thirdbridge_event_id from find_third_bridge_events, pass THAT instead. "
+            "Exactly one of thirdbridge_event_id / aiera_event_id is required; do not pass both."
+        ),
     )
 
     @model_validator(mode="after")

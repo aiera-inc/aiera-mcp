@@ -2,7 +2,7 @@
 
 """Pydantic models for Aiera search tools."""
 
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Union
 from pydantic import Field, field_validator
 
 from ..common.models import BaseAieraArgs, BaseAieraResponse, CompactArgsMixin
@@ -74,6 +74,20 @@ class SearchTranscriptsArgs(BaseAieraArgs, CompactArgsMixin):
     equity_ids: Optional[List[int]] = Field(
         default=None,
         description="Optional list of specific equity IDs to filter search. Obtain equity_ids from find_equities results. Example: [100, 200]",
+    )
+
+    conference_id: Optional[Union[int, str]] = Field(
+        default=None,
+        description=(
+            "Optional conference / investor summit ID. Restricts search to transcripts of "
+            "events that were part of the given conference (e.g., \"Barclays Global Consumer "
+            "Staples Conference\"). Obtain conference_id from find_conferences results. "
+            "Prefer this over passing the conference name as query_text — the server maps the "
+            "conference to its participating events server-side, which is far more reliable "
+            "than semantic matching on transcript text. Can be combined with event_ids to "
+            "intersect (search a specific subset of a conference); combining with an unrelated "
+            "event_ids set will return zero results."
+        ),
     )
 
     start_date: str = Field(
@@ -335,15 +349,42 @@ class SearchCompanyDocsArgs(BaseAieraArgs, CompactArgsMixin):
         description="Optional list of company IDs to filter search. Obtain company_ids from find_equities results. Example: [1, 2]",
     )
 
-    categories: Optional[List[str]] = Field(
+    categories: Optional[Union[str, List[str]]] = Field(
         default=None,
-        description="Optional list of document categories to filter by. Obtain valid values from get_company_doc_categories. Example: ['Investor Presentation', 'Press Release'].",
+        description=(
+            "Optional document categories to filter by. Obtain valid values from "
+            "get_company_doc_categories. Accepts either a list "
+            "(e.g., ['Investor Presentation', 'Press Release']) or a comma-separated "
+            "string (e.g., 'Investor Presentation,Press Release'); both shapes work."
+        ),
     )
 
-    keywords: Optional[List[str]] = Field(
+    keywords: Optional[Union[str, List[str]]] = Field(
         default=None,
-        description="Optional list of keywords to filter by. Obtain valid values from get_company_doc_keywords. Example: ['earnings', 'guidance'].",
+        description=(
+            "Optional keywords to filter by. Obtain valid values from "
+            "get_company_doc_keywords. Accepts either a list (e.g., ['earnings', 'guidance']) "
+            "or a comma-separated string (e.g., 'earnings,guidance'); both shapes work."
+        ),
     )
+
+    @field_validator("categories", "keywords", mode="before")
+    @classmethod
+    def _coerce_to_list(cls, v):
+        """Accept either a comma-separated string or a list; normalize to list.
+
+        Symmetric with find_company_docs / get_company_doc, which accept the same
+        two shapes and normalize to comma-separated string for their REST GET
+        endpoint. Search's underlying endpoint wants a JSON list, so we coerce
+        here. A model that reaches for either convention on either tool works
+        uniformly; no more class of \"str vs list\" ToolException on the search
+        side (observed on the docs-search smoke test).
+        """
+        if v is None:
+            return v
+        if isinstance(v, str):
+            return [part.strip() for part in v.split(",") if part.strip()]
+        return v
 
     start_date: str = Field(
         default="",

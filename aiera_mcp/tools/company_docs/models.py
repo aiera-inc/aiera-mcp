@@ -3,7 +3,7 @@
 """Company docs domain models for Aiera MCP."""
 
 from pydantic import BaseModel, Field, field_validator, field_serializer
-from typing import Optional, Any, Union
+from typing import List, Optional, Any, Union
 
 from ..common.models import BaseAieraResponse, CompactArgsMixin
 
@@ -66,14 +66,26 @@ class BloombergTickerMixin(BaseModel):
 
 
 class CategoriesKeywordsMixin(BaseModel):
-    """Mixin for models with categories and keywords fields."""
+    """Mixin for models with categories and keywords fields.
+
+    Accepts both a comma-separated string (``"press_release,earnings_release"``)
+    and a list of strings (``["press_release", "earnings_release"]``) and
+    normalizes to the wire shape find_company_docs' REST endpoint expects
+    (comma-separated string). Sibling tools like ``search_company_docs`` want
+    a list — its own model handles that normalization symmetrically. Accepting
+    both shapes on both tools eliminates a class of contract-validation errors
+    where a model calls one tool with one convention and the sibling tool with
+    the other (observed on the docs-search smoke test).
+    """
 
     @field_validator("categories", mode="before", check_fields=False)
     @classmethod
     def validate_categories(cls, v):
-        """Automatically correct categories format."""
+        """Coerce list input to comma-separated string, then normalize."""
         if v is None:
             return v
+        if isinstance(v, list):
+            v = ",".join(str(x).strip() for x in v if str(x).strip())
         from ..utils import correct_categories
 
         return correct_categories(v)
@@ -81,9 +93,11 @@ class CategoriesKeywordsMixin(BaseModel):
     @field_validator("keywords", mode="before", check_fields=False)
     @classmethod
     def validate_keywords(cls, v):
-        """Automatically correct keywords format."""
+        """Coerce list input to comma-separated string, then normalize."""
         if v is None:
             return v
+        if isinstance(v, list):
+            v = ",".join(str(x).strip() for x in v if str(x).strip())
         from ..utils import correct_keywords
 
         return correct_keywords(v)
@@ -169,14 +183,29 @@ class FindCompanyDocsArgs(BaseToolArgs, BloombergTickerMixin, CategoriesKeywords
         description="ID of a specific subsector. Use get_sectors_and_subsectors to find valid IDs.",
     )
 
-    categories: Optional[str] = Field(
+    categories: Optional[Union[str, List[str]]] = Field(
         default=None,
-        description="CRITICAL: Filter by document type/category. Common categories: 'press_release' (press releases/news), 'annual_report' (annual reports), 'earnings_release' (earnings releases), 'slide_presentation' (investor presentations/decks), 'compliance' (compliance filings), 'disclosure' (disclosure documents). Use get_company_doc_categories to see all valid categories. Multiple categories should be comma-separated without spaces (e.g., 'press_release,earnings_release'). Example: For 'Find all press releases from Apple in Q1 2024', use categories='press_release'.",
+        description=(
+            "CRITICAL: Filter by document type/category. Common categories: "
+            "'press_release' (press releases/news), 'annual_report' (annual reports), "
+            "'earnings_release' (earnings releases), 'slide_presentation' (investor "
+            "presentations/decks), 'compliance' (compliance filings), 'disclosure' "
+            "(disclosure documents). Use get_company_doc_categories to see all valid "
+            "categories. Accepts either a list (e.g., ['press_release']) or a "
+            "comma-separated string without spaces (e.g., 'press_release,earnings_release'); "
+            "both shapes work. Example: For 'Find all press releases from Apple in Q1 2024', "
+            "use categories=['press_release'] or categories='press_release'."
+        ),
     )
 
-    keywords: Optional[str] = Field(
+    keywords: Optional[Union[str, List[str]]] = Field(
         default=None,
-        description="Optional: Filter by keywords/topics (e.g., 'ESG', 'diversity', 'risk management', 'sustainability'). Use get_company_doc_keywords to see all valid keywords. Multiple keywords should be comma-separated without spaces.",
+        description=(
+            "Optional: Filter by keywords/topics (e.g., 'ESG', 'diversity', 'risk management', "
+            "'sustainability'). Use get_company_doc_keywords to see all valid keywords. "
+            "Accepts either a list (e.g., ['ESG', 'sustainability']) or a comma-separated "
+            "string without spaces; both shapes work."
+        ),
     )
 
     exclude_categories: Optional[str] = Field(
