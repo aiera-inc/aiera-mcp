@@ -70,8 +70,8 @@ class FindEquitiesArgs(BaseToolArgs, BloombergTickerMixin):
     """Find companies and equities using various identifiers or search. For multiple companies, pass bloomberg_ticker, isin, or ric as a single comma-separated string; or, use a search term. One call handles the full set.
 
     GOVERNMENT / REGULATORY ENTITIES (Federal Reserve, SEC, ECB, FOMC, etc.):
-    - These have no bloomberg_ticker. Find them by name with a plain search, e.g. find_equities(search="Federal Reserve").
-    - Optionally narrow with company_type='government' or 'regulatory'.
+    - These have no bloomberg_ticker. Find them by name with a plain search, e.g. find_equities(search="Federal Reserve"). Plain search is the reliable way to locate a specific entity.
+    - company_type='government'/'regulatory' is a coarse category filter and may exclude entities that lack a company_id (some government bodies do), so do NOT rely on it to surface a specific institution — use it only to browse a category.
     - include_non_tradable is only needed for entities that have no exchange row at all; most government/regulatory entities are returned without it.
     - The result gives an equity_id you can then pass to find_events(equity_ids=...).
     - Individual officials (Powell, Waller, Warsh, etc.) do NOT have their own entities. Find the parent institution first, then search event titles by name.
@@ -123,8 +123,8 @@ class FindEquitiesArgs(BaseToolArgs, BloombergTickerMixin):
     company_type: Optional[str] = Field(
         default=None,
         description=(
-            "Filter by company_type. Valid values: 'corporate' (public/private companies — "
-            "the default universe), 'government' (Federal Reserve, Treasury, central banks), "
+            "Filter by company_type. Valid values: 'corporate' (public/private companies), "
+            "'government' (Federal Reserve, Treasury, central banks), "
             "'regulatory' (SEC, CFTC, FCA). Omit to include ALL types. A narrowing filter only — "
             "government/regulatory entities already appear in default results."
         ),

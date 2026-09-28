@@ -3,7 +3,7 @@
 """Events domain models for Aiera MCP."""
 
 from pydantic import BaseModel, Field, field_validator, field_serializer
-from typing import Optional, Any, Union
+from typing import Optional, Any, Union, List
 
 from ..common.models import BaseAieraResponse, CompactArgsMixin
 
@@ -168,16 +168,18 @@ class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
         description="ID of a specific conference. Use find_conferences to find valid IDs.",
     )
 
-    equity_ids: Optional[str] = Field(
+    equity_ids: Optional[Union[str, List[Union[int, str]]]] = Field(
         default=None,
         description=(
-            "Comma-separated Aiera equity_id values (e.g. '24829' or '24829,25164'). "
-            "USE THIS for entities that have no bloomberg_ticker — most importantly "
-            "government/regulatory entities (Federal Reserve, SEC, ECB, etc.) surfaced "
-            "via find_equities. When supplied, this REPLACES all other identifier and "
-            "grouping filters: bloomberg_ticker/isin/permid/ric AND watchlist_id/index_id/"
-            "sector_id/subsector_id are ignored. It also matches ONLY the exact equity_ids "
-            "given — unlike the ticker path, it does not roll up a company's other listings."
+            "Aiera equity_id values — a list (e.g. [24829, 25164]) or a comma-separated "
+            "string (e.g. '24829,25164'); both shapes work. USE THIS for entities that have "
+            "no bloomberg_ticker — most importantly government/regulatory entities (Federal "
+            "Reserve, SEC, ECB, etc.) surfaced via find_equities. When supplied, this REPLACES "
+            "all other identifier and grouping filters: bloomberg_ticker/isin/permid/ric AND "
+            "watchlist_id/index_id/sector_id/subsector_id are ignored. Like the ticker path, it "
+            "ROLLS UP to the company — passing one listing's equity_id also returns events for "
+            "that company's other active listings. (Entities with no company_id — e.g. some "
+            "government/regulatory bodies — match only the exact ids given.)"
         ),
     )
 
@@ -185,7 +187,7 @@ class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
         default=None,
         description=(
             "Filter events by the participating company's company_type. "
-            "Valid values: 'corporate' (public/private companies — the default universe), "
+            "Valid values: 'corporate' (public/private companies), "
             "'government' (Federal Reserve, Treasury, central banks, etc.), "
             "'regulatory' (SEC, CFTC, FCA, etc.). Omit to include ALL types (the default). "
             "This is a narrowing filter only — government/regulatory events are already "
@@ -237,18 +239,30 @@ class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
     @field_validator("equity_ids", mode="before")
     @classmethod
     def validate_equity_ids(cls, v):
-        if v is None or v == "":
+        # None / "" mean "not provided" -> omit the filter entirely.
+        if v is None:
             return None
-        if isinstance(v, (list, tuple)):
+        was_collection = isinstance(v, (list, tuple))
+        if was_collection:
             v = ",".join(str(x) for x in v)
-        s = str(v)
+        s = str(v).strip()
+        if s == "" and not was_collection:
+            return None
         parts = [p.strip() for p in s.split(",") if p.strip()]
+        if not parts:
+            # e.g. equity_ids="," or [] — the caller intended a filter but gave no IDs.
+            # Do NOT collapse to "" (the backend reads "" as "no filter" and returns
+            # every event in the window). Fail loudly instead.
+            raise ValueError(
+                "equity_ids was provided but contained no valid IDs — pass at least one "
+                "integer equity_id, or omit the parameter entirely."
+            )
         for p in parts:
             try:
                 int(p)
             except ValueError:
                 raise ValueError(
-                    f"equity_ids must be comma-separated integers, got: {p!r}"
+                    f"equity_ids must be integer equity_id values, got: {p!r}"
                 )
         return ",".join(parts)
 
