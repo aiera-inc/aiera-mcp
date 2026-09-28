@@ -188,8 +188,8 @@ class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
         description=(
             "Filter events by the participating company's company_type. "
             "Valid values: 'corporate' (public/private companies), "
-            "'government' (Federal Reserve, Treasury, central banks, etc.), "
-            "'regulatory' (SEC, CFTC, FCA, etc.). Omit to include ALL types (the default). "
+            "'government' (Treasury, government agencies, etc.), "
+            "'regulatory' (Federal Reserve, SEC, CFTC, FCA, etc.). Omit to include ALL types (the default). "
             "This is a narrowing filter only — government/regulatory events are already "
             "included in default results; use it to restrict results to a given type, or "
             "pass equity_ids to target a specific entity."
