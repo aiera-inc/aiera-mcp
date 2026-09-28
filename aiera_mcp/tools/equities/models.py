@@ -70,10 +70,10 @@ class FindEquitiesArgs(BaseToolArgs, BloombergTickerMixin):
     """Find companies and equities using various identifiers or search. For multiple companies, pass bloomberg_ticker, isin, or ric as a single comma-separated string; or, use a search term. One call handles the full set.
 
     GOVERNMENT / REGULATORY ENTITIES (Federal Reserve, SEC, ECB, FOMC, etc.):
-    - These have no bloomberg_ticker and are EXCLUDED from default results.
-    - To find them: set include_non_tradable=true AND (typically) company_type='government' or 'regulatory'.
-    - Example: find_equities(search="Federal Reserve", include_non_tradable=true, company_type="government")
-      → returns the Fed entity with an equity_id you can then pass to find_events(equity_ids=...).
+    - These have no bloomberg_ticker. Find them by name with a plain search, e.g. find_equities(search="Federal Reserve").
+    - Optionally narrow with company_type='government' or 'regulatory'.
+    - include_non_tradable is only needed for entities that have no exchange row at all; most government/regulatory entities are returned without it.
+    - The result gives an equity_id you can then pass to find_events(equity_ids=...).
     - Individual officials (Powell, Waller, Warsh, etc.) do NOT have their own entities. Find the parent institution first, then search event titles by name.
     """
 
@@ -125,21 +125,19 @@ class FindEquitiesArgs(BaseToolArgs, BloombergTickerMixin):
         description=(
             "Filter by company_type. Valid values: 'corporate' (public/private companies — "
             "the default universe), 'government' (Federal Reserve, Treasury, central banks), "
-            "'regulatory' (SEC, CFTC, FCA). Omit to include ALL types. For government/regulatory "
-            "entities you almost always want to combine this with include_non_tradable=true, "
-            "since they have no exchange listing."
+            "'regulatory' (SEC, CFTC, FCA). Omit to include ALL types. A narrowing filter only — "
+            "government/regulatory entities already appear in default results."
         ),
     )
 
     include_non_tradable: Optional[bool] = Field(
         default=False,
         description=(
-            "By default, only tradable equities (listed on an exchange) are returned. "
-            "Set to true to also include non-tradable entities — required to surface "
-            "government/regulatory entities like the Federal Reserve, the SEC, central "
-            "banks, and similar institutions that lack a stock listing. "
-            "When true, bloomberg_ticker in the response will be NULL for entities "
-            "with no exchange."
+            "Set to true to also include entities that have no exchange row at all. "
+            "Most government/regulatory entities (Federal Reserve, SEC, central banks) "
+            "already appear in default results, so this flag is only needed for the subset "
+            "that has no exchange listing whatsoever. When true, bloomberg_ticker in the "
+            "response will be NULL for such entities."
         ),
     )
 

@@ -213,7 +213,7 @@ class GetThirdBridgeEventArgs(BaseToolArgs, CompactArgsMixin):
             "Third Bridge's canonical event identifier (hex string). PREFERRED when coming from "
             "find_third_bridge_events — use its ``event_id`` field verbatim. "
             "Example: 'thirdbridge_event_id=\"9c73e90f758aeb839236cc555b80de86\"'. "
-            "Exactly one of thirdbridge_event_id / aiera_event_id is required; do not pass both."
+            "At least one of thirdbridge_event_id / aiera_event_id is required; passing both is redundant."
         ),
     )
 
@@ -223,7 +223,7 @@ class GetThirdBridgeEventArgs(BaseToolArgs, CompactArgsMixin):
             "Aiera event ID (scheduled_audio_call_id, integer). Use ONLY when coming from "
             "search_thirdbridge (which returns aiera_event_id but not the Third-Bridge id). "
             "If you have a thirdbridge_event_id from find_third_bridge_events, pass THAT instead. "
-            "Exactly one of thirdbridge_event_id / aiera_event_id is required; do not pass both."
+            "At least one of thirdbridge_event_id / aiera_event_id is required; passing both is redundant."
         ),
     )
 

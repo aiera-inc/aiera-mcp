@@ -90,6 +90,24 @@ class SearchTranscriptsArgs(BaseAieraArgs, CompactArgsMixin):
         ),
     )
 
+    @field_validator("conference_id", mode="before", check_fields=False)
+    @classmethod
+    def _coerce_conference_id(cls, v):
+        """Coerce conference_id to int; reject non-numeric input (e.g. a conference name) early."""
+        if v is None or isinstance(v, int):
+            return v
+        if isinstance(v, str):
+            v = v.strip()
+            if v == "":
+                return None
+            try:
+                return int(v)
+            except ValueError:
+                raise ValueError(
+                    "conference_id must be a numeric ID from find_conferences, not a name"
+                )
+        return v
+
     start_date: str = Field(
         default="",
         description="Start date for transcripts search in YYYY-MM-DD format. Example: '2024-01-01'.",
@@ -352,10 +370,12 @@ class SearchCompanyDocsArgs(BaseAieraArgs, CompactArgsMixin):
     categories: Optional[Union[str, List[str]]] = Field(
         default=None,
         description=(
-            "Optional document categories to filter by. Obtain valid values from "
+            "Optional document categories to filter by. Use the category SLUG, not the "
+            "display name — matching is exact and case-sensitive (e.g. 'press_release' "
+            "matches, 'Press Release' returns nothing). Obtain valid slugs from "
             "get_company_doc_categories. Accepts either a list "
-            "(e.g., ['Investor Presentation', 'Press Release']) or a comma-separated "
-            "string (e.g., 'Investor Presentation,Press Release'); both shapes work."
+            "(e.g., ['slide_presentation', 'press_release']) or a comma-separated "
+            "string (e.g., 'slide_presentation,press_release'); both shapes work."
         ),
     )
 

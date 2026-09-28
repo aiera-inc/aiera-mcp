@@ -17,6 +17,7 @@ class BaseToolArgs(BaseModel):
         "index_id",
         "sector_id",
         "subsector_id",
+        "conference_id",
         "page",
         "page_size",
         mode="before",
@@ -39,6 +40,7 @@ class BaseToolArgs(BaseModel):
         "index_id",
         "sector_id",
         "subsector_id",
+        "conference_id",
         "page",
         "page_size",
         when_used="always",
@@ -99,8 +101,9 @@ class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
 
     GOVERNMENT / REGULATORY ENTITIES (Fed, FOMC, SEC, ECB, etc.):
     - These entities have no bloomberg_ticker. Do NOT try to search them by ticker.
-    - Resolve them first with find_equities(search="Federal Reserve", include_non_tradable=true, company_type="government"), then pass the resulting equity_id (or list of ids) here via the equity_ids parameter.
-    - Individual officials (e.g. "Waller", "Powell", "Warsh") do not have their own entities — their remarks appear in the parent institution's event titles. Combine equity_ids=<Fed> with search="<name>" to surface those events.
+    - Resolve them first with find_equities(search="Federal Reserve"), then pass the resulting equity_id (or list of ids) here via the equity_ids parameter.
+    - Their events are stored as event_type='presentation' (speeches, testimony, press conferences), NOT 'earnings'. You MUST pass event_type='presentation' for these entities — the default of 'earnings' returns zero results.
+    - Individual officials (e.g. "Waller", "Powell", "Warsh") do not have their own entities — their remarks appear in the parent institution's event titles. Combine equity_ids=<Fed> with search="<name>" (and event_type='presentation') to surface those events.
 
     This tool provides access to a comprehensive database of corporate events with transcripts and summaries.
     """
@@ -171,8 +174,10 @@ class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
             "Comma-separated Aiera equity_id values (e.g. '24829' or '24829,25164'). "
             "USE THIS for entities that have no bloomberg_ticker — most importantly "
             "government/regulatory entities (Federal Reserve, SEC, ECB, etc.) surfaced "
-            "via find_equities(include_non_tradable=true). Takes precedence over "
-            "bloomberg_ticker/isin/permid/ric if both are supplied."
+            "via find_equities. When supplied, this REPLACES all other identifier and "
+            "grouping filters: bloomberg_ticker/isin/permid/ric AND watchlist_id/index_id/"
+            "sector_id/subsector_id are ignored. It also matches ONLY the exact equity_ids "
+            "given — unlike the ticker path, it does not roll up a company's other listings."
         ),
     )
 
@@ -182,10 +187,10 @@ class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
             "Filter events by the participating company's company_type. "
             "Valid values: 'corporate' (public/private companies — the default universe), "
             "'government' (Federal Reserve, Treasury, central banks, etc.), "
-            "'regulatory' (SEC, CFTC, FCA, etc.). Omit to include ALL types. "
-            "Note: government/regulatory entities are excluded from default "
-            "find_events results because they have no exchange listing — pass this "
-            "filter (or equity_ids for a specific entity) to surface them."
+            "'regulatory' (SEC, CFTC, FCA, etc.). Omit to include ALL types (the default). "
+            "This is a narrowing filter only — government/regulatory events are already "
+            "included in default results; use it to restrict results to a given type, or "
+            "pass equity_ids to target a specific entity."
         ),
     )
 

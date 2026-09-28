@@ -85,7 +85,9 @@ class CategoriesKeywordsMixin(BaseModel):
         if v is None:
             return v
         if isinstance(v, list):
-            v = ",".join(str(x).strip() for x in v if str(x).strip())
+            # Caller already separated the values — join verbatim. Running the split
+            # helper here would wrongly break a single multi-word item.
+            return ",".join(str(x).strip() for x in v if str(x).strip())
         from ..utils import correct_categories
 
         return correct_categories(v)
@@ -97,7 +99,10 @@ class CategoriesKeywordsMixin(BaseModel):
         if v is None:
             return v
         if isinstance(v, list):
-            v = ",".join(str(x).strip() for x in v if str(x).strip())
+            # Caller already separated the values — join verbatim. Running the split
+            # helper here would wrongly break a single multi-word item (e.g.
+            # ["environmental social and governance"]) into four keywords.
+            return ",".join(str(x).strip() for x in v if str(x).strip())
         from ..utils import correct_keywords
 
         return correct_keywords(v)
@@ -208,15 +213,31 @@ class FindCompanyDocsArgs(BaseToolArgs, BloombergTickerMixin, CategoriesKeywords
         ),
     )
 
-    exclude_categories: Optional[str] = Field(
+    exclude_categories: Optional[Union[str, List[str]]] = Field(
         default=None,
-        description="Comma-separated category names to exclude from results.",
+        description=(
+            "Category slugs to exclude from results. Accepts either a list "
+            "(e.g., ['press_release']) or a comma-separated string; both shapes work."
+        ),
     )
 
-    exclude_keywords: Optional[str] = Field(
+    exclude_keywords: Optional[Union[str, List[str]]] = Field(
         default=None,
-        description="Comma-separated keywords to exclude from results.",
+        description=(
+            "Keywords to exclude from results. Accepts either a list (e.g., ['ESG']) "
+            "or a comma-separated string; both shapes work."
+        ),
     )
+
+    @field_validator(
+        "exclude_categories", "exclude_keywords", mode="before", check_fields=False
+    )
+    @classmethod
+    def _coerce_exclude_lists(cls, v):
+        """Accept a list or comma-separated string; join lists verbatim (no re-splitting)."""
+        if isinstance(v, list):
+            return ",".join(str(x).strip() for x in v if str(x).strip())
+        return v
 
     page: Union[int, str] = Field(
         default=1, ge=1, description="Page number for pagination (1-based)."
