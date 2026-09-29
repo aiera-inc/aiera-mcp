@@ -47,6 +47,9 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
     if args.equity_ids:
         payload["equity_ids"] = args.equity_ids
 
+    if args.conference_id is not None:
+        payload["conference_id"] = args.conference_id
+
     if args.start_date:
         payload["start_date"] = args.start_date
 

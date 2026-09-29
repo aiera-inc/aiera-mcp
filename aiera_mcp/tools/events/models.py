@@ -3,7 +3,7 @@
 """Events domain models for Aiera MCP."""
 
 from pydantic import BaseModel, Field, field_validator, field_serializer
-from typing import Optional, Any, Union
+from typing import Optional, Any, Union, List
 
 from ..common.models import BaseAieraResponse, CompactArgsMixin
 
@@ -17,6 +17,7 @@ class BaseToolArgs(BaseModel):
         "index_id",
         "sector_id",
         "subsector_id",
+        "conference_id",
         "page",
         "page_size",
         mode="before",
@@ -39,6 +40,7 @@ class BaseToolArgs(BaseModel):
         "index_id",
         "sector_id",
         "subsector_id",
+        "conference_id",
         "page",
         "page_size",
         when_used="always",
@@ -96,6 +98,12 @@ class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
     MULTIPLE EVENT TYPES: This tool only accepts ONE event_type per call. To search multiple event types, you MUST make separate calls for each event_type and combine the results yourself.
 
     MULTIPLE COMPANIES: To find events for multiple companies, pass bloomberg_ticker as a single comma-separated string (e.g. "AAPL:US,MSFT:US,GOOGL:US") in one call — do not make per-company calls.
+
+    GOVERNMENT / REGULATORY ENTITIES (Fed, FOMC, SEC, ECB, etc.):
+    - These entities have no bloomberg_ticker. Do NOT try to search them by ticker.
+    - Resolve them first with find_equities(search="Federal Reserve"), then pass the resulting equity_id (or list of ids) here via the equity_ids parameter.
+    - Their events are stored as event_type='presentation' (speeches, testimony, press conferences), NOT 'earnings'. You MUST pass event_type='presentation' for these entities — the default of 'earnings' returns zero results.
+    - Individual officials (e.g. "Waller", "Powell", "Warsh") do not have their own entities — their remarks appear in the parent institution's event titles. Combine equity_ids=<Fed> with search="<name>" (and event_type='presentation') to surface those events.
 
     This tool provides access to a comprehensive database of corporate events with transcripts and summaries.
     """
@@ -160,6 +168,34 @@ class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
         description="ID of a specific conference. Use find_conferences to find valid IDs.",
     )
 
+    equity_ids: Optional[Union[str, List[Union[int, str]]]] = Field(
+        default=None,
+        description=(
+            "Aiera equity_id values — a list (e.g. [24829, 25164]) or a comma-separated "
+            "string (e.g. '24829,25164'); both shapes work. USE THIS for entities that have "
+            "no bloomberg_ticker — most importantly government/regulatory entities (Federal "
+            "Reserve, SEC, ECB, etc.) surfaced via find_equities. When supplied, this REPLACES "
+            "all other identifier and grouping filters: bloomberg_ticker/isin/permid/ric AND "
+            "watchlist_id/index_id/sector_id/subsector_id are ignored. Like the ticker path, it "
+            "ROLLS UP to the company — passing one listing's equity_id also returns events for "
+            "that company's other active listings. (Entities with no company_id — e.g. some "
+            "government/regulatory bodies — match only the exact ids given.)"
+        ),
+    )
+
+    company_type: Optional[str] = Field(
+        default=None,
+        description=(
+            "Filter events by the participating company's company_type. "
+            "Valid values: 'corporate' (public/private companies), "
+            "'government' (Treasury, government agencies, etc.), "
+            "'regulatory' (Federal Reserve, SEC, CFTC, FCA, etc.). Omit to include ALL types (the default). "
+            "This is a narrowing filter only — government/regulatory events are already "
+            "included in default results; use it to restrict results to a given type, or "
+            "pass equity_ids to target a specific entity."
+        ),
+    )
+
     event_type: str = Field(
         default="earnings",
         description="Type of event to search for. ONLY ONE type per call - to search multiple types, make separate calls. Options: 'earnings' (quarterly earnings calls with Q&A), 'presentation' (investor conferences, company presentations at events - use this for 'conference calls'), 'investor_meeting' (investor day events, one-on-one meetings - use this for 'investor meetings'), 'shareholder_meeting' (annual/special shareholder meetings), 'special_situation' (M&A announcements, other corporate actions). Example: for 'conference calls AND meetings', make TWO calls: one with event_type='presentation' and one with event_type='investor_meeting'. Defaults to 'earnings'.",
@@ -189,6 +225,46 @@ class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
         if v not in valid_types:
             raise ValueError(f"event_type must be one of: {', '.join(valid_types)}")
         return v
+
+    @field_validator("company_type")
+    @classmethod
+    def validate_company_type_values(cls, v):
+        if v is None:
+            return v
+        valid = ("corporate", "government", "regulatory")
+        if v not in valid:
+            raise ValueError(f"company_type must be one of: {', '.join(valid)}")
+        return v
+
+    @field_validator("equity_ids", mode="before")
+    @classmethod
+    def validate_equity_ids(cls, v):
+        # None / "" mean "not provided" -> omit the filter entirely.
+        if v is None:
+            return None
+        was_collection = isinstance(v, (list, tuple))
+        if was_collection:
+            v = ",".join(str(x) for x in v)
+        s = str(v).strip()
+        if s == "" and not was_collection:
+            return None
+        parts = [p.strip() for p in s.split(",") if p.strip()]
+        if not parts:
+            # e.g. equity_ids="," or [] — the caller intended a filter but gave no IDs.
+            # Do NOT collapse to "" (the backend reads "" as "no filter" and returns
+            # every event in the window). Fail loudly instead.
+            raise ValueError(
+                "equity_ids was provided but contained no valid IDs — pass at least one "
+                "integer equity_id, or omit the parameter entirely."
+            )
+        for p in parts:
+            try:
+                int(p)
+            except ValueError:
+                raise ValueError(
+                    f"equity_ids must be integer equity_id values, got: {p!r}"
+                )
+        return ",".join(parts)
 
 
 # Parameter models (extracted from params.py)
