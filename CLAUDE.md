@@ -110,10 +110,20 @@ All settings via env vars or `.env` file (see `.env.example`):
 - pycln (unused import removal)
 - pytest-cov (pre-push only)
 
+## Docstrings
+
+**Some docstrings in this repo are user-facing text, not code documentation.** An MCP client (Claude, Gemini Enterprise, a customer's agent) reads them to decide when and how to call a tool.
+
+- **Args model docstrings are user-visible.** `registry.py` copies each Args model's entire `__doc__` into `TOOL_REGISTRY[...]["description"]`, stripped of leading and trailing whitespace and nothing else. Pydantic's `model_json_schema()` also puts the same docstring in the input schema's top-level `description`. Whatever you write there, the client sees, twice.
+- **`Field(description=...)` on Args fields is also user-visible**, as each property's `description` in the input schema.
+- **So don't use Google-style sections (`Args:`, `Returns:`, `Raises:`, `Example:`) in an Args model docstring.** They would reach the client as literal text and read as instructions about the model, not about the tool. Write plain prose about what the tool does and when to use it. Document each parameter with `Field(description=...)`, not in the docstring.
+- **Don't put internal notes in those docstrings:** no ticket keys, TODOs, implementation details or caveats meant for engineers. Put those in a `#` comment above the class.
+- **Everywhere else, use Google style** (CORE-4385): tool functions in `tools.py`, helpers in `base.py` and `utils.py`, Response models, and tests. That's a one-line summary ending in a period, then `Args:`, `Returns:` and `Raises:` sections where they apply. Response model docstrings aren't sent to clients today, because the registry has no output schema; if one is ever added, treat them like Args models.
+
 ## Adding a New Tool
 
 1. Create or extend a domain module under `aiera_mcp/tools/<domain>/`
-2. Define Args model (Pydantic, with docstring — this becomes the tool description) and Response model in `models.py`
+2. Define Args model (Pydantic, with docstring — this becomes the tool description, so read "Docstrings" above first) and Response model in `models.py`
 3. Implement async tool function in `tools.py`
 4. Export from domain `__init__.py`
 5. Register in `aiera_mcp/tools/registry.py` — add import and `TOOL_REGISTRY` entry
