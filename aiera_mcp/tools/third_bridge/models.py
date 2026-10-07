@@ -81,6 +81,8 @@ class FindThirdBridgeEventsArgs(BaseToolArgs, BloombergTickerMixin):
 
     RETURNS METADATA AND SUMMARIES ONLY — NOT full transcripts. To retrieve full interview content, call get_third_bridge_event with the event_id from these results. For keyword-level search across many interviews, use search_thirdbridge instead.
 
+    ORDERING: results are sorted newest-first by call_date (same convention as find_events). "The most recent" call is the first item on page 1; still read call_date rather than assuming when the user asks about a specific period.
+
     OPEN-ENDED QUERIES: For queries with no user-specified time period, OMIT start_date and end_date. Third Bridge content is valuable across its full historical corpus — only apply date filters when the user explicitly requests a specific time window.
 
     WHEN TO USE: Use this when you need expert/industry perspectives rather than official company communications.
