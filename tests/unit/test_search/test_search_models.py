@@ -432,3 +432,29 @@ class TestNewSearchResponses:
             response=None,
         )
         assert response.response is None
+
+
+class TestSearchCompanyScopeFields:
+    """CORE-4199: search tools accept bloomberg_ticker so the model never guesses equity_ids."""
+
+    def test_transcripts_accepts_public_identifiers(self):
+        from aiera_mcp.tools.search.models import SearchTranscriptsArgs
+
+        args = SearchTranscriptsArgs(query_text="drones", bloomberg_ticker="WMT:US", isin="US9311421039")
+        dumped = args.model_dump(exclude_none=True)
+        assert dumped["bloomberg_ticker"] == "WMT:US" and dumped["isin"] == "US9311421039"
+        assert "equity_ids" not in dumped
+
+    def test_filings_accepts_public_identifiers(self):
+        from aiera_mcp.tools.search.models import SearchFilingsArgs
+
+        args = SearchFilingsArgs(query_text="risk factors", bloomberg_ticker="TSLA:US")
+        assert args.model_dump(exclude_none=True)["bloomberg_ticker"] == "TSLA:US"
+
+    def test_equity_ids_description_forbids_guessing(self):
+        from aiera_mcp.tools.search.models import SearchFilingsArgs, SearchTranscriptsArgs
+
+        for model in (SearchTranscriptsArgs, SearchFilingsArgs):
+            desc = model.model_fields["equity_ids"].description
+            assert "NEVER guess" in desc and "resolved_equities" in desc
+            assert "PREFERRED" in model.model_fields["bloomberg_ticker"].description
