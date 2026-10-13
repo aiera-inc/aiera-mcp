@@ -168,6 +168,17 @@ class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
         description="ID of a specific conference. Use find_conferences to find valid IDs.",
     )
 
+    include_delisted: Optional[bool] = Field(
+        default=True,
+        description=(
+            "Whether ticker/ISIN/RIC/permid filters may resolve to delisted or inactive "
+            "equities (acquired, taken private, merged). Defaults to true: a company's "
+            "historical events remain available after it is delisted, so e.g. "
+            "bloomberg_ticker='APHA:CN' still finds Aphria's 2019 earnings calls. Set to "
+            "false only to restrict results to currently listed companies."
+        ),
+    )
+
     equity_ids: Optional[Union[str, List[Union[int, str]]]] = Field(
         default=None,
         description=(

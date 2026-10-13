@@ -715,3 +715,27 @@ class TestGetKpisAndSegmentsArgs:
         assert "period" in schema["properties"]
         assert "calendar_year" in schema["properties"]
         assert "calendar_quarter" in schema["properties"]
+
+
+class TestFindEquitiesIncludeInactive:
+    """CORE-3919: delisted / acquired companies must be discoverable on request."""
+
+    def test_default_false_and_excluded_from_payload(self):
+        from aiera_mcp.tools.equities.models import FindEquitiesArgs
+
+        args = FindEquitiesArgs(search="Aphria")
+        assert args.include_inactive is False
+        # model_dump(exclude_none=True) still carries the explicit False through
+        assert args.model_dump(exclude_none=True)["include_inactive"] is False
+
+    def test_true_passes_through(self):
+        from aiera_mcp.tools.equities.models import FindEquitiesArgs
+
+        args = FindEquitiesArgs(search="Aphria", include_inactive=True)
+        assert args.model_dump(exclude_none=True)["include_inactive"] is True
+
+    def test_description_mentions_delisted(self):
+        from aiera_mcp.tools.equities.models import FindEquitiesArgs
+
+        desc = FindEquitiesArgs.model_fields["include_inactive"].description
+        assert "delisted" in desc and "status" in desc

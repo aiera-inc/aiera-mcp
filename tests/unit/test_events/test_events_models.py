@@ -390,3 +390,20 @@ class TestEventsResponseJsonSerialization:
 
         # metadata should remain None when not provided
         assert serialized["metadata"] is None
+
+
+class TestFindEventsIncludeDelisted:
+    """CORE-3919: ticker filters resolve delisted companies' historical events by default."""
+
+    def test_default_true(self):
+        from aiera_mcp.tools.events.models import FindEventsArgs
+
+        args = FindEventsArgs(start_date="2019-01-01", end_date="2019-12-31", bloomberg_ticker="APHA:CN")
+        assert args.include_delisted is True
+        assert args.model_dump(exclude_none=True)["include_delisted"] is True
+
+    def test_opt_out(self):
+        from aiera_mcp.tools.events.models import FindEventsArgs
+
+        args = FindEventsArgs(start_date="2019-01-01", end_date="2019-12-31", include_delisted=False)
+        assert args.model_dump(exclude_none=True)["include_delisted"] is False
