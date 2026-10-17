@@ -81,6 +81,18 @@ class SearchTranscriptsArgs(BaseAieraArgs, CompactArgsMixin):
         ),
     )
 
+    @field_validator("bloomberg_ticker", mode="before")
+    @classmethod
+    def validate_bloomberg_ticker(cls, v):
+        """Automatically correct Bloomberg ticker format ('WMT US' / 'wmt' -> 'WMT:US'),
+        matching the find_* tools, so a format slip is fixed client-side rather than
+        returned as a backend error."""
+        if v is None:
+            return v
+        from ..utils import correct_bloomberg_ticker
+
+        return correct_bloomberg_ticker(v)
+
     isin: Optional[str] = Field(default=None, description="Optional ISIN to scope the search to one company.")
 
     ric: Optional[str] = Field(default=None, description="Optional Reuters Instrument Code to scope the search.")
@@ -220,6 +232,18 @@ class SearchFilingsArgs(BaseAieraArgs, CompactArgsMixin):
             "An unknown ticker returns an explicit error rather than empty results."
         ),
     )
+
+    @field_validator("bloomberg_ticker", mode="before")
+    @classmethod
+    def validate_bloomberg_ticker(cls, v):
+        """Automatically correct Bloomberg ticker format ('WMT US' / 'wmt' -> 'WMT:US'),
+        matching the find_* tools, so a format slip is fixed client-side rather than
+        returned as a backend error."""
+        if v is None:
+            return v
+        from ..utils import correct_bloomberg_ticker
+
+        return correct_bloomberg_ticker(v)
 
     isin: Optional[str] = Field(default=None, description="Optional ISIN to scope the search to one company.")
 

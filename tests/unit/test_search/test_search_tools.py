@@ -582,3 +582,95 @@ class TestSearchThirdbridge:
         )
 
         assert result.instructions == []
+
+
+@pytest.mark.unit
+class TestSearchCompanyScopePayload:
+    """CORE-4199 (PR #67 review): the public identifiers reach the request body, and
+    unset ones are omitted rather than sent as null."""
+
+    IDENTS = {
+        "bloomberg_ticker": "WMT:US",
+        "isin": "US9311421039",
+        "ric": "WMT.N",
+        "permid": "4295905298",
+    }
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("ident", sorted(IDENTS))
+    async def test_search_transcripts_forwards_identifier(
+        self, mock_http_dependencies, sample_api_responses, ident
+    ):
+        mock_http_dependencies["mock_make_request"].return_value = sample_api_responses[
+            "search"
+        ]["search_transcripts_success"]
+
+        await search_transcripts(
+            SearchTranscriptsArgs(
+                query_text="capex", size=10, **{ident: self.IDENTS[ident]}
+            )
+        )
+
+        payload = mock_http_dependencies["mock_make_request"].call_args[1]["data"]
+        assert payload[ident] == self.IDENTS[ident]
+        for other in self.IDENTS:
+            if other != ident:
+                assert other not in payload
+        assert "equity_ids" not in payload
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("ident", sorted(IDENTS))
+    async def test_search_filings_forwards_identifier(
+        self, mock_http_dependencies, sample_api_responses, ident
+    ):
+        mock_http_dependencies["mock_make_request"].return_value = {
+            "instructions": [],
+            "response": {"result": []},
+        }
+
+        await search_filings(
+            SearchFilingsArgs(
+                query_text="risk factors", size=10, **{ident: self.IDENTS[ident]}
+            )
+        )
+
+        payload = mock_http_dependencies["mock_make_request"].call_args[1]["data"]
+        assert payload[ident] == self.IDENTS[ident]
+        for other in self.IDENTS:
+            if other != ident:
+                assert other not in payload
+
+    @pytest.mark.asyncio
+    async def test_corrected_ticker_is_what_gets_sent(
+        self, mock_http_dependencies, sample_api_responses
+    ):
+        mock_http_dependencies["mock_make_request"].return_value = sample_api_responses[
+            "search"
+        ]["search_transcripts_success"]
+
+        await search_transcripts(
+            SearchTranscriptsArgs(
+                query_text="capex", size=10, bloomberg_ticker="wmt us"
+            )
+        )
+
+        payload = mock_http_dependencies["mock_make_request"].call_args[1]["data"]
+        # the Args validator corrects the separator; case is left to the backend
+        assert payload["bloomberg_ticker"] == "wmt:us"
+
+    @pytest.mark.asyncio
+    async def test_identifiers_and_equity_ids_can_combine(
+        self, mock_http_dependencies, sample_api_responses
+    ):
+        mock_http_dependencies["mock_make_request"].return_value = sample_api_responses[
+            "search"
+        ]["search_transcripts_success"]
+
+        await search_transcripts(
+            SearchTranscriptsArgs(
+                query_text="capex", size=10, bloomberg_ticker="WMT:US", equity_ids=[7]
+            )
+        )
+
+        payload = mock_http_dependencies["mock_make_request"].call_args[1]["data"]
+        assert payload["bloomberg_ticker"] == "WMT:US" and payload["equity_ids"] == [7]

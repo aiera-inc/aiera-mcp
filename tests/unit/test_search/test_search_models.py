@@ -458,3 +458,17 @@ class TestSearchCompanyScopeFields:
             desc = model.model_fields["equity_ids"].description
             assert "NEVER guess" in desc and "resolved_equities" in desc
             assert "PREFERRED" in model.model_fields["bloomberg_ticker"].description
+
+    @pytest.mark.parametrize(
+        "raw, expected",
+        [("WMT US", "WMT:US"), ("WMT", "WMT:US"), ("WMT:US", "WMT:US"), ("WMT US,COST US", "WMT:US,COST:US")],
+    )
+    def test_bloomberg_ticker_is_corrected_like_find_tools(self, raw, expected):
+        # review on PR #67: the search Args must apply the same ticker correction as the
+        # find_* tools, so a format slip does not become a backend error
+        assert SearchTranscriptsArgs(query_text="q", bloomberg_ticker=raw).bloomberg_ticker == expected
+        assert SearchFilingsArgs(query_text="q", bloomberg_ticker=raw).bloomberg_ticker == expected
+
+    def test_bloomberg_ticker_none_passes_through(self):
+        assert SearchTranscriptsArgs(query_text="q").bloomberg_ticker is None
+        assert SearchFilingsArgs(query_text="q").bloomberg_ticker is None
