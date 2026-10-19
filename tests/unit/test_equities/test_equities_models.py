@@ -57,6 +57,16 @@ class TestFindEquitiesArgs:
         assert args.ric is None
         assert args.permid is None
         assert args.search is None
+        assert args.include_inactive is False  # CORE-3919: active-only unless asked
+
+    def test_include_inactive_is_forwarded_when_set(self):
+        # CORE-3919: delisted companies (acquired / taken private) must be findable
+        args = FindEquitiesArgs(search="Aphria", include_inactive=True)
+        assert args.include_inactive is True
+        assert args.model_dump(exclude_none=True)["include_inactive"] is True
+        assert "status" in (
+            FindEquitiesArgs.model_fields["include_inactive"].description or ""
+        )
 
     def test_find_equities_args_pagination_validation(self):
         """Test pagination parameter validation."""

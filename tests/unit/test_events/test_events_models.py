@@ -49,6 +49,15 @@ class TestFindEventsArgs:
         assert args.bloomberg_ticker is None
         assert args.watchlist_id is None
         assert args.include_base_instructions is True  # Default value
+        assert args.include_delisted is True  # CORE-3919: delisted companies keep their history
+
+    def test_include_delisted_default_reaches_payload_and_can_be_disabled(self):
+        # CORE-3919: the default must be sent explicitly so the API resolves delisted
+        # tickers (e.g. APHA:CN); callers may opt out
+        args = FindEventsArgs(start_date="2019-01-01", end_date="2019-12-31", bloomberg_ticker="APHA:CN")
+        assert args.model_dump(exclude_none=True)["include_delisted"] is True
+        off = FindEventsArgs(start_date="2019-01-01", end_date="2019-12-31", include_delisted=False)
+        assert off.model_dump(exclude_none=True)["include_delisted"] is False
 
     def test_find_events_args_date_format_validation(self):
         """Test date format validation."""

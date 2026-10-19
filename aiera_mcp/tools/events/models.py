@@ -143,6 +143,17 @@ class FindEventsArgs(BaseToolArgs, BloombergTickerMixin, EventTypeMixin):
         description="Optional: Bloomberg ticker(s) to filter by specific companies in format 'TICKER:COUNTRY' (e.g., 'AAPL:US'). For multiple tickers, use comma-separated list without spaces (e.g., 'AAPL:US,MSFT:US,GOOGL:US'). Defaults to ':US' if country code omitted. Leave empty to search across all companies.",
     )
 
+    include_delisted: Optional[bool] = Field(
+        default=True,
+        description=(
+            "Whether ticker/ISIN/RIC/permid filters may resolve to delisted or inactive "
+            "equities (acquired, taken private, merged). Defaults to true: a company's "
+            "historical events remain available after it is delisted, so e.g. "
+            "bloomberg_ticker='APHA:CN' still finds Aphria's 2019 earnings calls. Set to "
+            "false only to restrict results to currently listed companies."
+        ),
+    )
+
     watchlist_id: Optional[Union[int, str]] = Field(
         default=None,
         description="ID of a specific watchlist. Use get_available_watchlists to find valid IDs.",
