@@ -130,6 +130,19 @@ class FindEquitiesArgs(BaseToolArgs, BloombergTickerMixin):
         ),
     )
 
+    include_inactive: Optional[bool] = Field(
+        default=False,
+        description=(
+            "By default only ACTIVE (currently listed) equities are returned. Set to true to "
+            "also include delisted / inactive equities: companies that were acquired, taken "
+            "private, merged, or otherwise delisted (e.g. Aphria, Hess, Heartland Financial, "
+            "CoreLogic). Their historical events, transcripts and filings remain available. "
+            "Use this whenever a ticker or name lookup returns nothing for a company that "
+            "plausibly existed. Each result carries a `status` field (active, delisted, "
+            "inactive, merger, suspended) so you can tell the user the company is no longer listed."
+        ),
+    )
+
     include_non_tradable: Optional[bool] = Field(
         default=False,
         description=(
