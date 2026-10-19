@@ -582,3 +582,60 @@ class TestSearchThirdbridge:
         )
 
         assert result.instructions == []
+
+
+@pytest.mark.unit
+class TestSearchCompanyScopePayload:
+    """CORE-4199: the public identifiers reach the request body; unset ones are omitted."""
+
+    IDENTS = {
+        "bloomberg_ticker": "WMT:US",
+        "isin": "US9311421039",
+        "ric": "WMT.N",
+        "permid": "4295905298",
+    }
+    EMPTY = {"instructions": [], "response": {"result": []}}
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("ident", sorted(IDENTS))
+    async def test_search_transcripts_forwards_identifier(
+        self, mock_http_dependencies, ident
+    ):
+        mock_http_dependencies["mock_make_request"].return_value = self.EMPTY
+        await search_transcripts(
+            SearchTranscriptsArgs(
+                query_text="capex", size=10, **{ident: self.IDENTS[ident]}
+            )
+        )
+        payload = mock_http_dependencies["mock_make_request"].call_args[1]["data"]
+        assert payload[ident] == self.IDENTS[ident]
+        assert not any(other in payload for other in self.IDENTS if other != ident)
+        assert "equity_ids" not in payload
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("ident", sorted(IDENTS))
+    async def test_search_filings_forwards_identifier(
+        self, mock_http_dependencies, ident
+    ):
+        mock_http_dependencies["mock_make_request"].return_value = self.EMPTY
+        await search_filings(
+            SearchFilingsArgs(
+                query_text="risk factors", size=10, **{ident: self.IDENTS[ident]}
+            )
+        )
+        payload = mock_http_dependencies["mock_make_request"].call_args[1]["data"]
+        assert payload[ident] == self.IDENTS[ident]
+        assert not any(other in payload for other in self.IDENTS if other != ident)
+
+    @pytest.mark.asyncio
+    async def test_corrected_ticker_and_equity_ids_combine(
+        self, mock_http_dependencies
+    ):
+        mock_http_dependencies["mock_make_request"].return_value = self.EMPTY
+        await search_transcripts(
+            SearchTranscriptsArgs(
+                query_text="capex", size=10, bloomberg_ticker="wmt us", equity_ids=[7]
+            )
+        )
+        payload = mock_http_dependencies["mock_make_request"].call_args[1]["data"]
+        assert payload["bloomberg_ticker"] == "wmt:us" and payload["equity_ids"] == [7]

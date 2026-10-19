@@ -71,9 +71,44 @@ class SearchTranscriptsArgs(BaseAieraArgs, CompactArgsMixin):
         description="Optional list of specific event IDs to search within. Obtain event_ids from find_events results. Example: [12345, 67890]",
     )
 
+    bloomberg_ticker: Optional[str] = Field(
+        default=None,
+        description=(
+            "PREFERRED way to scope the search to specific companies. Bloomberg ticker(s) in "
+            "'TICKER:COUNTRY' format, comma-separated for several (e.g. 'WMT:US' or "
+            "'WMT:US,COST:US'). Resolved server-side, so you never need an internal id. "
+            "An unknown ticker returns an explicit error rather than empty results."
+        ),
+    )
+
+    isin: Optional[str] = Field(default=None, description="Optional ISIN to scope the search to one company.")
+
+    ric: Optional[str] = Field(default=None, description="Optional Reuters Instrument Code to scope the search.")
+
+    permid: Optional[str] = Field(default=None, description="Optional Refinitiv PermID to scope the search.")
+
+    @field_validator("bloomberg_ticker", mode="before")
+    @classmethod
+    def validate_bloomberg_ticker(cls, v):
+        """Apply the same Bloomberg ticker correction as the find_* tools ('WMT US' /
+        'wmt' -> 'WMT:US'), so a format slip is fixed client-side rather than returned
+        as a backend error."""
+        if v is None:
+            return v
+        from ..utils import correct_bloomberg_ticker
+
+        return correct_bloomberg_ticker(v)
+
     equity_ids: Optional[List[int]] = Field(
         default=None,
-        description="Optional list of specific equity IDs to filter search. Obtain equity_ids from find_equities results. Example: [100, 200]",
+        description=(
+            "Internal equity ids to filter the search. ONLY pass values that appeared in a "
+            "find_equities or find_events result earlier in this conversation. NEVER guess, "
+            "recall, or construct an equity_id: a wrong id returns another company's data or "
+            "an error. If you only know the company or ticker, use bloomberg_ticker instead. "
+            "The response echoes `resolved_equities` so you can confirm the filter matched the "
+            "intended company; if it did not, fix the scope before answering."
+        ),
     )
 
     conference_id: Optional[Union[int, str]] = Field(
@@ -188,9 +223,44 @@ class SearchFilingsArgs(BaseAieraArgs, CompactArgsMixin):
         description="Optional list of specific filing IDs to search within. Obtain filing_ids from find_filings results. Example: [12345, 67890]",
     )
 
+    bloomberg_ticker: Optional[str] = Field(
+        default=None,
+        description=(
+            "PREFERRED way to scope the search to specific companies. Bloomberg ticker(s) in "
+            "'TICKER:COUNTRY' format, comma-separated for several (e.g. 'WMT:US' or "
+            "'WMT:US,COST:US'). Resolved server-side, so you never need an internal id. "
+            "An unknown ticker returns an explicit error rather than empty results."
+        ),
+    )
+
+    isin: Optional[str] = Field(default=None, description="Optional ISIN to scope the search to one company.")
+
+    ric: Optional[str] = Field(default=None, description="Optional Reuters Instrument Code to scope the search.")
+
+    permid: Optional[str] = Field(default=None, description="Optional Refinitiv PermID to scope the search.")
+
+    @field_validator("bloomberg_ticker", mode="before")
+    @classmethod
+    def validate_bloomberg_ticker(cls, v):
+        """Apply the same Bloomberg ticker correction as the find_* tools ('WMT US' /
+        'wmt' -> 'WMT:US'), so a format slip is fixed client-side rather than returned
+        as a backend error."""
+        if v is None:
+            return v
+        from ..utils import correct_bloomberg_ticker
+
+        return correct_bloomberg_ticker(v)
+
     equity_ids: Optional[List[int]] = Field(
         default=None,
-        description="Optional list of specific equity IDs to filter search. Obtain equity_ids from find_equities results. Example: [100, 200]",
+        description=(
+            "Internal equity ids to filter the search. ONLY pass values that appeared in a "
+            "find_equities or find_events result earlier in this conversation. NEVER guess, "
+            "recall, or construct an equity_id: a wrong id returns another company's data or "
+            "an error. If you only know the company or ticker, use bloomberg_ticker instead. "
+            "The response echoes `resolved_equities` so you can confirm the filter matched the "
+            "intended company; if it did not, fix the scope before answering."
+        ),
     )
 
     start_date: str = Field(

@@ -432,3 +432,40 @@ class TestNewSearchResponses:
             response=None,
         )
         assert response.response is None
+
+
+class TestSearchCompanyScopeFields:
+    """CORE-4199: search tools accept public identifiers so the model never guesses equity_ids."""
+
+    @pytest.mark.parametrize("model", [SearchTranscriptsArgs, SearchFilingsArgs])
+    def test_accepts_public_identifiers(self, model):
+        args = model(
+            query_text="q",
+            bloomberg_ticker="WMT:US,COST:US",
+            isin="US9311421039",
+            ric="WMT.N",
+            permid="4295905298",
+        )
+        assert args.bloomberg_ticker == "WMT:US,COST:US"
+        assert (
+            args.isin == "US9311421039"
+            and args.ric == "WMT.N"
+            and args.permid == "4295905298"
+        )
+
+    @pytest.mark.parametrize("model", [SearchTranscriptsArgs, SearchFilingsArgs])
+    @pytest.mark.parametrize(
+        "raw, expected",
+        [("WMT US", "WMT:US"), ("WMT", "WMT:US"), ("WMT US,COST US", "WMT:US,COST:US")],
+    )
+    def test_bloomberg_ticker_is_corrected_like_find_tools(self, model, raw, expected):
+        assert model(query_text="q", bloomberg_ticker=raw).bloomberg_ticker == expected
+
+    @pytest.mark.parametrize("model", [SearchTranscriptsArgs, SearchFilingsArgs])
+    def test_equity_ids_description_forbids_guessing(self, model):
+        desc = model.model_fields["equity_ids"].description
+        assert (
+            "NEVER guess" in desc
+            and "bloomberg_ticker" in desc
+            and "resolved_equities" in desc
+        )
