@@ -112,6 +112,12 @@ class TestFindThirdBridgeEventsArgs:
         dumped = args.model_dump(exclude_none=True)
         assert dumped[field_name] == str(field_value)
 
+    def test_docstring_states_newest_first_ordering(self):
+        # CORE-4193: the API orders by call_date DESC; the tool description must say
+        # so, so the model reads page 1 item 1 as the most recent call
+        doc = FindThirdBridgeEventsArgs.__doc__
+        assert "ORDERING" in doc and "newest-first by call_date" in doc
+
     def test_bloomberg_ticker_validation(self):
         """Test Bloomberg ticker format validation."""
         args = FindThirdBridgeEventsArgs(
