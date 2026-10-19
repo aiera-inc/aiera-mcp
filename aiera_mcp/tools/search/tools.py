@@ -47,6 +47,12 @@ async def search_transcripts(args: SearchTranscriptsArgs) -> SearchTranscriptsRe
     if args.equity_ids:
         payload["equity_ids"] = args.equity_ids
 
+    # public identifiers scope the search server-side (CORE-4199)
+    for identifier in ("bloomberg_ticker", "isin", "ric", "permid"):
+        value = getattr(args, identifier, None)
+        if value:
+            payload[identifier] = value
+
     if args.conference_id is not None:
         payload["conference_id"] = args.conference_id
 
@@ -105,6 +111,12 @@ async def search_filings(args: SearchFilingsArgs) -> SearchFilingsResponse:
 
     if args.equity_ids:
         payload["equity_ids"] = args.equity_ids
+
+    # public identifiers scope the search server-side (CORE-4199)
+    for identifier in ("bloomberg_ticker", "isin", "ric", "permid"):
+        value = getattr(args, identifier, None)
+        if value:
+            payload[identifier] = value
 
     if args.start_date:
         payload["start_date"] = args.start_date
