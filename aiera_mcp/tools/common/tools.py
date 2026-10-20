@@ -160,7 +160,12 @@ async def available_tools(
         params={},
     )
 
-    endpoints = raw_response.get("endpoints", [])
+    # Propagate an upstream error (e.g. an invalid / unauthenticated API key) instead
+    # of silently returning a near-empty tool list. Hosts use it to tell "bad
+    # credentials" from "few permissions" (CORE-4557).
+    upstream_error = raw_response.get("error") if isinstance(raw_response, dict) else None
+
+    endpoints = raw_response.get("endpoints", []) if isinstance(raw_response, dict) else []
 
     tool_names = set()
     for endpoint in endpoints:
@@ -179,4 +184,5 @@ async def available_tools(
     return AvailableToolsResponse(
         available_tools=sorted(tool_names),
         hidden_tools=sorted(hidden_tools),
+        error=upstream_error,
     )

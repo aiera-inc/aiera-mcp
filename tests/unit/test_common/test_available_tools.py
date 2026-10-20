@@ -79,3 +79,26 @@ class TestAvailableTools:
             TOOL_REGISTRY.keys()
         )
         assert not (set(result.available_tools) & set(result.hidden_tools))
+
+    async def test_upstream_error_is_propagated(self):
+        # CORE-4557: the API answers an invalid key with HTTP 200 and an error body;
+        # the host (aiera-public-mcp) must be able to see it rather than a near-empty
+        # tool list that looks like "few permissions"
+        raw = {"error": "The user is not properly authenticated with Aiera. Please instruct the user to re-authenticate."}
+        with patch(
+            "aiera_mcp.tools.common.tools.make_aiera_request", new=AsyncMock(return_value=raw)
+        ), patch("aiera_mcp.tools.common.tools.get_api_key", return_value="bad"), patch(
+            "aiera_mcp.tools.common.tools.get_http_client", new=AsyncMock(return_value=object())
+        ):
+            result = await available_tools(AvailableToolsArgs())
+        assert result.error == raw["error"]
+        assert result.available_tools == ["available_tools"]
+
+    async def test_no_error_field_when_upstream_succeeds(self):
+        with patch(
+            "aiera_mcp.tools.common.tools.make_aiera_request", new=AsyncMock(return_value={"endpoints": []})
+        ), patch("aiera_mcp.tools.common.tools.get_api_key", return_value="k"), patch(
+            "aiera_mcp.tools.common.tools.get_http_client", new=AsyncMock(return_value=object())
+        ):
+            result = await available_tools(AvailableToolsArgs())
+        assert result.error is None
