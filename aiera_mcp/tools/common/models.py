@@ -12,18 +12,12 @@ class BaseAieraArgs(BaseModel):
     pass
 
 
-# Keys MCP transports / the chat lambda attach to every tool call that are not tool
-# arguments (auth and chat-internal context). They are never forwarded by the tool
+# Keys an MCP client or hosting layer may attach to every tool call regardless of the
+# tool's schema (auth and session context). They are never forwarded by the tool
 # functions, so a strict model must tolerate them.
 #
-# KEEP IN SYNC WITH aiera-chat-lambda, which injects these without consulting the tool
-# schema: `_build_overrides` in infrastructure/mcp/tool_manager.py (self_identification,
-# exclude_instructions, api_key, originating_prompt) and `_FORCED_PARAM_VALUES` /
-# `_HIDDEN_SCHEMA_PARAMS` in infrastructure/mcp/source_filtered_tool.py (compact,
-# include_base_instructions). The lambda mirrors this set as
-# MCP_TRANSPORT_ONLY_ARGUMENT_KEYS and has a test that every key it injects is in it; a
-# key added on the lambda side without being added here makes every call to a strict
-# tool fail validation.
+# If your client injects additional per-call keys, add them here: a key that is neither
+# declared by the tool nor listed in this set fails validation on every call.
 TRANSPORT_ONLY_ARGUMENT_KEYS = frozenset(
     {
         "api_key",
@@ -42,10 +36,9 @@ class StrictArgsMixin(BaseModel):
     Pydantic ignores unknown keys by default, so a parameter the LLM supplies that the
     schema never declared is dropped before the request leaves the server — the call
     succeeds and returns an UNFILTERED result set with no signal that the filter was
-    lost (find_research with bloomberg_ticker returned the whole index for weeks). A
-    loud validation error gets fed back to the model, which then picks a parameter that
-    exists. Transport keys (``TRANSPORT_ONLY_ARGUMENT_KEYS``) are allowed through
-    because the chat lambda attaches them to every call regardless of schema.
+    lost. A loud validation error gets fed back to the model, which then picks a
+    parameter that exists. Transport keys (``TRANSPORT_ONLY_ARGUMENT_KEYS``) are allowed
+    through because clients may attach them to every call regardless of schema.
     """
 
     @model_validator(mode="before")

@@ -33,7 +33,7 @@ class TestStrictArgs:
         [(FindResearchArgs, {}), (SearchResearchArgs, {"query_text": "q"})],
     )
     def test_transport_keys_are_tolerated(self, model, base_kwargs):
-        # the chat lambda attaches these to every call regardless of the tool schema
+        # clients may attach these to every call regardless of the tool schema
         extras = {
             key: "x" for key in TRANSPORT_ONLY_ARGUMENT_KEYS - set(model.model_fields)
         }
