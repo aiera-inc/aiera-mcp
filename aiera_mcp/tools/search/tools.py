@@ -172,6 +172,12 @@ async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
     if args.document_ids:
         payload["document_ids"] = args.document_ids
 
+    # public identifiers scope the search server-side (same contract as search_transcripts)
+    for identifier in ("bloomberg_ticker", "isin", "ric", "permid"):
+        value = getattr(args, identifier, None)
+        if value:
+            payload[identifier] = value
+
     if args.start_date:
         payload["start_date"] = args.start_date
 

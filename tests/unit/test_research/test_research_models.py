@@ -162,12 +162,13 @@ class TestResearchModelSerialization:
         assert "countries" in schema["properties"]
         assert "search_after" in schema["properties"]
         assert "page_size" in schema["properties"]
-        # Equity/group filter fields should be present
-        assert "bloomberg_ticker" not in schema["properties"]
-        assert "index_id" not in schema["properties"]
-        assert "watchlist_id" not in schema["properties"]
-        assert "sector_id" not in schema["properties"]
-        assert "subsector_id" not in schema["properties"]
+        # Equity/group filter fields are declared — the tool description tells the model
+        # to scope by identifier, and an undeclared field is silently dropped by Pydantic
+        # (the request then runs unfiltered against the whole index)
+        for field in ("bloomberg_ticker", "isin", "ric", "permid"):
+            assert field in schema["properties"], field
+        for field in ("index_id", "watchlist_id", "sector_id", "subsector_id"):
+            assert field in schema["properties"], field
         # page is not present (uses cursor-based pagination via search_after)
         assert "page" not in schema["properties"]
 

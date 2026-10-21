@@ -3,13 +3,58 @@
 """Common base models for Aiera MCP tools."""
 
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field, field_serializer
+from pydantic import BaseModel, Field, model_validator
 
 
 class BaseAieraArgs(BaseModel):
     """Base class for all Aiera tool arguments."""
 
     pass
+
+
+# Keys MCP transports / the chat lambda attach to every tool call that are not tool
+# arguments (auth and chat-internal context). They are never forwarded by the tool
+# functions, so a strict model must tolerate them.
+TRANSPORT_ONLY_ARGUMENT_KEYS = frozenset(
+    {
+        "api_key",
+        "originating_prompt",
+        "self_identification",
+        "exclude_instructions",
+        "include_base_instructions",
+        "compact",
+    }
+)
+
+
+class StrictArgsMixin(BaseModel):
+    """Reject tool arguments the model does not declare.
+
+    Pydantic ignores unknown keys by default, so a parameter the LLM supplies that the
+    schema never declared is dropped before the request leaves the server — the call
+    succeeds and returns an UNFILTERED result set with no signal that the filter was
+    lost (find_research with bloomberg_ticker returned the whole index for weeks). A
+    loud validation error gets fed back to the model, which then picks a parameter that
+    exists. Transport keys (``TRANSPORT_ONLY_ARGUMENT_KEYS``) are allowed through
+    because the chat lambda attaches them to every call regardless of schema.
+    """
+
+    @model_validator(mode="before")
+    @classmethod
+    def reject_unknown_arguments(cls, data):
+        if not isinstance(data, dict):
+            return data
+        unknown = sorted(
+            key
+            for key in data
+            if key not in cls.model_fields and key not in TRANSPORT_ONLY_ARGUMENT_KEYS
+        )
+        if unknown:
+            raise ValueError(
+                f"Unknown argument(s) for {cls.__name__}: {', '.join(unknown)}. "
+                f"Accepted arguments: {', '.join(sorted(cls.model_fields))}."
+            )
+        return data
 
 
 class CitationMetadata(BaseModel):

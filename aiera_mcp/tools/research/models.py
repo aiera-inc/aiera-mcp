@@ -5,7 +5,13 @@
 from pydantic import BaseModel, Field, field_validator, field_serializer
 from typing import List, Optional, Any, Union
 
-from ..common.models import BaseAieraArgs, BaseAieraResponse, CompactArgsMixin
+from ..common.models import (
+    BaseAieraArgs,
+    BaseAieraResponse,
+    CompactArgsMixin,
+    StrictArgsMixin,
+)
+from ..utils import correct_bloomberg_ticker
 
 
 # Mixins for validation (same pattern as events/filings domains)
@@ -51,8 +57,8 @@ class BaseToolArgs(BaseModel):
         return str(value)
 
 
-class FindResearchArgs(BaseToolArgs):
-    """Find research reports filtered by optional search terms, author IDs, organizations, regions, and date range.
+class FindResearchArgs(StrictArgsMixin, BaseToolArgs):
+    """Find research reports filtered by company identifier, search terms, author IDs, providers, regions, and date range.
 
     RETURNS METADATA AND SUMMARIES ONLY — NOT full report content. To retrieve the actual report, call get_research with the document_id from these results.
 
@@ -60,7 +66,7 @@ class FindResearchArgs(BaseToolArgs):
     - For narrow queries (≤5 relevant documents expected), use find_research → get_research to retrieve full content from each. Do NOT use search_research for narrow queries; it returns text chunks rather than complete documents.
     - For broad queries (many documents, thematic coverage), use search_research with a descriptive query_text and paginate as needed.
 
-    ALWAYS PROVIDE A SEARCH TERM: Use the `search` parameter (ticker symbol or company name) whenever possible. Many research providers do not link their documents to equity tickers, so text-based search is the most reliable way to surface relevant reports across all providers.
+    SCOPING TO A COMPANY: Pass `bloomberg_ticker` (or `isin` / `ric` / `permid`) — it is resolved server-side and matches documents tagged with the company AND documents carrying the publisher's own security identifiers, including multi-company sector notes a name search misses. An unknown identifier returns an explicit error, never an unfiltered result. Combine it with `search` to narrow by topic (e.g. bloomberg_ticker='INTC:US', search='3Q25 preview'). Use `search` alone (company name or ticker text) only when you have no identifier; some providers do not tag documents with tickers, so when a ticker-scoped call returns little, retry with a name search.
 
     CURRENT RATING / PRICE TARGET QUESTIONS: Prefer get_current_ratings — it answers directly for one or more companies without a manual document workflow. Use find_research only as a fallback (an identifier get_current_ratings could not match, or when the user wants the underlying report): filter by equity identifier (`bloomberg_ticker` / `isin` / `ric`) with `sort_by_date=true` (plus any provider filter) to surface the newest covering document — INCLUDING multi-company sector/industry notes, where rating and price-target changes often land first and which a company-name text search will miss — then pass its document_id to get_research_metadata_ratings.
 
@@ -96,6 +102,62 @@ class FindResearchArgs(BaseToolArgs):
     end_date: Optional[str] = Field(
         default=None,
         description="End date in ISO format (YYYY-MM-DD). All dates are in Eastern Time (ET). Defaults to now on the server.",
+    )
+
+    bloomberg_ticker: Optional[str] = Field(
+        default=None,
+        description=(
+            "PREFERRED way to scope results to a company. Bloomberg ticker in 'TICKER:COUNTRY' "
+            "format (e.g. 'INTC:US'); comma-separate several (e.g. 'INTC:US,AMD:US'). Resolved "
+            "server-side, so you never need an internal id. An unknown ticker returns an explicit "
+            "error rather than unfiltered results. Only one identifier type per call "
+            "(bloomberg_ticker OR isin OR ric OR permid)."
+        ),
+    )
+
+    isin: Optional[str] = Field(
+        default=None,
+        description="ISIN to scope results to one company (alternative to bloomberg_ticker).",
+    )
+
+    ric: Optional[str] = Field(
+        default=None,
+        description="Reuters Instrument Code to scope results to one company (alternative to bloomberg_ticker).",
+    )
+
+    permid: Optional[str] = Field(
+        default=None,
+        description="Refinitiv PermID to scope results to one company (alternative to bloomberg_ticker).",
+    )
+
+    @field_validator("bloomberg_ticker", mode="before")
+    @classmethod
+    def validate_bloomberg_ticker(cls, v):
+        """Apply the same Bloomberg ticker correction as the other find_* tools ('INTC US' /
+        'intc' -> 'INTC:US'), so a format slip is fixed client-side rather than returned as
+        a backend error."""
+        if v is None:
+            return v
+        return correct_bloomberg_ticker(v)
+
+    sector_id: Optional[Union[int, str]] = Field(
+        default=None,
+        description="ID of a specific GICS sector. Use get_sectors_and_subsectors to find valid IDs.",
+    )
+
+    subsector_id: Optional[Union[int, str]] = Field(
+        default=None,
+        description="ID of a specific GICS subsector. Use get_sectors_and_subsectors to find valid IDs.",
+    )
+
+    index_id: Optional[Union[int, str]] = Field(
+        default=None,
+        description="ID of a specific market index. Use get_available_indexes to find valid IDs.",
+    )
+
+    watchlist_id: Optional[Union[int, str]] = Field(
+        default=None,
+        description="ID of a specific user watchlist. Use get_available_watchlists to find valid IDs.",
     )
 
     author_ids: Optional[List[str]] = Field(
@@ -252,7 +314,9 @@ class GetResearchProvidersArgs(BaseToolArgs):
         description="Search term to filter providers by name.",
     )
 
-    page: Union[int, str] = Field(default=1, ge=1, description="Page number for pagination (1-based).")
+    page: Union[int, str] = Field(
+        default=1, ge=1, description="Page number for pagination (1-based)."
+    )
 
     page_size: Union[int, str] = Field(
         default=25,
@@ -300,7 +364,9 @@ class GetResearchAuthorsArgs(BaseToolArgs):
         description="Filter authors by Aiera provider ID. Obtain provider IDs from get_research_providers results.",
     )
 
-    page: Union[int, str] = Field(default=1, ge=1, description="Page number for pagination (1-based).")
+    page: Union[int, str] = Field(
+        default=1, ge=1, description="Page number for pagination (1-based)."
+    )
 
     page_size: Union[int, str] = Field(
         default=25,
@@ -339,7 +405,9 @@ class GetResearchAssetClassesArgs(BaseToolArgs):
         description="Search term to filter asset classes by name.",
     )
 
-    page: Union[int, str] = Field(default=1, ge=1, description="Page number for pagination (1-based).")
+    page: Union[int, str] = Field(
+        default=1, ge=1, description="Page number for pagination (1-based)."
+    )
 
     page_size: Union[int, str] = Field(
         default=25,
@@ -378,7 +446,9 @@ class GetResearchAssetTypesArgs(BaseToolArgs):
         description="Search term to filter asset types by name.",
     )
 
-    page: Union[int, str] = Field(default=1, ge=1, description="Page number for pagination (1-based).")
+    page: Union[int, str] = Field(
+        default=1, ge=1, description="Page number for pagination (1-based)."
+    )
 
     page_size: Union[int, str] = Field(
         default=25,
@@ -417,7 +487,9 @@ class GetResearchSubjectsArgs(BaseToolArgs):
         description="Search term to filter subjects by name.",
     )
 
-    page: Union[int, str] = Field(default=1, ge=1, description="Page number for pagination (1-based).")
+    page: Union[int, str] = Field(
+        default=1, ge=1, description="Page number for pagination (1-based)."
+    )
 
     page_size: Union[int, str] = Field(
         default=25,
@@ -456,7 +528,9 @@ class GetResearchProductFocusesArgs(BaseToolArgs):
         description="Search term to filter product focuses by name.",
     )
 
-    page: Union[int, str] = Field(default=1, ge=1, description="Page number for pagination (1-based).")
+    page: Union[int, str] = Field(
+        default=1, ge=1, description="Page number for pagination (1-based)."
+    )
 
     page_size: Union[int, str] = Field(
         default=25,
@@ -495,7 +569,9 @@ class GetResearchRegionTypesArgs(BaseToolArgs):
         description="Search term to filter region types by name.",
     )
 
-    page: Union[int, str] = Field(default=1, ge=1, description="Page number for pagination (1-based).")
+    page: Union[int, str] = Field(
+        default=1, ge=1, description="Page number for pagination (1-based)."
+    )
 
     page_size: Union[int, str] = Field(
         default=25,
@@ -534,7 +610,9 @@ class GetResearchCountryCodesArgs(BaseToolArgs):
         description="Search term to filter country codes by name.",
     )
 
-    page: Union[int, str] = Field(default=1, ge=1, description="Page number for pagination (1-based).")
+    page: Union[int, str] = Field(
+        default=1, ge=1, description="Page number for pagination (1-based)."
+    )
 
     page_size: Union[int, str] = Field(
         default=25,

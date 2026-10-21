@@ -5,7 +5,13 @@
 from typing import List, Optional, Any, Union
 from pydantic import Field, field_validator
 
-from ..common.models import BaseAieraArgs, BaseAieraResponse, CompactArgsMixin
+from ..common.models import (
+    BaseAieraArgs,
+    BaseAieraResponse,
+    CompactArgsMixin,
+    StrictArgsMixin,
+)
+from ..utils import correct_bloomberg_ticker
 
 
 class SearchTranscriptsArgs(BaseAieraArgs, CompactArgsMixin):
@@ -81,11 +87,18 @@ class SearchTranscriptsArgs(BaseAieraArgs, CompactArgsMixin):
         ),
     )
 
-    isin: Optional[str] = Field(default=None, description="Optional ISIN to scope the search to one company.")
+    isin: Optional[str] = Field(
+        default=None, description="Optional ISIN to scope the search to one company."
+    )
 
-    ric: Optional[str] = Field(default=None, description="Optional Reuters Instrument Code to scope the search.")
+    ric: Optional[str] = Field(
+        default=None,
+        description="Optional Reuters Instrument Code to scope the search.",
+    )
 
-    permid: Optional[str] = Field(default=None, description="Optional Refinitiv PermID to scope the search.")
+    permid: Optional[str] = Field(
+        default=None, description="Optional Refinitiv PermID to scope the search."
+    )
 
     @field_validator("bloomberg_ticker", mode="before")
     @classmethod
@@ -115,8 +128,8 @@ class SearchTranscriptsArgs(BaseAieraArgs, CompactArgsMixin):
         default=None,
         description=(
             "Optional conference / investor summit ID. Restricts search to transcripts of "
-            "events that were part of the given conference (e.g., \"Barclays Global Consumer "
-            "Staples Conference\"). Obtain conference_id from find_conferences results. "
+            'events that were part of the given conference (e.g., "Barclays Global Consumer '
+            'Staples Conference"). Obtain conference_id from find_conferences results. '
             "Prefer this over passing the conference name as query_text — the server maps the "
             "conference to its participating events server-side, which is far more reliable "
             "than semantic matching on transcript text. Can be combined with event_ids to "
@@ -233,11 +246,18 @@ class SearchFilingsArgs(BaseAieraArgs, CompactArgsMixin):
         ),
     )
 
-    isin: Optional[str] = Field(default=None, description="Optional ISIN to scope the search to one company.")
+    isin: Optional[str] = Field(
+        default=None, description="Optional ISIN to scope the search to one company."
+    )
 
-    ric: Optional[str] = Field(default=None, description="Optional Reuters Instrument Code to scope the search.")
+    ric: Optional[str] = Field(
+        default=None,
+        description="Optional Reuters Instrument Code to scope the search.",
+    )
 
-    permid: Optional[str] = Field(default=None, description="Optional Refinitiv PermID to scope the search.")
+    permid: Optional[str] = Field(
+        default=None, description="Optional Refinitiv PermID to scope the search."
+    )
 
     @field_validator("bloomberg_ticker", mode="before")
     @classmethod
@@ -289,13 +309,15 @@ class SearchFilingsArgs(BaseAieraArgs, CompactArgsMixin):
     )
 
 
-class SearchResearchArgs(BaseAieraArgs, CompactArgsMixin):
+class SearchResearchArgs(StrictArgsMixin, BaseAieraArgs, CompactArgsMixin):
     """Semantic search within research content for specific topics, analyses, or insights.
 
     WHEN TO USE THIS TOOL:
     - Use this for broad queries where many documents are expected — it returns relevant text chunks across the research corpus
     - Use this for targeted content extraction from research reports
     - For narrow queries (≤5 relevant documents), prefer find_research → get_research instead, which returns complete documents rather than chunks
+
+    SCOPING TO A COMPANY: When the question is about a specific company, pass `bloomberg_ticker` (or `isin` / `ric` / `permid`). Without it the semantic search ranks chunks from the WHOLE research corpus, so a query like 'Intel 3Q25 preview' returns the closest-sounding passages about any company. The scope is resolved server-side and the matched companies are echoed back as `resolved_equities` so you can confirm the filter hit the intended company.
 
     RETURNS: Relevant research chunks with context, metadata, and relevance scores.
     Results are individual sections/chunks, not full research documents.
@@ -335,6 +357,39 @@ class SearchResearchArgs(BaseAieraArgs, CompactArgsMixin):
         default=None,
         description="Optional list of specific document IDs to search within. Obtain document_ids from find_research or search_research results. Example: ['doc123', 'doc456']",
     )
+
+    bloomberg_ticker: Optional[str] = Field(
+        default=None,
+        description=(
+            "PREFERRED way to scope the search to specific companies. Bloomberg ticker(s) in "
+            "'TICKER:COUNTRY' format, comma-separated for several (e.g. 'INTC:US' or "
+            "'INTC:US,AMD:US'). Resolved server-side, so you never need an internal id. "
+            "An unknown ticker returns an explicit error rather than unscoped results."
+        ),
+    )
+
+    isin: Optional[str] = Field(
+        default=None, description="Optional ISIN to scope the search to one company."
+    )
+
+    ric: Optional[str] = Field(
+        default=None,
+        description="Optional Reuters Instrument Code to scope the search.",
+    )
+
+    permid: Optional[str] = Field(
+        default=None, description="Optional Refinitiv PermID to scope the search."
+    )
+
+    @field_validator("bloomberg_ticker", mode="before")
+    @classmethod
+    def validate_bloomberg_ticker(cls, v):
+        """Apply the same Bloomberg ticker correction as the find_* tools ('INTC US' /
+        'intc' -> 'INTC:US'), so a format slip is fixed client-side rather than returned
+        as a backend error."""
+        if v is None:
+            return v
+        return correct_bloomberg_ticker(v)
 
     start_date: str = Field(
         default="",
