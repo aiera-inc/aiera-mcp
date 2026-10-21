@@ -15,6 +15,15 @@ class BaseAieraArgs(BaseModel):
 # Keys MCP transports / the chat lambda attach to every tool call that are not tool
 # arguments (auth and chat-internal context). They are never forwarded by the tool
 # functions, so a strict model must tolerate them.
+#
+# KEEP IN SYNC WITH aiera-chat-lambda, which injects these without consulting the tool
+# schema: `_build_overrides` in infrastructure/mcp/tool_manager.py (self_identification,
+# exclude_instructions, api_key, originating_prompt) and `_FORCED_PARAM_VALUES` /
+# `_HIDDEN_SCHEMA_PARAMS` in infrastructure/mcp/source_filtered_tool.py (compact,
+# include_base_instructions). The lambda mirrors this set as
+# MCP_TRANSPORT_ONLY_ARGUMENT_KEYS and has a test that every key it injects is in it; a
+# key added on the lambda side without being added here makes every call to a strict
+# tool fail validation.
 TRANSPORT_ONLY_ARGUMENT_KEYS = frozenset(
     {
         "api_key",
