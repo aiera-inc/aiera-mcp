@@ -3,13 +3,60 @@
 """Common base models for Aiera MCP tools."""
 
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field, field_serializer
+from pydantic import BaseModel, Field, model_validator
 
 
 class BaseAieraArgs(BaseModel):
     """Base class for all Aiera tool arguments."""
 
     pass
+
+
+# Keys an MCP client or hosting layer may attach to every tool call regardless of the
+# tool's schema (auth and session context). They are never forwarded by the tool
+# functions, so a strict model must tolerate them.
+#
+# If your client injects additional per-call keys, add them here: a key that is neither
+# declared by the tool nor listed in this set fails validation on every call.
+TRANSPORT_ONLY_ARGUMENT_KEYS = frozenset(
+    {
+        "api_key",
+        "originating_prompt",
+        "self_identification",
+        "exclude_instructions",
+        "include_base_instructions",
+        "compact",
+    }
+)
+
+
+class StrictArgsMixin(BaseModel):
+    """Reject tool arguments the model does not declare.
+
+    Pydantic ignores unknown keys by default, so a parameter the LLM supplies that the
+    schema never declared is dropped before the request leaves the server — the call
+    succeeds and returns an UNFILTERED result set with no signal that the filter was
+    lost. A loud validation error gets fed back to the model, which then picks a
+    parameter that exists. Transport keys (``TRANSPORT_ONLY_ARGUMENT_KEYS``) are allowed
+    through because clients may attach them to every call regardless of schema.
+    """
+
+    @model_validator(mode="before")
+    @classmethod
+    def reject_unknown_arguments(cls, data):
+        if not isinstance(data, dict):
+            return data
+        unknown = sorted(
+            key
+            for key in data
+            if key not in cls.model_fields and key not in TRANSPORT_ONLY_ARGUMENT_KEYS
+        )
+        if unknown:
+            raise ValueError(
+                f"Unknown argument(s) for {cls.__name__}: {', '.join(unknown)}. "
+                f"Accepted arguments: {', '.join(sorted(cls.model_fields))}."
+            )
+        return data
 
 
 class CitationMetadata(BaseModel):
