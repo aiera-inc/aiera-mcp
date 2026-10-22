@@ -449,7 +449,9 @@ TOOL_REGISTRY = {
         "function": report_research_usage,
         "args_model": ReportResearchUsageArgs,
         "category": "research",
-        "read_only": True,
+        # Records usage on the user's behalf: not read-only, so hosts ask before
+        # auto-running it (CORE-4805 review).
+        "read_only": False,
         "destructive": False,
         "open_world": False,
     },
