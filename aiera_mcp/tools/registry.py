@@ -131,6 +131,7 @@ TOOL_REGISTRY = {
         "category": "events",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "find_conferences": {
         "display_name": "Find Conferences",
@@ -140,6 +141,7 @@ TOOL_REGISTRY = {
         "category": "events",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "get_event": {
         "display_name": "Get Event",
@@ -149,6 +151,7 @@ TOOL_REGISTRY = {
         "category": "events",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "get_upcoming_events": {
         "display_name": "Get Upcoming Events",
@@ -158,6 +161,7 @@ TOOL_REGISTRY = {
         "category": "events",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "find_filings": {
         "display_name": "Find Filings",
@@ -167,6 +171,7 @@ TOOL_REGISTRY = {
         "category": "filings",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "get_filing": {
         "display_name": "Get Filing",
@@ -176,6 +181,7 @@ TOOL_REGISTRY = {
         "category": "filings",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "find_equities": {
         "display_name": "Find Equities",
@@ -185,6 +191,7 @@ TOOL_REGISTRY = {
         "category": "equities",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "get_equity_summaries": {
         "display_name": "Get Equity Summaries",
@@ -194,6 +201,7 @@ TOOL_REGISTRY = {
         "category": "equities",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "get_available_watchlists": {
         "display_name": "Get Available Watchlists",
@@ -203,6 +211,7 @@ TOOL_REGISTRY = {
         "category": "equities",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "get_available_indexes": {
         "display_name": "Get Available Indexes",
@@ -212,6 +221,7 @@ TOOL_REGISTRY = {
         "category": "equities",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "get_sectors_and_subsectors": {
         "display_name": "Get Sectors and Subsectors",
@@ -221,6 +231,7 @@ TOOL_REGISTRY = {
         "category": "equities",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "get_index_constituents": {
         "display_name": "Get Index Constituents",
@@ -230,6 +241,7 @@ TOOL_REGISTRY = {
         "category": "equities",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "get_watchlist_constituents": {
         "display_name": "Get Watchlist Constituents",
@@ -239,6 +251,7 @@ TOOL_REGISTRY = {
         "category": "equities",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "get_financials": {
         "display_name": "Get Financials",
@@ -248,6 +261,7 @@ TOOL_REGISTRY = {
         "category": "equities",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "get_ratios": {
         "display_name": "Get Ratios",
@@ -257,6 +271,7 @@ TOOL_REGISTRY = {
         "category": "equities",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "get_kpis_and_segments": {
         "display_name": "Get KPIs and Segments",
@@ -266,6 +281,7 @@ TOOL_REGISTRY = {
         "category": "equities",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "find_company_docs": {
         "display_name": "Find Company Documents",
@@ -275,6 +291,7 @@ TOOL_REGISTRY = {
         "category": "company_docs",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "get_company_doc": {
         "display_name": "Get Company Document",
@@ -284,6 +301,7 @@ TOOL_REGISTRY = {
         "category": "company_docs",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "get_company_doc_categories": {
         "display_name": "Get Company Document Categories",
@@ -293,6 +311,7 @@ TOOL_REGISTRY = {
         "category": "company_docs",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "get_company_doc_keywords": {
         "display_name": "Get Company Document Keywords",
@@ -302,6 +321,7 @@ TOOL_REGISTRY = {
         "category": "company_docs",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "find_third_bridge_events": {
         "display_name": "Find Third Bridge Events",
@@ -311,6 +331,7 @@ TOOL_REGISTRY = {
         "category": "third_bridge",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "get_third_bridge_event": {
         "display_name": "Get Third Bridge Event",
@@ -320,6 +341,7 @@ TOOL_REGISTRY = {
         "category": "third_bridge",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "find_research": {
         "display_name": "Find Research",
@@ -329,6 +351,7 @@ TOOL_REGISTRY = {
         "category": "research",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "get_research": {
         "display_name": "Get Research",
@@ -338,6 +361,7 @@ TOOL_REGISTRY = {
         "category": "research",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "get_research_providers": {
         "display_name": "Get Research Providers",
@@ -347,6 +371,7 @@ TOOL_REGISTRY = {
         "category": "research",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "get_research_authors": {
         "display_name": "Get Research Authors",
@@ -356,6 +381,7 @@ TOOL_REGISTRY = {
         "category": "research",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "get_research_asset_classes": {
         "display_name": "Get Research Asset Classes",
@@ -365,6 +391,7 @@ TOOL_REGISTRY = {
         "category": "research",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "get_research_asset_types": {
         "display_name": "Get Research Asset Types",
@@ -374,6 +401,7 @@ TOOL_REGISTRY = {
         "category": "research",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "get_research_subjects": {
         "display_name": "Get Research Subjects",
@@ -383,6 +411,7 @@ TOOL_REGISTRY = {
         "category": "research",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "get_research_product_focuses": {
         "display_name": "Get Research Product Focuses",
@@ -392,6 +421,7 @@ TOOL_REGISTRY = {
         "category": "research",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "get_research_region_types": {
         "display_name": "Get Research Region Types",
@@ -401,6 +431,7 @@ TOOL_REGISTRY = {
         "category": "research",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "get_research_country_codes": {
         "display_name": "Get Research Country Codes",
@@ -410,6 +441,7 @@ TOOL_REGISTRY = {
         "category": "research",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "report_research_usage": {
         "display_name": "Report Research Usage",
@@ -417,8 +449,11 @@ TOOL_REGISTRY = {
         "function": report_research_usage,
         "args_model": ReportResearchUsageArgs,
         "category": "research",
-        "read_only": True,
+        # Records usage on the user's behalf: not read-only, so hosts ask before
+        # auto-running it (CORE-4805 review).
+        "read_only": False,
         "destructive": False,
+        "open_world": False,
     },
     "get_research_metadata": {
         "display_name": "Get Research Metadata",
@@ -428,6 +463,7 @@ TOOL_REGISTRY = {
         "category": "research",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "get_research_metadata_fields": {
         "display_name": "Get Research Metadata Fields",
@@ -437,6 +473,7 @@ TOOL_REGISTRY = {
         "category": "research",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "get_research_metadata_ratings": {
         "display_name": "Get Research Metadata Ratings",
@@ -446,6 +483,7 @@ TOOL_REGISTRY = {
         "category": "research",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "get_current_ratings": {
         "display_name": "Get Current Ratings",
@@ -455,6 +493,7 @@ TOOL_REGISTRY = {
         "category": "research",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "search_transcripts": {
         "display_name": "Search Transcripts",
@@ -464,6 +503,7 @@ TOOL_REGISTRY = {
         "category": "search",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "search_filings": {
         "display_name": "Search Filings",
@@ -473,6 +513,7 @@ TOOL_REGISTRY = {
         "category": "search",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "search_research": {
         "display_name": "Search Research",
@@ -482,6 +523,7 @@ TOOL_REGISTRY = {
         "category": "search",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "search_company_docs": {
         "display_name": "Search Company Documents",
@@ -491,6 +533,7 @@ TOOL_REGISTRY = {
         "category": "search",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "search_thirdbridge": {
         "display_name": "Search Third Bridge",
@@ -500,6 +543,7 @@ TOOL_REGISTRY = {
         "category": "search",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "trusted_web_search": {
         "display_name": "Trusted Web Search",
@@ -509,6 +553,8 @@ TOOL_REGISTRY = {
         "category": "web",
         "read_only": True,
         "destructive": False,
+        # The only tool that reaches beyond Aiera's own API (CORE-4805).
+        "open_world": True,
     },
     "get_grammar_template": {
         "display_name": "Get Grammar Template",
@@ -518,6 +564,7 @@ TOOL_REGISTRY = {
         "category": "common",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "get_creation_templates": {
         "display_name": "Get Creation Templates",
@@ -527,6 +574,7 @@ TOOL_REGISTRY = {
         "category": "common",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "get_core_instructions": {
         "display_name": "Get Core Instructions",
@@ -536,6 +584,7 @@ TOOL_REGISTRY = {
         "category": "common",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
     "available_tools": {
         "display_name": "Available Tools",
@@ -545,6 +594,7 @@ TOOL_REGISTRY = {
         "category": "common",
         "read_only": True,
         "destructive": False,
+        "open_world": False,
     },
 }
 

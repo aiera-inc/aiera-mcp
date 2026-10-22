@@ -9,14 +9,13 @@ from typing import Any, Dict, Optional, Callable, List
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
-from mcp.types import Tool, TextContent
+from mcp.types import Tool, ToolAnnotations, TextContent
 
 # Setup logging
 logger = logging.getLogger(__name__)
 
 # Import settings and API key provider functions from package
 from .config import get_settings
-
 
 # Global HTTP client for Lambda environment with proper configuration
 _lambda_http_client: Optional[httpx.AsyncClient] = None
@@ -99,6 +98,31 @@ def register_aiera_tools(
     return TOOL_REGISTRY
 
 
+def tool_annotations_from_config(tool_config: Dict[str, Any]) -> ToolAnnotations:
+    """MCP annotations for a registry entry, with every hint set to an explicit bool.
+
+    Hosts (OpenAI flags this) expect readOnlyHint, destructiveHint and openWorldHint
+    to be present as booleans rather than left to the spec defaults (CORE-4805).
+    """
+    return ToolAnnotations(
+        title=tool_config.get("display_name"),
+        readOnlyHint=bool(tool_config.get("read_only", True)),
+        destructiveHint=bool(tool_config.get("destructive", False)),
+        openWorldHint=bool(tool_config.get("open_world", False)),
+    )
+
+
+def tool_from_config(tool_name: str, tool_config: Dict[str, Any]) -> Tool:
+    """The MCP Tool advertised for a registry entry."""
+    return Tool(
+        name=tool_name,
+        title=tool_config.get("display_name"),
+        description=tool_config["description"],
+        inputSchema=tool_config["input_schema"],
+        annotations=tool_annotations_from_config(tool_config),
+    )
+
+
 async def run_server():
     """Run the MCP server using stdio transport."""
     # Get the tool registry
@@ -109,17 +133,10 @@ async def run_server():
     @server.list_tools()
     async def list_tools() -> List[Tool]:
         """Return list of available tools with proper schemas."""
-        tools = []
-        for tool_name, tool_config in tool_registry.items():
-            tools.append(
-                Tool(
-                    name=tool_name,
-                    title=tool_config.get("display_name"),
-                    description=tool_config["description"],
-                    inputSchema=tool_config["input_schema"],
-                )
-            )
-        return tools
+        return [
+            tool_from_config(tool_name, tool_config)
+            for tool_name, tool_config in tool_registry.items()
+        ]
 
     @server.call_tool()
     async def call_tool(name: str, arguments: dict) -> List[TextContent]:
