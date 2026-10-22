@@ -11,11 +11,13 @@ from .models import (
     SearchTranscriptsArgs,
     SearchFilingsArgs,
     SearchResearchArgs,
+    SearchSalesCommentaryArgs,
     SearchCompanyDocsArgs,
     SearchThirdbridgeArgs,
     SearchTranscriptsResponse,
     SearchFilingsResponse,
     SearchResearchResponse,
+    SearchSalesCommentaryResponse,
     SearchCompanyDocsResponse,
     SearchThirdbridgeResponse,
 )
@@ -212,6 +214,68 @@ async def search_research(args: SearchResearchArgs) -> SearchResearchResponse:
     )
 
     response = SearchResearchResponse.model_validate(raw_response)
+    if args.exclude_instructions:
+        response.instructions = []
+    return response
+
+
+async def search_sales_commentary(args: SearchSalesCommentaryArgs) -> SearchSalesCommentaryResponse:
+    """Semantic search over sales commentary email sections (CORE-4827).
+
+    The sales-commentary twin of search_research: the same server-side identifier
+    scoping, a trailing ~52-week default window, and section-level results carrying
+    the parent email's document_id.
+    """
+    logger.info("tool called: search_sales_commentary")
+
+    client = await get_http_client(None)
+    api_key = get_api_key()
+
+    payload = {
+        "query_text": args.query_text,
+        "size": args.size,
+        "include_base_instructions": args.include_base_instructions,
+    }
+
+    if args.document_ids:
+        payload["document_ids"] = args.document_ids
+
+    for identifier in ("bloomberg_ticker", "isin", "ric", "permid"):
+        value = getattr(args, identifier, None)
+        if value:
+            payload[identifier] = value
+
+    if args.start_date:
+        payload["start_date"] = args.start_date
+
+    if args.end_date:
+        payload["end_date"] = args.end_date
+
+    if args.author_ids:
+        payload["author_ids"] = args.author_ids
+
+    if args.aiera_provider_ids:
+        payload["aiera_provider_ids"] = args.aiera_provider_ids
+
+    if args.series:
+        payload["series"] = args.series
+
+    if args.search_after is not None:
+        payload["search_after"] = args.search_after
+
+    if args.self_identification:
+        payload["self_identification"] = args.self_identification
+
+    raw_response = await make_aiera_request(
+        client=client,
+        method="POST",
+        endpoint="/chat-support/search-sales-commentary",
+        api_key=api_key,
+        params={},
+        data=payload,
+    )
+
+    response = SearchSalesCommentaryResponse.model_validate(raw_response)
     if args.exclude_instructions:
         response.instructions = []
     return response

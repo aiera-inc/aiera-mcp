@@ -37,7 +37,8 @@ aiera_mcp/
     research/          # find_research, get_research, get_research_providers, get_research_authors,
                        # get_research_asset_classes, get_research_asset_types, get_research_subjects,
                        # get_research_product_focuses, get_research_region_types, get_research_country_codes
-    search/            # search_transcripts, search_filings, search_research, search_company_docs, search_thirdbridge
+    sales_commentary/  # find_sales_commentary, get_sales_commentary, report_sales_commentary_usage
+    search/            # search_transcripts, search_filings, search_research, search_sales_commentary, search_company_docs, search_thirdbridge
     web/               # trusted_web_search
 entrypoint.py          # CLI entrypoint, transport selection
 scripts/
@@ -47,7 +48,7 @@ tests/                 # pytest test suite (unit + fixtures)
 
 ## Tool Count
 
-39 registered tools across 8 categories: events, filings, equities, company_docs, third_bridge, research, search, web.
+51 registered tools across 9 categories: events, filings, equities, company_docs, third_bridge, research, sales_commentary, search, web.
 
 ## Architecture Patterns
 
