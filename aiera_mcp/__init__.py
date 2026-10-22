@@ -130,10 +130,15 @@ AVAILABLE_TOOLS = [
     "get_research_metadata_fields",
     "get_research_metadata_ratings",
     "get_current_ratings",
+    # Sales Commentary Tools
+    "find_sales_commentary",
+    "get_sales_commentary",
+    "report_sales_commentary_usage",
     # Search Tools
     "search_transcripts",
     "search_filings",
     "search_research",
+    "search_sales_commentary",
     "search_company_docs",
     "search_thirdbridge",
     # Web Tools
@@ -186,10 +191,16 @@ RESEARCH_TOOLS = [
     "get_research_metadata_ratings",
     "get_current_ratings",
 ]
+SALES_COMMENTARY_TOOLS = [
+    "find_sales_commentary",
+    "get_sales_commentary",
+    "report_sales_commentary_usage",
+]
 SEARCH_TOOLS = [
     "search_transcripts",
     "search_filings",
     "search_research",
+    "search_sales_commentary",
     "search_company_docs",
     "search_thirdbridge",
 ]
@@ -240,10 +251,16 @@ from .tools.research import (
     get_research_country_codes,
     report_research_usage,
 )
+from .tools.sales_commentary import (
+    find_sales_commentary,
+    get_sales_commentary,
+    report_sales_commentary_usage,
+)
 from .tools.search import (
     search_transcripts,
     search_filings,
     search_research,
+    search_sales_commentary,
     search_company_docs,
     search_thirdbridge,
 )
@@ -323,9 +340,13 @@ __all__ = [
     "get_research_metadata_fields",
     "get_research_metadata_ratings",
     "get_current_ratings",
+    "find_sales_commentary",
+    "get_sales_commentary",
+    "report_sales_commentary_usage",
     "search_transcripts",
     "search_filings",
     "search_research",
+    "search_sales_commentary",
     "search_company_docs",
     "search_thirdbridge",
     "trusted_web_search",
@@ -371,6 +392,7 @@ __all__ = [
     "COMPANY_DOC_TOOLS",
     "THIRD_BRIDGE_TOOLS",
     "RESEARCH_TOOLS",
+    "SALES_COMMENTARY_TOOLS",
     "SEARCH_TOOLS",
     "WEB_TOOLS",
     "COMMON_TOOLS",

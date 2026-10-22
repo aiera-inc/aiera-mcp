@@ -52,6 +52,14 @@ from .research import (
     GetResearchMetadataRatingsArgs,
     GetCurrentRatingsArgs,
 )
+from .sales_commentary import (
+    find_sales_commentary,
+    get_sales_commentary,
+    report_sales_commentary_usage,
+    FindSalesCommentaryArgs,
+    GetSalesCommentaryArgs,
+    ReportSalesCommentaryUsageArgs,
+)
 from .web import trusted_web_search
 from .common import (
     get_grammar_template,
@@ -63,6 +71,7 @@ from .search import (
     search_transcripts,
     search_filings,
     search_research,
+    search_sales_commentary,
     search_company_docs,
     search_thirdbridge,
 )
@@ -118,6 +127,7 @@ from .search import (
     SearchTranscriptsArgs,
     SearchFilingsArgs,
     SearchResearchArgs,
+    SearchSalesCommentaryArgs,
     SearchCompanyDocsArgs,
     SearchThirdbridgeArgs,
 )
@@ -455,6 +465,38 @@ TOOL_REGISTRY = {
         "destructive": False,
         "open_world": False,
     },
+    # Sales commentary (CORE-4827): the research family minus the helper tools.
+    "find_sales_commentary": {
+        "display_name": "Find Sales Commentary",
+        "input_schema": FindSalesCommentaryArgs.model_json_schema(),
+        "function": find_sales_commentary,
+        "args_model": FindSalesCommentaryArgs,
+        "category": "sales_commentary",
+        "read_only": True,
+        "destructive": False,
+        "open_world": False,
+    },
+    "get_sales_commentary": {
+        "display_name": "Get Sales Commentary",
+        "input_schema": GetSalesCommentaryArgs.model_json_schema(),
+        "function": get_sales_commentary,
+        "args_model": GetSalesCommentaryArgs,
+        "category": "sales_commentary",
+        "read_only": True,
+        "destructive": False,
+        "open_world": False,
+    },
+    "report_sales_commentary_usage": {
+        "display_name": "Report Sales Commentary Usage",
+        "input_schema": ReportSalesCommentaryUsageArgs.model_json_schema(),
+        "function": report_sales_commentary_usage,
+        "args_model": ReportSalesCommentaryUsageArgs,
+        "category": "sales_commentary",
+        # Records usage on the user's behalf, like report_research_usage.
+        "read_only": False,
+        "destructive": False,
+        "open_world": False,
+    },
     "get_research_metadata": {
         "display_name": "Get Research Metadata",
         "input_schema": GetResearchMetadataArgs.model_json_schema(),
@@ -520,6 +562,16 @@ TOOL_REGISTRY = {
         "input_schema": SearchResearchArgs.model_json_schema(),
         "function": search_research,
         "args_model": SearchResearchArgs,
+        "category": "search",
+        "read_only": True,
+        "destructive": False,
+        "open_world": False,
+    },
+    "search_sales_commentary": {
+        "display_name": "Search Sales Commentary",
+        "input_schema": SearchSalesCommentaryArgs.model_json_schema(),
+        "function": search_sales_commentary,
+        "args_model": SearchSalesCommentaryArgs,
         "category": "search",
         "read_only": True,
         "destructive": False,
