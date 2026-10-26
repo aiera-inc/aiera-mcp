@@ -35,6 +35,11 @@ class TestEndpointToToolsMapping:
             f"always be reported as hidden_tools: {sorted(unreachable)}"
         )
 
+    def test_sales_commentary_usage_follows_sales_commentary_access(self):
+        # visible with the sales commentary routes, not with the shared readership route
+        assert "report_sales_commentary_usage" in ENDPOINT_TO_TOOLS["/chat-support/find-sales-commentary"]
+        assert "report_sales_commentary_usage" not in ENDPOINT_TO_TOOLS["/chat-support/report-readership"]
+
     def test_research_metadata_endpoints_are_mapped(self):
         assert ENDPOINT_TO_TOOLS.get("/chat-support/get-research-metadata") == [
             "get_research_metadata"

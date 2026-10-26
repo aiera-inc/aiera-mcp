@@ -127,8 +127,14 @@ ENDPOINT_TO_TOOLS = {
     "/chat-support/get-research-metadata-fields": ["get_research_metadata_fields"],
     "/chat-support/get-research-metadata-ratings": ["get_research_metadata_ratings"],
     "/chat-support/get-current-ratings": ["get_current_ratings"],
-    "/chat-support/report-readership": ["report_research_usage", "report_sales_commentary_usage"],
-    "/chat-support/find-sales-commentary": ["find_sales_commentary", "get_sales_commentary"],
+    "/chat-support/report-readership": ["report_research_usage"],
+    # the sales commentary usage tool is visible with the sales commentary routes, not with
+    # the shared readership route, so a research-only user does not see it (CORE-4827)
+    "/chat-support/find-sales-commentary": [
+        "find_sales_commentary",
+        "get_sales_commentary",
+        "report_sales_commentary_usage",
+    ],
     "/chat-support/search-sales-commentary": ["search_sales_commentary"],
     "/chat-support/search/transcripts": ["search_transcripts"],
     "/chat-support/search/filings": ["search_filings"],
