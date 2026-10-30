@@ -437,6 +437,114 @@ class SearchResearchArgs(StrictArgsMixin, BaseAieraArgs, CompactArgsMixin):
     )
 
 
+class SearchSalesCommentaryArgs(StrictArgsMixin, BaseAieraArgs, CompactArgsMixin):
+    """Semantic search within sales commentary emails (a provider's sales-desk notes) for what the desk is saying about a topic or company.
+
+    WHEN TO USE THIS TOOL:
+    - "What is the desk saying about ...", "how did sales react to [company]'s print", thematic questions across many emails
+    - For a specific provider / company / week, prefer find_sales_commentary → get_sales_commentary, which return whole emails rather than sections
+
+    SCOPING TO A COMPANY: pass `bloomberg_ticker` (or `isin` / `ric` / `permid`). Without it the search ranks sections from the WHOLE corpus. The scope is resolved server-side and the matched companies are echoed back as `resolved_equities`.
+
+    RETURNS: relevant email sections with the parent email's metadata (document_id, title, series, provider, authors, date) and relevance scores. Results are sections, not whole emails; pass document_id to get_sales_commentary for the full email.
+
+    Sales commentary reacts to research: rating and price-target actions it relays belong to the provider's research. Attribute them to the provider and prefer the referenced research document (or get_current_ratings) as the authoritative source.
+    """
+
+    self_identification: Optional[str] = Field(
+        default=None,
+        description="Optional self-identification string for the user/session making the request. Used for tracking and analytics purposes.",
+    )
+
+    include_base_instructions: Optional[bool] = Field(
+        default=True,
+        description="Whether or not to include initial critical instructions in the API response. This only needs to be done once per session.",
+    )
+
+    exclude_instructions: Optional[bool] = Field(
+        default=False,
+        description="Whether to exclude all instructions from the tool response.",
+    )
+
+    query_text: str = Field(
+        min_length=1,
+        description="Search query for semantic matching within email sections. Examples: 'reaction to the Q3 print', 'positioning into earnings', 'desk view on rate cuts'.",
+    )
+
+    @field_validator("query_text", mode="before")
+    @classmethod
+    def strip_query_text(cls, v):
+        """Strip whitespace and reject empty queries."""
+        if isinstance(v, str):
+            v = v.strip()
+        return v
+
+    document_ids: Optional[List[str]] = Field(
+        default=None,
+        description="Optional list of specific document IDs to search within. Obtain document_ids from find_sales_commentary or search_sales_commentary results.",
+    )
+
+    bloomberg_ticker: Optional[str] = Field(
+        default=None,
+        description=(
+            "PREFERRED way to scope the search to specific companies. Bloomberg ticker(s) in "
+            "'TICKER:COUNTRY' format, comma-separated for several (e.g. 'INTC:US' or "
+            "'INTC:US,AMD:US'). Resolved server-side, so you never need an internal id. "
+            "An unknown ticker returns an explicit error rather than unscoped results."
+        ),
+    )
+
+    isin: Optional[str] = Field(default=None, description="Optional ISIN to scope the search to one company.")
+
+    ric: Optional[str] = Field(default=None, description="Optional Reuters Instrument Code to scope the search.")
+
+    permid: Optional[str] = Field(default=None, description="Optional Refinitiv PermID to scope the search.")
+
+    @field_validator("bloomberg_ticker", mode="before")
+    @classmethod
+    def validate_bloomberg_ticker(cls, v):
+        """Same Bloomberg ticker correction as the find_* tools."""
+        if v is None:
+            return v
+        return correct_bloomberg_ticker(v)
+
+    start_date: str = Field(
+        default="",
+        description=(
+            "Start date in YYYY-MM-DD format. If omitted, the search defaults to a trailing "
+            "~52-week window. Commentary is time-sensitive: for 'latest' / 'this week' questions "
+            "pass a tight start_date."
+        ),
+    )
+
+    end_date: str = Field(default="", description="End date in YYYY-MM-DD format.")
+
+    author_ids: Optional[List[str]] = Field(
+        default=None,
+        description="Filter by one or more author person IDs, as returned on find / search results.",
+    )
+
+    aiera_provider_ids: Optional[List[str]] = Field(
+        default=None,
+        description="Filter by one or more Aiera provider IDs. Obtain provider IDs from get_research_providers results (the same registry as research).",
+    )
+
+    series: Optional[List[str]] = Field(
+        default=None,
+        description="Filter by one or more series: the subject prefix an email belongs to, e.g. ['First Look'].",
+    )
+
+    size: int = Field(
+        default=25,
+        description="Number of email sections to return per page (max 25, 10-25 recommended for optimal performance)",
+    )
+
+    search_after: Optional[List[Any]] = Field(
+        default=None,
+        description="Cursor for pagination. Pass the next_search_after value from a previous response to fetch the next page of results. Omit for the first page.",
+    )
+
+
 class SearchCompanyDocsArgs(BaseAieraArgs, CompactArgsMixin):
     """Semantic search within company document chunks for specific content, disclosures, or topics.
 
@@ -659,6 +767,12 @@ class SearchFilingsResponse(BaseAieraResponse):
 
 class SearchResearchResponse(BaseAieraResponse):
     """Response for search_research tool - passes through the API response structure."""
+
+    response: Optional[Any] = Field(None, description="Response data from the API")
+
+
+class SearchSalesCommentaryResponse(BaseAieraResponse):
+    """Response for search_sales_commentary tool - passes through the API response structure."""
 
     response: Optional[Any] = Field(None, description="Response data from the API")
 

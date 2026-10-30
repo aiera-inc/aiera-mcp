@@ -69,6 +69,7 @@ async def mock_http_dependencies(mock_server_import, mock_make_aiera_request):
             "aiera_mcp.tools.events.tools",
             "aiera_mcp.tools.company_docs.tools",
             "aiera_mcp.tools.research.tools",
+            "aiera_mcp.tools.sales_commentary.tools",
             "aiera_mcp.tools.search.tools",
         ]
 

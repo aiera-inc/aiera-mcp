@@ -18,11 +18,15 @@ def test_registry_entry_declares_all_three_hints_as_bools(tool_name):
         assert isinstance(cfg[key], bool), f"{tool_name}.{key} must be a bool"
 
 
-def test_report_research_usage_is_not_read_only():
-    """It records usage, so hosts must not auto-run it as a read-only tool."""
-    cfg = TOOL_REGISTRY["report_research_usage"]
-    assert (cfg["read_only"], cfg["destructive"]) == (False, False)
-    assert {name for name, c in TOOL_REGISTRY.items() if not c["read_only"]} == {"report_research_usage"}
+def test_usage_reporting_tools_are_not_read_only():
+    """They record usage, so hosts must not auto-run them as read-only tools."""
+    for name in ("report_research_usage", "report_sales_commentary_usage"):
+        cfg = TOOL_REGISTRY[name]
+        assert (cfg["read_only"], cfg["destructive"]) == (False, False)
+    assert {name for name, c in TOOL_REGISTRY.items() if not c["read_only"]} == {
+        "report_research_usage",
+        "report_sales_commentary_usage",
+    }
 
 
 def test_only_web_search_is_open_world():

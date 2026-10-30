@@ -114,7 +114,10 @@ ENDPOINT_TO_TOOLS = {
         "find_third_bridge_events",
         "get_third_bridge_event",
     ],
-    "/chat-support/find-research": ["find_research", "get_research"],
+    # each usage-reporting tool is visible with its own dataset's routes, not with the
+    # shared /chat-support/report-readership route (research OR sales commentary), so a
+    # user with access to only one dataset does not see the other's tool (CORE-4827)
+    "/chat-support/find-research": ["find_research", "get_research", "report_research_usage"],
     "/chat-support/get-research-providers": ["get_research_providers"],
     "/chat-support/get-research-authors": ["get_research_authors"],
     "/chat-support/get-research-asset-classes": ["get_research_asset_classes"],
@@ -127,7 +130,12 @@ ENDPOINT_TO_TOOLS = {
     "/chat-support/get-research-metadata-fields": ["get_research_metadata_fields"],
     "/chat-support/get-research-metadata-ratings": ["get_research_metadata_ratings"],
     "/chat-support/get-current-ratings": ["get_current_ratings"],
-    "/chat-support/report-readership": ["report_research_usage"],
+    "/chat-support/find-sales-commentary": [
+        "find_sales_commentary",
+        "get_sales_commentary",
+        "report_sales_commentary_usage",
+    ],
+    "/chat-support/search-sales-commentary": ["search_sales_commentary"],
     "/chat-support/search/transcripts": ["search_transcripts"],
     "/chat-support/search/filings": ["search_filings"],
     "/chat-support/search/filing-chunks": ["search_filings"],
