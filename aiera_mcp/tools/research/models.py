@@ -292,7 +292,9 @@ class GetResearchArgs(BaseAieraArgs, CompactArgsMixin):
 
 
 class GetResearchProvidersArgs(BaseToolArgs):
-    """Retrieve all available research providers with their IDs, names, and descriptions. Used to find valid provider IDs for filtering research tools.
+    """Retrieve all available research providers with their IDs, names, and coverage. Used to find valid provider IDs for filtering research tools.
+
+    Each provider row carries `doc_count` (documents available to this user), `earliest_published` and `latest_published` (UTC ISO 8601 bounds of those documents). Use them to judge coverage before filtering: a date-bounded question outside a provider's range, or a provider with a small doc_count, will return little or nothing, so say so rather than retrying.
 
     ALWAYS CALL THIS when the user mentions a specific research provider or bank (e.g., HSBC, Goldman Sachs, Morgan Stanley, BofA, Evercore). Pass the provider name as the `search` parameter to resolve it into an aiera_provider_id, then pass that ID as `aiera_provider_ids` to find_research or search_research. Omitting the provider filter when a specific provider is named returns results from all providers — that is almost never what the user wants.
 
