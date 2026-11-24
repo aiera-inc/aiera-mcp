@@ -62,6 +62,8 @@ class FindResearchArgs(StrictArgsMixin, BaseToolArgs):
 
     RETURNS METADATA AND SUMMARIES ONLY — NOT full report content. To retrieve the actual report, call get_research with the document_id from these results.
 
+    LEAN LISTING IS ON BY DEFAULT (`lean=true`): to keep pages small, each row's `abstract` is cut to its first 500 characters and its `issuers` list to the first 10 (primary issuers first). Nothing else is removed — titles, authors, dates, ratings, price targets and citation_information are complete. A trimmed row is flagged: `abstract_truncated: true` means the abstract continues, `issuers_total` gives the full issuer count. The response's `lean` block reports how many rows were trimmed. Do not treat a truncated abstract as the whole summary or a capped issuer list as the full coverage of a report. To get what was left out, call get_research for that document_id, or repeat the call with `lean=false` (full abstracts can be 50,000+ characters per row, so pair it with a small page_size).
+
     NARROW VS BROAD SCOPE:
     - For narrow queries (≤5 relevant documents expected), use find_research → get_research to retrieve full content from each. Do NOT use search_research for narrow queries; it returns text chunks rather than complete documents.
     - For broad queries (many documents, thematic coverage), use search_research with a descriptive query_text and paginate as needed.
@@ -240,6 +242,17 @@ class FindResearchArgs(StrictArgsMixin, BaseToolArgs):
             "more than topical fit. Leave false (default) for general topic questions — the "
             "server already applies a recency decay to the relevance score, so you don't need "
             "this for ordinary 'current view' style queries."
+        ),
+    )
+
+    lean: bool = Field(
+        default=True,
+        description=(
+            "Lean listing (default true). When true, each row's abstract is cut to its first 500 "
+            "characters (flagged with abstract_truncated: true) and its issuers list to the first 10, "
+            "primary issuers first (flagged with issuers_total); all other fields are complete. Set "
+            "false to receive full abstracts and issuer lists — some abstracts exceed 50,000 "
+            "characters, so use a small page_size with lean=false."
         ),
     )
 

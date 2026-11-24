@@ -185,6 +185,30 @@ class TestFindResearch:
         assert params["search_after"] == "1234567890,abc123"
 
     @pytest.mark.asyncio
+    async def test_find_research_is_lean_by_default(self, mock_http_dependencies):
+        """CORE-5887: listings ask the API for lean rows unless the caller opts out."""
+        mock_http_dependencies["mock_make_request"].return_value = FIND_RESEARCH_RESPONSE
+
+        await find_research(FindResearchArgs(search="Merck KGaA"))
+        params = mock_http_dependencies["mock_make_request"].call_args[1]["params"]
+        assert params["lean"] is True
+
+    @pytest.mark.asyncio
+    async def test_find_research_lean_can_be_turned_off(self, mock_http_dependencies):
+        mock_http_dependencies["mock_make_request"].return_value = FIND_RESEARCH_RESPONSE
+
+        await find_research(FindResearchArgs(search="Merck KGaA", lean=False))
+        params = mock_http_dependencies["mock_make_request"].call_args[1]["params"]
+        assert params["lean"] is False
+
+    def test_find_research_description_says_what_lean_removes(self):
+        schema = FindResearchArgs.model_json_schema()
+        assert schema["properties"]["lean"]["default"] is True
+        description = schema["description"]
+        for phrase in ("LEAN LISTING IS ON BY DEFAULT", "abstract_truncated", "issuers_total", "lean=false"):
+            assert phrase in description
+
+    @pytest.mark.asyncio
     async def test_find_research_with_all_filters(self, mock_http_dependencies):
         """Test find_research with all filter parameters."""
         mock_http_dependencies["mock_make_request"].return_value = FIND_RESEARCH_RESPONSE
