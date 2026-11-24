@@ -112,7 +112,7 @@ async def find_research(args: FindResearchArgs) -> FindResearchResponse:
 async def get_research_providers(
     args: GetResearchProvidersArgs,
 ) -> GetResearchProvidersResponse:
-    """Retrieve all available research providers."""
+    """Retrieve all available research providers with their document counts and published-date ranges."""
     logger.info("tool called: get_research_providers")
 
     # Get client and API key (no context needed for standard MCP)
